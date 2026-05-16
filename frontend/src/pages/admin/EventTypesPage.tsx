@@ -21,7 +21,7 @@ import { GALLERY_THEME_PRESETS } from '../../types/theme.types';
 
 // Common emoji options for event types
 const EMOJI_OPTIONS = [
-  '📷', '💒', '🎂', '🏢', '🎉', '🎊', '🎈', '👨‍👩‍👧', '💍', '🌸',
+  '📷', '💒', '🎂', '🏢', '🎉', '🎊', '🎈', '👨‍👩‍👧', '💍', '🌸', '🤰',
   '🎄', '🎃', '🐣', '🎓', '🏆', '🎸', '🎭', '🍽️', '🏖️', '✈️'
 ];
 
