@@ -62,6 +62,7 @@ export interface PublicSettings {
   event_require_event_date?: boolean;
   event_require_expiration?: boolean;
   event_default_require_password?: boolean;
+  event_default_feedback_enabled?: boolean;
   gallery_show_filter_bar?: boolean;
   event_phone_field_enabled?: boolean;
   // SEO meta tags (consumed by RobotsMetaTags)

@@ -439,7 +439,7 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       allow_presigned_download = false,
       require_password: requirePasswordInput,
       // Feedback settings
-      feedback_enabled = false,
+      feedback_enabled: feedbackEnabledInput,
       allow_ratings = true,
       allow_likes = true,
       allow_comments = true,
@@ -506,6 +506,17 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       if (setting !== undefined) requirePasswordFallback = setting;
     }
     const requirePassword = parseBooleanInput(requirePasswordInput, requirePasswordFallback);
+
+    // Default feedback_enabled from global "event_default_feedback_enabled"
+    // setting when the body omits it (#520 — same pattern as require_password
+    // above, lets admins make Guest Feedback ON the out-of-box default for
+    // new events instead of toggling it on every time).
+    let feedbackEnabledFallback = false;
+    if (feedbackEnabledInput === undefined) {
+      const setting = await readBooleanSetting('event_default_feedback_enabled');
+      if (setting !== undefined) feedbackEnabledFallback = setting;
+    }
+    const feedback_enabled = parseBooleanInput(feedbackEnabledInput, feedbackEnabledFallback);
 
     // Debug logging
     logger.debug('Download control values', {

@@ -54,6 +54,7 @@ export interface EventSettings {
   event_require_event_date: boolean;
   event_require_expiration: boolean;
   event_default_require_password: boolean;
+  event_default_feedback_enabled: boolean;
   gallery_show_filter_bar: boolean;
   event_phone_field_enabled: boolean;
 }
@@ -133,6 +134,7 @@ export function useSettingsState() {
     event_require_event_date: true,
     event_require_expiration: true,
     event_default_require_password: true,
+    event_default_feedback_enabled: false,
     gallery_show_filter_bar: true,
     event_phone_field_enabled: false
   });
@@ -220,6 +222,7 @@ export function useSettingsState() {
         event_require_event_date: toBoolean(settings.event_require_event_date, true),
         event_require_expiration: toBoolean(settings.event_require_expiration, true),
         event_default_require_password: toBoolean(settings.event_default_require_password, true),
+        event_default_feedback_enabled: toBoolean(settings.event_default_feedback_enabled, false),
         gallery_show_filter_bar: toBoolean(settings.gallery_show_filter_bar, true),
         event_phone_field_enabled: toBoolean(settings.event_phone_field_enabled, false)
       });

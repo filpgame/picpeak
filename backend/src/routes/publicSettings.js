@@ -16,6 +16,7 @@ router.get('/', async (req, res) => {
             .orWhereIn('setting_key', [
               'seo_meta_noindex', 'seo_meta_nofollow', 'seo_meta_noai',
               'event_default_require_password',
+              'event_default_feedback_enabled',
               'gallery_show_filter_bar',
               'event_phone_field_enabled'
             ]);
@@ -120,6 +121,10 @@ router.get('/', async (req, res) => {
       event_require_expiration: settingsObject.event_require_expiration !== false,
       // Default value for "Require password" toggle in event creation form
       event_default_require_password: settingsObject.event_default_require_password !== false,
+      // Default value for the "Guest Feedback enabled" toggle (#520).
+      // Defaults to false (matches the prior hard-coded form default), so
+      // existing installs see no behaviour change until an admin flips it.
+      event_default_feedback_enabled: settingsObject.event_default_feedback_enabled === true,
       // Phone-number field on events is opt-in (#322).
       event_phone_field_enabled: settingsObject.event_phone_field_enabled === true,
       // Whether to show the search/sort filter bar in public galleries (default: true)
