@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDevToolsProtection } from '../../hooks/useDevToolsProtection';
 import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut, MessageSquare, Heart, Star } from 'lucide-react';
 import type { Photo } from '../../types';
-import { useDownloadPhoto } from '../../hooks/useGallery';
+import { useSavePhotoToDevice } from '../../hooks/useGallery';
 import { AuthenticatedImage } from '../common';
 import { PhotoFeedback } from './PhotoFeedback';
 import { feedbackService } from '../../services/feedback.service';
@@ -99,7 +99,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   }, []);
 
 
-  const downloadPhotoMutation = useDownloadPhoto();
+  // Save-aware download. On mobile (where Web Share + files is supported)
+  // this opens the OS share sheet so "Save to Photos" actually lands in
+  // the Photos/Gallery app — matters for non-technical clients who
+  // otherwise have to chain Files → unzip → save (#531). Desktop and
+  // unsupported browsers fall through to a regular <a download>.
+  const downloadPhotoMutation = useSavePhotoToDevice();
   const currentPhoto = photos[currentIndex];
   
   // DevTools protection - enabled by individual setting OR legacy protection level
