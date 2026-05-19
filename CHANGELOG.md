@@ -5,6 +5,21 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.53.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.52.1-beta.0...v3.53.0-beta.0) (2026-05-19)
+
+
+### Features
+
+* **events:** default Guest Feedback ON via admin setting ([#520](https://github.com/the-luap/picpeak/issues/520)) ([3465b55](https://github.com/the-luap/picpeak/commit/3465b55abc98e52cf58ba46b811f4ec115d53012))
+
+
+### Bug Fixes
+
+* **bug-batch-518:** lightbox comments toggle + further fixes ([633a2ae](https://github.com/the-luap/picpeak/commit/633a2ae72405ae1fc885cb710ed896476ffee467))
+* **header:** hide language name on mobile to free the title ([#523](https://github.com/the-luap/picpeak/issues/523)) ([4b4ecfd](https://github.com/the-luap/picpeak/commit/4b4ecfdf7143c8f353355ecd6d5ee14bbf50c9bb))
+* **lightbox:** hide comments toggle when allow_comments=false ([#518](https://github.com/the-luap/picpeak/issues/518)) ([d44e1ad](https://github.com/the-luap/picpeak/commit/d44e1adba7a444b03511e9402cd39d25fe5acafe))
+* **og:** brandable static title + wider crawler UA coverage ([#521](https://github.com/the-luap/picpeak/issues/521)) ([b960639](https://github.com/the-luap/picpeak/commit/b96063903513fcc4cbe0e72f59ccbc37d7b1c0ab))
+
 ## [3.52.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.52.0-beta.0...v3.52.1-beta.0) (2026-05-18)
 
 
