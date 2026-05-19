@@ -246,6 +246,25 @@ export const CreateEventPage: React.FC = () => {
     }));
   }, [publicSettings]);
 
+  // Honour the global "Enable Guest Feedback by default" admin setting (#520).
+  // Same one-shot apply pattern as require_password above — only seeds the
+  // master toggle. The sub-toggles (likes / ratings / comments) keep their
+  // hard-coded true defaults so a flipped master immediately gives sensible
+  // behaviour without a second admin setting to manage.
+  const feedbackEnabledDefaultApplied = useRef(false);
+  useEffect(() => {
+    if (feedbackEnabledDefaultApplied.current) return;
+    if (publicSettings?.event_default_feedback_enabled === undefined) return;
+    feedbackEnabledDefaultApplied.current = true;
+    setFormData(prev => ({
+      ...prev,
+      feedback_settings: {
+        ...prev.feedback_settings,
+        feedback_enabled: publicSettings.event_default_feedback_enabled === true
+      }
+    }));
+  }, [publicSettings]);
+
   // Apply the global Branding default theme on first load so admins who set a
   // site-wide default in Branding actually see it on new events (#323).
   // This is the "always inherit colours from Branding" guarantee — every new

@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { db, logActivity } = require('../database/db');
 const { formatBoolean } = require('../utils/dbCompat');
+const { slugify } = require('../utils/slug');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const router = express.Router();
@@ -439,7 +440,7 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       allow_presigned_download = false,
       require_password: requirePasswordInput,
       // Feedback settings
-      feedback_enabled = false,
+      feedback_enabled: feedbackEnabledInput,
       allow_ratings = true,
       allow_likes = true,
       allow_comments = true,
@@ -507,6 +508,17 @@ router.post('/', adminAuth, requirePermission('events.create'), [
     }
     const requirePassword = parseBooleanInput(requirePasswordInput, requirePasswordFallback);
 
+    // Default feedback_enabled from global "event_default_feedback_enabled"
+    // setting when the body omits it (#520 — same pattern as require_password
+    // above, lets admins make Guest Feedback ON the out-of-box default for
+    // new events instead of toggling it on every time).
+    let feedbackEnabledFallback = false;
+    if (feedbackEnabledInput === undefined) {
+      const setting = await readBooleanSetting('event_default_feedback_enabled');
+      if (setting !== undefined) feedbackEnabledFallback = setting;
+    }
+    const feedback_enabled = parseBooleanInput(feedbackEnabledInput, feedbackEnabledFallback);
+
     // Debug logging
     logger.debug('Download control values', {
       allow_downloads,
@@ -538,12 +550,10 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       }
     }
     
-    // Generate unique slug
-    const processedEventName = event_name
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-') // Replace non-alphanumeric with dash
-      .replace(/-+/g, '-')         // Replace multiple dashes with single dash
-      .replace(/^-|-$/g, '');      // Remove leading/trailing dashes
+    // Generate unique slug. Uses the shared util so accented names
+    // (Família, Decoração, etc.) get transliterated instead of dropped
+    // — see backend/src/utils/slug.js for the why (#525).
+    const processedEventName = slugify(event_name);
 
     // Use event_date in slug if provided, otherwise use random suffix
     const slugSuffix = event_date || crypto.randomBytes(3).toString('hex');
