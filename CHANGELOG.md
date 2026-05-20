@@ -5,6 +5,13 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.54.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.0-beta.0...v3.54.1-beta.0) (2026-05-20)
+
+
+### Bug Fixes
+
+* **public-site:** honor dark theme surface colors ([8b72721](https://github.com/the-luap/picpeak/commit/8b727218127db2a738ad5a4381358076c1575c8a))
+
 ## [3.54.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.53.0-beta.0...v3.54.0-beta.0) (2026-05-20)
 
 
