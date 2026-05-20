@@ -152,6 +152,10 @@ export interface PublicSiteBranding {
     accent: string;
     background: string;
     text: string;
+    surface?: string;
+    elevated?: string;
+    border?: string;
+    mutedText?: string;
   };
 }
 

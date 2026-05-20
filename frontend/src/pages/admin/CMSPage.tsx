@@ -303,7 +303,7 @@ export const CMSPage: React.FC = () => {
     const branding = publicSiteBranding || publicSiteDefaults?.branding;
     const substitutedHtml = applyBrandTokens(publicSiteSanitizedHtml, branding);
     const inlineStyles = [
-      branding ? `:root {\n  --brand-primary: ${branding.colors.primary};\n  --brand-accent: ${branding.colors.accent};\n  --brand-background: ${branding.colors.background};\n  --brand-text: ${branding.colors.text};\n}` : '',
+      branding ? `:root {\n  --brand-primary: ${branding.colors.primary};\n  --brand-accent: ${branding.colors.accent};\n  --brand-background: ${branding.colors.background};\n  --brand-text: ${branding.colors.text};\n  --brand-surface: ${branding.colors.surface || '#ffffff'};\n  --brand-elevated: ${branding.colors.elevated || '#f5f5f5'};\n  --brand-border: ${branding.colors.border || '#e5e5e5'};\n  --brand-muted-text: ${branding.colors.mutedText || '#737373'};\n}` : '',
       publicSiteBaseCss,
       publicSiteSanitizedCss ? `/* Custom styles */\n${publicSiteSanitizedCss}` : ''
     ].filter(Boolean).join('\n\n');
