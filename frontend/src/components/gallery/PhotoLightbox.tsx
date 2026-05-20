@@ -78,6 +78,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     allow_likes?: boolean;
     allow_ratings?: boolean;
     allow_comments?: boolean;
+    show_feedback_to_guests?: boolean;
     require_name_email?: boolean;
   } | null>(null);
   const [myLiked, setMyLiked] = useState<boolean>(false);
@@ -663,7 +664,13 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                 >
                   <Heart className={`w-5 h-5 ${myLiked ? 'text-white' : 'text-white'}`} />
                 </button>
-                <span className="text-white text-xs min-w-[1.5rem] text-center select-none">{likeCount}</span>
+                {/* Aggregate like count is admin-only when the admin
+                    has hidden feedback from guests (#538 bug 3). Without
+                    this gate, a guest could see how many other guests
+                    liked a photo even with show_feedback_to_guests off. */}
+                {feedbackSettings?.show_feedback_to_guests && (
+                  <span className="text-white text-xs min-w-[1.5rem] text-center select-none">{likeCount}</span>
+                )}
               </div>
             )}
 
