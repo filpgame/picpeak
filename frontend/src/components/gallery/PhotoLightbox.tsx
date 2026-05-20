@@ -411,6 +411,16 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           setDragX(0);
         }
       }
+    } else if (e.touches.length === 1 && zoom > 1) {
+      // Single-finger pan when zoomed in (#532). Mirrors the desktop
+      // handleMouseDown path so mobile users can drag a zoomed image
+      // around instead of being stuck looking at the centre crop.
+      // Carousel swipe is disabled in this branch — when zoom > 1 the
+      // gesture has to mean "pan", not "next photo", or zoomed nav
+      // becomes unusable.
+      const t = e.touches[0];
+      setIsDragging(true);
+      setDragStart({ x: t.clientX - dragOffset.x, y: t.clientY - dragOffset.y });
     } else if (e.touches.length === 1 && zoom <= 1 && (phase === 'idle' || phase === 'dragging')) {
       const t = e.touches[0];
       swipeStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
@@ -432,6 +442,24 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       const newZoom = Math.max(1, Math.min(3, zoom * scale));
       setZoom(newZoom);
       setTouchDistance(newDistance);
+      // Pinch-out back down to 1.0 has to re-centre the image — without
+      // this the previous pan offset persists and the photo sits off-
+      // centre at the natural zoom level (#532 follow-on).
+      if (newZoom <= 1 && (dragOffset.x !== 0 || dragOffset.y !== 0)) {
+        setDragOffset({ x: 0, y: 0 });
+      }
+      return;
+    }
+
+    if (isDragging && zoom > 1 && e.touches.length === 1) {
+      // Single-finger pan when zoomed (#532). Touch counterpart to
+      // handleMouseMove. Same dragOffset state so the transform on the
+      // <img> stays consistent across input modalities.
+      const t = e.touches[0];
+      setDragOffset({
+        x: t.clientX - dragStart.x,
+        y: t.clientY - dragStart.y,
+      });
       return;
     }
 
@@ -459,6 +487,10 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     setTouchDistance(null);
+    // Release single-finger pan state (#532). The pan offset itself
+    // persists so the image stays where the user left it — only the
+    // "actively dragging" flag clears.
+    if (isDragging) setIsDragging(false);
     const start = swipeStartRef.current;
     if (phase === 'dragging' && start && e.changedTouches.length > 0) {
       const t = e.changedTouches[0];
