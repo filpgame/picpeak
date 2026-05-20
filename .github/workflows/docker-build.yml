@@ -21,7 +21,7 @@ name: Build and Push Docker Images
 on:
   push:
     branches: [ main, beta ]
-    tags: [ 'v*.*.*', 'v*.*.*-beta.*' ]  # Triggered by Release Please tags (stable and beta)
+    tags: [ 'v*.*.*', 'v*.*.*-beta.*', 'v*.*.*-beta' ]  # stable, beta.N (release-please), and plain beta tags
   pull_request:
     branches: [ main, beta ]
   release:

@@ -13,7 +13,7 @@ IFS=$'\n\t'
 # Script configuration
 readonly SCRIPT_VERSION="2.1.0"
 readonly APP_NAME="PicPeak"
-readonly REPO_URL="https://github.com/the-luap/picpeak.git"
+readonly REPO_URL="https://github.com/filpgame/picpeak.git"
 readonly NODE_VERSION="20"
 readonly MIN_RAM_DOCKER=2048
 readonly MIN_RAM_NATIVE=1024
@@ -66,6 +66,15 @@ run_as_user() {
     local cmd="$*"
     local current_dir_escaped
     current_dir_escaped=$(printf '%q' "$(pwd)")
+    local current_user
+    current_user=$(id -un)
+    # If already running as the target user, execute directly.
+    # Avoids sudo login-shell (-lc) side effects (directory changes, env resets)
+    # that break git operations when NATIVE_APP_USER is root.
+    if [[ "$current_user" == "$NATIVE_APP_USER" ]]; then
+        bash -c "cd $current_dir_escaped && $cmd"
+        return $?
+    fi
     if [[ "$(id -u)" -ne 0 ]]; then
         # Already non-root; preserve working directory
         bash -lc "cd $current_dir_escaped && $cmd"
@@ -769,11 +778,14 @@ setup_native_installation() {
         # Ensure correct remote and update even if history was rewritten
         run_as_user "git config --global --add safe.directory $NATIVE_APP_DIR/app" || true
         run_as_user "git remote set-url origin $REPO_URL" || true
-        run_as_user "git fetch --all --prune" || true
-        # Prefer checking out remote main and hard resetting to avoid merge prompts
-        if ! run_as_user "git checkout -B main origin/main"; then
-          run_as_user "git checkout main" || true
-          run_as_user "git reset --hard origin/main"
+        run_as_user "git fetch --all --tags --prune" || true
+        LATEST_TAG=$(git -C "$NATIVE_APP_DIR/app" tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1)
+        if [[ -n "$LATEST_TAG" ]]; then
+          log_info "Checking out latest tag: $LATEST_TAG"
+          run_as_user "git -c advice.detachedHead=false checkout $LATEST_TAG"
+        else
+          log_warn "No version tags found, falling back to main"
+          run_as_user "git checkout -B main origin/main" || run_as_user "git checkout main"
         fi
     else
         run_as_user "git clone $REPO_URL $NATIVE_APP_DIR/app" || {
@@ -1259,10 +1271,14 @@ update_native_installation() {
     cd "$NATIVE_APP_DIR/app"
     run_as_user "git config --global --add safe.directory $NATIVE_APP_DIR/app" || true
     run_as_user "git remote set-url origin $REPO_URL" || true
-    run_as_user "git fetch --all --prune"
-    if ! run_as_user "git checkout -B main origin/main"; then
-      run_as_user "git checkout main" || true
-      run_as_user "git reset --hard origin/main"
+    run_as_user "git fetch --all --tags --prune"
+    LATEST_TAG=$(git -C "$NATIVE_APP_DIR/app" tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1)
+    if [[ -n "$LATEST_TAG" ]]; then
+      log_info "Checking out latest tag: $LATEST_TAG"
+      run_as_user "git -c advice.detachedHead=false checkout $LATEST_TAG"
+    else
+      log_warn "No version tags found, falling back to main"
+      run_as_user "git checkout -B main origin/main" || run_as_user "git checkout main"
     fi
     
     # Update backend dependencies
