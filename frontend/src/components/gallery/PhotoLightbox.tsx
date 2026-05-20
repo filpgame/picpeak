@@ -662,7 +662,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   aria-label={myLiked ? 'Unlike photo' : 'Like photo'}
                   title={myLiked ? 'Unlike' : 'Like'}
                 >
-                  <Heart className={`w-5 h-5 ${myLiked ? 'text-white' : 'text-white'}`} />
+                  {/* fill-current on the liked state so the heart is
+                      actually visible against the red background — both
+                      branches were `text-white` only (#538 follow-on
+                      bug from @Tietge86). */}
+                  <Heart className={`w-5 h-5 text-white ${myLiked ? 'fill-current' : ''}`} />
                 </button>
                 {/* Aggregate like count is admin-only when the admin
                     has hidden feedback from guests (#538 bug 3). Without
