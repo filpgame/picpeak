@@ -124,24 +124,24 @@ export const MessagingConfigPage: React.FC = () => {
           />
 
           {/* Access Token */}
-          <div className="relative">
-            <Input
-              label={t('settings.messaging.accessToken', 'Access Token')}
-              type={showToken ? 'text' : 'password'}
-              value={form.access_token}
-              onChange={(e) => setForm((f) => ({ ...f, access_token: e.target.value }))}
-              placeholder="EAAxxxxxxxx..."
-              helperText={t('settings.messaging.accessTokenHelp', 'System User token with whatsapp_business_messaging permission')}
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-8 text-neutral-400 hover:text-neutral-600"
-              onClick={() => setShowToken((v) => !v)}
-              aria-label={showToken ? 'Hide token' : 'Show token'}
-            >
-              {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
+          <Input
+            label={t('settings.messaging.accessToken', 'Access Token')}
+            type={showToken ? 'text' : 'password'}
+            value={form.access_token}
+            onChange={(e) => setForm((f) => ({ ...f, access_token: e.target.value }))}
+            placeholder="EAAxxxxxxxx..."
+            helperText={t('settings.messaging.accessTokenHelp', 'System User token with whatsapp_business_messaging permission')}
+            rightIcon={
+              <button
+                type="button"
+                className="text-neutral-400 hover:text-neutral-600"
+                onClick={() => setShowToken((v) => !v)}
+                aria-label={showToken ? 'Hide token' : 'Show token'}
+              >
+                {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            }
+          />
 
           {/* Template Name */}
           <Input
@@ -161,7 +161,7 @@ export const MessagingConfigPage: React.FC = () => {
               disabled={saveMutation.isPending}
             >
               {saveMutation.isPending
-                ? t('common.saving', 'Saving...')
+                ? t('common.submitting', 'Saving...')
                 : t('common.save', 'Save')}
             </Button>
 
@@ -203,7 +203,7 @@ export const MessagingConfigPage: React.FC = () => {
                 disabled={!testPhone || testMutation.isPending}
               >
                 {testMutation.isPending
-                  ? t('common.sending', 'Enviando...')
+                  ? t('common.submitting', 'Enviando...')
                   : t('settings.messaging.testSendButton', 'Enviar')}
               </Button>
               <Button variant="outline" onClick={() => setShowTestModal(false)}>
