@@ -21,6 +21,7 @@ const { initializeDatabase, db } = require('./src/database/db');
 const { startFileWatcher } = require('./src/services/fileWatcher');
 const { startExpirationChecker } = require('./src/services/expirationChecker');
 const { initializeTransporter, startEmailQueueProcessor } = require('./src/services/emailProcessor');
+const { startWhatsAppQueueProcessor } = require('./src/services/whatsappProcessor');
 const { startBackupService } = require('./src/services/backupService');
 const { startScheduledBackups } = require('./src/services/databaseBackup');
 const backgroundProcessor = require('./src/services/backgroundProcessor');
@@ -626,6 +627,7 @@ app.use('/api/customer', noStoreCache, require('./src/routes/customer'));
 app.use('/api/admin/event-types', require('./src/routes/adminEventTypes'));
 app.use('/api/admin/api-tokens', require('./src/routes/adminApiTokens'));
 app.use('/api/admin/webhooks', require('./src/routes/adminWebhooks'));
+app.use('/api/admin/whatsapp', require('./src/routes/adminWhatsapp'));
 // Public v1 API for n8n / external integrations (#322). Mounted under
 // /api/v1; auth handled per-route via apiTokenAuth (Bearer tokens).
 app.use('/api/v1', require('./src/routes/v1/events'));
@@ -733,6 +735,7 @@ async function startServer() {
     // Initialize email transporter and start queue processor
     await initializeTransporter();
     startEmailQueueProcessor();
+    startWhatsAppQueueProcessor();
     
     // Start webhook delivery worker (#327)
     const { startWebhookDeliveryWorker } = require('./src/services/webhookDeliveryWorker');
