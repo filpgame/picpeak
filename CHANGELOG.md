@@ -5,6 +5,13 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.54.4-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.3-beta.0...v3.54.4-beta.0) (2026-05-21)
+
+
+### Bug Fixes
+
+* recover three orphaned commits from [#527](https://github.com/the-luap/picpeak/issues/527) (BRAND_TITLE runtime, Web Share, pan zoom) ([9607b46](https://github.com/the-luap/picpeak/commit/9607b4666c0abf22e54b43be3e87e3243db2cdbc))
+
 ## [3.54.3-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.2-beta.0...v3.54.3-beta.0) (2026-05-21)
 
 
