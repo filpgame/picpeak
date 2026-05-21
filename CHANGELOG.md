@@ -5,6 +5,14 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.54.3-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.2-beta.0...v3.54.3-beta.0) (2026-05-21)
+
+
+### Bug Fixes
+
+* **lightbox:** fill the heart icon when liked ([#538](https://github.com/the-luap/picpeak/issues/538) follow-up) ([3e39112](https://github.com/the-luap/picpeak/commit/3e39112a1276c194259d936dad813f3b0fc2dc3f))
+* **lightbox:** fill the heart icon when liked ([#538](https://github.com/the-luap/picpeak/issues/538) follow-up) ([600c29d](https://github.com/the-luap/picpeak/commit/600c29db8a75fa44e72da55bc5288908de614d9d))
+
 ## [3.54.2-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.1-beta.0...v3.54.2-beta.0) (2026-05-20)
 
 
