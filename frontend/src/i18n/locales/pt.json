@@ -428,6 +428,9 @@
     "resendCreationEmail": "Reenviar E-mail de Criação",
     "creationEmailResent": "O e-mail de criação foi enfileirado para envio",
     "failedToResendEmail": "Falha ao reenviar e-mail de criação",
+    "resendWhatsApp": "Reenviar WhatsApp",
+    "whatsappResent": "Mensagem WhatsApp enviada",
+    "failedToResendWhatsApp": "Falha ao reenviar WhatsApp",
     "photoStatistics": "Estatísticas de Fotos",
     "totalPhotos": "Total de Fotos",
     "managePhotos": "Gerenciar Fotos",
@@ -1086,6 +1089,28 @@
     },
     "email": {
       "title": "Configurações de E-mail"
+    },
+    "messaging": {
+      "title": "Configurações de Mensagens",
+      "description": "Configure a API do WhatsApp Business para notificar clientes quando a galeria estiver disponível.",
+      "enableWhatsApp": "Ativar envio por WhatsApp",
+      "enableDescription": "Enviar notificação quando uma galeria for criada ou publicada",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHelp": "Em Meta for Developers → WhatsApp → Getting Started",
+      "wabaId": "WhatsApp Business Account ID",
+      "wabaIdHelp": "Encontrado no Meta Business Manager",
+      "accessToken": "Access Token",
+      "accessTokenHelp": "Token de System User com permissão whatsapp_business_messaging",
+      "templateName": "Nome do Template",
+      "templateNameHelp": "Nome exato do template aprovado no Meta Business Manager",
+      "testButton": "Testar",
+      "testModalTitle": "Enviar mensagem de teste",
+      "testPhoneLabel": "Número de telefone (formato internacional)",
+      "testSendButton": "Enviar",
+      "saved": "Configurações WhatsApp salvas",
+      "saveFailed": "Falha ao salvar configurações",
+      "testSent": "Mensagem de teste enviada!",
+      "testFailed": "Falha ao enviar mensagem de teste"
     },
     "backup": {
       "title": "Backup"

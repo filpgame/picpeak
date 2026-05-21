@@ -420,6 +420,9 @@
     "resendCreationEmail": "Aanmaakmail opnieuw verzenden",
     "creationEmailResent": "Aanmaakmail is in de wachtrij geplaatst",
     "failedToResendEmail": "Kan aanmaakmail niet opnieuw verzenden",
+    "resendWhatsApp": "WhatsApp opnieuw sturen",
+    "whatsappResent": "WhatsApp-bericht verzonden",
+    "failedToResendWhatsApp": "WhatsApp opnieuw sturen mislukt",
     "photoStatistics": "Fotostatistieken",
     "totalPhotos": "Totaal foto's",
     "managePhotos": "Foto's beheren",
@@ -1069,6 +1072,28 @@
     },
     "email": {
       "title": "E-mailinstellingen"
+    },
+    "messaging": {
+      "title": "Berichtinstellingen",
+      "description": "Configureer de WhatsApp Business API om klanten te notificeren wanneer hun galerij klaar is.",
+      "enableWhatsApp": "WhatsApp-meldingen inschakelen",
+      "enableDescription": "WhatsApp-bericht sturen bij aanmaken of publiceren galerij",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHelp": "Via Meta for Developers → WhatsApp → Getting Started",
+      "wabaId": "WhatsApp Business Account ID",
+      "wabaIdHelp": "Te vinden in Meta Business Manager",
+      "accessToken": "Access Token",
+      "accessTokenHelp": "Systeemgebruikerstoken met whatsapp_business_messaging",
+      "templateName": "Sjabloonnaam",
+      "templateNameHelp": "Exacte naam van het goedgekeurde sjabloon",
+      "testButton": "Testen",
+      "testModalTitle": "Testbericht sturen",
+      "testPhoneLabel": "Telefoonnummer (internationaal formaat)",
+      "testSendButton": "Sturen",
+      "saved": "WhatsApp-instellingen opgeslagen",
+      "saveFailed": "Instellingen opslaan mislukt",
+      "testSent": "Testbericht verzonden!",
+      "testFailed": "Testbericht mislukt"
     },
     "backup": {
       "title": "Back-up"

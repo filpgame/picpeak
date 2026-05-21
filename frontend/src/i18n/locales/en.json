@@ -420,6 +420,9 @@
     "resendCreationEmail": "Resend Creation Email",
     "creationEmailResent": "Creation email has been queued for sending",
     "failedToResendEmail": "Failed to resend creation email",
+    "resendWhatsApp": "Resend WhatsApp",
+    "whatsappResent": "WhatsApp message sent",
+    "failedToResendWhatsApp": "Failed to resend WhatsApp",
     "photoStatistics": "Photo Statistics",
     "totalPhotos": "Total Photos",
     "managePhotos": "Manage Photos",
@@ -1080,6 +1083,28 @@
     },
     "email": {
       "title": "Email Settings"
+    },
+    "messaging": {
+      "title": "Message Settings",
+      "description": "Configure WhatsApp Business API to notify clients when their gallery is ready.",
+      "enableWhatsApp": "Enable WhatsApp notifications",
+      "enableDescription": "Send WhatsApp notification when a gallery is created or published",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHelp": "From Meta for Developers → WhatsApp → Getting Started",
+      "wabaId": "WhatsApp Business Account ID",
+      "wabaIdHelp": "Found in your Meta Business Manager",
+      "accessToken": "Access Token",
+      "accessTokenHelp": "System User token with whatsapp_business_messaging permission",
+      "templateName": "Template Name",
+      "templateNameHelp": "Exact name of the approved template in Meta Business Manager",
+      "testButton": "Test",
+      "testModalTitle": "Send test message",
+      "testPhoneLabel": "Phone number (international format)",
+      "testSendButton": "Send",
+      "saved": "WhatsApp settings saved",
+      "saveFailed": "Failed to save settings",
+      "testSent": "Test message sent!",
+      "testFailed": "Test message failed"
     },
     "backup": {
       "title": "Backup"

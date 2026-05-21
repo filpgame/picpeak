@@ -422,6 +422,9 @@
     "resendCreationEmail": "Renvoyer l'e-mail de création",
     "creationEmailResent": "L'e-mail de création a été mis en file d'attente",
     "failedToResendEmail": "Échec du renvoi de l'e-mail de création",
+    "resendWhatsApp": "Renvoyer WhatsApp",
+    "whatsappResent": "Message WhatsApp envoyé",
+    "failedToResendWhatsApp": "Échec du renvoi WhatsApp",
     "photoStatistics": "Statistiques des photos",
     "totalPhotos": "Total des photos",
     "managePhotos": "Gérer les photos",
@@ -1098,6 +1101,28 @@
       "save": "Enregistrer les modifications",
       "saved": "Branding du tableau de bord client enregistré",
       "error": "Impossible d'enregistrer les paramètres"
+    },
+    "messaging": {
+      "title": "Paramètres de messagerie",
+      "description": "Configurez l'API WhatsApp Business pour notifier les clients quand leur galerie est prête.",
+      "enableWhatsApp": "Activer les notifications WhatsApp",
+      "enableDescription": "Envoyer une notification à la création ou publication d'une galerie",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHelp": "Depuis Meta for Developers → WhatsApp → Getting Started",
+      "wabaId": "WhatsApp Business Account ID",
+      "wabaIdHelp": "Trouvé dans Meta Business Manager",
+      "accessToken": "Access Token",
+      "accessTokenHelp": "Token utilisateur système avec whatsapp_business_messaging",
+      "templateName": "Nom du modèle",
+      "templateNameHelp": "Nom exact du modèle approuvé dans Meta Business Manager",
+      "testButton": "Tester",
+      "testModalTitle": "Envoyer un message de test",
+      "testPhoneLabel": "Numéro de téléphone (format international)",
+      "testSendButton": "Envoyer",
+      "saved": "Paramètres WhatsApp sauvegardés",
+      "saveFailed": "Échec de la sauvegarde",
+      "testSent": "Message de test envoyé !",
+      "testFailed": "Échec du message de test"
     }
   },
   "analytics": {

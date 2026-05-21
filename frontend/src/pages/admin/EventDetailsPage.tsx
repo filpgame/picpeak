@@ -17,6 +17,7 @@ import {
   Image,
   Key,
   Mail,
+  MessageCircle,
   MessageSquare,
   Lock,
   Eye,
@@ -62,6 +63,7 @@ import { EventCategoryManager, AdminPhotoGrid, AdminPhotoViewer, PhotoFilters, P
 import { CustomerAccountPicker } from '../../components/admin/CustomerAccountPicker';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
+import { whatsappConfigService } from '../../services/whatsappConfig.service';
 import { usePublicSettings } from '../../hooks/usePublicSettings';
 import { api } from '../../config/api';
 import { buildResourceUrl, buildShareLinkUrl } from '../../utils/url';
@@ -492,6 +494,13 @@ export const EventDetailsPage: React.FC = () => {
     },
     enabled: !!id,
   });
+
+  const { data: whatsappConfig } = useQuery({
+    queryKey: ['whatsapp-config'],
+    queryFn: () => whatsappConfigService.getConfig(),
+    staleTime: 60_000,
+  });
+  const whatsappEnabled = Boolean(whatsappConfig?.enabled);
 
   // Update mutation
   const updateMutation = useMutation({
@@ -1958,6 +1967,24 @@ export const EventDetailsPage: React.FC = () => {
                 >
                   {t('events.resendCreationEmail')}
                 </Button>
+                {event.customer_phone && whatsappEnabled && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<MessageCircle className="w-4 h-4" />}
+                    onClick={async () => {
+                      try {
+                        await eventsService.resendWhatsApp(event.id);
+                        toast.success(t('events.whatsappResent'));
+                      } catch {
+                        toast.error(t('events.failedToResendWhatsApp'));
+                      }
+                    }}
+                    className="w-full justify-center"
+                  >
+                    {t('events.resendWhatsApp')}
+                  </Button>
+                )}
               </div>
             )}
           </Card>

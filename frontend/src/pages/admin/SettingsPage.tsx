@@ -18,6 +18,7 @@ import {
   KeyRound,
   Webhook,
   Mail,
+  MessageCircle,
   Palette,
   FileText,
   HardDrive,
@@ -42,6 +43,7 @@ import {
   WebhooksTab,
 } from '../../features/settings';
 import { EmailConfigPage } from './EmailConfigPage';
+import { MessagingConfigPage } from './MessagingConfigPage';
 import { BrandingPage } from './BrandingPage';
 import { EventTypesPage } from './EventTypesPage';
 import { BackupManagement } from './BackupManagement';
@@ -60,6 +62,7 @@ type TabType =
   | 'styling'
   | 'cms'
   | 'email'
+  | 'messaging'
   | 'moderation'
   | 'security'
   | 'imageSecurity'
@@ -84,7 +87,7 @@ interface NavGroup {
 const ALL_TAB_KEYS: TabType[] = [
   'features', 'general', 'events', 'eventTypes',
   'branding', 'categories', 'thumbnails', 'styling', 'cms',
-  'email', 'moderation',
+  'email', 'messaging', 'moderation',
   'security', 'imageSecurity', 'seo',
   'apiTokens', 'webhooks',
   'status', 'analytics', 'backup',
@@ -200,6 +203,7 @@ export const SettingsPage: React.FC = () => {
       label: t('settings.groups.communication', 'Communication'),
       items: [
         { key: 'email',      label: t('settings.email.title',      'Email Settings'), icon: Mail },
+        { key: 'messaging',  label: t('settings.messaging.title',  'Configurações de Mensagens'), icon: MessageCircle },
         { key: 'moderation', label: t('settings.moderation.title', 'Moderation'),     icon: Flag },
       ],
     },
@@ -235,7 +239,7 @@ export const SettingsPage: React.FC = () => {
   // header (FeaturesTab has its own icon+title+description block), skip
   // the Settings shell's section heading so the layout doesn't double
   // up.
-  const TABS_WITH_OWN_HEADER: TabType[] = ['features', 'email', 'branding', 'eventTypes', 'backup', 'cms'];
+  const TABS_WITH_OWN_HEADER: TabType[] = ['features', 'email', 'messaging', 'branding', 'eventTypes', 'backup', 'cms'];
   const showSectionHeading = !TABS_WITH_OWN_HEADER.includes(activeTab);
 
   return (
@@ -362,6 +366,7 @@ export const SettingsPage: React.FC = () => {
           {activeTab === 'branding' && <BrandingPage />}
           {activeTab === 'cms' && <CMSPage />}
           {activeTab === 'email' && <EmailConfigPage />}
+          {activeTab === 'messaging' && <MessagingConfigPage />}
           {activeTab === 'backup' && <BackupManagement />}
 
           {activeTab === 'status' && (

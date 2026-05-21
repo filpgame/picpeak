@@ -209,6 +209,12 @@ export const eventsService = {
     return response.data;
   },
 
+  // Resend WhatsApp notification
+  async resendWhatsApp(eventId: number): Promise<{ success: boolean; message: string }> {
+    const response = await api.post(`/admin/events/${eventId}/resend-whatsapp`);
+    return response.data;
+  },
+
   // Validate rename
   async validateRename(eventId: number, newEventName: string): Promise<{
     valid: boolean;

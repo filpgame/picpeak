@@ -783,6 +783,9 @@
     "resendCreationEmail": "Erstellungs-E-Mail erneut senden",
     "creationEmailResent": "Die Erstellungs-E-Mail wurde zur Warteschlange hinzugefügt",
     "failedToResendEmail": "Fehler beim erneuten Senden der Erstellungs-E-Mail",
+    "resendWhatsApp": "WhatsApp erneut senden",
+    "whatsappResent": "WhatsApp-Nachricht gesendet",
+    "failedToResendWhatsApp": "WhatsApp erneut senden fehlgeschlagen",
     "photoStatistics": "Fotostatistiken",
     "managePhotos": "Fotos verwalten",
     "actions": "Aktionen",
@@ -1441,6 +1444,28 @@
     },
     "email": {
       "title": "E-Mail-Einstellungen"
+    },
+    "messaging": {
+      "title": "Nachrichteneinstellungen",
+      "description": "WhatsApp Business API konfigurieren, um Kunden zu benachrichtigen.",
+      "enableWhatsApp": "WhatsApp-Benachrichtigungen aktivieren",
+      "enableDescription": "WhatsApp-Nachricht bei Galerie-Erstellung senden",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHelp": "Von Meta for Developers → WhatsApp → Getting Started",
+      "wabaId": "WhatsApp Business Account ID",
+      "wabaIdHelp": "In Meta Business Manager zu finden",
+      "accessToken": "Access Token",
+      "accessTokenHelp": "System-User-Token mit whatsapp_business_messaging",
+      "templateName": "Template-Name",
+      "templateNameHelp": "Exakter Name des genehmigten Templates",
+      "testButton": "Testen",
+      "testModalTitle": "Testnachricht senden",
+      "testPhoneLabel": "Telefonnummer (internationales Format)",
+      "testSendButton": "Senden",
+      "saved": "WhatsApp-Einstellungen gespeichert",
+      "saveFailed": "Einstellungen konnten nicht gespeichert werden",
+      "testSent": "Testnachricht gesendet!",
+      "testFailed": "Testnachricht fehlgeschlagen"
     },
     "backup": {
       "title": "Backup"

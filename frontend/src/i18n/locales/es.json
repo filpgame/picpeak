@@ -430,6 +430,9 @@
     "resendCreationEmail": "Reenviar correo de creación",
     "creationEmailResent": "El correo de creación se ha puesto en cola para enviar",
     "failedToResendEmail": "Error al reenviar el correo de creación",
+    "resendWhatsApp": "Reenviar WhatsApp",
+    "whatsappResent": "Mensaje de WhatsApp enviado",
+    "failedToResendWhatsApp": "Error al reenviar WhatsApp",
     "photoStatistics": "Estadísticas de fotos",
     "totalPhotos": "Total de fotos",
     "managePhotos": "Gestionar fotos",
@@ -1044,6 +1047,28 @@
       "deviceTypes": "Tipos de dispositivo desde agentes de usuario",
       "privacy": "Privacidad",
       "privacyText": "Las direcciones IP están hasheadas para privacidad. No se almacena datos personales. Los datos de analíticas se conservan durante 90 días."
+    },
+    "messaging": {
+      "title": "Configuración de mensajes",
+      "description": "Configure la API de WhatsApp Business para notificar a los clientes cuando su galería esté lista.",
+      "enableWhatsApp": "Activar notificaciones de WhatsApp",
+      "enableDescription": "Enviar notificación al crear o publicar una galería",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHelp": "Desde Meta for Developers → WhatsApp → Getting Started",
+      "wabaId": "WhatsApp Business Account ID",
+      "wabaIdHelp": "Disponible en Meta Business Manager",
+      "accessToken": "Access Token",
+      "accessTokenHelp": "Token de usuario del sistema con whatsapp_business_messaging",
+      "templateName": "Nombre de la plantilla",
+      "templateNameHelp": "Nombre exacto de la plantilla aprobada en Meta Business Manager",
+      "testButton": "Probar",
+      "testModalTitle": "Enviar mensaje de prueba",
+      "testPhoneLabel": "Número de teléfono (formato internacional)",
+      "testSendButton": "Enviar",
+      "saved": "Configuración de WhatsApp guardada",
+      "saveFailed": "Error al guardar la configuración",
+      "testSent": "¡Mensaje de prueba enviado!",
+      "testFailed": "Error en mensaje de prueba"
     }
   },
   "analytics": {

@@ -436,6 +436,9 @@
     "resendCreationEmail": "Отправить письмо о создании повторно",
     "creationEmailResent": "Письмо о создании поставлено в очередь отправки",
     "failedToResendEmail": "Не удалось повторно отправить письмо о создании",
+    "resendWhatsApp": "Повторно отправить WhatsApp",
+    "whatsappResent": "Сообщение WhatsApp отправлено",
+    "failedToResendWhatsApp": "Не удалось отправить WhatsApp",
     "photoStatistics": "Статистика фото",
     "totalPhotos": "Всего фото",
     "managePhotos": "Управление фото",
@@ -1103,6 +1106,28 @@
     },
     "email": {
       "title": "Настройки эл. почты"
+    },
+    "messaging": {
+      "title": "Настройки сообщений",
+      "description": "Настройте WhatsApp Business API для уведомления клиентов о готовности галереи.",
+      "enableWhatsApp": "Включить уведомления WhatsApp",
+      "enableDescription": "Отправлять уведомление при создании или публикации галереи",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHelp": "В Meta for Developers → WhatsApp → Getting Started",
+      "wabaId": "WhatsApp Business Account ID",
+      "wabaIdHelp": "Найдено в Meta Business Manager",
+      "accessToken": "Access Token",
+      "accessTokenHelp": "Токен системного пользователя с разрешением whatsapp_business_messaging",
+      "templateName": "Название шаблона",
+      "templateNameHelp": "Точное название одобренного шаблона",
+      "testButton": "Тест",
+      "testModalTitle": "Отправить тестовое сообщение",
+      "testPhoneLabel": "Номер телефона (международный формат)",
+      "testSendButton": "Отправить",
+      "saved": "Настройки WhatsApp сохранены",
+      "saveFailed": "Не удалось сохранить настройки",
+      "testSent": "Тестовое сообщение отправлено!",
+      "testFailed": "Ошибка отправки тестового сообщения"
     },
     "backup": {
       "title": "Резервное копирование"
