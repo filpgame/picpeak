@@ -13,6 +13,7 @@ const path = require('path');
 const multer = require('multer');
 const { archiveEvent } = require('../services/archiveService');
 const { queueEmail } = require('../services/emailProcessor');
+const { queueWhatsapp, getWhatsAppConfig } = require('../services/whatsappProcessor');
 const { escapeLikePattern } = require('../utils/sqlSecurity');
 // formatDate import removed - dates are formatted by email processor
 const { validatePasswordInContext, getBcryptRounds } = require('../utils/passwordValidation');
@@ -794,6 +795,25 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       });
     }
 
+
+    // Queue WhatsApp notification — non-fatal, never blocks gallery creation
+    if (!isDraft) {
+      try {
+        const waConfig = await getWhatsAppConfig();
+        if (waConfig && waConfig.enabled && customerPhone) {
+          await queueWhatsapp(eventId, customerPhone, 'gallery_created', {
+            customer_name: customerName || '',
+            event_name,
+            gallery_link: shareUrl,
+            gallery_password: requirePassword ? password : '',
+            expiry_date: expires_at ? expires_at.toISOString() : null,
+            language: null, // resolved by processor via general_default_language
+          });
+        }
+      } catch (waError) {
+        logger.warn('Failed to queue WhatsApp notification on creation', { error: waError.message });
+      }
+    }
     // Fire event.published when the event is created NOT as a draft. The
     // separate /publish endpoint fires it for the draft → live transition;
     // this covers the "create-and-publish in one shot" path.
@@ -1065,6 +1085,24 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
       });
     }
 
+
+    // Queue WhatsApp notification on publish — non-fatal
+    try {
+      const waConfig = await getWhatsAppConfig();
+      if (waConfig && waConfig.enabled && event.customer_phone) {
+        const { shareUrl: waShareUrl } = await buildShareLinkVariants({ slug: event.slug, shareToken: event.share_token });
+        await queueWhatsapp(id, event.customer_phone, 'gallery_created', {
+          customer_name: event.customer_name || event.host_name || '',
+          event_name: event.event_name,
+          gallery_link: waShareUrl,
+          gallery_password: event.require_password ? '(set at creation)' : '',
+          expiry_date: event.expires_at || null,
+          language: event.language || null,
+        });
+      }
+    } catch (waError) {
+      logger.warn('Failed to queue WhatsApp notification on publish', { error: waError.message });
+    }
     await logActivity('event_published',
       { event_name: event.event_name },
       id,
@@ -1668,6 +1706,54 @@ router.post('/:id/resend-email', adminAuth, requirePermission('events.edit'), re
     console.error('Error resending creation email:', error);
     console.error('Stack trace:', error.stack);
     res.status(500).json({ error: 'Failed to resend creation email' });
+  }
+});
+
+// Resend WhatsApp notification
+router.post('/:id/resend-whatsapp', adminAuth, requirePermission('events.edit'), requireEventOwnership, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const event = await db('events').where('id', id).first();
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    if (!event.customer_phone) {
+      return res.status(400).json({ error: 'No phone number on this event' });
+    }
+
+    const waConfig = await getWhatsAppConfig();
+    if (!waConfig || !waConfig.enabled) {
+      return res.status(400).json({ error: 'WhatsApp notifications are not enabled' });
+    }
+
+    const recipientName = event.customer_name || event.host_name || '';
+    const { shareUrl } = await buildShareLinkVariants({ slug: event.slug, shareToken: event.share_token });
+
+    await queueWhatsapp(id, event.customer_phone, 'gallery_created', {
+      customer_name: recipientName,
+      event_name: event.event_name,
+      gallery_link: shareUrl,
+      gallery_password: req.body && req.body.password ? req.body.password : '',
+      expiry_date: event.expires_at || null,
+      language: event.language || null,
+    });
+
+    try {
+      await logActivity('whatsapp_resent', {
+        recipient: event.customer_phone,
+        ip_address: req.ip || '0.0.0.0',
+        user_agent: req.get('user-agent') || 'Unknown',
+      }, id, { type: 'admin', id: req.admin.id, name: req.admin.username });
+    } catch (logError) {
+      logger.warn('Failed to log whatsapp_resent activity:', logError);
+    }
+
+    res.json({ success: true, message: 'WhatsApp message queued for sending' });
+  } catch (error) {
+    logger.error('Error resending WhatsApp:', error);
+    res.status(500).json({ error: 'Failed to resend WhatsApp notification' });
   }
 });
 
