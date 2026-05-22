@@ -120,7 +120,7 @@ async function processWhatsAppQueue() {
       } catch (error) {
         await db('whatsapp_queue')
           .where('id', item.id)
-          .update({ retry_count: item.retry_count + 1, error_message: error.message });
+          .update({ retry_count: item.retry_count + 1, error_message: error.message, ...(item.retry_count + 1 >= 3 ? { status: "failed" } : {}) });
 
         logger.error('WhatsApp message ' + item.id + ' failed:', error);
       }
