@@ -41,17 +41,39 @@ router.put('/config', adminAuth, requirePermission('settings.edit'), async (req,
     const { phone_number_id, waba_id, access_token, template_name, enabled } = req.body;
 
     const existing = await db('whatsapp_configs').first();
+    const isEnabled = Boolean(enabled);
 
     const data = {
       phone_number_id: phone_number_id || '',
       waba_id: waba_id || '',
       template_name: template_name || 'gallery_ready',
-      enabled: Boolean(enabled),
+      enabled: isEnabled,
       updated_at: new Date(),
     };
 
-    if (access_token && access_token !== '********') {
+    // Only update token when a real (non-masked) value is provided.
+    const hasNewToken = access_token && access_token !== '********';
+    const hasStoredToken = existing && Boolean(existing.access_token);
+
+    if (hasNewToken) {
       data.access_token = access_token;
+    } else if (!existing && (!access_token || access_token === '********')) {
+      // First-time insert with masked/empty token — reject to avoid
+      // silently saving an unusable config.
+      return res.status(400).json({ error: 'Access token is required when saving a new configuration' });
+    }
+
+    // Validate required fields when enabling.
+    if (isEnabled) {
+      if (!data.phone_number_id) {
+        return res.status(400).json({ error: 'Phone Number ID is required to enable WhatsApp' });
+      }
+      if (!data.template_name) {
+        return res.status(400).json({ error: 'Template name is required to enable WhatsApp' });
+      }
+      if (!hasNewToken && !hasStoredToken) {
+        return res.status(400).json({ error: 'Access token is required to enable WhatsApp' });
+      }
     }
 
     if (existing) {
@@ -63,7 +85,7 @@ router.put('/config', adminAuth, requirePermission('settings.edit'), async (req,
 
     await logActivity(
       'whatsapp_config_updated',
-      { phone_number_id, enabled },
+      { phone_number_id, enabled: isEnabled },
       null,
       { type: 'admin', id: req.admin.id, name: req.admin.username }
     );

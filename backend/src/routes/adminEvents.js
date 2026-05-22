@@ -807,6 +807,7 @@ router.post('/', adminAuth, requirePermission('events.create'), [
             gallery_link: shareUrl,
             gallery_password: requirePassword ? password : '',
             expiry_date: expires_at ? expires_at.toISOString() : null,
+            language: null, // resolved by processor via general_default_language
           });
         }
       } catch (waError) {
@@ -1094,8 +1095,9 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
           customer_name: event.customer_name || event.host_name || '',
           event_name: event.event_name,
           gallery_link: waShareUrl,
-          gallery_password: '',
+          gallery_password: event.require_password ? '(set at creation)' : '',
           expiry_date: event.expires_at || null,
+          language: event.language || null,
         });
       }
     } catch (waError) {
@@ -1735,6 +1737,7 @@ router.post('/:id/resend-whatsapp', adminAuth, requirePermission('events.edit'),
       gallery_link: shareUrl,
       gallery_password: req.body && req.body.password ? req.body.password : '',
       expiry_date: event.expires_at || null,
+      language: event.language || null,
     });
 
     try {
