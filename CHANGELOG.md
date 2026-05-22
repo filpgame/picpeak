@@ -5,6 +5,29 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.54.5-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.4-beta.0...v3.54.5-beta.0) (2026-05-22)
+
+
+### Bug Fixes
+
+* **nginx:** honour outer X-Forwarded-Proto when behind a reverse proxy ([#547](https://github.com/the-luap/picpeak/issues/547)) ([b351d17](https://github.com/the-luap/picpeak/commit/b351d17ee99528dd4251e74dfc47cd1fe289d9c3))
+* **nginx:** honour outer X-Forwarded-Proto when behind a reverse proxy ([#547](https://github.com/the-luap/picpeak/issues/547)) ([5488de3](https://github.com/the-luap/picpeak/commit/5488de3383d33d8a037587dd9112d36ea035c465))
+
+## [3.54.4-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.3-beta.0...v3.54.4-beta.0) (2026-05-21)
+
+
+### Bug Fixes
+
+* recover three orphaned commits from [#527](https://github.com/the-luap/picpeak/issues/527) (BRAND_TITLE runtime, Web Share, pan zoom) ([9607b46](https://github.com/the-luap/picpeak/commit/9607b4666c0abf22e54b43be3e87e3243db2cdbc))
+
+## [3.54.3-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.2-beta.0...v3.54.3-beta.0) (2026-05-21)
+
+
+### Bug Fixes
+
+* **lightbox:** fill the heart icon when liked ([#538](https://github.com/the-luap/picpeak/issues/538) follow-up) ([3e39112](https://github.com/the-luap/picpeak/commit/3e39112a1276c194259d936dad813f3b0fc2dc3f))
+* **lightbox:** fill the heart icon when liked ([#538](https://github.com/the-luap/picpeak/issues/538) follow-up) ([600c29d](https://github.com/the-luap/picpeak/commit/600c29db8a75fa44e72da55bc5288908de614d9d))
+
 ## [3.54.2-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.1-beta.0...v3.54.2-beta.0) (2026-05-20)
 
 
