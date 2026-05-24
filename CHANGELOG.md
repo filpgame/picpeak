@@ -5,6 +5,14 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.1-beta.0](https://github.com/filpgame/picpeak/compare/v4.1.0-beta.0...v4.1.1-beta.0) (2026-05-24)
+
+
+### Bug Fixes
+
+* **security:** password complexity setting never applied to gallery passwords ([a552526](https://github.com/filpgame/picpeak/commit/a55252657436f1109e54dceaa2342b861be5be5d))
+* **security:** password complexity setting never applied to gallery passwords ([630bdc3](https://github.com/filpgame/picpeak/commit/630bdc3c0b53b1a9fa7a15bae6828088b83363bc))
+
 ## [4.1.0-beta.0](https://github.com/filpgame/picpeak/compare/v3.54.5-beta.0...v3.55.0-beta.0) (2026-05-22)
 
 
