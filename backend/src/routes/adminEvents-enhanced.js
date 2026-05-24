@@ -107,7 +107,8 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       created_at: new Date().toISOString(),
       allow_user_uploads,
       upload_category_id,
-      photo_cap: photo_cap || null
+      photo_cap: photo_cap || null,
+      language: null,
     }).returning('id');
     
     // Handle both PostgreSQL (returns array of objects) and SQLite (returns array of IDs)

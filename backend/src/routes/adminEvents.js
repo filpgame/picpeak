@@ -683,6 +683,10 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       // false on create — admin opts in from the event detail page once
       // they've picked a hero they're comfortable surfacing publicly.
       og_image_share_enabled: formatBoolean(req.body.og_image_share_enabled === true),
+      // Null = use system default (general_default_language). The column has a
+      // DB-level default of 'en' which bypasses the system setting, so we
+      // always set it explicitly here.
+      language: null,
     }).returning('id');
     
     // Handle both PostgreSQL (returns array of objects) and SQLite (returns array of IDs)
