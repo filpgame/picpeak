@@ -247,7 +247,11 @@ const INVOICE_BODY_VALIDATORS = [
   body('lineItems').optional({ values: 'falsy' }).isArray(),
   body('lineItems.*.description').optional({ values: 'falsy' }).isString().isLength({ min: 1, max: 1000 }),
   body('lineItems.*.quantity').optional({ values: 'falsy' }).isFloat({ min: 0 }),
-  body('lineItems.*.unitPriceMinor').optional({ values: 'falsy' }).isInt({ min: 0 }),
+  // Negative unit prices are allowed so admins can add manual
+  // discount / Rabatt lines (e.g. "Treuerabatt -50,00 €"). The
+  // service-layer total guard rejects invoices whose net goes below
+  // zero — for credit notes, use Storno instead.
+  body('lineItems.*.unitPriceMinor').optional({ values: 'falsy' }).isInt(),
   body('lineItems.*.discountPercent').optional({ values: 'falsy' }).isFloat({ min: 0, max: 100 }),
   // Migration 119: sub-item + details support. Cross-row constraints
   // (parent must exist, max 1 level deep) are enforced by the service
@@ -662,6 +666,16 @@ router.put(
       updates.vat_rate = vatRate;
       updates.shipping_amount_minor = shipping;
       updates.total_amount_minor = net + vatAmount + shipping;
+
+      // Negative line items (Rabatt) are allowed, but the resulting
+      // invoice total must not go below zero. Credit notes belong in
+      // the Storno path, not in regular invoice edits.
+      if (updates.total_amount_minor < 0) {
+        return res.status(400).json({
+          error: 'Invoice total cannot be negative. To issue a credit note, cancel the original invoice with Storno.',
+          code: 'INVOICE_TOTAL_NEGATIVE',
+        });
+      }
 
       const quoteService = require('../services/quoteService');
       const { validateLineItemHierarchy, insertLineItemsHierarchical } = quoteService._internal;

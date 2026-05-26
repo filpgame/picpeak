@@ -696,6 +696,18 @@ async function createInvoice(payload, adminId, trx = db) {
   const shippingMinor = ensureInt(payload.shippingAmountMinor);
   const totalMinor = netMinor + vatMinor + shippingMinor;
 
+  // Negative line items (Rabatt) are allowed, but the resulting
+  // invoice total must not go below zero. Credit notes belong in
+  // the Storno path (createStorno), which mints a separate
+  // kind='storno' record with cancels_invoice_id set.
+  if (totalMinor < 0) {
+    throw new AppError(
+      'Invoice total cannot be negative. To issue a credit note, cancel the original invoice with Storno.',
+      400,
+      'INVOICE_TOTAL_NEGATIVE',
+    );
+  }
+
   const bank = await businessProfileService.resolveBankAccountForCurrency(currency, payload.businessBankAccountId);
 
   // Snapshot the selected payment-term template (net days / Skonto /
