@@ -3,6 +3,25 @@ import type { GalleryInfo, GalleryData, GalleryStats, ResolvedGalleryIdentifier 
 import { normalizeRequirePassword } from '../utils/accessControl';
 import { parseContentDispositionFilename } from '../utils/contentDisposition';
 
+// iOS is the only platform whose system share sheet exposes a
+// first-party "Save Image" / "Save to Photos" action for files
+// shared via navigator.share(). On Android the share sheet only
+// lists installed apps that registered an image/* intent (WhatsApp,
+// Telegram, etc.) — there is no built-in save-to-gallery action,
+// so the share path produces a useless app-picker for users who
+// just wanted to save the photo (#554). UA-sniff is the only signal
+// available because feature detection (canShare) is true on both.
+//
+// The MacIntel + maxTouchPoints clause covers iPadOS 13+ which
+// identifies as Mac in navigator.userAgent but supports the same
+// share-to-Photos flow as iOS Safari.
+function isIOS(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  return navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1;
+}
+
 export const galleryService = {
   // Verify share token
   async verifyToken(slug: string, token: string): Promise<{ valid: boolean }> {
@@ -48,42 +67,40 @@ export const galleryService = {
     };
   },
 
-  // Save single photo via the Web Share API on mobile, falling back to a
-  // regular browser download elsewhere (#531).
-  //
-  // On iOS Safari 15+ and Chrome Android the OS share sheet opened by
-  // navigator.share() includes "Save Image" / "Save to Photos", which
-  // is what non-technical clients actually want — straight into the
-  // Photos / Gallery app instead of the Files folder. Desktop browsers
-  // and Firefox don't implement Web Share File support, so they get the
-  // existing <a download> path (file lands in Downloads, same as before).
+  // Save single photo. iOS routes through the Web Share API so the
+  // share sheet's "Save Image" action lands the file in Photos;
+  // everywhere else (Android, desktop) uses a regular <a download>
+  // because their share sheets don't expose a save-to-gallery
+  // action — #531 originally extended this to "all mobile with
+  // canShare", which surfaced a useless app-picker on Android (#554).
   async savePhotoToDevice(slug: string, photoId: number, filename: string): Promise<void> {
     const fetched = await this.fetchPhotoBlob(slug, photoId);
     const resolvedFilename = fetched.serverFilename || filename;
 
-    // canShare() returns false on browsers without Web Share file support
-    // (desktop, older Safari, all Firefox as of writing). Probe with a
-    // representative File so the negotiation is accurate — `canShare({
-    // files: [] })` returns true on some browsers that don't actually
-    // accept files at share() time.
-    const file = new File([fetched.blob], resolvedFilename, {
-      type: fetched.blob.type || 'image/jpeg',
-    });
-    const canShareFile =
-      typeof navigator !== 'undefined' &&
-      typeof navigator.canShare === 'function' &&
-      navigator.canShare({ files: [file] });
+    if (isIOS()) {
+      // canShare() returns false on browsers without Web Share file
+      // support. Probe with a representative File so the negotiation
+      // is accurate — `canShare({ files: [] })` returns true on some
+      // browsers that don't actually accept files at share() time.
+      const file = new File([fetched.blob], resolvedFilename, {
+        type: fetched.blob.type || 'image/jpeg',
+      });
+      const canShareFile =
+        typeof navigator !== 'undefined' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({ files: [file] });
 
-    if (canShareFile) {
-      try {
-        await navigator.share({ files: [file], title: resolvedFilename });
-        return;
-      } catch (err) {
-        // AbortError = user dismissed the share sheet. Don't fall back —
-        // they made a choice. Any other failure (NotAllowedError,
-        // DataError, etc.) is unexpected; surface a download instead so
-        // the user still gets the file.
-        if ((err as DOMException)?.name === 'AbortError') return;
+      if (canShareFile) {
+        try {
+          await navigator.share({ files: [file], title: resolvedFilename });
+          return;
+        } catch (err) {
+          // AbortError = user dismissed the share sheet. Don't fall back —
+          // they made a choice. Any other failure (NotAllowedError,
+          // DataError, etc.) is unexpected; surface a download instead so
+          // the user still gets the file.
+          if ((err as DOMException)?.name === 'AbortError') return;
+        }
       }
     }
 
