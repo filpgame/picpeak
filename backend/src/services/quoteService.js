@@ -476,6 +476,17 @@ async function createQuote(payload, adminId) {
     payload.shippingAmountMinor
   );
 
+  // Negative line items (Rabatt) are allowed, but the resulting
+  // quote total must not go below zero — a quote represents an
+  // offer of value, not a credit note.
+  if (totals.totalAmountMinor < 0) {
+    throw new AppError(
+      'Quote total cannot be negative. Reduce the discount amount.',
+      400,
+      'QUOTE_TOTAL_NEGATIVE',
+    );
+  }
+
   // Resolve bank account for the chosen currency.
   const bank = await businessProfileService.resolveBankAccountForCurrency(currency, payload.businessBankAccountId);
 
@@ -585,6 +596,16 @@ async function updateQuote(id, payload, adminId) {
     payload.vatRate ?? existing.vat_rate,
     payload.shippingAmountMinor ?? existing.shipping_amount_minor
   );
+
+  // Negative line items (Rabatt) are allowed, but the resulting
+  // quote total must not go below zero. See createQuote.
+  if (totals.totalAmountMinor < 0) {
+    throw new AppError(
+      'Quote total cannot be negative. Reduce the discount amount.',
+      400,
+      'QUOTE_TOTAL_NEGATIVE',
+    );
+  }
 
   return await db.transaction(async (trx) => {
     const updates = {

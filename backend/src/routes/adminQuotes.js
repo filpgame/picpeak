@@ -335,7 +335,11 @@ const QUOTE_BODY_VALIDATORS = [
   body('lineItems').optional({ values: 'falsy' }).isArray(),
   body('lineItems.*.description').optional({ values: 'falsy' }).isString().isLength({ min: 1, max: 1000 }),
   body('lineItems.*.quantity').optional({ values: 'falsy' }).isFloat({ min: 0 }),
-  body('lineItems.*.unitPriceMinor').optional({ values: 'falsy' }).isInt({ min: 0 }),
+  // Negative unit prices are allowed so admins can add manual
+  // discount / Rabatt lines (e.g. "Treuerabatt -50,00 €"). The
+  // service-layer total guard rejects quotes whose net goes below
+  // zero — see quoteService.
+  body('lineItems.*.unitPriceMinor').optional({ values: 'falsy' }).isInt(),
   body('lineItems.*.discountPercent').optional({ values: 'falsy' }).isFloat({ min: 0, max: 100 }),
   // Migration 119: sub-item + details support. Cross-row constraints
   // (parent must exist, max 1 level deep) are enforced by the service
