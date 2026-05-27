@@ -8,6 +8,7 @@ const { requirePermission } = require('../middleware/permissions');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const { encrypt: encryptPassword, isEncryptionAvailable } = require('../utils/passwordEncryption');
 const fs = require('fs').promises;
 const path = require('path');
 const multer = require('multer');
@@ -576,9 +577,20 @@ router.post('/', adminAuth, requirePermission('events.create'), [
     const { shareUrl, shareLinkToStore } = await buildShareLinkVariants({ slug, shareToken });
     
     // Hash password with configurable rounds (random placeholder when not required)
+    const plaintextForEncryption = requirePassword ? password : null;
     const password_hash = requirePassword
       ? await bcrypt.hash(password, getBcryptRounds())
       : await bcrypt.hash(crypto.randomBytes(32).toString('hex'), getBcryptRounds());
+
+    let encryptedPasswordFields = {};
+    if (requirePassword && plaintextForEncryption && isEncryptionAvailable()) {
+      const { encrypted, iv, keyVersion } = encryptPassword(plaintextForEncryption);
+      encryptedPasswordFields = {
+        password_encrypted: encrypted,
+        password_iv: iv,
+        password_key_version: keyVersion,
+      };
+    }
     
     // Calculate expiration date (days after event date)
     // If expiration is not required, expires_at will be null (never expires)
@@ -651,6 +663,7 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       host_email: customerEmail || null,
       admin_email: admin_email || null,
       password_hash,
+      ...encryptedPasswordFields,
       welcome_message,
       color_theme,
       share_link: shareLinkToStore,
