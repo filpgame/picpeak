@@ -297,7 +297,22 @@ export const QuoteResponsePage: React.FC = () => {
               <>
                 <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                   {quote.respondedAt
-                    ? t('quoteResponse.changeWithin', 'You can change your response until {{at}}.', { at: quote.responseLockedAt ? new Date(quote.responseLockedAt).toLocaleTimeString() : '' })
+                    ? t('quoteResponse.changeWithin', 'You can change your response until {{at}}.', (() => {
+                        // Provide both variables so EN ("until {{at}}")
+                        // and DE ("innerhalb von {{minutes}} Minuten")
+                        // each render correctly without needing locale-
+                        // specific call sites. `minutes` rounds UP so a
+                        // 14m 32s remainder shows as "15 Minuten" — never
+                        // promise a number the user can't actually hit.
+                        const lockAt = quote.responseLockedAt ? new Date(quote.responseLockedAt) : null;
+                        const minutes = lockAt
+                          ? Math.max(0, Math.ceil((lockAt.getTime() - Date.now()) / 60000))
+                          : 0;
+                        return {
+                          at: lockAt ? lockAt.toLocaleTimeString() : '',
+                          minutes,
+                        };
+                      })())
                     : t('quoteResponse.intro', 'Please accept or decline this quote:')}
                 </p>
 
