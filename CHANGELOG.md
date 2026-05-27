@@ -5,6 +5,20 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.55.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.7-beta.0...v3.55.0-beta.0) (2026-05-27)
+
+
+### Features
+
+* **lightbox:** multi-photo Web Share save-to-Photos on iOS ([#557](https://github.com/the-luap/picpeak/issues/557)) ([d5823c7](https://github.com/the-luap/picpeak/commit/d5823c79d9a187461c0126adcff7f4374cd0e8aa))
+
+
+### Bug Fixes
+
+* **events:** preserve branding inheritance when saving events with null color_theme ([d5a37df](https://github.com/the-luap/picpeak/commit/d5a37df2c41425511dc8a1f974088bebb768f0d5))
+* **lightbox+events:** Android download lag, multi-photo Web Share re-land, theme branding inheritance ([e016f51](https://github.com/the-luap/picpeak/commit/e016f510b6cc57a9ed1b59e2ee24fedd5d7097c3))
+* **lightbox:** eliminate download lag on Android by skipping the blob round-trip ([0479521](https://github.com/the-luap/picpeak/commit/04795219a0b66fdd1ef73748d803adfdfc0d676f))
+
 ## [3.54.7-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.6-beta.0...v3.54.7-beta.0) (2026-05-26)
 
 
