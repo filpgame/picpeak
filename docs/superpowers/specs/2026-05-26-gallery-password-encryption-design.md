@@ -236,12 +236,129 @@ Also add the three columns to `initializeDatabase()` in `backend/src/database/db
 
 ---
 
+## Setup Script Changes
+
+Both installer scripts must generate `GALLERY_ENCRYPTION_KEY_V1` automatically so new
+installs are encryption-ready without any manual step. Updates must append the key if the
+existing `.env` predates this feature.
+
+### Key generation helper (shared)
+
+Add to `picpeak-setup.sh` alongside the existing `generate_jwt_secret()` function:
+
+```bash
+generate_gallery_encryption_key() {
+    openssl rand -hex 32
+}
+```
+
+`openssl rand -hex 32` produces 64 hex characters = 32 bytes = correct size for AES-256.
+This matches the same `openssl` dependency already required by both scripts.
+
+### `scripts/install.sh` (Docker legacy script)
+
+**Fresh install** — add after the existing `JWT_SECRET` / `DB_PASSWORD` / `UMAMI_HASH_SALT`
+generation block (lines 58–65):
+
+```bash
+# Generate gallery password encryption key
+GALLERY_ENCRYPTION_KEY_V1=$(openssl rand -hex 32)
+sed -i "s/GALLERY_ENCRYPTION_KEY_V1=.*/GALLERY_ENCRYPTION_KEY_V1=$GALLERY_ENCRYPTION_KEY_V1/" .env
+```
+
+Also add `GALLERY_ENCRYPTION_KEY_V1=` placeholder to the `.env.example` file that this
+script copies before applying `sed -i` substitutions.
+
+### `scripts/picpeak-setup.sh` — Fresh Docker install
+
+Inside `setup_docker_installation()`, add key generation alongside the existing secrets:
+
+```bash
+# Generate secrets
+local jwt_secret=$(generate_jwt_secret)
+local db_password=$(generate_password)
+local redis_password=$(generate_password)
+local gallery_key=$(generate_gallery_encryption_key)   # NEW
+```
+
+Add to the `.env` heredoc (after `JWT_SECRET` line):
+
+```bash
+# Gallery password encryption (AES-256-GCM)
+# Rotate: add GALLERY_ENCRYPTION_KEY_V2 with a new key; increment continues decrypting V1 data.
+GALLERY_ENCRYPTION_KEY_V1=$gallery_key
+```
+
+### `scripts/picpeak-setup.sh` — Fresh Native install
+
+Inside `setup_native_installation()`, add key generation alongside the existing `jwt_secret`:
+
+```bash
+local jwt_secret=$(generate_jwt_secret)
+local gallery_key=$(generate_gallery_encryption_key)   # NEW
+```
+
+Add to the `.env` heredoc:
+
+```bash
+# Gallery password encryption (AES-256-GCM)
+GALLERY_ENCRYPTION_KEY_V1=$gallery_key
+```
+
+### `scripts/picpeak-setup.sh` — Update Docker install
+
+Inside `update_docker_installation()`, after `cp .env .env.backup-...` and before
+`docker compose up -d`, add:
+
+```bash
+# Inject gallery encryption key if this .env predates the feature
+if ! grep -q '^GALLERY_ENCRYPTION_KEY_V1=' .env; then
+    local gallery_key
+    gallery_key=$(generate_gallery_encryption_key)
+    echo "" >> .env
+    echo "# Gallery password encryption (AES-256-GCM)" >> .env
+    echo "GALLERY_ENCRYPTION_KEY_V1=$gallery_key" >> .env
+    log_success "Generated GALLERY_ENCRYPTION_KEY_V1 (new feature — existing events use sentinel fallback)"
+fi
+```
+
+### `scripts/picpeak-setup.sh` — Update Native install
+
+Inside `update_native_installation()`, after the existing append-if-missing block for
+`SERVE_FRONTEND` / `FRONTEND_DIR` (lines ~1300–1315), add:
+
+```bash
+if ! grep -q '^GALLERY_ENCRYPTION_KEY_V1=' "$NATIVE_APP_DIR/app/backend/.env"; then
+    local gallery_key
+    gallery_key=$(generate_gallery_encryption_key)
+    echo "" >> "$NATIVE_APP_DIR/app/backend/.env"
+    echo "# Gallery password encryption (AES-256-GCM)" >> "$NATIVE_APP_DIR/app/backend/.env"
+    echo "GALLERY_ENCRYPTION_KEY_V1=$gallery_key" >> "$NATIVE_APP_DIR/app/backend/.env"
+    log_success "Generated GALLERY_ENCRYPTION_KEY_V1 (new feature — existing events use sentinel fallback)"
+fi
+```
+
+### Behaviour summary
+
+| Scenario | Result |
+|---|---|
+| Fresh Docker install | Key generated + written to `.env` |
+| Fresh Native install | Key generated + written to `.env` |
+| Update — key already present | No change (existing key preserved — existing encrypted passwords remain decryptable) |
+| Update — key absent (pre-feature) | Key generated + appended; existing events fall back to sentinel on resend |
+| `install.sh` fresh | Key generated + substituted into `.env` via `sed -i` |
+
+---
+
 ## CLAUDE.md Addition
 
 Add to the `.env` section:
 ```
 # Gallery password encryption (AES-256-GCM)
-# Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Generated automatically by picpeak-setup.sh on install/update.
+# To rotate: add GALLERY_ENCRYPTION_KEY_V2=<new 64-char hex> — system uses highest version
+# for new encryptions and falls back to older versions for existing data.
+# Generate manually: openssl rand -hex 32
 GALLERY_ENCRYPTION_KEY_V1=<64-char hex>
 ```
 
@@ -259,3 +376,5 @@ GALLERY_ENCRYPTION_KEY_V1=<64-char hex>
 | `frontend/src/types/index.ts` | Add `has_encrypted_password?: boolean` to `Event` |
 | `frontend/src/pages/admin/EventDetailsPage.tsx` | Hide password field when `has_encrypted_password` |
 | `CLAUDE.md` | Document `GALLERY_ENCRYPTION_KEY_V*` env var |
+| `scripts/install.sh` | Generate + inject `GALLERY_ENCRYPTION_KEY_V1` |
+| `scripts/picpeak-setup.sh` | Add `generate_gallery_encryption_key()`, inject in all 4 paths |
