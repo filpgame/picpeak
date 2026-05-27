@@ -5,6 +5,13 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.2-beta.0](https://github.com/filpgame/picpeak/compare/v4.1.1-beta.0...v4.1.2-beta.0) (2026-05-27)
+
+
+### Bug Fixes
+
+* **email:** event emails always sent in English ignoring system language ([#5](https://github.com/filpgame/picpeak/issues/5)) ([b455135](https://github.com/filpgame/picpeak/commit/b455135283b3535e81c468b6fbfecfe53ce9ffbd))
+
 ## [4.1.1-beta.0](https://github.com/filpgame/picpeak/compare/v4.1.0-beta.0...v4.1.1-beta.0) (2026-05-24)
 
 
