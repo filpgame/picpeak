@@ -370,6 +370,9 @@ export const EventDetailsPage: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<{ photo: AdminPhoto; index: number } | null>(null);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showResendEmailModal, setShowResendEmailModal] = useState(false);
+  const [resendEmailPassword, setResendEmailPassword] = useState('');
+  const [resendEmailLoading, setResendEmailLoading] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<ThemeConfig | null>(null);
@@ -1955,13 +1958,9 @@ export const EventDetailsPage: React.FC = () => {
                   variant="outline"
                   size="sm"
                   leftIcon={<Mail className="w-4 h-4" />}
-                  onClick={async () => {
-                    try {
-                      await eventsService.resendCreationEmail(event.id);
-                      toast.success(t('events.creationEmailResent'));
-                    } catch {
-                      toast.error(t('events.failedToResendEmail'));
-                    }
+                  onClick={() => {
+                    setResendEmailPassword('');
+                    setShowResendEmailModal(true);
                   }}
                   className="w-full justify-center"
                 >
@@ -2495,6 +2494,64 @@ export const EventDetailsPage: React.FC = () => {
           }}
           onClose={() => setShowPasswordReset(false)}
         />
+      )}
+
+      {/* Resend Creation Email Modal */}
+      {showResendEmailModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                {t('events.resendCreationEmail')}
+              </h2>
+              <button onClick={() => setShowResendEmailModal(false)} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {event.require_password && !event.has_encrypted_password && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  {t('events.resendEmailPasswordLabel', 'Gallery password (optional)')}
+                </label>
+                <input
+                  type="text"
+                  value={resendEmailPassword}
+                  onChange={(e) => setResendEmailPassword(e.target.value)}
+                  placeholder={t('events.resendEmailPasswordPlaceholder', 'Enter password to include in email')}
+                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  {t('events.resendEmailPasswordHint', 'If left blank, the email will say the password is not shown for security reasons.')}
+                </p>
+              </div>
+            )}
+            <div className="flex gap-3 justify-end">
+              <Button variant="ghost" size="sm" onClick={() => setShowResendEmailModal(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                isLoading={resendEmailLoading}
+                leftIcon={<Mail className="w-4 h-4" />}
+                onClick={async () => {
+                  setResendEmailLoading(true);
+                  try {
+                    await eventsService.resendCreationEmail(event.id, resendEmailPassword || undefined);
+                    toast.success(t('events.creationEmailResent'));
+                    setShowResendEmailModal(false);
+                  } catch {
+                    toast.error(t('events.failedToResendEmail'));
+                  } finally {
+                    setResendEmailLoading(false);
+                  }
+                }}
+              >
+                {t('events.sendEmail', 'Send email')}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* External Import Modal */}
