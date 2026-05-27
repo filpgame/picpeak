@@ -171,7 +171,8 @@ router.post('/', adminAuth, [
       share_link: shareLinkToStore,
       share_token: shareToken,
       expires_at,
-      require_password: formatBoolean(requirePassword)
+      require_password: formatBoolean(requirePassword),
+      language: null,
     }).returning('id');
     
     // Handle both PostgreSQL (returns array of objects) and SQLite (returns array of IDs)

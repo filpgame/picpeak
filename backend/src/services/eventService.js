@@ -211,7 +211,9 @@ const createEvent = async (eventData) => {
     allow_user_uploads: allow_user_uploads !== undefined ? formatBoolean(allow_user_uploads) : undefined,
     upload_category_id: upload_category_id || null,
     // Photo cap
-    photo_cap: photo_cap || null
+    photo_cap: photo_cap || null,
+    // Null = use system default (general_default_language)
+    language: null,
   };
 
   // Remove undefined values

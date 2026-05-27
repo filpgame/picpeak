@@ -176,7 +176,8 @@ router.post(
         is_draft: false,
         ...(customer_name ? { customer_name } : {}),
         ...(customer_email ? { customer_email } : {}),
-        ...(persistPhone ? { customer_phone: persistPhone } : {})
+        ...(persistPhone ? { customer_phone: persistPhone } : {}),
+        language: null,
       }).returning('id');
       const id = insertResult[0]?.id || insertResult[0];
 

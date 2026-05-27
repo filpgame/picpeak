@@ -8,6 +8,7 @@ const { requirePermission } = require('../middleware/permissions');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const { encrypt: encryptPassword, decrypt: decryptPassword, isEncryptionAvailable } = require('../utils/passwordEncryption');
 const fs = require('fs').promises;
 const path = require('path');
 const multer = require('multer');
@@ -223,6 +224,9 @@ const mapEventForApi = (event) => {
     customer_phone,
     password_hash: _ph,
     client_password_hash: _cph,
+    password_encrypted: _pe,
+    password_iv: _piv,
+    password_key_version: _pkv,
     ...rest
   } = event;
 
@@ -230,7 +234,8 @@ const mapEventForApi = (event) => {
     ...rest,
     customer_name: customer_name ?? host_name ?? null,
     customer_email: customer_email ?? host_email ?? null,
-    customer_phone: customer_phone ?? null
+    customer_phone: customer_phone ?? null,
+    has_encrypted_password: !!event.password_encrypted,
   };
 };
 
@@ -572,9 +577,20 @@ router.post('/', adminAuth, requirePermission('events.create'), [
     const { shareUrl, shareLinkToStore } = await buildShareLinkVariants({ slug, shareToken });
     
     // Hash password with configurable rounds (random placeholder when not required)
+    const plaintextForEncryption = requirePassword ? password : null;
     const password_hash = requirePassword
       ? await bcrypt.hash(password, getBcryptRounds())
       : await bcrypt.hash(crypto.randomBytes(32).toString('hex'), getBcryptRounds());
+
+    let encryptedPasswordFields = {};
+    if (requirePassword && plaintextForEncryption && isEncryptionAvailable()) {
+      const { encrypted, iv, keyVersion } = encryptPassword(plaintextForEncryption);
+      encryptedPasswordFields = {
+        password_encrypted: encrypted,
+        password_iv: iv,
+        password_key_version: keyVersion,
+      };
+    }
     
     // Calculate expiration date (days after event date)
     // If expiration is not required, expires_at will be null (never expires)
@@ -647,6 +663,7 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       host_email: customerEmail || null,
       admin_email: admin_email || null,
       password_hash,
+      ...encryptedPasswordFields,
       welcome_message,
       color_theme,
       share_link: shareLinkToStore,
@@ -683,6 +700,10 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       // false on create — admin opts in from the event detail page once
       // they've picked a hero they're comfortable surfacing publicly.
       og_image_share_enabled: formatBoolean(req.body.og_image_share_enabled === true),
+      // Null = use system default (general_default_language). The column has a
+      // DB-level default of 'en' which bypasses the system setting, so we
+      // always set it explicitly here.
+      language: null,
     }).returning('id');
     
     // Handle both PostgreSQL (returns array of objects) and SQLite (returns array of IDs)
@@ -1063,6 +1084,16 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
       const frontendBase = await getFrontendBaseUrl();
       const { shareUrl } = await buildShareLinkVariants({ slug: event.slug, shareToken: event.share_token });
 
+      // Determine gallery password for publish email:
+      // 1. Auto-decrypt AES-GCM ciphertext if available
+      // 2. Sentinel fallback for events created before encryption feature
+      let publishGalleryPassword = '{{password_security_message}}';
+      if (!parseBooleanInput(event.require_password, true)) {
+        publishGalleryPassword = 'No password required';
+      } else if (event.password_encrypted && event.password_iv && isEncryptionAvailable()) {
+        publishGalleryPassword = decryptPassword(event.password_encrypted, event.password_iv, event.password_key_version ?? 1);
+      }
+
       const emailData = {
         customer_name: customerName,
         customer_email: customerEmail,
@@ -1070,7 +1101,7 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
         event_name: event.event_name,
         event_date: event.event_date,
         gallery_link: shareUrl || `${frontendBase}/gallery/${event.slug}`,
-        gallery_password: parseBooleanInput(event.require_password, true) ? '(set at creation)' : 'No password required',
+        gallery_password: publishGalleryPassword,
         expiry_date: event.expires_at ? new Date(event.expires_at).toISOString() : null,
         welcome_message: event.welcome_message || ''
       };
@@ -1095,7 +1126,9 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
           customer_name: event.customer_name || event.host_name || '',
           event_name: event.event_name,
           gallery_link: waShareUrl,
-          gallery_password: event.require_password ? '(set at creation)' : '',
+          gallery_password: (event.password_encrypted && event.password_iv && isEncryptionAvailable())
+            ? decryptPassword(event.password_encrypted, event.password_iv, event.password_key_version ?? 1)
+            : (event.require_password ? '{{password_security_message}}' : ''),
           expiry_date: event.expires_at || null,
           language: event.language || null,
         });
@@ -1358,8 +1391,23 @@ router.put('/:id', adminAuth, requirePermission('events.edit'), requireEventOwne
 
     if (newPasswordPlain) {
       updates.password_hash = await bcrypt.hash(newPasswordPlain, getBcryptRounds());
+      if (isEncryptionAvailable()) {
+        const { encrypted, iv, keyVersion } = encryptPassword(newPasswordPlain);
+        updates.password_encrypted = encrypted;
+        updates.password_iv = iv;
+        updates.password_key_version = keyVersion;
+      } else {
+        // Key not available — clear any stale ciphertext so a future resend
+        // cannot decrypt an outdated password after the key is restored.
+        updates.password_encrypted = null;
+        updates.password_iv = null;
+        updates.password_key_version = null;
+      }
     } else if (hasRequirePasswordUpdate && requirePasswordUpdate === false && currentRequirePassword) {
       updates.password_hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), getBcryptRounds());
+      updates.password_encrypted = null;
+      updates.password_iv = null;
+      updates.password_key_version = null;
     }
 
     // Enforce expires_at requirement based on app settings
@@ -1577,11 +1625,26 @@ router.post('/:id/reset-password', adminAuth, requirePermission('events.edit'), 
     }
     const passwordHash = await bcrypt.hash(newPassword, getBcryptRounds());
 
+    const resetEncryptedFields = {};
+    if (isEncryptionAvailable()) {
+      const { encrypted, iv, keyVersion } = encryptPassword(newPassword);
+      resetEncryptedFields.password_encrypted = encrypted;
+      resetEncryptedFields.password_iv = iv;
+      resetEncryptedFields.password_key_version = keyVersion;
+    } else {
+      // Key not available — clear any stale ciphertext so a future resend
+      // cannot decrypt an outdated password after the key is restored.
+      resetEncryptedFields.password_encrypted = null;
+      resetEncryptedFields.password_iv = null;
+      resetEncryptedFields.password_key_version = null;
+    }
+
     // Update event with new password
     await db('events')
       .where('id', id)
       .update({
-        password_hash: passwordHash
+        password_hash: passwordHash,
+        ...resetEncryptedFields,
       });
 
     // Log activity
@@ -1646,16 +1709,20 @@ router.post('/:id/resend-email', adminAuth, requirePermission('events.edit'), re
     // 4. Domain-based detection
     // So we don't need to determine it here
     
-    // For resending creation email, we need the actual password
-    // First, try to get it from the request body if provided
-    // Use optional chaining to handle cases where req.body might be undefined
-    let galleryPassword = req.body?.password;
-    
-    // If no password provided, we can't decrypt the existing one
-    // So we'll show a security message
-    if (!galleryPassword) {
-      // We'll let the email processor determine the language for the security message
-      galleryPassword = '{{password_security_message}}';
+    // Determine gallery password for the email:
+    // 1. Auto-decrypt if the event has AES-GCM ciphertext stored
+    // 2. Fall back to manually-provided password from request body (legacy events)
+    // 3. Fall back to sentinel (pre-encryption events with no password in body)
+    let galleryPassword = '{{password_security_message}}';
+
+    if (event.password_encrypted && event.password_iv && isEncryptionAvailable()) {
+      galleryPassword = decryptPassword(
+        event.password_encrypted,
+        event.password_iv,
+        event.password_key_version ?? 1
+      );
+    } else if (req.body?.password) {
+      galleryPassword = req.body.password;
     }
     
     // Dates will be formatted by the email processor based on recipient language

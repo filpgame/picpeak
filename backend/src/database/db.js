@@ -97,6 +97,10 @@ async function initializeDatabase() {
       // (#484, MrGabri's reproduction.)
       table.integer('hero_photo_id');
       table.boolean('require_password').defaultTo(true);
+      table.string('language', 5).defaultTo(null);
+      table.text('password_encrypted').nullable();
+      table.text('password_iv').nullable();
+      table.integer('password_key_version').nullable().defaultTo(1);
     });
   } else {
     // Check if color_theme needs to be updated to TEXT type
@@ -391,6 +395,7 @@ async function initializeDatabase() {
       table.string('smtp_pass');
       table.string('from_email').notNullable();
       table.string('from_name');
+      table.string('default_language', 5).defaultTo('en');
       table.datetime('updated_at').defaultTo(db.fn.now());
     });
   }
