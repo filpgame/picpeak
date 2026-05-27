@@ -183,6 +183,10 @@ generate_jwt_secret() {
     openssl rand -base64 64 | tr -d "\n"
 }
 
+generate_gallery_encryption_key() {
+    openssl rand -hex 32
+}
+
 get_available_ram_mb() {
     # Prefer /proc/meminfo (always available on Linux), fallback to free(1)
     if [[ -r /proc/meminfo ]]; then
@@ -453,7 +457,8 @@ setup_docker_installation() {
     local jwt_secret=$(generate_jwt_secret)
     local db_password=$(generate_password)
     local redis_password=$(generate_password)
-    
+    local gallery_key=$(generate_gallery_encryption_key)
+
     # Create .env file
     log_step "Creating configuration..."
     cat > "$app_dir/.env" <<EOF
@@ -464,6 +469,10 @@ setup_docker_installation() {
 NODE_ENV=production
 PORT=3001
 JWT_SECRET=$jwt_secret
+
+# Gallery password encryption (AES-256-GCM)
+# Rotate: add GALLERY_ENCRYPTION_KEY_V2 with a new key; system uses highest version.
+GALLERY_ENCRYPTION_KEY_V1=$gallery_key
 
 # Admin
 ADMIN_EMAIL=$ADMIN_EMAIL
@@ -816,7 +825,8 @@ setup_native_installation() {
     
     # Generate secrets
     local jwt_secret=$(generate_jwt_secret)
-    
+    local gallery_key=$(generate_gallery_encryption_key)
+
     # Create .env file
     log_step "Creating configuration..."
     cat > "$NATIVE_APP_DIR/app/backend/.env" <<EOF
@@ -827,6 +837,9 @@ setup_native_installation() {
 NODE_ENV=production
 PORT=${CUSTOM_PORT:-$DEFAULT_PORT}
 JWT_SECRET=$jwt_secret
+
+# Gallery password encryption (AES-256-GCM)
+GALLERY_ENCRYPTION_KEY_V1=$gallery_key
 
 # Admin
 ADMIN_USERNAME=admin
@@ -1219,7 +1232,17 @@ update_docker_installation() {
     
     # Backup current configuration
     cp .env .env.backup-$(date +%Y%m%d-%H%M%S)
-    
+
+    # Inject gallery encryption key if this .env predates the feature
+    if ! grep -q '^GALLERY_ENCRYPTION_KEY_V1=' .env; then
+        local gallery_key
+        gallery_key=$(generate_gallery_encryption_key)
+        echo "" >> .env
+        echo "# Gallery password encryption (AES-256-GCM)" >> .env
+        echo "GALLERY_ENCRYPTION_KEY_V1=$gallery_key" >> .env
+        log_success "Generated GALLERY_ENCRYPTION_KEY_V1 (existing events use sentinel fallback)"
+    fi
+
     # Pull latest code
     git pull
 
@@ -1302,6 +1325,14 @@ update_native_installation() {
     fi
     if ! grep -q '^FRONTEND_DIR=' "$NATIVE_APP_DIR/app/backend/.env"; then
       echo "FRONTEND_DIR=$NATIVE_APP_DIR/app/frontend/dist" >> "$NATIVE_APP_DIR/app/backend/.env"
+    fi
+    if ! grep -q '^GALLERY_ENCRYPTION_KEY_V1=' "$NATIVE_APP_DIR/app/backend/.env"; then
+        local gallery_key
+        gallery_key=$(generate_gallery_encryption_key)
+        echo "" >> "$NATIVE_APP_DIR/app/backend/.env"
+        echo "# Gallery password encryption (AES-256-GCM)" >> "$NATIVE_APP_DIR/app/backend/.env"
+        echo "GALLERY_ENCRYPTION_KEY_V1=$gallery_key" >> "$NATIVE_APP_DIR/app/backend/.env"
+        log_success "Generated GALLERY_ENCRYPTION_KEY_V1 (existing events use sentinel fallback)"
     fi
 
     ensure_storage_layout "$NATIVE_APP_DIR"
