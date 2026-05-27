@@ -68,39 +68,49 @@ export const galleryService = {
   },
 
   // Save single photo. iOS routes through the Web Share API so the
-  // share sheet's "Save Image" action lands the file in Photos;
-  // everywhere else (Android, desktop) uses a regular <a download>
-  // because their share sheets don't expose a save-to-gallery
-  // action — #531 originally extended this to "all mobile with
-  // canShare", which surfaced a useless app-picker on Android (#554).
+  // share sheet's "Save Image" action lands the file in Photos.
+  // Everywhere else (Android, desktop) navigates a hidden anchor
+  // straight at the download URL — the browser's native download UI
+  // shows up immediately and its progress lives in the notification
+  // shade. Buffering the blob through fetch first (the original
+  // path) added ~5s of dead air on cellular before any visible
+  // feedback, prompting users to re-click and produce duplicate
+  // downloads (#554 follow-up). Direct navigation eliminates the
+  // latency outright rather than masking it with a spinner.
   async savePhotoToDevice(slug: string, photoId: number, filename: string): Promise<void> {
+    if (!isIOS()) {
+      this.triggerDirectDownload(
+        api.getUri({ url: `/gallery/${slug}/download/${photoId}` }),
+        filename,
+      );
+      return;
+    }
+
     const fetched = await this.fetchPhotoBlob(slug, photoId);
     const resolvedFilename = fetched.serverFilename || filename;
 
-    if (isIOS()) {
-      // canShare() returns false on browsers without Web Share file
-      // support. Probe with a representative File so the negotiation
-      // is accurate — `canShare({ files: [] })` returns true on some
-      // browsers that don't actually accept files at share() time.
-      const file = new File([fetched.blob], resolvedFilename, {
-        type: fetched.blob.type || 'image/jpeg',
-      });
-      const canShareFile =
-        typeof navigator !== 'undefined' &&
-        typeof navigator.canShare === 'function' &&
-        navigator.canShare({ files: [file] });
+    // canShare() returns false on browsers without Web Share file
+    // support. Probe with a representative File so the negotiation
+    // is accurate — `canShare({ files: [] })` returns true on some
+    // browsers that don't actually accept files at share() time.
+    const file = new File([fetched.blob], resolvedFilename, {
+      type: fetched.blob.type || 'image/jpeg',
+    });
+    const canShareFile =
+      typeof navigator !== 'undefined' &&
+      typeof navigator.canShare === 'function' &&
+      navigator.canShare({ files: [file] });
 
-      if (canShareFile) {
-        try {
-          await navigator.share({ files: [file], title: resolvedFilename });
-          return;
-        } catch (err) {
-          // AbortError = user dismissed the share sheet. Don't fall back —
-          // they made a choice. Any other failure (NotAllowedError,
-          // DataError, etc.) is unexpected; surface a download instead so
-          // the user still gets the file.
-          if ((err as DOMException)?.name === 'AbortError') return;
-        }
+    if (canShareFile) {
+      try {
+        await navigator.share({ files: [file], title: resolvedFilename });
+        return;
+      } catch (err) {
+        // AbortError = user dismissed the share sheet. Don't fall back —
+        // they made a choice. Any other failure (NotAllowedError,
+        // DataError, etc.) is unexpected; surface a download instead so
+        // the user still gets the file.
+        if ((err as DOMException)?.name === 'AbortError') return;
       }
     }
 
@@ -155,6 +165,21 @@ export const galleryService = {
     link.click();
     link.remove();
     window.URL.revokeObjectURL(url);
+  },
+
+  // Trigger a browser-native download by navigating a hidden anchor at
+  // the URL directly. The browser fetches the response itself (showing
+  // its own progress UI), so unlike triggerBrowserDownload the JS layer
+  // never materialises the bytes. `filename` is a hint; the server's
+  // Content-Disposition wins per spec, which is what carries the #493
+  // original-camera-filename setting through to disk.
+  triggerDirectDownload(href: string, filename: string): void {
+    const link = document.createElement('a');
+    link.href = href;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   },
 
   // Download single photo — kept as the canonical name for the existing
