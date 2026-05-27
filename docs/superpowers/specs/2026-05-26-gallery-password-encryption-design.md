@@ -56,7 +56,7 @@ preserved (sentinel fallback on resend).
 ### Environment Variables
 
 ```bash
-# Required for encryption. Generate with: node -e "require('crypto').randomBytes(32).toString('hex')|console.log"
+# Required for encryption. Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 GALLERY_ENCRYPTION_KEY_V1=<64-char hex string>
 
 # Future key rotation: add _V2, _V3, etc. System uses highest-numbered key present.

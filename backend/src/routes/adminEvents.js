@@ -1396,6 +1396,12 @@ router.put('/:id', adminAuth, requirePermission('events.edit'), requireEventOwne
         updates.password_encrypted = encrypted;
         updates.password_iv = iv;
         updates.password_key_version = keyVersion;
+      } else {
+        // Key not available — clear any stale ciphertext so a future resend
+        // cannot decrypt an outdated password after the key is restored.
+        updates.password_encrypted = null;
+        updates.password_iv = null;
+        updates.password_key_version = null;
       }
     } else if (hasRequirePasswordUpdate && requirePasswordUpdate === false && currentRequirePassword) {
       updates.password_hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), getBcryptRounds());
@@ -1625,6 +1631,12 @@ router.post('/:id/reset-password', adminAuth, requirePermission('events.edit'), 
       resetEncryptedFields.password_encrypted = encrypted;
       resetEncryptedFields.password_iv = iv;
       resetEncryptedFields.password_key_version = keyVersion;
+    } else {
+      // Key not available — clear any stale ciphertext so a future resend
+      // cannot decrypt an outdated password after the key is restored.
+      resetEncryptedFields.password_encrypted = null;
+      resetEncryptedFields.password_iv = null;
+      resetEncryptedFields.password_key_version = null;
     }
 
     // Update event with new password

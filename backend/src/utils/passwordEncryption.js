@@ -23,8 +23,8 @@ function _getKey(version) {
   if (!hex) {
     throw new Error(`GALLERY_ENCRYPTION_KEY_V${version} is not set`);
   }
-  if (hex.length !== 64) {
-    throw new Error(`GALLERY_ENCRYPTION_KEY_V${version} must be 64 hex characters (32 bytes)`);
+  if (!/^[0-9a-fA-F]{64}$/.test(hex)) {
+    throw new Error(`GALLERY_ENCRYPTION_KEY_V${version} must be exactly 64 hex characters (32 bytes)`);
   }
   return Buffer.from(hex, 'hex');
 }
