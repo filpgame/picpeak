@@ -1084,6 +1084,16 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
       const frontendBase = await getFrontendBaseUrl();
       const { shareUrl } = await buildShareLinkVariants({ slug: event.slug, shareToken: event.share_token });
 
+      // Determine gallery password for publish email:
+      // 1. Auto-decrypt AES-GCM ciphertext if available
+      // 2. Sentinel fallback for events created before encryption feature
+      let publishGalleryPassword = '{{password_security_message}}';
+      if (!parseBooleanInput(event.require_password, true)) {
+        publishGalleryPassword = 'No password required';
+      } else if (event.password_encrypted && event.password_iv && isEncryptionAvailable()) {
+        publishGalleryPassword = decryptPassword(event.password_encrypted, event.password_iv, event.password_key_version ?? 1);
+      }
+
       const emailData = {
         customer_name: customerName,
         customer_email: customerEmail,
@@ -1091,7 +1101,7 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
         event_name: event.event_name,
         event_date: event.event_date,
         gallery_link: shareUrl || `${frontendBase}/gallery/${event.slug}`,
-        gallery_password: parseBooleanInput(event.require_password, true) ? '(set at creation)' : 'No password required',
+        gallery_password: publishGalleryPassword,
         expiry_date: event.expires_at ? new Date(event.expires_at).toISOString() : null,
         welcome_message: event.welcome_message || ''
       };
@@ -1116,7 +1126,9 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
           customer_name: event.customer_name || event.host_name || '',
           event_name: event.event_name,
           gallery_link: waShareUrl,
-          gallery_password: event.require_password ? '(set at creation)' : '',
+          gallery_password: (event.password_encrypted && event.password_iv && isEncryptionAvailable())
+            ? decryptPassword(event.password_encrypted, event.password_iv, event.password_key_version ?? 1)
+            : (event.require_password ? '{{password_security_message}}' : ''),
           expiry_date: event.expires_at || null,
           language: event.language || null,
         });
