@@ -29,6 +29,7 @@ const { claimNextSequence } = require('../utils/documentSequences');
 const { formatShortDate } = require('../utils/dateFormatter');
 const businessProfileService = require('./businessProfileService');
 const { buildIssuerBlock, buildRecipientBlock } = require('./_renderContext');
+const { resolveBillingRecipients } = require('./_billingRecipients');
 const pdfService = require('./pdfService');
 const emailProcessor = require('./emailProcessor');
 // Migration 119 line-item hierarchy helpers, shared with quoteService.
@@ -1880,7 +1881,8 @@ async function sendInvoice(id, adminId) {
     status: newStatus, sent_at: new Date(), pdf_path: pdfPath, updated_at: new Date(),
   });
 
-  await emailProcessor.queueEmail(invoice.event_id || null, customer.email, 'invoice_sent', {
+  const { to: invoiceTo, cc: invoiceCc } = resolveBillingRecipients(customer, invoice.cc_pdf_email);
+  await emailProcessor.queueEmail(invoice.event_id || null, invoiceTo, 'invoice_sent', {
     invoice_number: invoice.invoice_number,
     customer_name: customer.display_name || customer.first_name || customer.email.split('@')[0],
     event_name: invoice.event_name || '',
@@ -1889,7 +1891,7 @@ async function sendInvoice(id, adminId) {
     installment_label: invoice.installment_label || '',
     installment_index: invoice.installment_index + 1,
     installment_total: invoice.installment_total,
-    cc: invoice.cc_pdf_email || undefined,
+    cc: invoiceCc,
     attachments: [{
       filename: `${invoice.invoice_number}.pdf`,
       contentPath: pdfPath,
@@ -2200,13 +2202,14 @@ async function sendStorno(stornoId, adminId) {
         .select('invoice_number', 'issue_date').first()
     : null;
 
-  await emailProcessor.queueEmail(storno.event_id || null, customer.email, 'storno_issued', {
+  const { to: stornoTo, cc: stornoCc } = resolveBillingRecipients(customer, storno.cc_pdf_email);
+  await emailProcessor.queueEmail(storno.event_id || null, stornoTo, 'storno_issued', {
     storno_number: storno.invoice_number,
     original_invoice_number: originalRow?.invoice_number || '',
     original_issue_date: originalRow?.issue_date ? formatShortDate(originalRow.issue_date) : '',
     customer_name: customer.display_name || customer.first_name || customer.email.split('@')[0],
     total_amount: formatMajor(Math.abs(storno.total_amount_minor), storno.currency, ctx.locale),
-    cc: storno.cc_pdf_email || undefined,
+    cc: stornoCc,
     attachments: [{
       filename: `${storno.invoice_number}.pdf`,
       contentPath: pdfPath,
@@ -2511,7 +2514,8 @@ async function applyReminder(invoice, lineItems, level, adminId) {
     + Number(lateFeeMinor || 0)
     - Number(invoice.paid_amount_minor || 0));
 
-  await emailProcessor.queueEmail(invoice.event_id || null, customer.email, templateKey, {
+  const { to: reminderTo, cc: reminderCc } = resolveBillingRecipients(customer, invoice.cc_pdf_email);
+  await emailProcessor.queueEmail(invoice.event_id || null, reminderTo, templateKey, {
     invoice_number: invoice.invoice_number,
     customer_name: customer.display_name || customer.first_name || customer.email.split('@')[0],
     total_amount: formatMajor(invoice.total_amount_minor, invoice.currency, ctx.locale),
@@ -2523,7 +2527,7 @@ async function applyReminder(invoice, lineItems, level, adminId) {
     // (matches the quote_sent + invoice_sent templates).
     due_date: formatShortDate(invoice.due_date),
     days_overdue: daysOverdue,
-    cc: invoice.cc_pdf_email || undefined,
+    cc: reminderCc,
     attachments: [{
       filename: `${invoice.invoice_number}.pdf`,
       contentPath: pdfPath,
