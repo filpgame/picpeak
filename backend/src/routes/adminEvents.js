@@ -1379,8 +1379,17 @@ router.put('/:id', adminAuth, requirePermission('events.edit'), requireEventOwne
 
     if (newPasswordPlain) {
       updates.password_hash = await bcrypt.hash(newPasswordPlain, getBcryptRounds());
+      if (isEncryptionAvailable()) {
+        const { encrypted, iv, keyVersion } = encryptPassword(newPasswordPlain);
+        updates.password_encrypted = encrypted;
+        updates.password_iv = iv;
+        updates.password_key_version = keyVersion;
+      }
     } else if (hasRequirePasswordUpdate && requirePasswordUpdate === false && currentRequirePassword) {
       updates.password_hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), getBcryptRounds());
+      updates.password_encrypted = null;
+      updates.password_iv = null;
+      updates.password_key_version = null;
     }
 
     // Enforce expires_at requirement based on app settings
@@ -1598,11 +1607,20 @@ router.post('/:id/reset-password', adminAuth, requirePermission('events.edit'), 
     }
     const passwordHash = await bcrypt.hash(newPassword, getBcryptRounds());
 
+    const resetEncryptedFields = {};
+    if (isEncryptionAvailable()) {
+      const { encrypted, iv, keyVersion } = encryptPassword(newPassword);
+      resetEncryptedFields.password_encrypted = encrypted;
+      resetEncryptedFields.password_iv = iv;
+      resetEncryptedFields.password_key_version = keyVersion;
+    }
+
     // Update event with new password
     await db('events')
       .where('id', id)
       .update({
-        password_hash: passwordHash
+        password_hash: passwordHash,
+        ...resetEncryptedFields,
       });
 
     // Log activity
