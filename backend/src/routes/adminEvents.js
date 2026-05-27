@@ -223,6 +223,9 @@ const mapEventForApi = (event) => {
     customer_phone,
     password_hash: _ph,
     client_password_hash: _cph,
+    password_encrypted: _pe,
+    password_iv: _piv,
+    password_key_version: _pkv,
     ...rest
   } = event;
 
@@ -230,7 +233,8 @@ const mapEventForApi = (event) => {
     ...rest,
     customer_name: customer_name ?? host_name ?? null,
     customer_email: customer_email ?? host_email ?? null,
-    customer_phone: customer_phone ?? null
+    customer_phone: customer_phone ?? null,
+    has_encrypted_password: !!event.password_encrypted,
   };
 };
 
