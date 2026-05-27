@@ -8,7 +8,7 @@ const { requirePermission } = require('../middleware/permissions');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const { encrypt: encryptPassword, isEncryptionAvailable } = require('../utils/passwordEncryption');
+const { encrypt: encryptPassword, decrypt: decryptPassword, isEncryptionAvailable } = require('../utils/passwordEncryption');
 const fs = require('fs').promises;
 const path = require('path');
 const multer = require('multer');
@@ -1685,16 +1685,20 @@ router.post('/:id/resend-email', adminAuth, requirePermission('events.edit'), re
     // 4. Domain-based detection
     // So we don't need to determine it here
     
-    // For resending creation email, we need the actual password
-    // First, try to get it from the request body if provided
-    // Use optional chaining to handle cases where req.body might be undefined
-    let galleryPassword = req.body?.password;
-    
-    // If no password provided, we can't decrypt the existing one
-    // So we'll show a security message
-    if (!galleryPassword) {
-      // We'll let the email processor determine the language for the security message
-      galleryPassword = '{{password_security_message}}';
+    // Determine gallery password for the email:
+    // 1. Auto-decrypt if the event has AES-GCM ciphertext stored
+    // 2. Fall back to manually-provided password from request body (legacy events)
+    // 3. Fall back to sentinel (pre-encryption events with no password in body)
+    let galleryPassword = '{{password_security_message}}';
+
+    if (event.password_encrypted && event.password_iv && isEncryptionAvailable()) {
+      galleryPassword = decryptPassword(
+        event.password_encrypted,
+        event.password_iv,
+        event.password_key_version ?? 1
+      );
+    } else if (req.body?.password) {
+      galleryPassword = req.body.password;
     }
     
     // Dates will be formatted by the email processor based on recipient language
