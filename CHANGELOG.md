@@ -5,6 +5,24 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.1.2-beta.0...v4.2.0-beta.0) (2026-05-28)
+
+
+### Features
+
+* **encryption:** wire up resend-email modal and Docker env ([08fd721](https://github.com/filpgame/picpeak/commit/08fd721102d92bd9986585c40ace6910c5d7c270))
+* **encryption:** wire up resend-email modal and Docker env ([24c7c55](https://github.com/filpgame/picpeak/commit/24c7c5566fe7f7af0febf878bdf9a67deef4621d))
+* **lightbox:** multi-photo Web Share save-to-Photos on iOS ([#557](https://github.com/filpgame/picpeak/issues/557)) ([6a87e34](https://github.com/filpgame/picpeak/commit/6a87e3438dfa24043443b3e184621a3ac5ad6155))
+
+
+### Bug Fixes
+
+* **analytics:** Umami config check always falls back to env vars ([a6bc492](https://github.com/filpgame/picpeak/commit/a6bc4926f1345549f38c1250491ab2bf4ef0ecaa))
+* **api/v1:** accept color_theme + create feedback row on event create ([#550](https://github.com/filpgame/picpeak/issues/550)) ([3968710](https://github.com/filpgame/picpeak/commit/39687108110f00fbbf75ac441d93275758dab0cb))
+* **events:** preserve branding inheritance when saving events with null color_theme ([747ebb7](https://github.com/filpgame/picpeak/commit/747ebb7721946c31d8bcf6c4e0ac471dfbb55073))
+* **lightbox:** eliminate download lag on Android by skipping the blob round-trip ([6a89cba](https://github.com/filpgame/picpeak/commit/6a89cba610330b4f9d4ca5fafa274fd9a3b6cfbe))
+* **lightbox:** restrict Web Share save-to-Photos path to iOS ([#554](https://github.com/filpgame/picpeak/issues/554)) ([ec5d0f0](https://github.com/filpgame/picpeak/commit/ec5d0f00267ba4cb08c3820e92b63ec71fc5c905))
+
 ## [4.1.2-beta.0](https://github.com/filpgame/picpeak/compare/v4.1.1-beta.0...v4.1.2-beta.0) (2026-05-27)
 
 
