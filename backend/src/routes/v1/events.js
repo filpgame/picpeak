@@ -24,6 +24,8 @@ const { buildShareLinkVariants } = require('../../services/shareLinkService');
 const { generateThumbnail } = require('../../services/imageProcessor');
 const logger = require('../../utils/logger');
 const { slugify } = require('../../utils/slug');
+const { formatBoolean } = require('../../utils/dbCompat');
+const { parseBooleanInput } = require('../../utils/parsers');
 
 const router = express.Router();
 
@@ -87,6 +89,8 @@ const photoUpload = multer({
  *               require_password: { type: boolean, default: true }
  *               password: { type: string, nullable: true, description: "Required when require_password is true." }
  *               expires_at: { type: string, format: date-time, nullable: true }
+ *               color_theme: { type: string, nullable: true, description: "Preset name (e.g. 'default') or JSON-encoded ThemeConfig. Persisted as-is on the event row." }
+ *               feedback_enabled: { type: boolean, nullable: true, description: "Enable guest feedback for this gallery. When omitted, falls back to the global event_default_feedback_enabled setting." }
  *     responses:
  *       201:
  *         description: Event created
@@ -117,7 +121,9 @@ router.post(
     body('admin_email').optional({ nullable: true, checkFalsy: true }).isEmail(),
     body('require_password').optional().isBoolean(),
     body('password').optional({ nullable: true }).isString().isLength({ min: 6 }),
-    body('expires_at').optional({ nullable: true, checkFalsy: true }).isISO8601()
+    body('expires_at').optional({ nullable: true, checkFalsy: true }).isISO8601(),
+    body('color_theme').optional({ nullable: true }).isString().trim(),
+    body('feedback_enabled').optional().isBoolean()
   ],
   async (req, res) => {
     try {
@@ -127,8 +133,27 @@ router.post(
         event_name, event_type, event_date,
         customer_name = null, customer_email = null, customer_phone = null,
         admin_email = null, require_password = true, password,
-        expires_at = null
+        expires_at = null,
+        color_theme = null,
+        feedback_enabled: feedbackEnabledInput
       } = req.body;
+
+      // Issue #550 — mirror the admin POST path so API-created events
+      // pick up the global "Enable Guest Feedback by default" toggle
+      // (event_default_feedback_enabled). Without this, the UI reads
+      // a missing event_feedback_settings row as "feedback off"
+      // regardless of the admin's chosen default.
+      let feedbackEnabledFallback = false;
+      if (feedbackEnabledInput === undefined) {
+        const setting = await db('app_settings').where('setting_key', 'event_default_feedback_enabled').first();
+        if (setting) {
+          try {
+            const parsed = JSON.parse(setting.setting_value);
+            if (typeof parsed === 'boolean') feedbackEnabledFallback = parsed;
+          } catch { /* keep false */ }
+        }
+      }
+      const feedback_enabled = parseBooleanInput(feedbackEnabledInput, feedbackEnabledFallback);
 
       if (require_password && (!password || password.length < 6)) {
         return res.status(400).json({ error: 'Password is required when require_password is true (min 6 chars)' });
@@ -174,12 +199,36 @@ router.post(
         created_at: new Date().toISOString(),
         created_by: req.admin.id,
         is_draft: false,
+        // Issue #550 — without this, editing an API-created event in the
+        // admin UI snaps the theme picker to GALLERY_THEME_PRESETS.default
+        // and saving overwrites whatever theme was inherited visually.
+        color_theme,
         ...(customer_name ? { customer_name } : {}),
         ...(customer_email ? { customer_email } : {}),
         ...(persistPhone ? { customer_phone: persistPhone } : {}),
         language: null,
       }).returning('id');
       const id = insertResult[0]?.id || insertResult[0];
+
+      // Issue #550 — mirror adminEvents.js: create event_feedback_settings
+      // row when feedback is enabled, so the gallery actually shows
+      // feedback UI. Sub-flags default to the same values the admin form
+      // ships with (everything on except require_name_email).
+      if (feedback_enabled) {
+        await db('event_feedback_settings').insert({
+          event_id: id,
+          feedback_enabled: formatBoolean(true),
+          allow_ratings: formatBoolean(true),
+          allow_likes: formatBoolean(true),
+          allow_comments: formatBoolean(true),
+          allow_favorites: formatBoolean(true),
+          require_name_email: formatBoolean(false),
+          moderate_comments: formatBoolean(true),
+          show_feedback_to_guests: formatBoolean(true),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      }
 
       await logActivity('event_created', { via: 'api_v1', event_type }, id, {
         type: 'admin', id: req.admin.id, name: req.admin.username
