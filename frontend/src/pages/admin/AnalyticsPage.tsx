@@ -84,14 +84,8 @@ export const AnalyticsPage: React.FC = () => {
       try {
         // Use admin API endpoint with auth token since we're in admin area
         const response = await api.get('/admin/settings');
-        const settings = response.data;
-        
-        // Transform the settings array to object
-        const settingsMap = settings.reduce((acc: any, setting: any) => {
-          acc[setting.key] = setting.value;
-          return acc;
-        }, {});
-        
+        const settingsMap = response.data;
+
         // Check if Umami is enabled in admin settings
         if (settingsMap.analytics_umami_enabled && settingsMap.analytics_umami_url && settingsMap.analytics_umami_website_id) {
           setUmamiConfig({
