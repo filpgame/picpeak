@@ -5,6 +5,7 @@ const { formatBoolean } = require('../utils/dbCompat');
 const { slugify } = require('../utils/slug');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
+const { IDENTITY_PRESERVING_NORMALIZE_EMAIL } = require('../utils/emailNormalization');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -335,11 +336,11 @@ router.post('/', adminAuth, requirePermission('events.create'), [
   body('event_name').notEmpty().trim(),
   body('event_date').optional({ values: 'falsy' }).isDate(),
   body('customer_name').optional().trim(),
-  body('customer_email').optional({ values: 'falsy' }).isEmail().normalizeEmail(),
+  body('customer_email').optional({ values: 'falsy' }).isEmail().normalizeEmail(IDENTITY_PRESERVING_NORMALIZE_EMAIL),
   body('customer_phone').optional({ nullable: true, checkFalsy: true })
     .isString().trim()
     .isLength({ max: 32 }).withMessage('Phone number must be at most 32 characters'),
-  body('admin_email').optional({ values: 'falsy' }).isEmail().normalizeEmail(),
+  body('admin_email').optional({ values: 'falsy' }).isEmail().normalizeEmail(IDENTITY_PRESERVING_NORMALIZE_EMAIL),
   body('require_password').optional().isBoolean(),
   body('password').optional().isString().custom((value, { req }) => {
     const input = req.body.require_password;
@@ -1109,7 +1110,7 @@ router.put('/:id', adminAuth, requirePermission('events.edit'), requireEventOwne
   body('color_theme').optional({ nullable: true }),
   body('allow_user_uploads').optional().isBoolean(),
   body('customer_name').optional({ nullable: true, checkFalsy: true }).trim(),
-  body('customer_email').optional().isEmail().normalizeEmail(),
+  body('customer_email').optional().isEmail().normalizeEmail(IDENTITY_PRESERVING_NORMALIZE_EMAIL),
   body('customer_phone').optional({ nullable: true, checkFalsy: true })
     .isString().trim()
     .isLength({ max: 32 }).withMessage('Phone number must be at most 32 characters'),

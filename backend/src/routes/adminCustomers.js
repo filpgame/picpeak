@@ -12,6 +12,7 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const { handleAsync, validateRequest, successResponse } = require('../utils/routeHelpers');
 const customerAccountsService = require('../services/customerAccountsService');
+const { IDENTITY_PRESERVING_NORMALIZE_EMAIL } = require('../utils/emailNormalization');
 
 const router = express.Router();
 
@@ -121,7 +122,7 @@ router.get('/invitations', [
 router.post('/invite', [
   adminAuth,
   requirePermission('customers.create'),
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('email').isEmail().normalizeEmail(IDENTITY_PRESERVING_NORMALIZE_EMAIL).withMessage('Valid email is required'),
   // Optional prefill — admin can stash any subset of customer profile fields
   // on the invitation. The customer sees them pre-populated on the accept
   // form and can edit before submitting. Validators are deliberately lax:
@@ -199,7 +200,7 @@ router.put('/:id', [
   adminAuth,
   requirePermission('customers.create'),
   param('id').isInt({ min: 1 }),
-  body('email').optional().isEmail().normalizeEmail(),
+  body('email').optional().isEmail().normalizeEmail(IDENTITY_PRESERVING_NORMALIZE_EMAIL),
   body('salutation').optional().isString().isLength({ max: 32 }),
   body('first_name').optional().isString().isLength({ max: 80 }),
   body('last_name').optional().isString().isLength({ max: 80 }),
