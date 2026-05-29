@@ -401,6 +401,7 @@ These features are currently in beta testing and may have limited functionality 
 
 | Feature | Description | Status |
 |---------|-------------|--------|
+| **CRM Module** | Quotes, contracts, invoices, hours logging, calendar, and tax report — feature-flagged off by default. Seeded contract blocks, payment terms, and IBAN / tax defaults are **examples only** and need legal / financial review before customer-facing use. See [docs.picpeak.app/features/crm](https://docs.picpeak.app/features/crm). | 🧪 Beta |
 | **Simple Deployment Script** | One-click deployment script for quick server setup with automated configuration and dependency installation | 🧪 Beta |
 
 ### 📋 Future Enhancements
