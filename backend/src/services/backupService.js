@@ -417,43 +417,111 @@ async function scanDirectory(dirPath, fileList, basePath, excludePatterns = []) 
   }
 }
 
-async function getFilesToBackupInternal(includeArchived = true) {
+/**
+ * Hard-coded fallback when `backup_paths` is missing/empty. Mirrors
+ * the canonical seed in migration 108 — kept here as defense in depth
+ * so the walker can never silently degrade to "no directories scanned"
+ * because of a seed problem.
+ *
+ * Order matches the legacy behavior of the inlined sequence this
+ * function used to contain.
+ */
+const LEGACY_BACKUP_PATHS = [
+  { path: 'events/active',    feature_flag: null },
+  { path: 'events/archived',  feature_flag: 'backup_include_archived' },
+  { path: 'thumbnails',       feature_flag: null },
+  { path: 'previews',         feature_flag: null },
+  { path: 'heroes',           feature_flag: null },
+  { path: 'uploads',          feature_flag: null },
+  { path: 'business-docs',    feature_flag: null },
+];
+
+/**
+ * Resolve the walker's target subdirectories from `backup_paths`.
+ *
+ * Layered fallback (defense in depth — no scenario where the walker
+ * silently scans nothing):
+ *   1. Read `backup_paths` rows where include_in_default = true,
+ *      ordered by display_order.
+ *   2. If the table is missing OR returns zero rows, fall back to
+ *      LEGACY_BACKUP_PATHS. Logged loudly so the admin sees it.
+ *
+ * Per-row gating: when `feature_flag` is set, the corresponding
+ * config key in `app_settings` must resolve truthy for that path to
+ * be included. Mirrors the historical `includeArchived` parameter,
+ * but now driven by data instead of a hard-coded boolean.
+ *
+ * @param {object} config  resolved backup config (parseSettingValue'd).
+ *                         Used to evaluate feature_flag gates.
+ * @returns {Promise<Array<{ path: string, feature_flag: string|null }>>}
+ */
+async function resolveBackupPaths(config) {
+  let rows;
+  try {
+    if (!(await db.schema.hasTable('backup_paths'))) {
+      logger.warn('backup_paths table missing — falling back to LEGACY_BACKUP_PATHS');
+      rows = LEGACY_BACKUP_PATHS;
+    } else {
+      rows = await db('backup_paths')
+        .where('include_in_default', formatBoolean(true))
+        .orderBy('display_order', 'asc')
+        .select('path', 'feature_flag');
+      if (!rows.length) {
+        logger.warn('backup_paths has no rows with include_in_default=true — falling back to LEGACY_BACKUP_PATHS');
+        rows = LEGACY_BACKUP_PATHS;
+      }
+    }
+  } catch (err) {
+    logger.warn(`Failed to query backup_paths (${err.message}) — falling back to LEGACY_BACKUP_PATHS`);
+    rows = LEGACY_BACKUP_PATHS;
+  }
+
+  // Apply feature_flag gating. A row with feature_flag='backup_include_archived'
+  // requires config.backup_include_archived to be truthy (same semantics as
+  // the historical `includeArchived` parameter).
+  return rows.filter((row) => {
+    if (!row.feature_flag) return true;
+    const flagValue = config ? config[row.feature_flag] : undefined;
+    return normalizeBoolean(flagValue);
+  });
+}
+
+async function getFilesToBackupInternal(configOrIncludeArchived = true) {
   const files = [];
   const storagePath = getStoragePath();
 
-  await scanDirectory(path.join(storagePath, 'events/active'), files, storagePath);
-
-  if (normalizeBoolean(includeArchived)) {
-    await scanDirectory(path.join(storagePath, 'events/archived'), files, storagePath);
+  // Backward-compatible call signature:
+  //   - Boolean `true|false` → legacy `includeArchived` argument. We
+  //     forge a config-shaped object so the feature-flag gating
+  //     resolves the same way the old code path did.
+  //   - Object             → full resolved backup config (preferred).
+  //   - Anything else      → treated as "include archived" (truthy).
+  let config;
+  if (typeof configOrIncludeArchived === 'object' && configOrIncludeArchived !== null) {
+    config = configOrIncludeArchived;
+  } else {
+    config = { backup_include_archived: normalizeBoolean(configOrIncludeArchived) };
   }
 
-  await scanDirectory(path.join(storagePath, 'thumbnails'), files, storagePath);
-  // Lightbox preview tier (#492). Cheap to back up — typically a few
-  // hundred KB per photo — and saves admins the regenerate cycle on
-  // a restore. Tolerated when missing (admins who never enabled the
-  // feature won't have the folder; scanDirectory short-circuits on
-  // ENOENT cleanly).
-  await scanDirectory(path.join(storagePath, 'previews'), files, storagePath);
-  // Heroes too — same logic; admins who picked a hero photo for the
-  // gallery header had its 1920x1080 file generated and was missed
-  // by the original backup walk before this addition.
-  await scanDirectory(path.join(storagePath, 'heroes'), files, storagePath);
-  await scanDirectory(path.join(storagePath, 'uploads'), files, storagePath);
-  // CRM document estate — every PDF and signature artefact the
-  // service persists for legal-evidence purposes:
-  //   - business-docs/quote/<year>/*.pdf
-  //   - business-docs/contract/<year>/*.pdf  (system-rendered + wet uploads)
-  //   - business-docs/contract/signatures/<contract_id>/*.{png,jpg}
-  //     (drawn signatures, forensic-preserved per Date.now() filename)
-  //   - business-docs/invoice/<year>/*.pdf  (issued invoices + Storno)
-  //   - business-docs/invoice-imports/<year>/*.pdf  (admin-imported
-  //     historical invoices — irrecoverable if not backed up)
-  // Without this scan, the audit trail (signed_pdf_sha256, signed_*
-  // _ip, accepted_at, etc.) survives the restore but the documents
-  // those values refer to do not, leaving every CRM *_path column a
-  // broken FK. scanDirectory short-circuits on ENOENT so installs
-  // that never used CRM features won't error.
-  await scanDirectory(path.join(storagePath, 'business-docs'), files, storagePath);
+  const targets = await resolveBackupPaths(config);
+
+  for (const target of targets) {
+    // CRM document estate is special-cased in the comment block below
+    // because it's the most expensive omission to recover from:
+    //   - business-docs/quote/<year>/*.pdf
+    //   - business-docs/contract/<year>/*.pdf  (system-rendered + wet uploads)
+    //   - business-docs/contract/signatures/<contract_id>/*.{png,jpg}
+    //     (drawn signatures, forensic-preserved per Date.now() filename)
+    //   - business-docs/invoice/<year>/*.pdf  (issued invoices + Storno)
+    //   - business-docs/invoice-imports/<year>/*.pdf  (admin-imported
+    //     historical invoices — irrecoverable if not backed up)
+    // Without this scan, the audit trail (signed_pdf_sha256, signed_*
+    // _ip, accepted_at, etc.) survives the restore but the documents
+    // those values refer to do not, leaving every CRM *_path column a
+    // broken FK. scanDirectory short-circuits on ENOENT so installs
+    // that never used CRM features won't error.
+    await scanDirectory(path.join(storagePath, target.path), files, storagePath);
+  }
 
   return files;
 }
@@ -887,7 +955,11 @@ async function runBackupInternal(isManual = false) {
     // for the full rationale.
     const verifiedDatabaseInfo = await ensureDatabaseDumpForBackup(config);
 
-    const files = await service.getFilesToBackup(config.backup_include_archived);
+    // Pass the full config so the walker can evaluate any feature_flag
+    // gates declared in the backup_paths table (e.g. `events/archived`
+    // gated by `backup_include_archived`). Boolean signature is still
+    // supported for legacy callers and tests — see getFilesToBackupInternal.
+    const files = await service.getFilesToBackup(config);
     logger.info(`Found ${files.length} files to check for backup`);
 
     let result;
