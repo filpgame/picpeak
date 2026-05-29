@@ -97,7 +97,7 @@ Note on Docker file permissions
 
 ## 🔄 Release Channels
 
-PicPeak offers two release channels for different needs:
+PicPeak offers two release channels for different needs. Stable promotions are cut from a known-good beta point every 4–6 weeks — see [RELEASING.md](RELEASING.md) for the maintainer's promotion criteria and cadence policy.
 
 ### Stable Channel (Recommended)
 - Production-ready releases
@@ -453,6 +453,23 @@ This project was generated with the assistance of AI technology, but has been:
 - 🧪 **Production-tested** in real-world scenarios
 
 We believe in transparent development practices and the responsible use of AI as a tool to accelerate development while maintaining high standards of quality and security.
+
+## ⚠️ CRM disclaimers — examples only
+
+The CRM module (contracts, invoices, QR-bills) ships seeded content
+that is intended as a **starting point only**:
+
+- **Contract blocks** (image rights, NDA, model release, cancellation,
+  jurisdiction, …) are written by the maintainer, **not by a lawyer**.
+  Every operator must have their lawyer review and adapt them before
+  sending any contract to a customer.
+- **QR-bills and SEPA EPC payloads** are rendered from the data you
+  typed. Picpeak is open source — please scan a test invoice with your
+  bank's app to check the QR actually works. We are not responsible for
+  any mistakes that come from sending an invoice with bad data on it.
+
+Read [`docs/crm-disclaimers.md`](docs/crm-disclaimers.md) before
+enabling the Contracts or Invoices features.
 
 ## 📄 License
 
