@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Info, ArrowUpCircle } from 'lucide-react';
 import { api } from '../../config/api';
+import { githubReleaseUrl as releaseUrl } from '../../utils/githubReleaseUrl';
 import packageJson from '../../../package.json';
 
 // Frontend version from package.json
@@ -63,20 +64,48 @@ export const VersionInfo: React.FC = () => {
         {channelBadge}
       </div>
       <div className="mt-1 space-y-0.5 text-xs text-neutral-500">
-        <div>Frontend: v{FRONTEND_VERSION}</div>
+        <div>
+          Frontend:{' '}
+          <a
+            href={releaseUrl(FRONTEND_VERSION)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-neutral-500 hover:text-neutral-700 hover:underline"
+            title={t('admin.viewReleaseNotes', 'View release notes on GitHub')}
+          >
+            v{FRONTEND_VERSION}
+          </a>
+        </div>
         {versionInfo && (
-          <div>Backend: v{versionInfo.backend}</div>
+          <div>
+            Backend:{' '}
+            <a
+              href={releaseUrl(versionInfo.backend)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-500 hover:text-neutral-700 hover:underline"
+              title={t('admin.viewReleaseNotes', 'View release notes on GitHub')}
+            >
+              v{versionInfo.backend}
+            </a>
+          </div>
         )}
       </div>
-      {updateInfo?.enabled && updateInfo?.updateAvailable && (
-        <div className="mt-2 flex items-center gap-1 text-xs text-blue-600">
+      {updateInfo?.enabled && updateInfo?.updateAvailable && updateInfo.latest && (
+        <a
+          href={releaseUrl(updateInfo.latest.forChannel)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+          title={t('admin.viewReleaseNotes', 'View release notes on GitHub')}
+        >
           <ArrowUpCircle className="w-3 h-3" />
           <span>
             {t('admin.updates.updateAvailableShort', 'v{{version}} available', {
-              version: updateInfo.latest?.forChannel
+              version: updateInfo.latest.forChannel
             })}
           </span>
-        </div>
+        </a>
       )}
     </div>
   );
