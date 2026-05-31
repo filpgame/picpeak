@@ -1237,11 +1237,34 @@ async function getBackupStatus(limit = 10) {
 
     const lastRunWithManifest = lastRun ? { ...lastRun, manifestValid } : null;
 
+    // Separate "most recent attempt" from "most recent SUCCESS" so the
+    // dashboard widget can distinguish:
+    //   - last attempt failed → red, "Last attempt failed at X"
+    //   - last attempt running → blue spinner, "In progress since X"
+    //   - never succeeded → critical, "No successful backup yet"
+    //   - last attempt succeeded → green tick, "Last backup X ago"
+    // Previously the widget showed the most-recent row with a generic
+    // green tick regardless of status, so a crashed run from 5 minutes
+    // ago looked identical to a successful one. Same "silent failure
+    // not surfaced" class Stage A was designed to fight.
+    const lastSuccessful = runs.find(r => r.status === 'completed') || null;
+    // Detect zombie running rows (started >30min ago, never updated)
+    // — these are processes that died without writing a completed_at.
+    // Surface them so the admin can tell at a glance vs a live run.
+    const ZOMBIE_THRESHOLD_MS = 30 * 60 * 1000;
+    const zombieRuns = runs.filter(r =>
+      r.status === 'running'
+      && r.started_at
+      && (Date.now() - new Date(r.started_at).getTime()) > ZOMBIE_THRESHOLD_MS
+    );
+
     return {
       isRunning,
       isHealthy: Boolean(lastRun && lastRun.status === 'completed'),
       lastRun: lastRunWithManifest,
       lastBackup: lastRunWithManifest, // Alias for frontend compatibility
+      lastSuccessfulBackup: lastSuccessful, // NEW — see comment above
+      zombieRuns,                           // NEW — running >30min, likely crashed
       recentRuns: runs,
       recentBackups: runs, // Alias for frontend compatibility
       totalBackups: runs.filter(r => r.status === 'completed').length,
