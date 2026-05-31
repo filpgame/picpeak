@@ -21,8 +21,26 @@ set -eu
 
 : "${BRAND_TITLE:=PicPeak}"
 : "${BRAND_DESCRIPTION:=Photo gallery shared with PicPeak.}"
+# ANALYTICS_ORIGIN: full origin of the analytics server injected into
+# the nginx CSP (script-src + connect-src). Example:
+#   ANALYTICS_ORIGIN=https://analytics.example.com
+# Leave unset or empty when analytics is disabled or self-hosted on the
+# same origin. Set this alongside the admin settings at
+# /admin/settings?tab=analytics when using an external Umami instance.
+: "${ANALYTICS_ORIGIN:=}"
 
-export BRAND_TITLE BRAND_DESCRIPTION
+export BRAND_TITLE BRAND_DESCRIPTION ANALYTICS_ORIGIN
+
+# Render nginx config from template so ANALYTICS_ORIGIN is baked into
+# the CSP header at container start (no rebuild required).
+NGINX_TEMPLATE=/etc/nginx/nginx.conf.template
+NGINX_CONF=/etc/nginx/conf.d/default.conf
+
+if [ -f "$NGINX_TEMPLATE" ]; then
+  envsubst '${ANALYTICS_ORIGIN}' < "$NGINX_TEMPLATE" > "$NGINX_CONF"
+else
+  echo "[frontend-entrypoint] WARN: $NGINX_TEMPLATE missing; nginx CSP will not include analytics origin." >&2
+fi
 
 TEMPLATE=/usr/share/nginx/html/index.html.tpl
 RENDERED=/usr/share/nginx/html/index.html

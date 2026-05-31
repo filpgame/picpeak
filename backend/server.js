@@ -54,16 +54,27 @@ app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 // Security middleware with custom CSP
 // In native HTTP installs, do NOT force HTTPS for subresources.
 const enableHsts = process.env.ENABLE_HSTS === 'true';
+// ANALYTICS_ORIGIN: full origin of the analytics server (e.g.
+// "https://analytics.example.com"). Set alongside the Umami URL
+// configured in /admin/settings?tab=analytics so the CSP allows the
+// dynamically-injected script and its beacon requests.
+const analyticsOrigin = process.env.ANALYTICS_ORIGIN || null;
 const cspDirectives = {
   defaultSrc: ["'self'"],
   scriptSrc: [
     "'self'",
     'https://www.google.com',
-    'https://www.gstatic.com'
+    'https://www.gstatic.com',
+    ...(analyticsOrigin ? [analyticsOrigin] : []),
   ],
   styleSrc: ["'self'", "'unsafe-inline'", "https:"], // Required for styled components
   imgSrc: ["'self'", "data:", "https:", "blob:"], // Allow data URLs and external images
-  connectSrc: ["'self'", 'https://www.google.com', 'https://www.gstatic.com'], // API connections
+  connectSrc: [
+    "'self'",
+    'https://www.google.com',
+    'https://www.gstatic.com',
+    ...(analyticsOrigin ? [analyticsOrigin] : []),
+  ],
   fontSrc: ["'self'", "https:", "data:"], // Web fonts
   objectSrc: ["'none'"], // Disable plugins
   mediaSrc: ["'self'"], // Audio/video

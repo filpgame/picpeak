@@ -42,8 +42,14 @@ RUN apk add --no-cache curl gettext
 # Remove default nginx config
 RUN rm -rf /etc/nginx/conf.d/*
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx config template; entrypoint renders it with ANALYTICS_ORIGIN
+# substituted at container start so the CSP can include the admin-configured
+# analytics host without a rebuild.
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
+# Pre-create the output file owned by nginx so the entrypoint (which runs
+# as the nginx user) can overwrite it.
+RUN touch /etc/nginx/conf.d/default.conf && \
+    chown nginx:nginx /etc/nginx/conf.d/default.conf
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
