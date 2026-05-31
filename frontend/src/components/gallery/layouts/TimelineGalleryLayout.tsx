@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Download, Maximize2, Check, Calendar, Heart, MessageSquare } from 'lucide-react';
 import { format, parseISO, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -24,6 +24,14 @@ export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
 }) => {
   const { theme } = useTheme();
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
+  // Seed from server is_liked on first non-empty payload (#590 follow-up).
+  // Mount-only so refetches don't clobber in-session optimistic toggles.
+  const likedSeededRef = useRef(false);
+  useEffect(() => {
+    if (likedSeededRef.current || photos.length === 0) return;
+    setLikedIds(new Set(photos.filter(p => p.is_liked).map(p => p.id)));
+    likedSeededRef.current = true;
+  }, [photos]);
   const [showIdentityModal, setShowIdentityModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | { type: 'like'; photoId: number }>(null);
   const [savedIdentity, setSavedIdentity] = useState<{ name: string; email: string } | null>(null);
@@ -155,7 +163,13 @@ export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                                   } catch {
                                     return;
                                   }
-                                  setLikedIds(prev => new Set(prev).add(photo.id));
+                                  // Toggle — server /feedback like is a toggle (#590).
+                                  setLikedIds(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(photo.id)) next.delete(photo.id);
+                                    else next.add(photo.id);
+                                    return next;
+                                  });
                                   try {
                                     await feedbackService.submitFeedback(slug!, String(photo.id), {
                                       feedback_type: 'like',
@@ -168,7 +182,13 @@ export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                                   setShowIdentityModal(true);
                                   return;
                                 }
-                                setLikedIds(prev => new Set(prev).add(photo.id));
+                                // Toggle — server /feedback like is a toggle (#590).
+                                setLikedIds(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(photo.id)) next.delete(photo.id);
+                                  else next.add(photo.id);
+                                  return next;
+                                });
                                 try {
                                   await feedbackService.submitFeedback(slug!, String(photo.id), {
                                     feedback_type: 'like',

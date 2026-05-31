@@ -543,6 +543,14 @@ export const JustifiedGalleryLayout: React.FC<JustifiedGalleryLayoutProps> = ({
     null
   );
   const [likedPhotoIds, setLikedPhotoIds] = useState<Set<number>>(new Set());
+  // Seed from server is_liked on first non-empty payload (#590 follow-up).
+  // Mount-only so refetches don't clobber in-session optimistic toggles.
+  const likedSeededRef = useRef(false);
+  useEffect(() => {
+    if (likedSeededRef.current || photos.length === 0) return;
+    setLikedPhotoIds(new Set(photos.filter(p => p.is_liked).map(p => p.id)));
+    likedSeededRef.current = true;
+  }, [photos]);
   const [savedIdentity, setSavedIdentity] = useState<{ name: string; email: string } | null>(null);
 
   // Track container width with ResizeObserver
@@ -763,9 +771,12 @@ export const JustifiedGalleryLayout: React.FC<JustifiedGalleryLayoutProps> = ({
               onFeedbackChange={onFeedbackChange}
               liked={likedPhotoIds.has(photo.id)}
               onLikeSuccess={() => {
+                // Toggle, not add — like endpoint toggles server-side,
+                // so the optimistic UI has to follow suit on click 2 (#590).
                 setLikedPhotoIds((prev) => {
                   const next = new Set(prev);
-                  next.add(photo.id);
+                  if (next.has(photo.id)) next.delete(photo.id);
+                  else next.add(photo.id);
                   return next;
                 });
               }}
@@ -788,10 +799,12 @@ export const JustifiedGalleryLayout: React.FC<JustifiedGalleryLayoutProps> = ({
                 guest_name: name,
                 guest_email: email,
               });
+              // Toggle for consistency (#590).
               if (pendingAction.type === 'like') {
                 setLikedPhotoIds((prev) => {
                   const next = new Set(prev);
-                  next.add(pendingAction.photoId);
+                  if (next.has(pendingAction.photoId)) next.delete(pendingAction.photoId);
+                  else next.add(pendingAction.photoId);
                   return next;
                 });
               }
