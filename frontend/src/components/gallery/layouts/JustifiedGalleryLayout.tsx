@@ -763,9 +763,12 @@ export const JustifiedGalleryLayout: React.FC<JustifiedGalleryLayoutProps> = ({
               onFeedbackChange={onFeedbackChange}
               liked={likedPhotoIds.has(photo.id)}
               onLikeSuccess={() => {
+                // Toggle, not add — like endpoint toggles server-side,
+                // so the optimistic UI has to follow suit on click 2 (#590).
                 setLikedPhotoIds((prev) => {
                   const next = new Set(prev);
-                  next.add(photo.id);
+                  if (next.has(photo.id)) next.delete(photo.id);
+                  else next.add(photo.id);
                   return next;
                 });
               }}
@@ -788,10 +791,12 @@ export const JustifiedGalleryLayout: React.FC<JustifiedGalleryLayoutProps> = ({
                 guest_name: name,
                 guest_email: email,
               });
+              // Toggle for consistency (#590).
               if (pendingAction.type === 'like') {
                 setLikedPhotoIds((prev) => {
                   const next = new Set(prev);
-                  next.add(pendingAction.photoId);
+                  if (next.has(pendingAction.photoId)) next.delete(pendingAction.photoId);
+                  else next.add(pendingAction.photoId);
                   return next;
                 });
               }
