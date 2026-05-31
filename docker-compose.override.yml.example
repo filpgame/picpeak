@@ -29,6 +29,24 @@ services:
   #   ports:
   #     - "3000:3000"
 
+  # Example: Allow an external Umami analytics instance in the CSP.
+  # Set ANALYTICS_ORIGIN to the full origin (scheme + host) of your Umami
+  # server so the dynamically-injected script.js and its beacon requests
+  # are not blocked. Must match the URL configured in
+  # /admin/settings?tab=analytics.
+  #
+  # Non-Docker installs (LXC, bare-metal):
+  #   - SERVE_FRONTEND=true: set ANALYTICS_ORIGIN in the backend .env — the
+  #     Node.js process reads it and injects it into the helmet CSP.
+  #   - Separate system nginx: edit the CSP script-src and connect-src lines
+  #     in your nginx config manually; see frontend/nginx.conf for the comment.
+  # frontend:
+  #   environment:
+  #     - ANALYTICS_ORIGIN=https://analytics.example.com
+  # backend:
+  #   environment:
+  #     - ANALYTICS_ORIGIN=https://analytics.example.com
+
   # Example: Use different storage paths
   # backend:
   #   volumes:
