@@ -17,6 +17,9 @@ const {
 const RELEASES_REPO = process.env.GITHUB_RELEASES_REPO || 'filpgame/picpeak';
 const { spawn } = require('child_process');
 
+// Flag never resets after successful spawn: the setup script ends with
+// `systemctl restart picpeak-backend`, killing this process. A second
+// apply call can only arrive if the first spawn failed (flag reset in catch).
 let updateInProgress = false;
 
 const router = express.Router();
@@ -403,7 +406,7 @@ router.post('/updates/apply', adminAuth, requirePermission('settings.edit'), asy
 
     res.status(202).json({
       status: 'started',
-      targetVersion: updateInfo.latest?.forChannel,
+      targetVersion: updateInfo.latest?.forChannel ?? 'unknown',
     });
   } catch (error) {
     updateInProgress = false;
