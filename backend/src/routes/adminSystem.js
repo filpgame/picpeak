@@ -3,6 +3,7 @@ const { db, withRetry } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const os = require('os');
 const { formatBoolean } = require('../utils/dbCompat');
@@ -413,6 +414,25 @@ router.post('/updates/apply', adminAuth, requirePermission('settings.edit'), asy
     logger.error('Failed to start update process:', error);
     res.status(500).json({ error: 'Failed to start update process' });
   }
+});
+
+// Download backend log files
+router.get('/logs/download', adminAuth, requirePermission('settings.view'), async (req, res) => {
+  const type = req.query.type === 'error' ? 'error' : 'combined';
+  const filename = `${type}.log`;
+  const logPath = path.join(__dirname, '../../logs', filename);
+
+  try {
+    await fs.access(logPath);
+  } catch {
+    return res.status(404).json({ error: 'Log file not found' });
+  }
+
+  res.setHeader('Content-Disposition', `attachment; filename=picpeak-${filename}`);
+  res.setHeader('Content-Type', 'text/plain');
+
+  const stream = fsSync.createReadStream(logPath);
+  stream.pipe(res);
 });
 
 module.exports = router;
