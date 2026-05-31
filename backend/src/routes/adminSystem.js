@@ -14,6 +14,7 @@ const {
   sendTestUpdateNotification,
   getUpdateNotificationSettings
 } = require('../services/updateNotificationService');
+const RELEASES_REPO = process.env.GITHUB_RELEASES_REPO || 'filpgame/picpeak';
 const router = express.Router();
 
 // Get system version
@@ -104,7 +105,7 @@ router.get('/updates/instructions', adminAuth, requirePermission('settings.view'
       channel: updateInfo.channel,
       environment: env,
       instructions,
-      releaseNotesUrl: `https://github.com/${process.env.GITHUB_RELEASES_REPO || 'filpgame/picpeak'}/releases/tag/v${updateInfo.latest.forChannel}`
+      releaseNotesUrl: `https://github.com/${RELEASES_REPO}/releases/tag/v${updateInfo.latest.forChannel}`
     });
   } catch (error) {
     logger.error('Error generating update instructions:', error);
