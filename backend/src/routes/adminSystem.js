@@ -15,6 +15,10 @@ const {
   getUpdateNotificationSettings
 } = require('../services/updateNotificationService');
 const RELEASES_REPO = process.env.GITHUB_RELEASES_REPO || 'filpgame/picpeak';
+const { spawn } = require('child_process');
+
+let updateInProgress = false;
+
 const router = express.Router();
 
 // Get system version
@@ -376,6 +380,35 @@ router.post('/updates/notifications/check', adminAuth, requirePermission('settin
   } catch (error) {
     logger.error('Error checking for update notifications:', error);
     res.status(500).json({ error: 'Failed to check for update notifications' });
+  }
+});
+
+// Trigger automatic update by running the setup/update script as a detached process
+router.post('/updates/apply', adminAuth, requirePermission('settings.edit'), async (req, res) => {
+  if (updateInProgress) {
+    return res.status(409).json({ error: 'Update already in progress' });
+  }
+
+  updateInProgress = true;
+
+  try {
+    const updateInfo = await checkForUpdates();
+    const scriptPath = path.resolve(__dirname, '../../../scripts/picpeak-setup.sh');
+
+    const child = spawn('bash', [scriptPath], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+
+    res.status(202).json({
+      status: 'started',
+      targetVersion: updateInfo.latest?.forChannel,
+    });
+  } catch (error) {
+    updateInProgress = false;
+    logger.error('Failed to start update process:', error);
+    res.status(500).json({ error: 'Failed to start update process' });
   }
 });
 
