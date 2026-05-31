@@ -91,6 +91,7 @@ const photoUpload = multer({
  *               expires_at: { type: string, format: date-time, nullable: true }
  *               color_theme: { type: string, nullable: true, description: "Preset name (e.g. 'default') or JSON-encoded ThemeConfig. Persisted as-is on the event row." }
  *               feedback_enabled: { type: boolean, nullable: true, description: "Enable guest feedback for this gallery. When omitted, falls back to the global event_default_feedback_enabled setting." }
+ *               enable_devtools_protection: { type: boolean, nullable: true, description: "Block right-click / devtools shortcuts in the gallery. When omitted, falls back to the global enable_devtools_protection setting." }
  *     responses:
  *       201:
  *         description: Event created
@@ -123,7 +124,8 @@ router.post(
     body('password').optional({ nullable: true }).isString().isLength({ min: 6 }),
     body('expires_at').optional({ nullable: true, checkFalsy: true }).isISO8601(),
     body('color_theme').optional({ nullable: true }).isString().trim(),
-    body('feedback_enabled').optional().isBoolean()
+    body('feedback_enabled').optional().isBoolean(),
+    body('enable_devtools_protection').optional().isBoolean()
   ],
   async (req, res) => {
     try {
@@ -135,7 +137,8 @@ router.post(
         admin_email = null, require_password = true, password,
         expires_at = null,
         color_theme = null,
-        feedback_enabled: feedbackEnabledInput
+        feedback_enabled: feedbackEnabledInput,
+        enable_devtools_protection: devtoolsInput
       } = req.body;
 
       // Issue #550 — mirror the admin POST path so API-created events
@@ -154,6 +157,22 @@ router.post(
         }
       }
       const feedback_enabled = parseBooleanInput(feedbackEnabledInput, feedbackEnabledFallback);
+
+      // Issue #592 — same shape as the feedback fallback above. The
+      // events table column default is `true`, so without this an admin
+      // who disabled devtools detection globally still gets it ON for
+      // every API-created gallery. Mirrors adminEvents.js behaviour.
+      let devtoolsFallback = true;
+      if (devtoolsInput === undefined) {
+        const setting = await db('app_settings').where('setting_key', 'enable_devtools_protection').first();
+        if (setting) {
+          try {
+            const parsed = JSON.parse(setting.setting_value);
+            if (typeof parsed === 'boolean') devtoolsFallback = parsed;
+          } catch { /* keep true */ }
+        }
+      }
+      const enable_devtools_protection = parseBooleanInput(devtoolsInput, devtoolsFallback);
 
       if (require_password && (!password || password.length < 6)) {
         return res.status(400).json({ error: 'Password is required when require_password is true (min 6 chars)' });
@@ -203,6 +222,9 @@ router.post(
         // admin UI snaps the theme picker to GALLERY_THEME_PRESETS.default
         // and saving overwrites whatever theme was inherited visually.
         color_theme,
+        // Issue #592 — write the resolved devtools setting (input value
+        // or global fallback) so the column default doesn't shadow it.
+        enable_devtools_protection: formatBoolean(enable_devtools_protection),
         ...(customer_name ? { customer_name } : {}),
         ...(customer_email ? { customer_email } : {}),
         ...(persistPhone ? { customer_phone: persistPhone } : {}),
