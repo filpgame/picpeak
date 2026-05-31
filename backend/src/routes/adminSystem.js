@@ -104,7 +104,7 @@ router.get('/updates/instructions', adminAuth, requirePermission('settings.view'
       channel: updateInfo.channel,
       environment: env,
       instructions,
-      releaseNotesUrl: `https://github.com/the-luap/picpeak/releases/tag/v${updateInfo.latest.forChannel}`
+      releaseNotesUrl: `https://github.com/${process.env.GITHUB_RELEASES_REPO || 'filpgame/picpeak'}/releases/tag/v${updateInfo.latest.forChannel}`
     });
   } catch (error) {
     logger.error('Error generating update instructions:', error);
