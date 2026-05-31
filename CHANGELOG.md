@@ -5,6 +5,31 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.2.0-beta.0...v4.3.0-beta.0) (2026-05-31)
+
+
+### Features
+
+* **i18n:** add admin.updates.card keys to all 7 locale files ([0d5a4b5](https://github.com/filpgame/picpeak/commit/0d5a4b520d9e4170555c6b69eb32e98e20232631))
+* **settings:** add UpdateCard component with 6 update states ([527e3ca](https://github.com/filpgame/picpeak/commit/527e3cad8d0bf2b4bfa4034b08117e845ab67c50))
+* **settings:** add UpdateCard to status tab, remove UpdateNotification banner ([5d40858](https://github.com/filpgame/picpeak/commit/5d408586bf3fcd7872b4f539d29f5e0ef5e7c4a3))
+* **settings:** add useUpdateCard hook with update state machine ([7da51e4](https://github.com/filpgame/picpeak/commit/7da51e4f39a4a1c700edcef090b3a76ac51066ea))
+* **system:** add GET /logs/download endpoint for combined and error logs ([8baa46c](https://github.com/filpgame/picpeak/commit/8baa46ced8c1e9ea3df6cbad8d68e1d90195827a))
+* **updates:** add POST /updates/apply endpoint to trigger server update ([cf14dfc](https://github.com/filpgame/picpeak/commit/cf14dfcd2ca9e8cf565ffb56159997cd98efb218))
+
+
+### Bug Fixes
+
+* **updates:** check filpgame/picpeak releases via GITHUB_RELEASES_REPO env var ([1a1915d](https://github.com/filpgame/picpeak/commit/1a1915d5371779d3f612806915548a2273d1cfa3))
+* **updates:** document sticky updateInProgress flag, add targetVersion fallback ([a6d270c](https://github.com/filpgame/picpeak/commit/a6d270c2e400089d31d70956ed4e3ff8dafb11da))
+* **updates:** replace remaining hardcoded the-luap/picpeak repo URLs ([a312f2f](https://github.com/filpgame/picpeak/commit/a312f2fb31e6aa948a81b90c0b5ac82c5d68bd3c))
+
+
+### Documentation
+
+* add auto-update card design spec ([b11b089](https://github.com/filpgame/picpeak/commit/b11b089c4ce6b8c33ed3d97a98ed889d9390aeb2))
+* add auto-update card implementation plan ([ec5e00a](https://github.com/filpgame/picpeak/commit/ec5e00a790b0e6ae883667e000f0f5b091b9e4f8))
+
 ## [4.2.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.1.2-beta.0...v4.2.0-beta.0) (2026-05-28)
 
 
