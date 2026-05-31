@@ -124,7 +124,7 @@ async function getPasswordComplexitySettings() {
     // Use retry wrapper to handle connection failures
     const settings = await withRetry(async () => {
       return await db('app_settings')
-        .where('setting_key', 'security_password_complexity_level')
+        .where('setting_key', 'security_password_complexity')
         .first();
     });
     

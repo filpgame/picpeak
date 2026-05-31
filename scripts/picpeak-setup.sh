@@ -13,7 +13,7 @@ IFS=$'\n\t'
 # Script configuration
 readonly SCRIPT_VERSION="2.1.0"
 readonly APP_NAME="PicPeak"
-readonly REPO_URL="https://github.com/the-luap/picpeak.git"
+readonly REPO_URL="https://github.com/filpgame/picpeak.git"
 readonly NODE_VERSION="20"
 readonly MIN_RAM_DOCKER=2048
 readonly MIN_RAM_NATIVE=1024
@@ -66,6 +66,15 @@ run_as_user() {
     local cmd="$*"
     local current_dir_escaped
     current_dir_escaped=$(printf '%q' "$(pwd)")
+    local current_user
+    current_user=$(id -un)
+    # If already running as the target user, execute directly.
+    # Avoids sudo login-shell (-lc) side effects (directory changes, env resets)
+    # that break git operations when NATIVE_APP_USER is root.
+    if [[ "$current_user" == "$NATIVE_APP_USER" ]]; then
+        bash -c "cd $current_dir_escaped && $cmd"
+        return $?
+    fi
     if [[ "$(id -u)" -ne 0 ]]; then
         # Already non-root; preserve working directory
         bash -lc "cd $current_dir_escaped && $cmd"
@@ -172,6 +181,10 @@ generate_password() {
 
 generate_jwt_secret() {
     openssl rand -base64 64 | tr -d "\n"
+}
+
+generate_gallery_encryption_key() {
+    openssl rand -hex 32
 }
 
 get_available_ram_mb() {
@@ -444,7 +457,8 @@ setup_docker_installation() {
     local jwt_secret=$(generate_jwt_secret)
     local db_password=$(generate_password)
     local redis_password=$(generate_password)
-    
+    local gallery_key=$(generate_gallery_encryption_key)
+
     # Create .env file
     log_step "Creating configuration..."
     cat > "$app_dir/.env" <<EOF
@@ -455,6 +469,10 @@ setup_docker_installation() {
 NODE_ENV=production
 PORT=3001
 JWT_SECRET=$jwt_secret
+
+# Gallery password encryption (AES-256-GCM)
+# Rotate: add GALLERY_ENCRYPTION_KEY_V2 with a new key; system uses highest version.
+GALLERY_ENCRYPTION_KEY_V1=$gallery_key
 
 # Admin
 ADMIN_EMAIL=$ADMIN_EMAIL
@@ -490,6 +508,13 @@ SMTP_FROM=${SMTP_USER:-noreply@localhost}
 FRONTEND_URL=${DOMAIN_NAME:+https://$DOMAIN_NAME}
 ADMIN_URL=${DOMAIN_NAME:+https://$DOMAIN_NAME}
 
+# Auth cookie behavior — 'auto' emits Secure on HTTPS, omits it on HTTP.
+# Without this, first-time HTTP installs (no reverse proxy yet) silently
+# fail at login because the browser drops Secure cookies over HTTP (#427).
+# On HTTPS via reverse proxy, req.secure is true → Secure flag is still
+# emitted, so this is not a security regression for production deploys.
+COOKIE_SECURE=auto
+
 # Features
 ENABLE_FILE_WATCHER=true
 ENABLE_EXPIRATION_CHECKER=true
@@ -499,30 +524,53 @@ EOF
 
     # Ensure bind mounts are writable by mapped user
     chown -R "$host_uid":"$host_gid" "$app_dir"/storage "$app_dir"/logs "$app_dir"/backup "$app_dir"/data "$app_dir"/events 2>/dev/null || true
-    
+
     # Create docker-compose.yml if it doesn't exist
     if [[ ! -f "$app_dir/docker-compose.yml" ]]; then
         log_step "Creating Docker Compose configuration..."
         create_docker_compose_file "$app_dir"
     fi
-    
+
     # Set up SSL if requested
     if [[ "$ENABLE_SSL" == "true" ]] && [[ -n "$DOMAIN_NAME" ]]; then
         setup_ssl_docker "$app_dir"
     fi
-    
+
+    # Clean up the legacy picpeak-workers container from prior installs
+    # (workers are now in-process — see create_docker_compose_file).
+    # Otherwise the leftover container keeps running its own
+    # fileWatcher / expirationChecker against the same DB rows the new
+    # backend container processes.
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q '^picpeak-workers$'; then
+      log_step "Removing legacy picpeak-workers container (workers now run in-process)..."
+      docker stop picpeak-workers >/dev/null 2>&1 || true
+      docker rm picpeak-workers >/dev/null 2>&1 || true
+    fi
+
     # Start services
     log_step "Starting services..."
     cd "$app_dir"
     docker compose up -d
-    
+
     # Wait for services to be ready
     log_step "Waiting for services to initialize..."
     sleep 10
-    
-    # Run database migrations
-    log_step "Running database migrations..."
-    docker compose exec -T backend npm run migrate
+
+    # Migrations are run automatically by backend/wait-for-db.sh on
+    # container startup (`npm run migrate:safe`). Running migrate here
+    # in parallel — as we used to — could race against the in-container
+    # migration and leave the schema half-applied (the actual mechanism
+    # behind the "relation 'photos' does not exist" symptom in #484
+    # when re-installing on top of partial state). Wait briefly for the
+    # backend to finish its migrate:safe pass instead.
+    log_step "Waiting for backend to finish migrations and become healthy..."
+    for _ in $(seq 1 30); do
+      if docker inspect -f '{{.State.Health.Status}}' picpeak-backend 2>/dev/null | grep -q '^healthy$'; then
+        log_success "Backend healthy."
+        break
+      fi
+      sleep 2
+    done
 
     if [[ "$FORCE_ADMIN_PASSWORD_RESET" == "true" ]]; then
         log_step "Resetting admin credentials..."
@@ -532,7 +580,28 @@ EOF
             log_warn "Automatic admin password reset failed; run reset-admin-password.js inside the backend container."
         fi
     fi
-    
+
+    # Always surface the admin credentials file (#427: iSchumi reported
+    # admins couldn't find the generated password — the migration writes it
+    # to the in-container path and we never copied it to the host unless
+    # --reset-admin-password was used). Best-effort: a missing file just
+    # means the migration ran on a pre-existing DB and didn't generate one.
+    if docker compose cp backend:/app/data/ADMIN_CREDENTIALS.txt "$app_dir/data/ADMIN_CREDENTIALS.txt" 2>/dev/null; then
+        chown "$host_uid":"$host_gid" "$app_dir/data/ADMIN_CREDENTIALS.txt" 2>/dev/null || true
+        chmod 600 "$app_dir/data/ADMIN_CREDENTIALS.txt" 2>/dev/null || true
+        log_step "Admin credentials saved to: $app_dir/data/ADMIN_CREDENTIALS.txt"
+        # Show the password in the install output so the operator can log
+        # in immediately. The file remains as a backup record.
+        echo
+        echo "--------------------------------------------------"
+        grep -E '^Email:|^Password:' "$app_dir/data/ADMIN_CREDENTIALS.txt" 2>/dev/null || true
+        echo "--------------------------------------------------"
+        echo "  Login URL: ${DOMAIN_NAME:+https://$DOMAIN_NAME}${DOMAIN_NAME:-http://YOUR_HOST_IP:3000}/admin"
+        echo "  Full credentials file: $app_dir/data/ADMIN_CREDENTIALS.txt"
+        echo "  Delete the file after recording the password."
+        echo
+    fi
+
     log_success "Docker installation completed!"
 }
 
@@ -555,7 +624,12 @@ services:
       - picpeak-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      # `pg_isready -U <user>` without -d defaults to probing a database
+      # whose name matches the user — postgres logs constant `FATAL:
+      # database "<user>" does not exist` even though the actual DB
+      # is `${DB_NAME}`. Pinning -d to DB_NAME silences the noise
+      # that made #484's reporter think the install was broken.
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -593,24 +667,41 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      # backend image only ships wget (Alpine base) — using curl
+      # makes `docker ps` show the container as `unhealthy`
+      # indefinitely even when /api/health responds. Mirrors the
+      # wget-based HEALTHCHECK in backend/Dockerfile.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  workers:
-    build: ./backend
-    container_name: picpeak-workers
-    command: npm run workers
-    env_file: .env
-    volumes:
-      - ./storage:/app/storage
-      - ./logs:/app/logs
+  # Frontend container (#484). Previously absent from the
+  # script-generated compose, which left the script's docker
+  # architecture (backend on host port 3001, no separate frontend)
+  # different from the documented production install
+  # (docker-compose.production.yml: backend internal-only +
+  # frontend nginx serving /api proxy on host port 3000). Aligning
+  # both shapes on the same 3-service shape — postgres + redis +
+  # backend, plus a frontend nginx — eliminates the doc/script
+  # divergence MrGabri flagged.
+  frontend:
+    build: ./frontend
+    container_name: picpeak-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
     networks:
       - picpeak-network
     depends_on:
       - backend
     restart: unless-stopped
+    healthcheck:
+      # frontend Dockerfile installs curl (apk add --no-cache curl)
+      # — safe to use here unlike the backend.
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres-data:
@@ -696,11 +787,14 @@ setup_native_installation() {
         # Ensure correct remote and update even if history was rewritten
         run_as_user "git config --global --add safe.directory $NATIVE_APP_DIR/app" || true
         run_as_user "git remote set-url origin $REPO_URL" || true
-        run_as_user "git fetch --all --prune" || true
-        # Prefer checking out remote main and hard resetting to avoid merge prompts
-        if ! run_as_user "git checkout -B main origin/main"; then
-          run_as_user "git checkout main" || true
-          run_as_user "git reset --hard origin/main"
+        run_as_user "git fetch --all --tags --prune" || true
+        LATEST_TAG=$(git -C "$NATIVE_APP_DIR/app" tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1)
+        if [[ -n "$LATEST_TAG" ]]; then
+          log_info "Checking out latest tag: $LATEST_TAG"
+          run_as_user "git -c advice.detachedHead=false checkout $LATEST_TAG"
+        else
+          log_warn "No version tags found, falling back to main"
+          run_as_user "git checkout -B main origin/main" || run_as_user "git checkout main"
         fi
     else
         run_as_user "git clone $REPO_URL $NATIVE_APP_DIR/app" || {
@@ -731,7 +825,8 @@ setup_native_installation() {
     
     # Generate secrets
     local jwt_secret=$(generate_jwt_secret)
-    
+    local gallery_key=$(generate_gallery_encryption_key)
+
     # Create .env file
     log_step "Creating configuration..."
     cat > "$NATIVE_APP_DIR/app/backend/.env" <<EOF
@@ -742,6 +837,9 @@ setup_native_installation() {
 NODE_ENV=production
 PORT=${CUSTOM_PORT:-$DEFAULT_PORT}
 JWT_SECRET=$jwt_secret
+
+# Gallery password encryption (AES-256-GCM)
+GALLERY_ENCRYPTION_KEY_V1=$gallery_key
 
 # Admin
 ADMIN_USERNAME=admin
@@ -766,6 +864,9 @@ SMTP_FROM=${SMTP_USER:-noreply@localhost}
 FRONTEND_URL=${DOMAIN_NAME:+https://$DOMAIN_NAME}
 ADMIN_URL=${DOMAIN_NAME:+https://$DOMAIN_NAME}
 
+# Auth cookie behavior — see Docker .env block above for rationale (#427).
+COOKIE_SECURE=auto
+
 # Features
 ENABLE_FILE_WATCHER=true
 ENABLE_EXPIRATION_CHECKER=true
@@ -780,11 +881,11 @@ LOG_LEVEL=info
 SERVE_FRONTEND=true
 FRONTEND_DIR=$NATIVE_APP_DIR/app/frontend/dist
 EOF
-    
+
     # Set permissions
     chown -R $NATIVE_APP_USER:$NATIVE_APP_USER "$NATIVE_APP_DIR"
     chmod 600 "$NATIVE_APP_DIR/app/backend/.env"
-    
+
     # Run database migrations
     log_step "Initializing database..."
     cd "$NATIVE_APP_DIR/app/backend"
@@ -796,7 +897,22 @@ EOF
             log_warn "Automatic admin password reset failed; please run reset-admin-password.js manually."
         fi
     fi
-    
+
+    # Always surface the admin credentials file (#427).
+    local creds_path="$NATIVE_APP_DIR/app/backend/data/ADMIN_CREDENTIALS.txt"
+    if [[ -f "$creds_path" ]]; then
+        chmod 600 "$creds_path" 2>/dev/null || true
+        log_step "Admin credentials saved to: $creds_path"
+        echo
+        echo "--------------------------------------------------"
+        grep -E '^Email:|^Password:' "$creds_path" 2>/dev/null || true
+        echo "--------------------------------------------------"
+        echo "  Login URL: ${DOMAIN_NAME:+https://$DOMAIN_NAME}${DOMAIN_NAME:-http://YOUR_HOST_IP:${CUSTOM_PORT:-$DEFAULT_PORT}}/admin"
+        echo "  Full credentials file: $creds_path"
+        echo "  Delete the file after recording the password."
+        echo
+    fi
+
     # Create systemd services
     create_systemd_services
     
@@ -1116,18 +1232,47 @@ update_docker_installation() {
     
     # Backup current configuration
     cp .env .env.backup-$(date +%Y%m%d-%H%M%S)
-    
+
+    # Inject gallery encryption key if this .env predates the feature
+    if ! grep -q '^GALLERY_ENCRYPTION_KEY_V1=' .env; then
+        local gallery_key
+        gallery_key=$(generate_gallery_encryption_key)
+        echo "" >> .env
+        echo "# Gallery password encryption (AES-256-GCM)" >> .env
+        echo "GALLERY_ENCRYPTION_KEY_V1=$gallery_key" >> .env
+        log_success "Generated GALLERY_ENCRYPTION_KEY_V1 (existing events use sentinel fallback)"
+    fi
+
     # Pull latest code
     git pull
-    
+
     # Rebuild and restart containers
     docker compose down
     docker compose build --no-cache
+
+    # Clean up the legacy picpeak-workers container if it exists
+    # (workers are now in-process — see comment in
+    # create_docker_compose_file). Best-effort: ignore if absent.
+    if docker ps -a --format '{{.Names}}' | grep -q '^picpeak-workers$'; then
+      log_step "Removing legacy picpeak-workers container (workers now run in-process)..."
+      docker stop picpeak-workers >/dev/null 2>&1 || true
+      docker rm picpeak-workers >/dev/null 2>&1 || true
+    fi
+
     docker compose up -d
-    
-    # Run migrations
-    docker compose exec -T backend npm run migrate
-    
+
+    # Migrations are run automatically by backend/wait-for-db.sh on
+    # container startup. Wait for the backend to become healthy
+    # rather than racing it with a manual `npm run migrate`.
+    log_step "Waiting for backend to finish migrations and become healthy..."
+    for _ in $(seq 1 30); do
+      if docker inspect -f '{{.State.Health.Status}}' picpeak-backend 2>/dev/null | grep -q '^healthy$'; then
+        log_success "Backend healthy."
+        break
+      fi
+      sleep 2
+    done
+
     log_success "Docker installation updated successfully!"
 }
 
@@ -1149,10 +1294,14 @@ update_native_installation() {
     cd "$NATIVE_APP_DIR/app"
     run_as_user "git config --global --add safe.directory $NATIVE_APP_DIR/app" || true
     run_as_user "git remote set-url origin $REPO_URL" || true
-    run_as_user "git fetch --all --prune"
-    if ! run_as_user "git checkout -B main origin/main"; then
-      run_as_user "git checkout main" || true
-      run_as_user "git reset --hard origin/main"
+    run_as_user "git fetch --all --tags --prune"
+    LATEST_TAG=$(git -C "$NATIVE_APP_DIR/app" tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1)
+    if [[ -n "$LATEST_TAG" ]]; then
+      log_info "Checking out latest tag: $LATEST_TAG"
+      run_as_user "git -c advice.detachedHead=false checkout $LATEST_TAG"
+    else
+      log_warn "No version tags found, falling back to main"
+      run_as_user "git checkout -B main origin/main" || run_as_user "git checkout main"
     fi
     
     # Update backend dependencies
@@ -1176,6 +1325,14 @@ update_native_installation() {
     fi
     if ! grep -q '^FRONTEND_DIR=' "$NATIVE_APP_DIR/app/backend/.env"; then
       echo "FRONTEND_DIR=$NATIVE_APP_DIR/app/frontend/dist" >> "$NATIVE_APP_DIR/app/backend/.env"
+    fi
+    if ! grep -q '^GALLERY_ENCRYPTION_KEY_V1=' "$NATIVE_APP_DIR/app/backend/.env"; then
+        local gallery_key
+        gallery_key=$(generate_gallery_encryption_key)
+        echo "" >> "$NATIVE_APP_DIR/app/backend/.env"
+        echo "# Gallery password encryption (AES-256-GCM)" >> "$NATIVE_APP_DIR/app/backend/.env"
+        echo "GALLERY_ENCRYPTION_KEY_V1=$gallery_key" >> "$NATIVE_APP_DIR/app/backend/.env"
+        log_success "Generated GALLERY_ENCRYPTION_KEY_V1 (existing events use sentinel fallback)"
     fi
 
     ensure_storage_layout "$NATIVE_APP_DIR"
