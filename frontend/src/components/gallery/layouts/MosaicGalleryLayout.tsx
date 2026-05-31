@@ -116,7 +116,8 @@ const MosaicPhoto: React.FC<MosaicPhotoProps> = ({
                       } catch {
                         return;
                       }
-                      setLikedLocal(true);
+                      // Toggle — server /feedback like is a toggle (#590).
+                      setLikedLocal(prev => !prev);
                       try {
                         await feedbackService.submitFeedback(slug!, String(photo.id), {
                           feedback_type: 'like',
@@ -129,7 +130,8 @@ const MosaicPhoto: React.FC<MosaicPhotoProps> = ({
                       setShowIdentityModal(true);
                       return;
                     }
-                    setLikedLocal(true);
+                    // Toggle — server /feedback like is a toggle (#590).
+                    setLikedLocal(prev => !prev);
                     try {
                       await feedbackService.submitFeedback(slug!, String(photo.id), {
                         feedback_type: 'like',

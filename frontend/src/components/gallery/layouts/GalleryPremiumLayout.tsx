@@ -260,9 +260,11 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
       } catch {
         return;
       }
+      // Toggle — server /feedback like is a toggle (#590).
       setLikedPhotoIds(prev => {
         const next = new Set(prev);
-        next.add(photo.id);
+        if (next.has(photo.id)) next.delete(photo.id);
+        else next.add(photo.id);
         return next;
       });
       try {
@@ -282,10 +284,11 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
       return;
     }
 
-    // Optimistic update
+    // Optimistic update — toggle, not add (#590).
     setLikedPhotoIds(prev => {
       const next = new Set(prev);
-      next.add(photo.id);
+      if (next.has(photo.id)) next.delete(photo.id);
+      else next.add(photo.id);
       return next;
     });
 
@@ -306,9 +309,14 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
     setShowIdentityModal(false);
 
     if (pendingLikePhotoId) {
+      // Toggle — server /feedback like is a toggle (#590). The identity
+      // modal only fires the first time per session, so the user is
+      // intentionally liking a not-yet-liked photo here, but keep the
+      // setter shape consistent with the other paths.
       setLikedPhotoIds(prev => {
         const next = new Set(prev);
-        next.add(pendingLikePhotoId);
+        if (next.has(pendingLikePhotoId)) next.delete(pendingLikePhotoId);
+        else next.add(pendingLikePhotoId);
         return next;
       });
 

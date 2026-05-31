@@ -158,7 +158,13 @@ export const CarouselGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                     } catch {
                       return;
                     }
-                    setLikedIds(prev => new Set(prev).add(currentPhoto.id));
+                    // Toggle — server /feedback like is a toggle (#590).
+                    setLikedIds(prev => {
+                      const next = new Set(prev);
+                      if (next.has(currentPhoto.id)) next.delete(currentPhoto.id);
+                      else next.add(currentPhoto.id);
+                      return next;
+                    });
                     try {
                       await feedbackService.submitFeedback(slug!, String(currentPhoto.id), {
                         feedback_type: 'like',
@@ -171,7 +177,13 @@ export const CarouselGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                     setShowIdentityModal(true);
                     return;
                   }
-                  setLikedIds(prev => new Set(prev).add(currentPhoto.id));
+                  // Toggle — server /feedback like is a toggle (#590).
+                  setLikedIds(prev => {
+                    const next = new Set(prev);
+                    if (next.has(currentPhoto.id)) next.delete(currentPhoto.id);
+                    else next.add(currentPhoto.id);
+                    return next;
+                  });
                   try {
                     await feedbackService.submitFeedback(slug!, String(currentPhoto.id), {
                       feedback_type: 'like',

@@ -832,9 +832,13 @@ export const MasonryGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                 columnWidth={columnWidth}
                 liked={likedPhotoIds.has(photo.id)}
                 onLikeSuccess={() => {
+                  // Toggle, not add — the /feedback like endpoint toggles
+                  // server-side, so click 2 on a liked photo unlikes it;
+                  // the optimistic UI must follow suit (#590).
                   setLikedPhotoIds((prev) => {
                     const next = new Set(prev);
-                    next.add(photo.id);
+                    if (next.has(photo.id)) next.delete(photo.id);
+                    else next.add(photo.id);
                     return next;
                   });
                 }}
