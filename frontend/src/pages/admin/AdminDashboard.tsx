@@ -17,7 +17,6 @@ import { useTranslation } from 'react-i18next';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 import { Button, Card, Loading } from '../../components/common';
-import { UpdateNotification } from '../../components/admin/UpdateNotification';
 import { useQuery } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
 import { adminService, ActivityType } from '../../services/admin.service';
@@ -139,9 +138,6 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div>
-      {/* Update Notification */}
-      <UpdateNotification />
-
       {/* Page Header */}
       <div className="flex justify-between items-center mb-8">
         <div>

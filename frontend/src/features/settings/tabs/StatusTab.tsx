@@ -16,6 +16,7 @@ import { api } from '../../../config/api';
 import { settingsService } from '../../../services/settings.service';
 import { useStatusTab } from '../hooks/useStatusTab';
 import { UpdateNotificationSettings } from '../components/UpdateNotificationSettings';
+import { UpdateCard } from '../components/UpdateCard';
 
 const BYTES_PER_GB = 1024 * 1024 * 1024;
 
@@ -113,6 +114,8 @@ export const StatusTab: React.FC<StatusTabProps> = ({
 
   return (
     <div className="space-y-6">
+      <UpdateCard />
+
       {/* Storage Overview */}
       {storageInfo && (() => {
         const configuredSoftLimit = storageInfo.configured_soft_limit ?? null;
