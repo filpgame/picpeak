@@ -58,7 +58,7 @@ describe('POST /system/updates/apply', () => {
     expect(res.body.targetVersion).toBe('4.1.3-beta.0');
     expect(mockSpawn).toHaveBeenCalledWith(
       'bash',
-      [expect.stringContaining('picpeak-setup.sh')],
+      [expect.stringContaining('picpeak-setup.sh'), '--update'],
       expect.objectContaining({ detached: true, stdio: 'ignore' })
     );
   });

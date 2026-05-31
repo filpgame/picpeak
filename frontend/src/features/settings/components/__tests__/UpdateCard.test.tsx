@@ -88,8 +88,9 @@ describe('UpdateCard', () => {
     render(<UpdateCard />);
     const combinedLink = screen.getByText('admin.updates.card.downloadCombinedLog').closest('a');
     const errorLink = screen.getByText('admin.updates.card.downloadErrorLog').closest('a');
-    expect(combinedLink).toHaveAttribute('href', '/api/admin/system/logs/download?type=combined');
-    expect(errorLink).toHaveAttribute('href', '/api/admin/system/logs/download?type=error');
+    // buildResourceUrl prepends origin in jsdom (http://localhost:3000)
+    expect(combinedLink?.getAttribute('href')).toContain('/api/admin/system/logs/download?type=combined');
+    expect(errorLink?.getAttribute('href')).toContain('/api/admin/system/logs/download?type=error');
   });
 
   it('calls checkAgain when "check again" is clicked', async () => {

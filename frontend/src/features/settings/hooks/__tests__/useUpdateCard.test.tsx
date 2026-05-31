@@ -66,6 +66,14 @@ describe('useUpdateCard', () => {
     expect(result.current.state.phase).toBe('loading');
   });
 
+  it('transitions to disabled when update checking is disabled', async () => {
+    apiGet.mockResolvedValue({ data: { enabled: false, message: 'Update checking is disabled' } });
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useUpdateCard(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.state.phase).toBe('disabled'));
+  });
+
   it('transitions to idle when no update is available', async () => {
     apiGet.mockResolvedValue(UP_TO_DATE_RESPONSE);
     const { Wrapper } = makeWrapper();

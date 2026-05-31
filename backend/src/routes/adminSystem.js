@@ -399,7 +399,7 @@ router.post('/updates/apply', adminAuth, requirePermission('settings.edit'), asy
     const updateInfo = await checkForUpdates();
     const scriptPath = path.resolve(__dirname, '../../../scripts/picpeak-setup.sh');
 
-    const child = spawn('bash', [scriptPath], {
+    const child = spawn('bash', [scriptPath, '--update'], {
       detached: true,
       stdio: 'ignore',
     });

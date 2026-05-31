@@ -4,6 +4,7 @@ import { api } from '../../../config/api';
 
 export type UpdatePhase =
   | { phase: 'loading' }
+  | { phase: 'disabled' }
   | { phase: 'idle'; current: string; channel: string; lastChecked: string }
   | { phase: 'update-available'; current: string; latest: string; channel: string; lastChecked: string }
   | { phase: 'updating'; targetVersion: string }
@@ -45,6 +46,10 @@ export function useUpdateCard() {
         prev.phase === 'complete' ||
         prev.phase === 'error'
       ) return prev;
+
+      if (updateInfo.enabled === false) {
+        return { phase: 'disabled' };
+      }
 
       if (updateInfo.updateAvailable) {
         return {

@@ -2,11 +2,14 @@ import React from 'react';
 import { ArrowUpCircle, RefreshCw, Download, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../../components/common';
+import { buildResourceUrl } from '../../../utils/url';
 import { useUpdateCard } from '../hooks/useUpdateCard';
 
 export const UpdateCard: React.FC = () => {
   const { t } = useTranslation();
   const { state, triggerUpdate, checkAgain } = useUpdateCard();
+
+  if (state.phase === 'disabled') return null;
 
   const channelBadge =
     ('channel' in state && state.channel === 'beta') ? (
@@ -102,14 +105,14 @@ export const UpdateCard: React.FC = () => {
           <p>{t('admin.updates.card.errorTitle')}</p>
           <div className="flex flex-wrap gap-4 mt-2">
             <a
-              href="/api/admin/system/logs/download?type=combined"
+              href={buildResourceUrl('/api/admin/system/logs/download?type=combined')}
               className="inline-flex items-center gap-1 font-semibold underline hover:text-amber-900 dark:hover:text-amber-100"
             >
               <Download className="w-3.5 h-3.5" />
               {t('admin.updates.card.downloadCombinedLog')}
             </a>
             <a
-              href="/api/admin/system/logs/download?type=error"
+              href={buildResourceUrl('/api/admin/system/logs/download?type=error')}
               className="inline-flex items-center gap-1 font-semibold underline hover:text-amber-900 dark:hover:text-amber-100"
             >
               <Download className="w-3.5 h-3.5" />
