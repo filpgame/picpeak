@@ -48,16 +48,27 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   // Renders the logo + wordmark block per the current logo_display_mode.
   // Re-used in left / center / right slots below so all three positions
   // produce visually identical brand chrome.
+  const showLogo = !logoInSidebar && (logoDisplayMode === 'logo_only' || logoDisplayMode === 'logo_and_text');
+  const showText = logoDisplayMode === 'text_only' || logoDisplayMode === 'logo_and_text';
+  // On <sm the wordmark hides when the logo carries the brand identity
+  // (logo_and_text). Same pattern LanguageSelector uses for its language
+  // name (#527). Without this, even with truncate, a phone-width admin
+  // shows things like "Ar..." after the logo image — readable but ugly,
+  // and on accounts whose company name lets the text reach the right
+  // cluster it overlaps the LanguageSelector button (#523 follow-up,
+  // Rekoo-PS's "Arkan Studio" screenshot in v3.59.0-beta.0). text_only
+  // mode keeps the wordmark on every width — nothing else would render.
+  const wordmarkVisibilityClass = showLogo ? 'hidden sm:inline' : 'inline';
   const renderBrandBlock = () => (
     // min-w-0 + truncate on the name span so long company names shrink
     // within the left cluster instead of pushing into the right-side
     // action buttons on narrow mobile widths (#523 regression).
     <div className="flex items-center gap-2 min-w-0">
-      {!logoInSidebar && (logoDisplayMode === 'logo_only' || logoDisplayMode === 'logo_and_text') && (
+      {showLogo && (
         <img src={resolvedLogoUrl} alt={companyName} className="h-8 w-auto object-contain flex-shrink-0" />
       )}
-      {(logoDisplayMode === 'text_only' || logoDisplayMode === 'logo_and_text') && (
-        <span className="text-xl sm:text-2xl truncate" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, color: '#145346' }}>{companyName}</span>
+      {showText && (
+        <span className={`${wordmarkVisibilityClass} text-xl sm:text-2xl truncate`} style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, color: '#145346' }}>{companyName}</span>
       )}
     </div>
   );
