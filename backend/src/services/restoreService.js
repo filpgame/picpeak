@@ -954,12 +954,27 @@ END $$;`
         this.log('info', 'Sequence resync completed');
       }
 
-      // Re-initialize database connection
-      const { db: newDb } = require('../database/db');
-      
-      // Run migrations to ensure schema is up to date
+      // Re-initialize the in-process knex pool. The DROP/CREATE
+      // DATABASE pair above destroyed our connections and the recreated
+      // database has a different pg_database OID — any pooled
+      // connection from before would either be dead or pointed at a
+      // ghost. Without explicit reinit, every query in the process
+      // after restore returns `Error: Unable to acquire a connection`
+      // until the container is manually restarted (and admin sees
+      // "An error occurred" on the login screen even after the restore
+      // technically succeeded). reinitPool destroys + rebuilds the
+      // pool and probes the new one with `SELECT 1` so failures here
+      // surface immediately instead of polluting the next request.
+      const { reinitPool } = require('../database/db');
+      this.log('info', 'Re-initializing knex pool against the restored database...');
+      await reinitPool();
+      this.log('info', 'Knex pool re-initialized');
+
+      // Run migrations to ensure schema is up to date. Use the
+      // module-level `db` export, which is the Proxy that now points
+      // at the freshly-initialized pool.
       this.log('info', 'Running database migrations...');
-      await newDb.migrate.latest();
+      await db.migrate.latest();
 
       return { success: true };
 
