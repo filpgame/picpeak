@@ -1544,6 +1544,23 @@
         "copyAllCommands": "Copier toutes les commandes",
         "completeChecklist": "Complétez la liste de contrôle avant de mettre à jour",
         "error": "Échec du chargement des instructions de mise à jour"
+      },
+      "card": {
+        "title": "Version de l'application",
+        "upToDate": "À jour",
+        "updateAvailable": "Mise à jour disponible",
+        "updateTo": "Mettre à jour vers {{version}}",
+        "checkAgain": "Vérifier à nouveau",
+        "lastChecked": "Dernière vérification : {{time}}",
+        "updating": "Mise à jour en cours…",
+        "updatingDesc": "Mise à jour vers {{version}} — installation des dépendances et compilation du frontend. Le serveur redémarrera automatiquement.",
+        "restarting": "Redémarrage…",
+        "restartingDesc": "Le serveur redémarre — la page se rechargera automatiquement dès qu'il sera prêt.",
+        "complete": "Mis à jour vers {{version}} — rechargement de la page…",
+        "errorTitle": "La mise à jour a peut-être rencontré un problème, ou le serveur prend plus de temps que prévu pour redémarrer.",
+        "downloadCombinedLog": "Télécharger combined.log",
+        "downloadErrorLog": "Télécharger error.log",
+        "retry": "Réessayer"
       }
     },
     "notifications": "Notifications",

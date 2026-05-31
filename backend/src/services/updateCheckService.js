@@ -3,6 +3,8 @@ const fs = require('fs').promises;
 const path = require('path');
 const logger = require('../utils/logger');
 
+const RELEASES_REPO = process.env.GITHUB_RELEASES_REPO || 'filpgame/picpeak';
+
 // Cache for version info (avoid hitting GitHub API too often)
 let versionCache = null;
 let lastCheck = 0;
@@ -94,7 +96,7 @@ async function fetchAvailableVersions() {
   try {
     // Use GitHub Releases API (public, no auth required)
     const response = await axios.get(
-      'https://api.github.com/repos/the-luap/picpeak/releases',
+      `https://api.github.com/repos/${RELEASES_REPO}/releases`,
       {
         headers: {
           'Accept': 'application/vnd.github+json',

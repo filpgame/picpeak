@@ -1876,6 +1876,23 @@
         "copyAllCommands": "Alle Befehle kopieren",
         "completeChecklist": "Checkliste vor dem Update ausfüllen",
         "error": "Fehler beim Laden der Update-Anweisungen"
+      },
+      "card": {
+        "title": "Anwendungsversion",
+        "upToDate": "Aktuell",
+        "updateAvailable": "Update verfügbar",
+        "updateTo": "Auf {{version}} aktualisieren",
+        "checkAgain": "Erneut prüfen",
+        "lastChecked": "Zuletzt geprüft: {{time}}",
+        "updating": "Wird aktualisiert…",
+        "updatingDesc": "Aktualisierung auf {{version}} — Abhängigkeiten werden installiert und das Frontend wird erstellt. Der Server wird automatisch neu gestartet.",
+        "restarting": "Wird neu gestartet…",
+        "restartingDesc": "Der Server wird neu gestartet — die Seite lädt automatisch neu, wenn er bereit ist.",
+        "complete": "Auf {{version}} aktualisiert — Seite wird neu geladen…",
+        "errorTitle": "Beim Update ist möglicherweise ein Problem aufgetreten, oder der Server benötigt länger als erwartet zum Neustart.",
+        "downloadCombinedLog": "combined.log herunterladen",
+        "downloadErrorLog": "error.log herunterladen",
+        "retry": "Erneut versuchen"
       }
     },
     "notifications": "Benachrichtigungen",

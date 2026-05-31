@@ -1533,6 +1533,23 @@
         "copyAllCommands": "Alle opdrachten kopieren",
         "completeChecklist": "Voltooi de checklist voor het bijwerken",
         "error": "Kan update-instructies niet laden"
+      },
+      "card": {
+        "title": "Versie van de applicatie",
+        "upToDate": "Up-to-date",
+        "updateAvailable": "Update beschikbaar",
+        "updateTo": "Bijwerken naar {{version}}",
+        "checkAgain": "Opnieuw controleren",
+        "lastChecked": "Laatst gecontroleerd: {{time}}",
+        "updating": "Bijwerken…",
+        "updatingDesc": "Bijwerken naar {{version}} — afhankelijkheden installeren en frontend bouwen. De server zal automatisch opnieuw starten.",
+        "restarting": "Herstarten…",
+        "restartingDesc": "De server herstart — de pagina wordt automatisch herladen zodra deze gereed is.",
+        "complete": "Bijgewerkt naar {{version}} — pagina herladen…",
+        "errorTitle": "De update is mogelijk mislukt, of de server heeft meer tijd nodig dan verwacht om te herstarten.",
+        "downloadCombinedLog": "Download combined.log",
+        "downloadErrorLog": "Download error.log",
+        "retry": "Opnieuw proberen"
       }
     },
     "notifications": "Meldingen",

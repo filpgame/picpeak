@@ -3,6 +3,7 @@ const { db, withRetry } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const os = require('os');
 const { formatBoolean } = require('../utils/dbCompat');
@@ -14,6 +15,14 @@ const {
   sendTestUpdateNotification,
   getUpdateNotificationSettings
 } = require('../services/updateNotificationService');
+const RELEASES_REPO = process.env.GITHUB_RELEASES_REPO || 'filpgame/picpeak';
+const { spawn } = require('child_process');
+
+// Flag never resets after successful spawn: the setup script ends with
+// `systemctl restart picpeak-backend`, killing this process. A second
+// apply call can only arrive if the first spawn failed (flag reset in catch).
+let updateInProgress = false;
+
 const router = express.Router();
 
 // Get system version
@@ -104,7 +113,7 @@ router.get('/updates/instructions', adminAuth, requirePermission('settings.view'
       channel: updateInfo.channel,
       environment: env,
       instructions,
-      releaseNotesUrl: `https://github.com/the-luap/picpeak/releases/tag/v${updateInfo.latest.forChannel}`
+      releaseNotesUrl: `https://github.com/${RELEASES_REPO}/releases/tag/v${updateInfo.latest.forChannel}`
     });
   } catch (error) {
     logger.error('Error generating update instructions:', error);
@@ -376,6 +385,54 @@ router.post('/updates/notifications/check', adminAuth, requirePermission('settin
     logger.error('Error checking for update notifications:', error);
     res.status(500).json({ error: 'Failed to check for update notifications' });
   }
+});
+
+// Trigger automatic update by running the setup/update script as a detached process
+router.post('/updates/apply', adminAuth, requirePermission('settings.edit'), async (req, res) => {
+  if (updateInProgress) {
+    return res.status(409).json({ error: 'Update already in progress' });
+  }
+
+  updateInProgress = true;
+
+  try {
+    const updateInfo = await checkForUpdates();
+    const scriptPath = path.resolve(__dirname, '../../../scripts/picpeak-setup.sh');
+
+    const child = spawn('bash', [scriptPath, '--update'], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+
+    res.status(202).json({
+      status: 'started',
+      targetVersion: updateInfo.latest?.forChannel ?? 'unknown',
+    });
+  } catch (error) {
+    updateInProgress = false;
+    logger.error('Failed to start update process:', error);
+    res.status(500).json({ error: 'Failed to start update process' });
+  }
+});
+
+// Download backend log files
+router.get('/logs/download', adminAuth, requirePermission('settings.view'), async (req, res) => {
+  const type = req.query.type === 'error' ? 'error' : 'combined';
+  const filename = `${type}.log`;
+  const logPath = path.join(__dirname, '../../logs', filename);
+
+  try {
+    await fs.access(logPath);
+  } catch {
+    return res.status(404).json({ error: 'Log file not found' });
+  }
+
+  res.setHeader('Content-Disposition', `attachment; filename=picpeak-${filename}`);
+  res.setHeader('Content-Type', 'text/plain');
+
+  const stream = fsSync.createReadStream(logPath);
+  stream.pipe(res);
 });
 
 module.exports = router;

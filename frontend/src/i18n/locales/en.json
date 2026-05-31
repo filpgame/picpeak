@@ -1544,6 +1544,23 @@
         "copyAllCommands": "Copy All Commands",
         "completeChecklist": "Complete the checklist before updating",
         "error": "Failed to load update instructions"
+      },
+      "card": {
+        "title": "Application Version",
+        "upToDate": "Up to date",
+        "updateAvailable": "Update available",
+        "updateTo": "Update to {{version}}",
+        "checkAgain": "Check again",
+        "lastChecked": "Last checked: {{time}}",
+        "updating": "Updating…",
+        "updatingDesc": "Updating to {{version}} — installing dependencies and building frontend. The server will restart automatically.",
+        "restarting": "Restarting…",
+        "restartingDesc": "Server is restarting — page will reload automatically when ready.",
+        "complete": "Updated to {{version}} — reloading page…",
+        "errorTitle": "Update may have encountered an issue, or the server is taking longer than expected to restart.",
+        "downloadCombinedLog": "Download combined.log",
+        "downloadErrorLog": "Download error.log",
+        "retry": "Retry"
       }
     },
     "notifications": "Notifications",
