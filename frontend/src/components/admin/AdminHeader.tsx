@@ -49,12 +49,15 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   // Re-used in left / center / right slots below so all three positions
   // produce visually identical brand chrome.
   const renderBrandBlock = () => (
-    <div className="flex items-center gap-2">
+    // min-w-0 + truncate on the name span so long company names shrink
+    // within the left cluster instead of pushing into the right-side
+    // action buttons on narrow mobile widths (#523 regression).
+    <div className="flex items-center gap-2 min-w-0">
       {!logoInSidebar && (logoDisplayMode === 'logo_only' || logoDisplayMode === 'logo_and_text') && (
-        <img src={resolvedLogoUrl} alt={companyName} className="h-8 w-auto object-contain" />
+        <img src={resolvedLogoUrl} alt={companyName} className="h-8 w-auto object-contain flex-shrink-0" />
       )}
       {(logoDisplayMode === 'text_only' || logoDisplayMode === 'logo_and_text') && (
-        <span className="text-xl sm:text-2xl" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, color: '#145346' }}>{companyName}</span>
+        <span className="text-xl sm:text-2xl truncate" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, color: '#145346' }}>{companyName}</span>
       )}
     </div>
   );
