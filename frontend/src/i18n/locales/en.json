@@ -82,6 +82,7 @@
     "edit": "Edit",
     "add": "Add",
     "sortBy": "Sort by",
+    "selectCountry": "Select country…",
     "yes": "Yes",
     "no": "No",
     "back": "Back",
@@ -2997,7 +2998,8 @@
       "savedPassiveToast": "Passive customer created.",
       "savedActiveToast": "Customer created and portal invitation sent.",
       "inviteFailedToast": "Customer saved (passive). Invitation email failed — retry from the customer detail page.",
-      "emailRequired": "A valid email is required."
+      "emailRequired": "A valid email is required.",
+      "nameRequired": "Enter at least a company name or a contact name."
     },
     "passive": {
       "badge": "Passive — admin only",
@@ -3102,6 +3104,7 @@
       "city": "City",
       "state": "State / region",
       "countryCode": "Country (ISO 2)",
+      "country": "Country",
       "countryName": "Country (full name)",
       "notesHint": "Visible only to admins. Never shown to the customer.",
       "featuresSection": "Customer features",

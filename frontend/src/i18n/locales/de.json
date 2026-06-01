@@ -82,6 +82,7 @@
     "edit": "Bearbeiten",
     "add": "Hinzufügen",
     "sortBy": "Sortieren nach",
+    "selectCountry": "Land auswählen…",
     "yes": "Ja",
     "no": "Nein",
     "back": "Zurück",
@@ -2997,7 +2998,8 @@
       "savedPassiveToast": "Passiver Kunde erstellt.",
       "savedActiveToast": "Kunde erstellt und Portal-Einladung gesendet.",
       "inviteFailedToast": "Kunde gespeichert (passiv). Einladungs-E-Mail fehlgeschlagen — bitte aus dem Kundendetail erneut versuchen.",
-      "emailRequired": "Eine gültige E-Mail-Adresse ist erforderlich."
+      "emailRequired": "Eine gültige E-Mail-Adresse ist erforderlich.",
+      "nameRequired": "Geben Sie mindestens einen Firmennamen oder einen Ansprechpartner an."
     },
     "passive": {
       "badge": "Passiv — nur Admin",
@@ -3102,6 +3104,7 @@
       "city": "Stadt",
       "state": "Bundesland / Region",
       "countryCode": "Land (ISO-2)",
+      "country": "Land",
       "countryName": "Land (vollständiger Name)",
       "notesHint": "Nur für Administratoren sichtbar. Wird dem Kunden nie gezeigt.",
       "featuresSection": "Kundenfunktionen",
