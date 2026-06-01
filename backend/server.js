@@ -65,6 +65,8 @@ const cspDirectives = {
     "'self'",
     'https://www.google.com',
     'https://www.gstatic.com',
+    // Pre-React theme bootstrap inline script in index.html (#358)
+    "'sha256-gK/rtz98Li1BCNYLIrWO9dN89OKP5ZRGZ95XEQCEZEo='",
     ...(analyticsOrigin ? [analyticsOrigin] : []),
   ],
   styleSrc: ["'self'", "'unsafe-inline'", "https:"], // Required for styled components
@@ -78,7 +80,11 @@ const cspDirectives = {
   fontSrc: ["'self'", "https:", "data:"], // Web fonts
   objectSrc: ["'none'"], // Disable plugins
   mediaSrc: ["'self'"], // Audio/video
-  frameSrc: ["'self'", 'https://www.google.com'],
+  frameSrc: [
+    "'self'",
+    'https://www.google.com',
+    ...(analyticsOrigin ? [analyticsOrigin] : []),
+  ],
 };
 // Only upgrade insecure requests when HSTS explicitly enabled (HTTPS deployment)
 if (enableHsts) {
