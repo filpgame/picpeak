@@ -105,6 +105,46 @@ function computeDueDate(scheduledSendAt, netDays = 30) {
 }
 
 /**
+ * Resolve the net-days a new invoice's due date should be anchored to.
+ * Single source of truth so the editor (split picker), legacy callers,
+ * and quote→invoice conversion all land on the same number. Priority:
+ *
+ *   1. `payload.netDays` — explicit caller override (installment spawn
+ *      passes the snapshot's net_days here).
+ *   2. Split picker (migration 124): payment_net_days_templates.net_days
+ *      via `payload.paymentNetDaysTemplateId`. This is what the bill
+ *      editor actually sends; the old code only read the legacy FK and
+ *      so silently ignored Net 60 / 90 selections.
+ *   3. Legacy single FK: payment_term_templates.net_days via
+ *      `payload.paymentTermTemplateId`.
+ *   4. The `crm_payment_default_net_days` setting (admin-configured).
+ *   5. 30 — historical hard default.
+ */
+async function resolveNetDays(payload, trx = db) {
+  if (payload && payload.netDays != null && payload.netDays !== '') {
+    const n = ensureInt(payload.netDays);
+    if (n) return n;
+  }
+  if (payload && payload.paymentNetDaysTemplateId) {
+    const probe = await trx('payment_net_days_templates')
+      .where({ id: payload.paymentNetDaysTemplateId })
+      .select('net_days')
+      .first();
+    if (probe && probe.net_days != null) return ensureInt(probe.net_days) || 30;
+  }
+  if (payload && payload.paymentTermTemplateId) {
+    const probe = await trx('payment_term_templates')
+      .where({ id: payload.paymentTermTemplateId })
+      .select('net_days')
+      .first();
+    if (probe && probe.net_days != null) return ensureInt(probe.net_days) || 30;
+  }
+  const setting = ensureInt(await getAppSetting('crm_payment_default_net_days'));
+  if (setting) return setting;
+  return 30;
+}
+
+/**
  * Resolve the deal_uuid for a new invoice row (migration 140). Priority:
  *
  *   1. `payload.dealUuid` — explicit caller override. Used by
@@ -642,18 +682,13 @@ async function createInvoice(payload, adminId, trx = db) {
   // used `invoiceNumber` here.
   const issueDate = payload.issueDate || new Date().toISOString().slice(0, 10);
   const scheduledSendAt = payload.scheduledSendAt ? new Date(payload.scheduledSendAt) : null;
-  // Resolve the selected payment-term template's net_days BEFORE
-  // computing the due date so Net 60 / 90 templates actually push
-  // the due date out. Falls back to 30 when no template is set
-  // (matches the historical default).
-  let resolvedNetDays = 30;
-  if (payload.paymentTermTemplateId) {
-    const probe = await trx('payment_term_templates')
-      .where({ id: payload.paymentTermTemplateId })
-      .select('net_days')
-      .first();
-    if (probe && probe.net_days != null) resolvedNetDays = ensureInt(probe.net_days) || 30;
-  }
+  // Resolve net_days BEFORE computing the due date so Net 60 / 90
+  // selections actually push the due date out. resolveNetDays honors
+  // the split picker FK the editor sends, the legacy single FK, and
+  // the crm_payment_default_net_days setting (see helper). The clock
+  // starts on the SEND date when the invoice is scheduled, otherwise
+  // the issue date — so a future send pushes the due date out too.
+  const resolvedNetDays = await resolveNetDays(payload, trx);
   const dueDate = payload.dueDate || computeDueDate(scheduledSendAt || new Date(issueDate), resolvedNetDays)
     .toISOString().slice(0, 10);
 
@@ -927,10 +962,13 @@ async function spawnInstallmentInvoices({ trx, eventId, quoteId, customer, curre
   }
 
   // netDays drives the due-date offset on every scheduled invoice
-  // created here. Defaults to 30 when the caller doesn't pass one;
-  // callers in quoteService now pass the converting quote's
-  // payment-term net_days so Net 60 / 90 templates flow through.
-  const resolvedNetDays = ensureInt(netDays) || 30;
+  // created here. Callers in quoteService pass the converting quote's
+  // payment-term net_days so Net 60 / 90 templates flow through; when
+  // absent we fall back to the crm_payment_default_net_days setting
+  // (then 30) rather than silently using 30, matching createInvoice.
+  const resolvedNetDays = ensureInt(netDays)
+    || ensureInt(await getAppSetting('crm_payment_default_net_days'))
+    || 30;
   const total = installments.length;
   const acceptanceTime = new Date();
   const invoiceIds = [];

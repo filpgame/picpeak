@@ -48,6 +48,12 @@ export const BillEditorPage: React.FC = () => {
   const [currency, setCurrency] = useState('CHF');
   const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState('');
+  // Due date is normally view-only: it auto-tracks (send date else issue
+  // date) + the selected Net-days template, so the payment clock starts
+  // on the day the invoice actually goes out. Flipping this lets the
+  // admin type a different date by hand; we keep it pinned so the auto
+  // effect below stops clobbering their value.
+  const [dueDateOverridden, setDueDateOverridden] = useState(false);
   const [scheduledSendAt, setScheduledSendAt] = useState('');
   // null = inherit profile default at render time. 'none' / 'swiss' /
   // 'epc' = explicit per-invoice override. (Existing invoices that
@@ -124,6 +130,10 @@ export const BillEditorPage: React.FC = () => {
       setCurrency(inv.currency);
       setIssueDate(inv.issueDate);
       setDueDate(inv.dueDate);
+      // The invoice already carries a due date — preserve it rather than
+      // letting the auto effect recompute and surprise the admin. They
+      // can untick "Override" to re-enable auto-tracking.
+      setDueDateOverridden(true);
       setScheduledSendAt(inv.scheduledSendAt ? inv.scheduledSendAt.slice(0, 16) : '');
       // Preserve null when the saved invoice has no explicit format —
       // it inherits the profile default at render time.
@@ -317,6 +327,25 @@ export const BillEditorPage: React.FC = () => {
     setPaymentTimingTemplateId((prev) => prev ?? defaultTiming.id);
   }, [isEdit, netDaysTemplates, timingTemplates, appSettings]);
 
+  // Auto-track the due date off (scheduled send date else issue date) +
+  // the selected Net-days template, mirroring the backend's
+  // computeDueDate. The clock starts the day the invoice goes out, so
+  // scheduling a future send pushes the due date out with it. Skipped
+  // once the admin overrides the field by hand. Date math is in UTC to
+  // match the backend (which parses the YYYY-MM-DD base as UTC midnight).
+  useEffect(() => {
+    if (dueDateOverridden) return;
+    const base = (scheduledSendAt ? scheduledSendAt.slice(0, 10) : issueDate) || '';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(base)) return;
+    const tpl = netDaysTemplates?.templates?.find((t) => t.id === paymentNetDaysTemplateId);
+    const netDays = tpl?.netDays != null
+      ? Number(tpl.netDays)
+      : Number(appSettings?.crm_payment_default_net_days) || 30;
+    const d = new Date(`${base}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + netDays);
+    setDueDate(d.toISOString().slice(0, 10));
+  }, [dueDateOverridden, scheduledSendAt, issueDate, paymentNetDaysTemplateId, netDaysTemplates, appSettings]);
+
   const buildPayload = (): InvoiceCreatePayload => ({
     customerAccountId: customerId || 0,
     currency,
@@ -501,7 +530,25 @@ export const BillEditorPage: React.FC = () => {
         <h3 className="font-semibold mb-2">{t('bills.section.details', 'Details')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <LocalizedDateInput label={t('bills.field.issueDate', 'Issue date') as string} value={issueDate} onChange={setIssueDate} />
-          <LocalizedDateInput label={t('bills.field.dueDate', 'Due date') as string} value={dueDate} onChange={setDueDate} />
+          <div>
+            <LocalizedDateInput
+              label={t('bills.field.dueDate', 'Due date') as string}
+              value={dueDate}
+              onChange={setDueDate}
+              disabled={!dueDateOverridden}
+            />
+            <label className="mt-1.5 flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+              <input
+                type="checkbox"
+                checked={dueDateOverridden}
+                onChange={(e) => setDueDateOverridden(e.target.checked)}
+                className="rounded border-neutral-300 dark:border-neutral-600"
+              />
+              {dueDateOverridden
+                ? t('bills.field.dueDateOverrideOn', 'Manual due date — untick to auto-set from send date + payment term')
+                : t('bills.field.dueDateOverrideOff', 'Auto from send date + payment term — tick to set manually')}
+            </label>
+          </div>
           <Input type="datetime-local" label={t('bills.field.scheduledSendAt', 'Scheduled send (optional)') as string}
             value={scheduledSendAt} onChange={(e) => setScheduledSendAt(e.target.value)} />
           <div>
