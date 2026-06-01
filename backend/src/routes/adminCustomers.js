@@ -245,6 +245,17 @@ router.post('/', [
   body('prefill.country_code').optional({ nullable: true }).isString().isLength({ max: 2 }),
   body('prefill.country_name').optional({ nullable: true }).isString().isLength({ max: 120 }),
   body('prefill.preferred_language').optional({ nullable: true }).isString().isLength({ min: 2, max: 8 }),
+  // At least one human-readable identifier so the record isn't a
+  // nameless row that's impossible to recognise in lists later.
+  body('prefill').custom((prefill) => {
+    const p = prefill || {};
+    const hasName = ['company_name', 'display_name', 'first_name', 'last_name']
+      .some((k) => typeof p[k] === 'string' && p[k].trim());
+    if (!hasName) {
+      throw new Error('At least a company name or a contact name is required');
+    }
+    return true;
+  }),
 ], handleAsync(async (req, res) => {
   validateRequest(req);
   const { id } = await customerAccountsService.createDirect({

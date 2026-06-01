@@ -19,7 +19,7 @@ import {
   Clock,
 } from 'lucide-react';
 
-import { Button, Card, Input, Loading } from '../../components/common';
+import { Button, Card, CountrySelect, Input, Loading } from '../../components/common';
 import { SUPPORTED_LANGUAGES } from '../../components/common/LanguageSelector';
 import { DecimalInput } from '../../components/common/DecimalInput';
 import { AssignedEventsDialog } from '../../components/admin/AssignedEventsDialog';
@@ -538,20 +538,18 @@ export const CustomerDetailPage: React.FC = () => {
             <Input value={form.state || ''} onChange={setField('state')} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-theme mb-1">{t('customers.detail.countryCode', 'Country abbreviation (FL, CH, DE …)')}</label>
-            <Input
+            <CountrySelect
+              label={t('customers.detail.country', 'Country') as string}
               value={form.countryCode || ''}
-              onChange={setField('countryCode')}
-              maxLength={2}
-              placeholder="FL"
+              onChange={(code) => setForm((prev) => ({ ...prev, countryCode: code }))}
             />
           </div>
           <div>
             {/* Free-text country name override (migration 107). When
                 left empty the PDF renderer falls back to the locale-
-                aware lookup on the abbreviation; useful when the
-                abbreviation isn't an ISO code (e.g. "FL" for
-                Liechtenstein, which is "LI" in ISO). */}
+                aware lookup on the ISO code. Kept for the rare case
+                where an operator wants a custom display name that
+                differs from the standard localized label. */}
             <label className="block text-sm font-medium text-theme mb-1">{t('customers.detail.countryName', 'Country (full name)')}</label>
             <Input
               value={form.countryName || ''}
