@@ -3512,6 +3512,8 @@
       "total": "Gesamt",
       "sourceQuote": "Vom Angebot",
       "issueDate": "Ausgestellt am",
+      "dueDateOverrideOn": "Manuelles Fälligkeitsdatum — Häkchen entfernen, um es automatisch aus Versanddatum + Zahlungsziel zu berechnen",
+      "dueDateOverrideOff": "Automatisch aus Versanddatum + Zahlungsziel — ankreuzen, um es manuell zu setzen",
       "scheduledSendAt": "Geplanter Versand (optional)",
       "installment": "Rate",
       "paid": "Bezahlt",
