@@ -3134,6 +3134,8 @@
       "quarterly": "Quartalsweise",
       "cycleDay": "Stichtag",
       "cycleDayHint": "1..28 = Tag im Monat. Negativ -1..-15 für „N Tage vor Monatsende“ (so löst -3 in einem 31-Tage-Monat am 28. aus).",
+      "skontoDisabled": "Kein Skonto für diesen Kunden",
+      "skontoDisabledHint": "Deaktiviert den Skonto-Abzug auf allen Rechnungen dieses Kunden – unabhängig von Vorlage oder globalen Standardwerten.",
       "triggerNow": "Rechnung jetzt ausstellen",
       "triggerConfirm": "Monatsrechnung für diesen Kunden jetzt ausstellen? Der Kunde erhält die E-Mail sofort.",
       "triggerHint": "Überspringt den Stichtag und stellt den aktuellen Entwurf sofort aus. Wird abgelehnt, wenn für die aktuelle Periode nichts erfasst wurde.",

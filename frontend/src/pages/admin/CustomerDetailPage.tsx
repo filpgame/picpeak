@@ -40,7 +40,7 @@ type EditableFields =
   | 'addressLine1' | 'addressLine2' | 'postalCode' | 'city' | 'state'
   | 'countryCode' | 'countryName' | 'preferredLanguage' | 'notes'
   | 'featureCalendar' | 'featureQuotes' | 'featureBills' | 'featureHoursLogging'
-  | 'hourlyRateMinor' | 'billingCadence' | 'billingCycleDay';
+  | 'hourlyRateMinor' | 'billingCadence' | 'billingCycleDay' | 'skontoDisabled';
 
 // `fmtDate` (from useLocalizedDate, below) is the single canonical date
 // formatter. It honors the admin's `general_date_format` setting AND
@@ -140,6 +140,7 @@ export const CustomerDetailPage: React.FC = () => {
         hourlyRateMinor: customer.hourlyRateMinor ?? null,
         billingCadence: customer.billingCadence ?? 'per_event',
         billingCycleDay: customer.billingCycleDay ?? 1,
+        skontoDisabled: customer.skontoDisabled ?? false,
       } as any);
     }
   }, [customer, form]);
@@ -737,6 +738,25 @@ export const CustomerDetailPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Per-customer Skonto opt-out (migration 112). For B2B
+            customers who negotiated "no early-payment discount" — set
+            once instead of ticking the per-invoice toggle every time. */}
+        <label className="mt-4 flex items-start gap-2 text-sm text-theme">
+          <input
+            type="checkbox"
+            checked={!!form.skontoDisabled}
+            onChange={(e) => setForm((prev) => ({ ...prev, skontoDisabled: e.target.checked } as any))}
+            className="mt-0.5 rounded border-neutral-300 dark:border-neutral-600"
+          />
+          <span>
+            {t('customers.billing.skontoDisabled', 'No Skonto for this customer')}
+            <span className="block text-xs text-muted-theme">
+              {t('customers.billing.skontoDisabledHint',
+                'Disables the early-payment discount on all of this customer’s invoices, regardless of template or global defaults.')}
+            </span>
+          </span>
+        </label>
 
         {/* Preview of the open monthly draft (migration 128). Shows
             every line item queued for the customer's current billing

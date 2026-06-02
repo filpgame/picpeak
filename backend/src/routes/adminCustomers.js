@@ -67,6 +67,10 @@ function transformCustomer(c) {
     // per-entry override on every logged block.
     featureHoursLogging: c.feature_hours_logging === true || c.feature_hours_logging === 1,
     hourlyRateMinor: c.hourly_rate_minor != null ? Number(c.hourly_rate_minor) : null,
+    // Per-customer Skonto opt-out (migration 112). When true, none of
+    // this customer's invoices qualify for an early-payment discount,
+    // regardless of template / global defaults.
+    skontoDisabled: c.skonto_disabled === true || c.skonto_disabled === 1,
     lastLogin: c.last_login,
     createdAt: c.created_at,
     updatedAt: c.updated_at,
@@ -394,6 +398,8 @@ router.put('/:id', [
   body('billing_cadence').optional().isIn(['per_event', 'monthly', 'quarterly']),
   body('billing_cycle_day').optional().isInt({ min: -15, max: 28 })
     .withMessage('billing_cycle_day must be -15..-1 (days before month end) or 1..28 (day of month)'),
+  // Per-customer Skonto opt-out (migration 112).
+  body('skonto_disabled').optional().isBoolean(),
 ], handleAsync(async (req, res) => {
   validateRequest(req);
   const customer = await customerAccountsService.updateCustomer(
