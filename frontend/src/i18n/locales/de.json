@@ -3871,6 +3871,8 @@
       "addHours": "Zeiten hinzufügen",
       "addBlock": "Weiteren Block hinzufügen",
       "copyToAll": "Auf alle Tage übertragen",
+      "startTime": "Öffnungszeit",
+      "endTime": "Schließzeit",
       "floorToggle": "Geplante E-Mails bis zu den Geschäftszeiten zurückhalten",
       "floorToggleHelp": "Wenn aktiv, wird eine automatische E-Mail, die außerhalb der obigen Zeiten geplant ist, erst zur nächsten Öffnungszeit zugestellt statt zu einer ungünstigen Uhrzeit. Wenn aus, werden geplante E-Mails exakt zum geplanten Zeitpunkt versendet.",
       "weekday": {

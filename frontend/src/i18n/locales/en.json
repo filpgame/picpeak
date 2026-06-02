@@ -3869,6 +3869,8 @@
       "addHours": "Add hours",
       "addBlock": "Add another block",
       "copyToAll": "Copy to all days",
+      "startTime": "Opening time",
+      "endTime": "Closing time",
       "floorToggle": "Hold scheduled emails until business hours",
       "floorToggleHelp": "When on, an automated email scheduled outside the hours above is delivered at the next opening instead of at an odd hour. When off, scheduled emails send at their exact time.",
       "weekday": {

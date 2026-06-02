@@ -356,12 +356,11 @@ const BusinessHoursEditor: React.FC<{
 }> = ({ value, onChange }) => {
   const { t } = useTranslation();
   const { timeFormat } = useLocalizedDate();
-  // A native <input type="time"> renders 12h (AM/PM) or 24h purely from the
-  // browser/OS locale — it ignores our `general_time_format` setting. Pin a
-  // `lang` hint so Chrome/Edge render the admin's chosen format. (Safari /
-  // Firefox follow the OS locale regardless — same caveat as date inputs.)
-  // The stored value is always 24h "HH:MM" either way, so this is display-only.
-  const timeInputLang = timeFormat === '12h' ? 'en-US' : 'en-GB';
+  // Same `lang`-hint approach the rest of the app uses for time pickers
+  // (HoursSection / Quote / Bill / Contract editors): de-DE → 24h, en-US → 12h.
+  // Chrome/Edge honour it; Safari/Firefox follow OS locale (browser limit).
+  // The stored value is always 24h "HH:MM".
+  const timeInputLang = timeFormat === '12h' ? 'en-US' : 'de-DE';
 
   // Always work with a fully-populated 7-day object so toggling a day on
   // and off doesn't drop sibling keys.
@@ -433,17 +432,15 @@ const BusinessHoursEditor: React.FC<{
 
               {blocks.map((block, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  {/* Plain <input>, NOT the shared <Input> — that one wraps
-                      the field in a w-full div, so two of them in a flex row
-                      split the width and the trailing +/trash buttons shift
-                      the columns out of alignment. Fixed-width + shrink-0
-                      keeps every block's start/end columns lined up. The
-                      `input` class carries the shared field styling. */}
+                  {/* Plain <input>, NOT the shared <Input> (its w-full
+                      wrapper makes two-per-row split + misalign with the
+                      trailing buttons). Fixed width keeps columns aligned. */}
                   <input
                     type="time"
                     lang={timeInputLang}
                     value={block.start}
                     onChange={(e) => updateBlock(iso, idx, { start: e.target.value })}
+                    aria-label={t('businessProfile.businessHours.startTime', 'Opening time') as string}
                     className="input w-32 shrink-0"
                   />
                   <span className="text-neutral-400">–</span>
@@ -452,6 +449,7 @@ const BusinessHoursEditor: React.FC<{
                     lang={timeInputLang}
                     value={block.end}
                     onChange={(e) => updateBlock(iso, idx, { end: e.target.value })}
+                    aria-label={t('businessProfile.businessHours.endTime', 'Closing time') as string}
                     className="input w-32 shrink-0"
                   />
                   <button
