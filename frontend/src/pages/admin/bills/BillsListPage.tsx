@@ -167,7 +167,13 @@ export const BillsListPage: React.FC = () => {
                           )}
                         </td>
                         <td className="px-3 py-2">{inv.customer.companyName || inv.customer.displayName || inv.customer.email}</td>
-                        <td className="px-3 py-2 truncate max-w-xs">{inv.eventName || '—'}</td>
+                        <td className="px-3 py-2 truncate max-w-xs">
+                          {inv.eventName
+                            ? (inv.eventId
+                                ? <Link to={`/admin/events/${inv.eventId}`} className="text-theme hover:underline" onClick={(e) => e.stopPropagation()}>{inv.eventName}</Link>
+                                : inv.eventName)
+                            : '—'}
+                        </td>
                         <td className="px-3 py-2 text-xs text-muted-theme">
                           {inv.installmentTotal > 1 ? `${inv.installmentIndex + 1}/${inv.installmentTotal} · ${inv.installmentLabel || ''}` : '—'}
                         </td>
