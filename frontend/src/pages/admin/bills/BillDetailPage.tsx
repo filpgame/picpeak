@@ -391,7 +391,7 @@ export const BillDetailPage: React.FC = () => {
                 {inv.eventId ? (
                   <Link to={`/admin/events/${inv.eventId}`} className="text-theme hover:underline">{inv.eventName}</Link>
                 ) : inv.eventName}
-                {inv.eventDate ? ` · ${inv.eventDate}` : ''}
+                {inv.eventDate ? ` · ${fmtDate(inv.eventDate)}` : ''}
               </div>
             </div>
           )}
