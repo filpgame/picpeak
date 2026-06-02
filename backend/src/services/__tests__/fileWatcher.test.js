@@ -10,9 +10,6 @@ jest.mock('../webhookService', () => ({ fire: jest.fn().mockResolvedValue(undefi
 jest.mock('../../utils/dbCompat', () => ({ formatBoolean: jest.fn((v) => v) }));
 jest.mock('mime-types');
 
-// Point STORAGE_PATH so path.relative(WATCH_PATH(), filePath) works deterministically
-process.env.STORAGE_PATH = '/test-storage';
-
 const chokidar = require('chokidar');
 const { db } = require('../../database/db');
 const { generateThumbnail } = require('../imageProcessor');
@@ -28,6 +25,17 @@ const watchedPath = (slug, filename) =>
   `/test-storage/events/active/${slug}/${filename}`;
 
 describe('processNewPhoto', () => {
+  let savedStoragePath;
+
+  beforeAll(() => {
+    savedStoragePath = process.env.STORAGE_PATH;
+    process.env.STORAGE_PATH = '/test-storage';
+  });
+
+  afterAll(() => {
+    process.env.STORAGE_PATH = savedStoragePath;
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     mime.lookup = jest.fn().mockReturnValue('image/jpeg');

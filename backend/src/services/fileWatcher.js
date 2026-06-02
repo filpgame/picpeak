@@ -14,7 +14,8 @@ const downloadZipService = require('./downloadZipService');
 const getStoragePath = () => process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
 const WATCH_PATH = () => path.join(getStoragePath(), 'events/active');
 
-const processLimit = pLimit(2);
+const WATCHER_CONCURRENCY = Math.max(1, parseInt(process.env.FILE_WATCHER_CONCURRENCY || '2', 10));
+const processLimit = pLimit(WATCHER_CONCURRENCY);
 
 function startFileWatcher() {
   // Auto-import via filesystem watching only works with the local storage
