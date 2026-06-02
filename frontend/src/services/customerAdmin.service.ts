@@ -60,6 +60,10 @@ export interface CustomerAccountDetail extends CustomerAccountSummary {
    */
   billingCadence?: 'per_event' | 'monthly' | 'quarterly';
   billingCycleDay?: number;
+  /** Per-customer Skonto opt-out (migration 112). When true, none of
+   *  this customer's invoices qualify for an early-payment discount,
+   *  regardless of template / global defaults. */
+  skontoDisabled?: boolean;
   notes: string | null;
   events: Array<{
     id: number;
@@ -158,6 +162,8 @@ export const customerAdminService = {
       // CRM billing cadence (migration 102 + 128).
       billingCadence: 'billing_cadence',
       billingCycleDay: 'billing_cycle_day',
+      // Per-customer Skonto opt-out (migration 112).
+      skontoDisabled: 'skonto_disabled',
     };
     for (const [k, v] of Object.entries(payload)) {
       if (k in map) snake[map[k]] = v;

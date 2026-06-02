@@ -1690,8 +1690,10 @@ async function buildInvoiceRenderContext(invoice, lineItems) {
   // but still printed the discount row on the PDF. Zero out both
   // fields here so pdfService.drawPaymentBlock's
   // `paymentTerm?.skontoPercent && paymentTerm?.skontoWithinDays`
-  // guard suppresses the row.
-  if (invoice.skonto_disabled) {
+  // guard suppresses the row. The per-customer opt-out (migration 112)
+  // is honoured here too — a customer flagged skonto_disabled never
+  // prints the discount row, mirroring resolveSkontoPercentForInvoice.
+  if (invoice.skonto_disabled || customer?.skonto_disabled) {
     paymentTerm.skontoPercent = null;
     paymentTerm.skontoWithinDays = null;
   }
@@ -2667,6 +2669,17 @@ async function resolveSkontoPercentForInvoice(invoice) {
   // installments that shouldn't qualify for the discount even when
   // the global default offers it.
   if (invoice.skonto_disabled) return null;
+  // Per-customer opt-out (migration 112) — a customer that negotiated
+  // "no Skonto" as a contract term never qualifies, so the admin
+  // doesn't have to tick the per-invoice toggle on every invoice.
+  // Falls through customer → invoice → snapshot → quote → global.
+  if (invoice.customer_account_id) {
+    const cust = await db('customer_accounts')
+      .where({ id: invoice.customer_account_id })
+      .select('skonto_disabled')
+      .first();
+    if (cust && cust.skonto_disabled) return null;
+  }
   const parseSnap = (raw) => {
     if (!raw) return null;
     if (typeof raw === 'object') return raw;

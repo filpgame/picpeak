@@ -3257,6 +3257,8 @@
       "quarterly": "Quarterly",
       "cycleDay": "Cycle day",
       "cycleDayHint": "1..28 = day of month. Use negative -1..-15 for \"N days before month end\" (so -3 fires on the 28th of a 31-day month).",
+      "skontoDisabled": "No Skonto for this customer",
+      "skontoDisabledHint": "Disables the early-payment discount on all of this customer’s invoices, regardless of template or global defaults.",
       "triggerNow": "Trigger invoice now",
       "triggerConfirm": "Issue this customer's monthly bill now? The customer receives the email immediately.",
       "triggerHint": "Bypasses the cadence day and issues the running draft immediately. Refuses when nothing has been queued for the current period.",
