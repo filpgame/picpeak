@@ -535,6 +535,18 @@ router.put('/:id/events', [
 // surface.
 // ---------------------------------------------------------------------
 
+// Aggregate landing view for /admin/clients/hours — every customer with
+// open (unbilled) hours + the open monetary amount. Registered before
+// the /:id/hour-entries routes; the literal first segment ("hour-entries")
+// can't collide with the int-validated :id pattern.
+router.get('/hour-entries/unbilled-summary', [
+  adminAuth,
+  requirePermission('customers.view'),
+], handleAsync(async (req, res) => {
+  const summary = await customerHoursService.getUnbilledSummaryByCustomer();
+  successResponse(res, { summary });
+}));
+
 router.get('/:id/hour-entries', [
   adminAuth,
   requirePermission('customers.view'),

@@ -340,6 +340,14 @@ export const customerAdminService = {
     return (response.data as any).data ?? response.data;
   },
 
+  /** Landing aggregate for /admin/clients/hours — every customer that
+   *  currently carries unbilled hour entries, with open hours + open
+   *  amount (install default currency). Sorted by open amount desc. */
+  async getUnbilledHoursSummary(): Promise<UnbilledHoursSummaryRow[]> {
+    const response = await api.get(`/admin/customers/hour-entries/unbilled-summary`);
+    return ((response.data as any).data?.summary ?? (response.data as any).summary) || [];
+  },
+
   /** Admin override — issue the customer's running monthly draft now,
    *  bypassing the cadence-day wait. 409 when no draft exists or the
    *  draft is empty. Returns the issued invoice id + number. */
@@ -417,6 +425,24 @@ export interface HourEntry {
   recordedByAdminId: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UnbilledHoursSummaryRow {
+  customerAccountId: number;
+  companyName: string | null;
+  displayName: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  isPassive: boolean;
+  billingCadence: string | null;
+  entryCount: number;
+  totalMinutes: number;
+  openAmountMinor: number;
+  /** false when at least one entry has no resolvable rate (no override,
+   *  no customer rate, no install default) — its amount is excluded from
+   *  openAmountMinor and the UI prompts to set a rate. */
+  rateResolvable: boolean;
 }
 
 export interface HourEntryCreatePayload {

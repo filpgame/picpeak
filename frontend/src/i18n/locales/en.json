@@ -3268,7 +3268,16 @@
     "pickPlaceholder": "— Select customer —",
     "emptyList": "No customers have hours logging enabled yet. Flip \"Hours logging\" on a customer's detail page first.",
     "searchPlaceholder": "Search by email or company…",
-    "customerLoggingDisabled": "This customer has hour logging disabled. Enable it on the customer's detail page to log hours."
+    "customerLoggingDisabled": "This customer has hour logging disabled. Enable it on the customer's detail page to log hours.",
+    "openHours": {
+      "title": "Open hours across all customers",
+      "subtitle": "Unbilled time blocks waiting to be billed. Pick a customer above, or click a row to drill in.",
+      "empty": "No unbilled hours right now — everything is billed or no time has been logged yet.",
+      "entryLine_one": "{{count}} entry · {{hours}}h",
+      "entryLine_other": "{{count}} entries · {{hours}}h",
+      "passive": "Passive",
+      "needsRate": "Rate not set"
+    }
   },
   "crmDev": {
     "title": "CRM Development",

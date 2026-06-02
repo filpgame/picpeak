@@ -495,8 +495,80 @@ async function billUnbilledEntries(customerId, adminId) {
   });
 }
 
+/**
+ * Landing aggregate for /admin/clients/hours: one row per customer that
+ * currently carries unbilled hour entries, with the open hours + open
+ * monetary amount. In practice only per-event customers surface here —
+ * monthly/manual cadences auto-append each entry onto the running draft
+ * at save time (status flips straight to 'billed'), so they never leave
+ * unbilled rows behind. Each entry's amount resolves through the usual
+ * override → customer-rate → install-default chain; if an entry has no
+ * resolvable rate it still counts toward hours/entries but the row is
+ * flagged rateResolvable=false so the UI can prompt for a rate rather
+ * than silently undercounting. Sorted by open amount desc.
+ */
+async function getUnbilledSummaryByCustomer() {
+  const installDefaultMinor = await getInstallDefaultRateMinor();
+  const rows = await db('customer_hour_entries as h')
+    .join('customer_accounts as c', 'h.customer_account_id', 'c.id')
+    .where('h.status', 'unbilled')
+    .select(
+      'h.customer_account_id',
+      'h.duration_minutes',
+      'h.hourly_rate_minor_override',
+      'c.hourly_rate_minor as customer_hourly_rate_minor',
+      'c.company_name',
+      'c.display_name',
+      'c.first_name',
+      'c.last_name',
+      'c.email',
+      'c.password_hash',
+      'c.billing_cadence',
+    );
+
+  const byCustomer = new Map();
+  for (const r of rows) {
+    let agg = byCustomer.get(r.customer_account_id);
+    if (!agg) {
+      agg = {
+        customerAccountId: r.customer_account_id,
+        companyName: r.company_name || null,
+        displayName: r.display_name || null,
+        firstName: r.first_name || null,
+        lastName: r.last_name || null,
+        email: r.email || null,
+        // passive = no portal password set, same rule as the customer
+        // list / picker (adminCustomers transform).
+        isPassive: r.password_hash == null,
+        billingCadence: r.billing_cadence || null,
+        entryCount: 0,
+        totalMinutes: 0,
+        openAmountMinor: 0,
+        rateResolvable: true,
+      };
+      byCustomer.set(r.customer_account_id, agg);
+    }
+    agg.entryCount += 1;
+    const minutes = Number(r.duration_minutes || 0);
+    agg.totalMinutes += minutes;
+    let rateMinor = null;
+    if (r.hourly_rate_minor_override != null) rateMinor = Number(r.hourly_rate_minor_override);
+    else if (r.customer_hourly_rate_minor != null) rateMinor = Number(r.customer_hourly_rate_minor);
+    else if (installDefaultMinor != null) rateMinor = installDefaultMinor;
+    if (rateMinor == null) {
+      agg.rateResolvable = false;
+    } else {
+      agg.openAmountMinor += Math.round((minutes / 60) * rateMinor);
+    }
+  }
+
+  return Array.from(byCustomer.values())
+    .sort((a, b) => b.openAmountMinor - a.openAmountMinor);
+}
+
 module.exports = {
   listEntries,
+  getUnbilledSummaryByCustomer,
   createEntry,
   updateEntry,
   deleteEntry,
