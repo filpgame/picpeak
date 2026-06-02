@@ -74,6 +74,16 @@ export const emailService = {
     await api.post('/admin/email/test', { test_email: testEmail });
   },
 
+  /** Flush the email queue immediately. Sends every pending email now,
+   *  bypassing the business-hours floor — the escape hatch for draining
+   *  the queue before maintenance/updates. */
+  async flushQueue(): Promise<{ processed: number; sent: number; failed: number }> {
+    const response = await api.post<{ processed: number; sent: number; failed: number }>(
+      '/admin/email/flush-queue'
+    );
+    return response.data;
+  },
+
   // Get all email templates
   async getTemplates(): Promise<EmailTemplate[]> {
     const response = await api.get<EmailTemplate[]>('/admin/email/templates');

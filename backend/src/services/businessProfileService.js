@@ -17,6 +17,7 @@ const { db, withRetry } = require('../database/db');
 const logger = require('../utils/logger');
 const { AppError } = require('../utils/errors');
 const { formatBoolean } = require('../utils/dbCompat');
+const { normaliseSchedule } = require('../utils/businessHours');
 
 const ALLOWED_PROFILE_FIELDS = [
   'company_name',
@@ -79,6 +80,11 @@ const ALLOWED_PROFILE_FIELDS = [
   // by the calendar UI to render timed blocks in the operator's
   // working tz. Admin-only; never exposed via publicSettings.
   'timezone',
+  // Per-ISO-weekday opening hours (migration 114). JSON TEXT; drives the
+  // scheduled-email floor and is interpreted in `timezone`.
+  'business_hours',
+  // Master switch for the scheduled-email business-hours floor (mig 114).
+  'scheduled_email_floor_enabled',
 ];
 
 const ALLOWED_BANK_FIELDS = [
@@ -175,6 +181,21 @@ function sanitiseProfilePayload(payload) {
       const n = parseInt(updates.default_hourly_rate_minor, 10);
       updates.default_hourly_rate_minor = Number.isFinite(n) && n >= 0 ? n : null;
     }
+  }
+
+  // Per-weekday opening hours. Accept the API object (or a JSON string),
+  // run it through the shared validator (drops bad blocks, sorts, fills
+  // all 7 days), and persist the canonical JSON string. An explicit
+  // null / '' clears the schedule back to "no hours configured".
+  if (updates.business_hours !== undefined) {
+    if (updates.business_hours === null || updates.business_hours === '') {
+      updates.business_hours = null;
+    } else {
+      updates.business_hours = JSON.stringify(normaliseSchedule(updates.business_hours));
+    }
+  }
+  if (updates.scheduled_email_floor_enabled !== undefined) {
+    updates.scheduled_email_floor_enabled = formatBoolean(Boolean(updates.scheduled_email_floor_enabled));
   }
 
   return updates;
