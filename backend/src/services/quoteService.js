@@ -39,6 +39,7 @@ const { buildIssuerBlock, buildRecipientBlock } = require('./_renderContext');
 const pdfService = require('./pdfService');
 const emailProcessor = require('./emailProcessor');
 const { getFrontendBaseUrl } = require('../utils/frontendUrl');
+const { hasColumnCached } = require('../utils/schemaCache');
 const fs = require('fs');
 const path = require('path');
 
@@ -1174,6 +1175,69 @@ async function adminAcceptQuote(id, adminId) {
 }
 
 /**
+ * Admin "decline on behalf of customer" — records the quote as
+ * `declined` directly, bypassing the public token + response window.
+ * Used when the customer says no by phone/email and the admin wants the
+ * pipeline reflected without asking them to click the decline link.
+ *
+ * Mirrors adminAcceptQuote's guards: refuses quotes that are already
+ * terminal (`accepted`, `declined`, `converted`) — those would overwrite
+ * history. Allowed from `draft` / `sent` / `expired`.
+ *
+ * `reason` is optional free text persisted to `quotes.decline_reason`
+ * (migration 115) and surfaced on the quote detail page.
+ *
+ * Any outstanding accept/decline tokens are invalidated so the customer
+ * can't flip the quote back to accepted via a still-live emailed link.
+ */
+async function adminDeclineQuote(id, adminId, reason = null) {
+  const quote = await db('quotes').where({ id }).first();
+  if (!quote) throw new AppError('Quote not found', 404);
+  if (quote.status === 'declined') {
+    throw new AppError('Quote already declined', 409, 'QUOTE_ALREADY_DECLINED');
+  }
+  if (quote.status === 'accepted') {
+    throw new AppError('Quote already accepted; duplicate it to start a fresh round.', 409, 'QUOTE_ALREADY_ACCEPTED');
+  }
+  if (quote.status === 'converted') {
+    throw new AppError('Quote already converted to an event/invoice', 409, 'QUOTE_CONVERTED');
+  }
+
+  const now = new Date();
+  const cleanReason = typeof reason === 'string' && reason.trim() ? reason.trim().slice(0, 5000) : null;
+  const hasReasonColumn = await hasColumnCached('quotes', 'decline_reason');
+
+  await db.transaction(async (trx) => {
+    const updates = {
+      status: 'declined',
+      responded_at: quote.responded_at || now,
+      // Close the public response window immediately so a customer link
+      // can't toggle the quote afterwards (recordResponse rejects once
+      // now > response_locked_at).
+      response_locked_at: now,
+      declined_at: now,
+      accepted_at: null,
+      updated_at: now,
+    };
+    if (hasReasonColumn) updates.decline_reason = cleanReason;
+    await trx('quotes').where({ id }).update(updates);
+
+    // Burn any unused tokens for this quote — defense in depth alongside
+    // the closed response window above.
+    await trx('quote_action_tokens')
+      .where({ quote_id: id })
+      .whereNull('used_at')
+      .update({ used_at: now, used_action: 'declined' });
+  });
+
+  try {
+    await logActivity('quote_declined_by_admin', { quoteId: id, reason: cleanReason }, null, `admin:${adminId}`);
+  } catch (_) {}
+
+  return { status: 'declined', declinedAt: now };
+}
+
+/**
  * Convert an accepted quote to an event + scheduled invoices.
  * Wraps everything in a transaction so a half-finished conversion
  * doesn't litter the DB.
@@ -1786,6 +1850,7 @@ module.exports = {
   duplicateQuote,
   recordResponse,
   adminAcceptQuote,
+  adminDeclineQuote,
   convertToEvent,
   convertToInvoiceOnly,
 
