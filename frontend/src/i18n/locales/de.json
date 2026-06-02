@@ -3391,7 +3391,16 @@
     "pickPlaceholder": "— Kunde wählen —",
     "emptyList": "Noch keine Kunden mit aktivierter Stundenerfassung. Aktivieren Sie „Stundenerfassung“ zuerst auf der Kundendetailseite.",
     "searchPlaceholder": "Nach E-Mail oder Firma suchen…",
-    "customerLoggingDisabled": "Bei diesem Kunden ist die Stundenerfassung deaktiviert. Aktiviere sie auf der Kundendetailseite, um Stunden zu erfassen."
+    "customerLoggingDisabled": "Bei diesem Kunden ist die Stundenerfassung deaktiviert. Aktiviere sie auf der Kundendetailseite, um Stunden zu erfassen.",
+    "openHours": {
+      "title": "Offene Stunden über alle Kunden",
+      "subtitle": "Noch nicht abgerechnete Zeitblöcke. Oben einen Kunden wählen oder auf eine Zeile klicken, um Details zu öffnen.",
+      "empty": "Aktuell keine offenen Stunden – alles abgerechnet oder noch keine Zeit erfasst.",
+      "entryLine_one": "{{count}} Eintrag · {{hours}} Std.",
+      "entryLine_other": "{{count}} Einträge · {{hours}} Std.",
+      "passive": "Passiv",
+      "needsRate": "Kein Satz hinterlegt"
+    }
   },
   "crmDev": {
     "title": "CRM-Entwicklung",
