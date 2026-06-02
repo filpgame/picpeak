@@ -8,13 +8,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Upload, X } from 'lucide-react';
 import { billsService, type InvoiceStatus, type InvoiceSort } from '../../../services/bills.service';
-import { Button, Card, Input, Loading, LocalizedDateInput } from '../../../components/common';
+import { Button, Card, Input, Loading, LocalizedDateInput, SortableHeader, useColumnSort, type SortColumnMap } from '../../../components/common';
 import { formatMoney } from '../../../components/admin/LineItemsTable';
 import { customerAdminService } from '../../../services/customerAdmin.service';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import { toast } from 'react-toastify';
 
 const STATUSES: InvoiceStatus[] = ['scheduled', 'pending_delivery', 'sent', 'paid', 'overdue', 'cancelled', 'skipped'];
+
+// Maps each clickable column to its server-side sort enum pair. The "#"
+// column sorts by creation order (newest/oldest) since that's how the
+// invoice sequence is assigned; "Issued" sorts the admin-controlled
+// issue_date and is the default (newest issued first).
+const SORT_COLUMNS: SortColumnMap = {
+  number: { asc: 'oldest', desc: 'newest', defaultDir: 'desc' },
+  customer: { asc: 'customer_asc', desc: 'customer_desc' },
+  issue: { asc: 'issue_asc', desc: 'issue_desc', defaultDir: 'desc' },
+  due: { asc: 'due_asc', desc: 'due_desc' },
+  value: { asc: 'value_asc', desc: 'value_desc', defaultDir: 'desc' },
+};
 
 export const BillsListPage: React.FC = () => {
   const { t } = useTranslation();
@@ -23,9 +35,11 @@ export const BillsListPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus[]>([]);
   const [unpaidOnly, setUnpaidOnly] = useState(false);
-  const [sort, setSort] = useState<InvoiceSort>('newest');
+  const { sort, activeKey, activeDir, toggle } = useColumnSort<InvoiceSort>(SORT_COLUMNS, 'issue_desc');
   const [page, setPage] = useState(1);
   const [importOpen, setImportOpen] = useState(false);
+
+  const onSort = (key: string) => { toggle(key); setPage(1); };
 
   const { data, isLoading } = useQuery({
     queryKey: ['invoices', { search, statusFilter, unpaidOnly, sort, page }],
@@ -87,18 +101,6 @@ export const BillsListPage: React.FC = () => {
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             />
           </div>
-          <select
-            className="px-3 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as InvoiceSort)}
-          >
-            <option value="newest">{t('bills.sort.newest', 'Newest first')}</option>
-            <option value="due_asc">{t('bills.sort.dueAsc', 'Due soon first')}</option>
-            <option value="due_desc">{t('bills.sort.dueDesc', 'Due latest first')}</option>
-            <option value="customer_asc">{t('bills.sort.customerAsc', 'Customer A→Z')}</option>
-            <option value="value_asc">{t('bills.sort.valueAsc', 'Value low→high')}</option>
-            <option value="value_desc">{t('bills.sort.valueDesc', 'Value high→low')}</option>
-          </select>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={unpaidOnly} onChange={(e) => setUnpaidOnly(e.target.checked)} />
             {t('bills.filter.unpaidOnly', 'Unpaid only')}
@@ -127,12 +129,13 @@ export const BillsListPage: React.FC = () => {
                 <table className="w-full text-sm">
                   <thead className="bg-neutral-50 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                     <tr>
-                      <th className="px-3 py-2 text-left">#</th>
-                      <th className="px-3 py-2 text-left">{t('bills.table.customer', 'Customer')}</th>
+                      <SortableHeader label="#" columnKey="number" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
+                      <SortableHeader label={t('bills.table.customer', 'Customer')} columnKey="customer" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
                       <th className="px-3 py-2 text-left">{t('bills.table.event', 'Event')}</th>
                       <th className="px-3 py-2 text-left">{t('bills.table.installment', 'Installment')}</th>
-                      <th className="px-3 py-2 text-left">{t('bills.table.dueDate', 'Due')}</th>
-                      <th className="px-3 py-2 text-right">{t('bills.table.total', 'Total')}</th>
+                      <SortableHeader label={t('bills.table.issueDate', 'Issued')} columnKey="issue" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
+                      <SortableHeader label={t('bills.table.dueDate', 'Due')} columnKey="due" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
+                      <SortableHeader label={t('bills.table.total', 'Total')} columnKey="value" activeKey={activeKey} activeDir={activeDir} onSort={onSort} align="right" />
                       <th className="px-3 py-2 text-left">{t('bills.table.status', 'Status')}</th>
                     </tr>
                   </thead>
@@ -177,6 +180,7 @@ export const BillsListPage: React.FC = () => {
                         <td className="px-3 py-2 text-xs text-muted-theme">
                           {inv.installmentTotal > 1 ? `${inv.installmentIndex + 1}/${inv.installmentTotal} · ${inv.installmentLabel || ''}` : '—'}
                         </td>
+                        <td className="px-3 py-2 whitespace-nowrap">{inv.issueDate ? fmtDate(inv.issueDate) : '—'}</td>
                         <td className="px-3 py-2">{fmtDate(inv.dueDate)}</td>
                         <td className="px-3 py-2 text-right tabular-nums">
                           {formatMoney(Number(inv.totalAmountMinor) / 100, inv.currency)}

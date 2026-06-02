@@ -319,7 +319,7 @@ router.get(
     query('sourceQuoteId').optional({ values: 'falsy' }).isInt({ min: 1 }),
     query('unpaidOnly').optional({ values: 'falsy' }).isBoolean(),
     query('q').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
-    query('sort').optional({ values: 'falsy' }).isIn(['newest', 'oldest', 'due_asc', 'due_desc', 'value_asc', 'value_desc', 'customer_asc']),
+    query('sort').optional({ values: 'falsy' }).isIn(['newest', 'oldest', 'issue_asc', 'issue_desc', 'due_asc', 'due_desc', 'value_asc', 'value_desc', 'customer_asc', 'customer_desc']),
     query('page').optional({ values: 'falsy' }).isInt({ min: 1 }),
     query('pageSize').optional({ values: 'falsy' }).isInt({ min: 1, max: 100 }),
   ],
@@ -336,7 +336,7 @@ router.get(
         unpaidOnly: req.query.unpaidOnly === 'true' || req.query.unpaidOnly === true,
         q: req.query.q,
       },
-      sort: req.query.sort || 'newest',
+      sort: req.query.sort || 'issue_desc',
       page: req.query.page ? parseInt(req.query.page, 10) : 1,
       pageSize: req.query.pageSize ? parseInt(req.query.pageSize, 10) : 25,
     });

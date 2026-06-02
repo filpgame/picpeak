@@ -410,7 +410,7 @@ async function getOrCreateMonthlyDraft(customer, adminId, trx) {
 // Public API
 // ---------------------------------------------------------------------
 
-async function listInvoices({ filters = {}, sort = 'newest', page = 1, pageSize = 25 } = {}) {
+async function listInvoices({ filters = {}, sort = 'issue_desc', page = 1, pageSize = 25 } = {}) {
   return await withRetry(async () => {
     let query = db('invoices')
       .leftJoin('customer_accounts', 'invoices.customer_account_id', 'customer_accounts.id')
@@ -477,6 +477,8 @@ async function listInvoices({ filters = {}, sort = 'newest', page = 1, pageSize 
       // reflects when the row landed in the DB. id is the tiebreaker
       // for rows that share a created_at second.
       case 'oldest':       query = query.orderBy('invoices.created_at', 'asc').orderBy('invoices.id', 'asc'); break;
+      case 'issue_asc':    query = query.orderBy('invoices.issue_date', 'asc').orderBy('invoices.id', 'asc'); break;
+      case 'issue_desc':   query = query.orderBy('invoices.issue_date', 'desc').orderBy('invoices.id', 'desc'); break;
       case 'due_asc':      query = query.orderBy('invoices.due_date', 'asc'); break;
       case 'due_desc':     query = query.orderBy('invoices.due_date', 'desc'); break;
       case 'value_asc':    query = query.orderBy('invoices.total_amount_minor', 'asc'); break;
@@ -484,6 +486,11 @@ async function listInvoices({ filters = {}, sort = 'newest', page = 1, pageSize 
       case 'customer_asc':
         query = query
           .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) asc')
+          .orderBy('invoices.id', 'desc');
+        break;
+      case 'customer_desc':
+        query = query
+          .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) desc')
           .orderBy('invoices.id', 'desc');
         break;
       case 'newest':

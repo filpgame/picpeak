@@ -19,9 +19,10 @@ export type InvoiceStatus = 'scheduled' | 'sent' | 'paid' | 'overdue' | 'cancell
 export type InvoiceKind = 'invoice' | 'storno';
 export type InvoiceSort =
   | 'newest' | 'oldest'
+  | 'issue_asc' | 'issue_desc'
   | 'due_asc' | 'due_desc'
   | 'value_asc' | 'value_desc'
-  | 'customer_asc';
+  | 'customer_asc' | 'customer_desc';
 
 export type InvoiceQrFormat = 'swiss' | 'epc' | 'none';
 

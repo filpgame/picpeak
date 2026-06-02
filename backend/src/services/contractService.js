@@ -621,7 +621,7 @@ async function buildRenderContext(contract, inclusions) {
 // Public API
 // ---------------------------------------------------------------------
 
-async function listContracts({ filters = {}, sort = 'newest', page = 1, pageSize = 25 } = {}) {
+async function listContracts({ filters = {}, sort = 'issue_desc', page = 1, pageSize = 25 } = {}) {
   return await withRetry(async () => {
     let query = db('contracts')
       .leftJoin('customer_accounts', 'contracts.customer_account_id', 'customer_accounts.id')
@@ -658,9 +658,20 @@ async function listContracts({ filters = {}, sort = 'newest', page = 1, pageSize
       case 'oldest':
         query = query.orderBy('contracts.created_at', 'asc').orderBy('contracts.id', 'asc');
         break;
+      case 'issue_asc':
+        query = query.orderBy('contracts.issue_date', 'asc').orderBy('contracts.id', 'asc');
+        break;
+      case 'issue_desc':
+        query = query.orderBy('contracts.issue_date', 'desc').orderBy('contracts.id', 'desc');
+        break;
       case 'customer_asc':
         query = query
           .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) asc')
+          .orderBy('contracts.id', 'desc');
+        break;
+      case 'customer_desc':
+        query = query
+          .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) desc')
           .orderBy('contracts.id', 'desc');
         break;
       case 'newest':

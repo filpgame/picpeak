@@ -3705,6 +3705,7 @@
       "customer": "Kunde",
       "event": "Anlass",
       "installment": "Rate",
+      "issueDate": "Ausgestellt",
       "dueDate": "Fällig",
       "total": "Gesamt",
       "status": "Status"

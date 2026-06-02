@@ -5,7 +5,11 @@
 import { api } from '../config/api';
 
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted';
-export type QuoteSort = 'newest' | 'oldest' | 'customer_asc' | 'value_asc' | 'value_desc';
+export type QuoteSort =
+  | 'newest' | 'oldest'
+  | 'issue_asc' | 'issue_desc'
+  | 'customer_asc' | 'customer_desc'
+  | 'value_asc' | 'value_desc';
 
 export interface QuoteLineItem {
   id?: number;

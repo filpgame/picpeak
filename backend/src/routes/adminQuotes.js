@@ -257,7 +257,7 @@ router.get(
     query('q').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
     query('from').optional({ values: 'falsy' }).isISO8601(),
     query('to').optional({ values: 'falsy' }).isISO8601(),
-    query('sort').optional({ values: 'falsy' }).isIn(['newest', 'oldest', 'customer_asc', 'value_asc', 'value_desc']),
+    query('sort').optional({ values: 'falsy' }).isIn(['newest', 'oldest', 'issue_asc', 'issue_desc', 'customer_asc', 'customer_desc', 'value_asc', 'value_desc']),
     query('page').optional({ values: 'falsy' }).isInt({ min: 1 }),
     query('pageSize').optional({ values: 'falsy' }).isInt({ min: 1, max: 100 }),
   ],
@@ -272,7 +272,7 @@ router.get(
         customerAccountId: req.query.customerAccountId ? parseInt(req.query.customerAccountId, 10) : null,
         from: req.query.from, to: req.query.to, q: req.query.q,
       },
-      sort: req.query.sort || 'newest',
+      sort: req.query.sort || 'issue_desc',
       page: req.query.page ? parseInt(req.query.page, 10) : 1,
       pageSize: req.query.pageSize ? parseInt(req.query.pageSize, 10) : 25,
     });

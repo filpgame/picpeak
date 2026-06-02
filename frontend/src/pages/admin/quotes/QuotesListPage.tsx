@@ -8,11 +8,20 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
 import { quotesService, type QuoteStatus, type QuoteSort } from '../../../services/quotes.service';
-import { Button, Card, Loading } from '../../../components/common';
+import { Button, Card, Loading, SortableHeader, useColumnSort, type SortColumnMap } from '../../../components/common';
 import { formatMoney } from '../../../components/admin/LineItemsTable';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 
 const STATUSES: QuoteStatus[] = ['draft', 'sent', 'accepted', 'declined', 'expired', 'converted'];
+
+// "#" sorts by creation order (newest/oldest); "Issued" sorts by the
+// admin-controlled issue_date, which can drift from chronology.
+const SORT_COLUMNS: SortColumnMap = {
+  number: { asc: 'oldest', desc: 'newest', defaultDir: 'desc' },
+  customer: { asc: 'customer_asc', desc: 'customer_desc' },
+  issue: { asc: 'issue_asc', desc: 'issue_desc', defaultDir: 'desc' },
+  value: { asc: 'value_asc', desc: 'value_desc', defaultDir: 'desc' },
+};
 
 export const QuotesListPage: React.FC = () => {
   const { t } = useTranslation();
@@ -20,8 +29,10 @@ export const QuotesListPage: React.FC = () => {
   const { format: fmtDate } = useLocalizedDate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<QuoteStatus[]>([]);
-  const [sort, setSort] = useState<QuoteSort>('newest');
+  const { sort, activeKey, activeDir, toggle } = useColumnSort<QuoteSort>(SORT_COLUMNS, 'issue_desc');
   const [page, setPage] = useState(1);
+
+  const onSort = (key: string) => { toggle(key); setPage(1); };
 
   const { data, isLoading } = useQuery({
     queryKey: ['quotes', { search, statusFilter, sort, page }],
@@ -73,17 +84,6 @@ export const QuotesListPage: React.FC = () => {
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             />
           </div>
-          <select
-            className="px-3 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as QuoteSort)}
-          >
-            <option value="newest">{t('quotes.sort.newest', 'Newest first')}</option>
-            <option value="oldest">{t('quotes.sort.oldest', 'Oldest first')}</option>
-            <option value="customer_asc">{t('quotes.sort.customerAsc', 'Customer A→Z')}</option>
-            <option value="value_asc">{t('quotes.sort.valueAsc', 'Value low→high')}</option>
-            <option value="value_desc">{t('quotes.sort.valueDesc', 'Value high→low')}</option>
-          </select>
         </div>
         <div className="mt-3 flex flex-wrap gap-1">
           {STATUSES.map((s) => {
@@ -111,11 +111,11 @@ export const QuotesListPage: React.FC = () => {
                 <table className="w-full text-sm">
                   <thead className="bg-neutral-50 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                     <tr>
-                      <th className="px-3 py-2 text-left">#</th>
-                      <th className="px-3 py-2 text-left">{t('quotes.table.customer', 'Customer')}</th>
+                      <SortableHeader label="#" columnKey="number" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
+                      <SortableHeader label={t('quotes.table.customer', 'Customer')} columnKey="customer" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
                       <th className="px-3 py-2 text-left">{t('quotes.table.event', 'Event')}</th>
-                      <th className="px-3 py-2 text-left">{t('quotes.table.issueDate', 'Issued')}</th>
-                      <th className="px-3 py-2 text-right">{t('quotes.table.total', 'Total')}</th>
+                      <SortableHeader label={t('quotes.table.issueDate', 'Issued')} columnKey="issue" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
+                      <SortableHeader label={t('quotes.table.total', 'Total')} columnKey="value" activeKey={activeKey} activeDir={activeDir} onSort={onSort} align="right" />
                       <th className="px-3 py-2 text-left">{t('quotes.table.status', 'Status')}</th>
                     </tr>
                   </thead>

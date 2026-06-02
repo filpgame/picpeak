@@ -333,7 +333,7 @@ function ensureCustomerFeatureEnabled(customer, feature) {
  * Filters: { status[], customerAccountId, from, to, q }
  * Sort:    'newest' | 'oldest' | 'customer_asc' | 'value_asc' | 'value_desc'
  */
-async function listQuotes({ filters = {}, sort = 'newest', page = 1, pageSize = 25 } = {}) {
+async function listQuotes({ filters = {}, sort = 'issue_desc', page = 1, pageSize = 25 } = {}) {
   return await withRetry(async () => {
     let query = db('quotes')
       .leftJoin('customer_accounts', 'quotes.customer_account_id', 'customer_accounts.id')
@@ -385,9 +385,20 @@ async function listQuotes({ filters = {}, sort = 'newest', page = 1, pageSize = 
       case 'oldest':
         query = query.orderBy('quotes.created_at', 'asc').orderBy('quotes.id', 'asc');
         break;
+      case 'issue_asc':
+        query = query.orderBy('quotes.issue_date', 'asc').orderBy('quotes.id', 'asc');
+        break;
+      case 'issue_desc':
+        query = query.orderBy('quotes.issue_date', 'desc').orderBy('quotes.id', 'desc');
+        break;
       case 'customer_asc':
         query = query
           .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) asc')
+          .orderBy('quotes.id', 'desc');
+        break;
+      case 'customer_desc':
+        query = query
+          .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) desc')
           .orderBy('quotes.id', 'desc');
         break;
       case 'value_asc':

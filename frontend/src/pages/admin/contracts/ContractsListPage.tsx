@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, BookOpen } from 'lucide-react';
-import { Button, Card, Loading } from '../../../components/common';
+import { Button, Card, Loading, SortableHeader, useColumnSort, type SortColumnMap } from '../../../components/common';
 import {
   contractsService,
   type ContractStatus,
@@ -27,14 +27,24 @@ const STATUSES: ContractStatus[] = [
   'draft', 'sent', 'signed_by_customer', 'signed_by_admin', 'fully_signed', 'cancelled',
 ];
 
+// "Number" sorts by creation order (newest/oldest); "Issued" sorts by
+// the admin-controlled issue_date, which can drift from chronology.
+const SORT_COLUMNS: SortColumnMap = {
+  number: { asc: 'oldest', desc: 'newest', defaultDir: 'desc' },
+  customer: { asc: 'customer_asc', desc: 'customer_desc' },
+  issue: { asc: 'issue_asc', desc: 'issue_desc', defaultDir: 'desc' },
+};
+
 export const ContractsListPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { format } = useLocalizedDate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ContractStatus[]>([]);
-  const [sort, setSort] = useState<ContractSort>('newest');
+  const { sort, activeKey, activeDir, toggle } = useColumnSort<ContractSort>(SORT_COLUMNS, 'issue_desc');
   const [page, setPage] = useState(1);
+
+  const onSort = (key: string) => { toggle(key); setPage(1); };
 
   const { data, isLoading } = useQuery({
     queryKey: ['contracts', { search, statusFilter, sort, page }],
@@ -98,15 +108,6 @@ export const ContractsListPage: React.FC = () => {
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             />
           </div>
-          <select
-            className="px-3 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as ContractSort)}
-          >
-            <option value="newest">{t('contracts.list.sort.newest', 'Newest first')}</option>
-            <option value="oldest">{t('contracts.list.sort.oldest', 'Oldest first')}</option>
-            <option value="customer_asc">{t('contracts.list.sort.customer', 'Customer A→Z')}</option>
-          </select>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-1">
@@ -135,10 +136,10 @@ export const ContractsListPage: React.FC = () => {
                 <table className="w-full text-sm">
                   <thead className="bg-neutral-50 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                     <tr>
-                      <th className="px-3 py-2 text-left">{t('contracts.list.table.number', 'Number')}</th>
-                      <th className="px-3 py-2 text-left">{t('contracts.list.table.customer', 'Customer')}</th>
+                      <SortableHeader label={t('contracts.list.table.number', 'Number')} columnKey="number" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
+                      <SortableHeader label={t('contracts.list.table.customer', 'Customer')} columnKey="customer" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
                       <th className="px-3 py-2 text-left">{t('contracts.list.table.title', 'Title')}</th>
-                      <th className="px-3 py-2 text-left">{t('contracts.list.table.issueDate', 'Issued')}</th>
+                      <SortableHeader label={t('contracts.list.table.issueDate', 'Issued')} columnKey="issue" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
                       <th className="px-3 py-2 text-left">{t('contracts.list.table.status', 'Status')}</th>
                     </tr>
                   </thead>
