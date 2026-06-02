@@ -145,6 +145,25 @@ async function resolveNetDays(payload, trx = db) {
 }
 
 /**
+ * Net-days for an already-persisted invoice row (no payload). Reads the
+ * snapshot's net_days, then the crm_payment_default_net_days setting,
+ * then 30. Used at send time to re-anchor the due date when the issue
+ * date is stamped. Mirrors resolveNetDays' tail.
+ */
+async function resolveNetDaysForRow(invoice) {
+  const snap = typeof invoice.payment_term_snapshot === 'string'
+    ? (() => { try { return JSON.parse(invoice.payment_term_snapshot); } catch { return null; } })()
+    : invoice.payment_term_snapshot;
+  if (snap && snap.net_days != null) {
+    const n = ensureInt(snap.net_days);
+    if (n) return n;
+  }
+  const setting = ensureInt(await getAppSetting('crm_payment_default_net_days'));
+  if (setting) return setting;
+  return 30;
+}
+
+/**
  * Resolve the deal_uuid for a new invoice row (migration 140). Priority:
  *
  *   1. `payload.dealUuid` — explicit caller override. Used by
@@ -1902,6 +1921,39 @@ async function sendInvoice(id, adminId) {
       updated_at: new Date(),
     });
     invoice.language = customer.preferred_language;
+  }
+
+  // Stamp the issue date at the moment the invoice actually goes out.
+  // A scheduled invoice's issue_date is provisional — set to the
+  // authoring day at creation — but the legal issue date is when it
+  // ships. Anchoring it here keeps the printed invoice date, the Skonto
+  // window (a relative "pay within N working days" counted from that
+  // date) and the net-days due date all consistent with the send date.
+  // Only on the first send (status 'scheduled'); 'sent' / 'overdue'
+  // rows are immutable legal records and keep their stamped date.
+  if (invoice.status === 'scheduled') {
+    const sendDateIso = new Date().toISOString().slice(0, 10);
+    const netDays = await resolveNetDaysForRow(invoice);
+    // Re-anchor the due date too, but only when it was machine-set: if
+    // the stored due_date still equals the auto formula off the OLD
+    // base (scheduled_send_at, else the old issue_date), the admin never
+    // hand-edited it and we slide it to the new issue date. A divergent
+    // value means a manual override (the editor's "Override due date"
+    // toggle) — leave it untouched.
+    const oldBase = invoice.scheduled_send_at
+      ? new Date(invoice.scheduled_send_at)
+      : new Date(invoice.issue_date);
+    const oldAutoDue = computeDueDate(oldBase, netDays).toISOString().slice(0, 10);
+    const storedDue = invoice.due_date
+      ? new Date(invoice.due_date).toISOString().slice(0, 10)
+      : null;
+    const updates = { issue_date: sendDateIso, updated_at: new Date() };
+    if (storedDue && storedDue === oldAutoDue) {
+      updates.due_date = computeDueDate(new Date(sendDateIso), netDays).toISOString().slice(0, 10);
+    }
+    await db('invoices').where({ id }).update(updates);
+    invoice.issue_date = updates.issue_date;
+    if (updates.due_date) invoice.due_date = updates.due_date;
   }
 
   const ctx = await buildInvoiceRenderContext(invoice, lineItems);
