@@ -4,7 +4,7 @@ const { body, validationResult } = require('express-validator');
 const { db, logActivity } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
-const { wrapEmailHtml } = require('../services/emailProcessor');
+const { wrapEmailHtml, processEmailQueue } = require('../services/emailProcessor');
 const router = express.Router();
 
 // Get email configuration
@@ -245,6 +245,26 @@ router.post('/test', adminAuth, requirePermission('email.send'), async (req, res
       code: error.code,
       responseCode: error.responseCode
     });
+  }
+});
+
+// Flush the email queue now. Sends every pending email immediately,
+// bypassing the business-hours floor (`scheduled_at`) — the escape hatch
+// for "drain the queue before I take the server down for an update".
+router.post('/flush-queue', adminAuth, requirePermission('email.send'), async (req, res) => {
+  try {
+    const summary = await processEmailQueue({ ignoreSchedule: true, limit: 1000 });
+    try {
+      await logActivity('email_queue_flushed',
+        { processed: summary.processed, sent: summary.sent, failed: summary.failed },
+        null,
+        { type: 'admin', id: req.admin.id, name: req.admin.username }
+      );
+    } catch (_) { /* activity logging is best-effort */ }
+    res.json({ message: 'Email queue flushed', ...summary });
+  } catch (error) {
+    console.error('Flush email queue error:', error);
+    res.status(500).json({ error: 'Failed to flush email queue', details: error.message });
   }
 });
 

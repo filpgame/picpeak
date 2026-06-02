@@ -2001,6 +2001,13 @@
     "gmailAppPassword": "For Gmail, use an app-specific password",
     "testEmailAddressLabel": "Test Email Address",
     "sendTestEmailButton": "Send Test Email",
+    "flushQueue": {
+      "title": "Send queued emails now",
+      "help": "Immediately send every pending email, ignoring the business-hours schedule. Useful for draining the queue before maintenance or updates.",
+      "button": "Send queued emails now",
+      "success": "Email queue flushed — {{sent}} sent, {{failed}} failed",
+      "empty": "No pending emails to send"
+    },
     "commonSmtpSettings": "Common SMTP Settings:",
     "editTemplate": "Edit Template",
     "templateName": "Template Name",
@@ -3806,6 +3813,25 @@
     "savedToast": "Business profile saved.",
     "title": "Business profile",
     "subtitle": "Issuer block shown on every quote and invoice PDF.",
+    "businessHours": {
+      "title": "Business hours",
+      "subtitle": "Set opening hours per weekday — add a second block for a lunch break. Interpreted in the timezone above ({{tz}}).",
+      "closed": "Closed",
+      "addHours": "Add hours",
+      "addBlock": "Add another block",
+      "copyToAll": "Copy to all days",
+      "floorToggle": "Hold scheduled emails until business hours",
+      "floorToggleHelp": "When on, an automated email scheduled outside the hours above is delivered at the next opening instead of at an odd hour. When off, scheduled emails send at their exact time.",
+      "weekday": {
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday",
+        "7": "Sunday"
+      }
+    },
     "section": {
       "company": "Company",
       "contact": "Contact",

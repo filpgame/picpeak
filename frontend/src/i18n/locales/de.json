@@ -2428,6 +2428,13 @@
     "gmailAppPassword": "Für Gmail verwenden Sie ein App-spezifisches Passwort",
     "testEmailAddressLabel": "Test-E-Mail-Adresse",
     "sendTestEmailButton": "Test-E-Mail senden",
+    "flushQueue": {
+      "title": "Wartende E-Mails jetzt senden",
+      "help": "Sendet sofort alle ausstehenden E-Mails, unabhängig von den Geschäftszeiten. Nützlich, um die Warteschlange vor Wartungsarbeiten oder Updates zu leeren.",
+      "button": "Wartende E-Mails jetzt senden",
+      "success": "Warteschlange geleert – {{sent}} gesendet, {{failed}} fehlgeschlagen",
+      "empty": "Keine ausstehenden E-Mails zum Senden"
+    },
     "commonSmtpSettings": "Häufige SMTP-Einstellungen:",
     "editTemplate": "Vorlage bearbeiten",
     "templateName": "Vorlagenname",
@@ -3809,6 +3816,25 @@
     "savedToast": "Geschäftsprofil gespeichert.",
     "title": "Geschäftsprofil",
     "subtitle": "Briefkopf, Kontaktdaten und Standardwerte für Angebote und Rechnungen.",
+    "businessHours": {
+      "title": "Geschäftszeiten",
+      "subtitle": "Öffnungszeiten je Wochentag festlegen — für eine Mittagspause einfach einen zweiten Block hinzufügen. Werden in der oben gewählten Zeitzone interpretiert ({{tz}}).",
+      "closed": "Geschlossen",
+      "addHours": "Zeiten hinzufügen",
+      "addBlock": "Weiteren Block hinzufügen",
+      "copyToAll": "Auf alle Tage übertragen",
+      "floorToggle": "Geplante E-Mails bis zu den Geschäftszeiten zurückhalten",
+      "floorToggleHelp": "Wenn aktiv, wird eine automatische E-Mail, die außerhalb der obigen Zeiten geplant ist, erst zur nächsten Öffnungszeit zugestellt statt zu einer ungünstigen Uhrzeit. Wenn aus, werden geplante E-Mails exakt zum geplanten Zeitpunkt versendet.",
+      "weekday": {
+        "1": "Montag",
+        "2": "Dienstag",
+        "3": "Mittwoch",
+        "4": "Donnerstag",
+        "5": "Freitag",
+        "6": "Samstag",
+        "7": "Sonntag"
+      }
+    },
     "section": {
       "company": "Firma",
       "contact": "Kontakt",

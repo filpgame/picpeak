@@ -248,6 +248,20 @@ export const EmailConfigPage: React.FC = () => {
     }
   });
 
+  const flushQueueMutation = useMutation({
+    mutationFn: () => emailService.flushQueue(),
+    onSuccess: (summary) => {
+      if (summary.processed === 0) {
+        toast.info(t('email.flushQueue.empty'));
+      } else {
+        toast.success(t('email.flushQueue.success', { sent: summary.sent, failed: summary.failed }));
+      }
+    },
+    onError: () => {
+      toast.error(t('toast.saveError'));
+    }
+  });
+
   const saveTemplateMutation = useMutation({
     mutationFn: ({ key, translations }: { key: string; translations: Record<string, EmailTemplateTranslation> }) =>
       emailService.updateTemplate(key, { translations }),
@@ -664,6 +678,20 @@ export const EmailConfigPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </Card>
+
+          <Card padding="md">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{t('email.flushQueue.title')}</h2>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">{t('email.flushQueue.help')}</p>
+            <Button
+              variant="outline"
+              onClick={() => flushQueueMutation.mutate()}
+              isLoading={flushQueueMutation.isPending}
+              leftIcon={<Send className="w-5 h-5" />}
+              className="w-full"
+            >
+              {t('email.flushQueue.button')}
+            </Button>
           </Card>
         </div>
       )}
