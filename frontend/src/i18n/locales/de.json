@@ -1547,6 +1547,21 @@
       "clients": {
         "title": "CRM",
         "description": "Hauptschalter für den CRM-Bereich in der Seitenleiste. Aus blendet den Bereich und alle Unterfunktionen aus, unabhängig von deren individuellen Schaltern – beim erneuten Einschalten wird der vorherige Zustand wiederhergestellt."
+      },
+      "contracts": {
+        "title": "Verträge",
+        "description": "Erstellen Sie Verträge aus einer Bibliothek wiederverwendbarer Bausteine (Bildrechte, Geheimhaltung, Model-Release, Stornierung, Gerichtsstand …) und lassen Sie Kunden im Browser unterschreiben oder eine handsignierte PDF hochladen. Die vorausgefüllten Baustein-Texte sind NUR BEISPIELE — vor dem Versand mit Ihrem Anwalt prüfen.",
+        "sidebar": "Verträge"
+      },
+      "crmDevelopment": {
+        "title": "CRM-Entwicklerwerkzeuge",
+        "description": "Interne Helfer zum Prüfen von CRM-Abläufen (z. B. die Admin-Zahlungsprüfungs-E-Mail sofort auslösen, Drosselungen umgehen). Erscheint als Unterreiter „Entwicklung“ unter Kunden. Strikt opt-in — löst echte Seiteneffekte aus, nur mit Testdaten verwenden.",
+        "sidebar": "Entwicklung"
+      },
+      "hoursLogging": {
+        "title": "Stundenerfassung",
+        "description": "Zeiterfassung pro Kunde. Admin erfasst Datum + Start-/Endzeit + optionalen Satz-Override + Notiz. Kunden im Monatsmodus akkumulieren Stunden automatisch in den laufenden Monatsentwurf; Kunden pro Anlass sehen eine Schaltfläche „Entwurfsrechnung erstellen“, die eine eigenständige Entwurfsrechnung mit einer Zeile pro Eintrag erzeugt. Unabhängig von Rechnungen — Stunden erfassen, noch bevor die volle Abrechnungsoberfläche aktiviert ist.",
+        "sidebar": "Stunden"
       }
     },
     "customerSurface": {
@@ -1559,6 +1574,12 @@
       "save": "Änderungen speichern",
       "saved": "Branding des Kundendashboards gespeichert",
       "error": "Einstellungen konnten nicht gespeichert werden"
+    },
+    "businessProfile": {
+      "title": "Geschäftsprofil"
+    },
+    "crm": {
+      "title": "CRM-Verhalten"
     }
   },
   "branding": {
@@ -3575,7 +3596,6 @@
       "status": "Status",
       "dueDate": "Fällig",
       "total": "Gesamt",
-      "sourceQuote": "Vom Angebot",
       "issueDate": "Ausgestellt am",
       "dueDateOverrideOn": "Manuelles Fälligkeitsdatum — Häkchen entfernen, um es automatisch aus Versanddatum + Zahlungsziel zu berechnen",
       "dueDateOverrideOff": "Automatisch aus Versanddatum + Zahlungsziel — ankreuzen, um es manuell zu setzen",
@@ -3798,7 +3818,11 @@
       "quotes": "Angebote",
       "invoices": "Rechnungen",
       "paymentDefaults": "Standard-Zahlungsbedingungen",
-      "installmentDefaults": "Standard-Trigger für Teilzahlungen"
+      "installmentDefaults": "Standard-Trigger für Teilzahlungen",
+      "contracts": "Verträge",
+      "quotesTos": "AGB-Schritt",
+      "dashboardOverview": "CRM-Übersicht im Dashboard",
+      "dashboardOverviewHint": "CRM-Übersichtskacheln im Admin-Dashboard ausblenden. Alle Kacheln werden standardmäßig angezeigt; zum Ausblenden abwählen."
     },
     "installmentDefaults": {
       "help": "Vorbelegung der Trigger für neue Zeilen im Teilzahlungs-Panel. Pro-Dokument-Anpassungen überschreiben; bestehende Dokumente behalten ihren gespeicherten Plan.",
@@ -3873,6 +3897,48 @@
     },
     "crm_invoices_late_fee_enabled": {
       "label": "Mahngebühr aktivieren"
+    },
+    "crm_quotes_tos_required": {
+      "label": "Kunden müssen „Ich akzeptiere die AGB“ ankreuzen, bevor sie annehmen können"
+    },
+    "crm_quotes_tos_url": {
+      "label": "AGB-URL (optional)"
+    },
+    "crm_quotes_tos_text": {
+      "label": "AGB-Text, der auf der Angebotsseite angezeigt wird",
+      "placeholder": "Fügen Sie hier die Vertragsbedingungen ein. Nur Text. Leer lassen, um nur Häkchen + URL anzuzeigen."
+    },
+    "crm_contracts_pdf_attachment_enabled": {
+      "label": "Vertrags-PDF an E-Mail anhängen"
+    },
+    "crm_contracts_require_drawn_signature": {
+      "label": "Gezeichnete Unterschrift verlangen (getippter Name allein genügt nicht)"
+    },
+    "crm_contracts_allow_pdf_upload": {
+      "label": "Kunden erlauben, eine handsignierte PDF hochzuladen"
+    },
+    "crm_contracts_store_ip": {
+      "label": "IP-Adresse des Unterzeichners speichern (empfohlen — stützendes Beweismittel in Zivilstreitigkeiten)",
+      "help": "Wenn deaktiviert, wird die IP-Adresse von Kunde und Admin zum Signaturzeitpunkt NICHT in der Vertragszeile oder der öffentlichen Signaturseiten-Bestätigung erfasst. Nach dem DSGVO-Grundsatz der Datenminimierung bevorzugen das manche Betreiber — die IP ist jedoch ein stützendes Identitätsmerkmal, falls der Vertrag angefochten wird, daher empfehlen wir, sie aktiviert zu lassen."
+    },
+    "crm_contracts_default_valid_days": {
+      "label": "Unterzeichnungsfrist (Tage)"
+    },
+    "crm_contracts_number_format": {
+      "label": "Vertragsnummern-Format",
+      "help": "Unterstützte Platzhalter: {YEAR}, {MONTH}, {SEQ:04d}. Beispiel: LBM-C-{YEAR}-{SEQ:04d} → LBM-C-2026-0001."
+    },
+    "crm_overview_show_revenue": {
+      "label": "Umsatz-Kacheln (30 / 90 / 365 Tage)"
+    },
+    "crm_overview_show_outstanding": {
+      "label": "Kachel offene Zahlungen"
+    },
+    "crm_overview_show_quotes": {
+      "label": "Angebots-Pipeline (nach Status)"
+    },
+    "crm_overview_show_invoices": {
+      "label": "Rechnungs-Pipeline (nach Status)"
     }
   },
   "quoteResponse": {
@@ -4017,6 +4083,43 @@
         "actual": "tatsächlich",
         "error": "Integritätsprüfung fehlgeschlagen."
       }
+    },
+    "editor": {
+      "back": "Zurück zur Liste",
+      "backToDetail": "Zurück zum Vertrag",
+      "create": "Entwurf erstellen",
+      "createdToast": "Vertrag erstellt.",
+      "customer": "Kunde",
+      "disclaimerBody": "Die vorausgefüllten Baustein-Texte sind NUR BEISPIELE — vom Maintainer verfasst, nicht von einem Anwalt. Lassen Sie jeden verwendeten Baustein von Ihrem eigenen Anwalt prüfen, bevor Sie den Vertrag versenden. Siehe docs/crm-disclaimers.md.",
+      "disclaimerTitle": "Anwaltliche Prüfung erforderlich",
+      "eventDate": "Anlassdatum",
+      "eventHelp": "Wird auf den Vertrag übernommen und an jeden daraus erzeugten Anlass / jede Rechnung weitergegeben. Setzen Sie dies, damit Kundenportal und Mahn-E-Mails die richtige Bezeichnung \"Hochzeit Doe / Müller\" anzeigen.",
+      "eventName": "Anlassname",
+      "eventNamePlaceholder": "z. B. Hochzeit Doe / Müller",
+      "eventSection": "Anlass (optional)",
+      "eventTimeEnd": "Ende",
+      "eventTimeStart": "Beginn",
+      "intro": "Einleitungstext (optional)",
+      "issueDate": "Ausstellungsdatum",
+      "language": "Sprache",
+      "locked": "Gesendete Verträge können nicht bearbeitet werden. Für Änderungen stornieren und einen neuen erstellen.",
+      "noBlocksInSection": "Noch keine Bausteine für diesen Abschnitt.",
+      "outro": "Schlusstext (optional)",
+      "popupBlocked": "Erlauben Sie Pop-ups für diese Seite, um die PDF-Vorschau anzuzeigen.",
+      "preview": "PDF-Vorschau",
+      "previewAfterSave": "Zuerst den Entwurf speichern, dann Vorschau anzeigen.",
+      "previewError": "Vorschau fehlgeschlagen",
+      "save": "Speichern",
+      "saveError": "Speichern fehlgeschlagen",
+      "savedToast": "Vertrag gespeichert.",
+      "schriftformWarning": "Signaturtyp: einfache elektronische Signatur (EES). Ausreichend für routinemäßige Fotografieverträge in CH / DE / AT / FL. NICHT ausreichend für Dokumente, die gesetzlich Schriftform / forme qualifiée verlangen: Bürgschaft (DE § 766 BGB), Verbraucherdarlehensvertrag (DE § 492 BGB), befristete Arbeitsverträge (DE § 14 Abs. 4 TzBfG) und Ähnliches. Dafür ist eine qualifizierte elektronische Signatur (QES) eines Vertrauensdiensteanbieters erforderlich — picpeak bietet keine QES.",
+      "searchCustomer": "Nach E-Mail suchen…",
+      "systemBadge": "System",
+      "titleEdit": "Vertrag bearbeiten",
+      "titleField": "Vertragstitel",
+      "titleNew": "Neuer Vertrag",
+      "titlePlaceholder": "z. B. Hochzeitsvertrag Doe / Müller",
+      "validUntil": "Unterzeichnen bis (optional)"
     }
   }
 }
