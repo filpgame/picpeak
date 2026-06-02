@@ -286,7 +286,7 @@ router.get(
     query('status').optional().isString(),
     query('customerAccountId').optional().isInt({ min: 1 }),
     query('q').optional().isString(),
-    query('sort').optional().isIn(['newest', 'oldest', 'customer_asc']),
+    query('sort').optional().isIn(['newest', 'oldest', 'issue_asc', 'issue_desc', 'customer_asc', 'customer_desc']),
     query('page').optional().isInt({ min: 1 }),
     query('pageSize').optional().isInt({ min: 1, max: 200 }),
   ],
@@ -302,7 +302,7 @@ router.get(
     const pageSize = parseInt(req.query.pageSize, 10) || 25;
     const result = await contractService.listContracts({
       filters,
-      sort: req.query.sort || 'newest',
+      sort: req.query.sort || 'issue_desc',
       page,
       pageSize,
     });

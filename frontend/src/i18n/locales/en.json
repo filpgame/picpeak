@@ -3522,6 +3522,7 @@
       "customer": "Customer",
       "event": "Event",
       "installment": "Installment",
+      "issueDate": "Issued",
       "dueDate": "Due",
       "total": "Total",
       "status": "Status"
