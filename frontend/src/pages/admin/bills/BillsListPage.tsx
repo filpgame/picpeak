@@ -221,6 +221,8 @@ const ImportHistoricalInvoiceModal: React.FC<ImportModalProps> = ({ onClose }) =
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [customerLabel, setCustomerLabel] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState('');
   const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState('');
   const [totalMajor, setTotalMajor] = useState('');
@@ -245,6 +247,8 @@ const ImportHistoricalInvoiceModal: React.FC<ImportModalProps> = ({ onClose }) =
       await billsService.importHistorical({
         customerAccountId: customerId,
         invoiceNumber,
+        eventName: eventName.trim() || undefined,
+        eventDate: eventDate || undefined,
         issueDate,
         dueDate: dueDate || undefined,
         totalAmountMinor: Math.round(Number(totalMajor) * 100),
@@ -327,6 +331,17 @@ const ImportHistoricalInvoiceModal: React.FC<ImportModalProps> = ({ onClose }) =
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="md:col-span-2">
+              <Input label={t('bills.field.eventName', 'Event / occasion (optional)') as string}
+                value={eventName}
+                placeholder={t('bills.field.eventNamePlaceholder', 'e.g. Smith wedding 2024') as string}
+                onChange={(e) => setEventName(e.target.value)} />
+            </div>
+            <LocalizedDateInput
+              label={t('bills.field.eventDate', 'Event date (optional)') as string}
+              value={eventDate}
+              onChange={setEventDate}
+            />
             <Input label={t('bills.field.invoiceNumber', 'Invoice number') as string}
               value={invoiceNumber}
               placeholder="R-2024-0001"

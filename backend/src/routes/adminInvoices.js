@@ -427,6 +427,8 @@ router.post(
   [
     body('customerAccountId').isInt({ min: 1 }),
     body('invoiceNumber').isString().isLength({ min: 1, max: 64 }),
+    body('eventName').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
+    body('eventDate').optional({ values: 'falsy' }).isISO8601(),
     body('issueDate').isISO8601(),
     body('dueDate').optional({ values: 'falsy' }).isISO8601(),
     body('totalAmountMinor').isInt({ min: 0 }),
@@ -487,7 +489,12 @@ router.post(
       invoice_number: req.body.invoiceNumber,
       customer_account_id: customer.id,
       source_quote_id: null,
+      // No FK link on import — the event may predate picpeak. Store the
+      // free-text snapshot only, mirroring createInvoice's event_name /
+      // event_date columns (migration 107).
       event_id: null,
+      event_name: req.body.eventName || null,
+      event_date: req.body.eventDate || null,
       language,
       currency,
       issue_date: issueDate,

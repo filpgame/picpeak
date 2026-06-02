@@ -330,6 +330,8 @@ export const billsService = {
   async importHistorical(payload: {
     customerAccountId: number;
     invoiceNumber: string;
+    eventName?: string;
+    eventDate?: string;
     issueDate: string;
     dueDate?: string;
     totalAmountMinor: number;
@@ -343,6 +345,8 @@ export const billsService = {
     form.append('pdf', payload.file);
     form.append('customerAccountId', String(payload.customerAccountId));
     form.append('invoiceNumber', payload.invoiceNumber);
+    if (payload.eventName) form.append('eventName', payload.eventName);
+    if (payload.eventDate) form.append('eventDate', payload.eventDate);
     form.append('issueDate', payload.issueDate);
     if (payload.dueDate) form.append('dueDate', payload.dueDate);
     form.append('totalAmountMinor', String(payload.totalAmountMinor));
