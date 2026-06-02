@@ -433,20 +433,26 @@ const BusinessHoursEditor: React.FC<{
 
               {blocks.map((block, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <Input
+                  {/* Plain <input>, NOT the shared <Input> — that one wraps
+                      the field in a w-full div, so two of them in a flex row
+                      split the width and the trailing +/trash buttons shift
+                      the columns out of alignment. Fixed-width + shrink-0
+                      keeps every block's start/end columns lined up. The
+                      `input` class carries the shared field styling. */}
+                  <input
                     type="time"
                     lang={timeInputLang}
                     value={block.start}
                     onChange={(e) => updateBlock(iso, idx, { start: e.target.value })}
-                    className="w-32"
+                    className="input w-32 shrink-0"
                   />
                   <span className="text-neutral-400">–</span>
-                  <Input
+                  <input
                     type="time"
                     lang={timeInputLang}
                     value={block.end}
                     onChange={(e) => updateBlock(iso, idx, { end: e.target.value })}
-                    className="w-32"
+                    className="input w-32 shrink-0"
                   />
                   <button
                     type="button"
