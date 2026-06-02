@@ -3710,6 +3710,7 @@
       "selectTiming": "— Select schedule —",
       "eventName": "Event",
       "eventDate": "Event date",
+      "eventNamePlaceholder": "e.g. Smith wedding 2024",
       "eventTimeStart": "Start time",
       "eventTimeEnd": "End time",
       "customer": "Customer",

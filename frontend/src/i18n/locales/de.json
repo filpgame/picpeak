@@ -3664,6 +3664,7 @@
       "selectTiming": "— Zahlungsablauf wählen —",
       "eventName": "Anlass",
       "eventDate": "Anlassdatum",
+      "eventNamePlaceholder": "z.B. Hochzeit Schmidt 2024",
       "eventTimeStart": "Startzeit",
       "eventTimeEnd": "Endzeit",
       "customer": "Kunde",
