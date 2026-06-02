@@ -350,17 +350,89 @@ const PdfToggleRow: React.FC<PdfToggleRowProps> = ({ label, description, enabled
  */
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7];
 
+/**
+ * Parse a free-typed time into the canonical 24h "HH:MM", or null if
+ * unparseable. Tolerant of: "13:00", "1300", "9:5", "9", "1:00 PM",
+ * "1pm", "12 am". Used to accept input in whichever format the field is
+ * displaying (24h or 12h) and normalise it back to storage form.
+ */
+const parseTimeToHHMM = (raw: string): string | null => {
+  const s = raw.trim().toLowerCase();
+  if (!s) return null;
+  let ampm: 'am' | 'pm' | null = null;
+  let core = s;
+  const am = s.match(/(a|p)\.?m?\.?\s*$/);
+  if (am) {
+    ampm = am[1] === 'p' ? 'pm' : 'am';
+    core = s.slice(0, am.index).trim();
+  }
+  let h: number;
+  let mi: number;
+  const colon = core.match(/^(\d{1,2})\s*[:.]\s*(\d{1,2})$/);
+  if (colon) {
+    h = parseInt(colon[1], 10);
+    mi = parseInt(colon[2], 10);
+  } else {
+    const digits = core.replace(/\D/g, '');
+    if (!digits) return null;
+    if (digits.length <= 2) { h = parseInt(digits, 10); mi = 0; }
+    else if (digits.length === 3) { h = parseInt(digits.slice(0, 1), 10); mi = parseInt(digits.slice(1), 10); }
+    else { h = parseInt(digits.slice(0, 2), 10); mi = parseInt(digits.slice(2, 4), 10); }
+  }
+  if (Number.isNaN(h) || Number.isNaN(mi)) return null;
+  if (ampm === 'pm' && h < 12) h += 12;
+  if (ampm === 'am' && h === 12) h = 0;
+  h = Math.min(23, Math.max(0, h));
+  mi = Math.min(59, Math.max(0, mi));
+  return `${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}`;
+};
+
+/**
+ * Time field that DISPLAYS in the admin's `general_time_format` (24h →
+ * "13:00", 12h → "01:00 PM") but always stores/emits canonical 24h
+ * "HH:MM". A plain text input, so the rendered format is identical in
+ * every browser (native <input type="time"> ignores our setting — its
+ * 12h/24h chrome is browser-locale-controlled and Safari ignores the
+ * `lang` hint entirely). Free text while typing; parsed + reformatted on
+ * blur, reverting to the last good value if unparseable.
+ */
+const TimeField: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  ariaLabel?: string;
+}> = ({ value, onChange, ariaLabel }) => {
+  const { formatTime: fmtTime, timeFormat } = useLocalizedDate();
+  const display = (v: string) => (/^\d{1,2}:\d{2}/.test(v) ? fmtTime(v) : (v || ''));
+  const [text, setText] = useState(() => display(value));
+  useEffect(() => { setText(display(value)); /* eslint-disable-next-line */ }, [value, timeFormat]);
+  const commit = () => {
+    const parsed = parseTimeToHHMM(text);
+    if (parsed) {
+      setText(display(parsed));
+      if (parsed !== value) onChange(parsed);
+    } else {
+      setText(display(value));
+    }
+  };
+  return (
+    <input
+      type="text"
+      inputMode={timeFormat === '12h' ? 'text' : 'numeric'}
+      aria-label={ariaLabel}
+      placeholder={timeFormat === '12h' ? '1:00 PM' : 'HH:MM'}
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={commit}
+      className="input w-32 shrink-0 tabular-nums"
+    />
+  );
+};
+
 const BusinessHoursEditor: React.FC<{
   value: BusinessHours | null;
   onChange: (next: BusinessHours) => void;
 }> = ({ value, onChange }) => {
   const { t } = useTranslation();
-  const { timeFormat } = useLocalizedDate();
-  // Same `lang`-hint approach the rest of the app uses for time pickers
-  // (HoursSection / Quote / Bill / Contract editors): de-DE → 24h, en-US → 12h.
-  // Chrome/Edge honour it; Safari/Firefox follow OS locale (browser limit).
-  // The stored value is always 24h "HH:MM".
-  const timeInputLang = timeFormat === '12h' ? 'en-US' : 'de-DE';
 
   // Always work with a fully-populated 7-day object so toggling a day on
   // and off doesn't drop sibling keys.
@@ -432,25 +504,16 @@ const BusinessHoursEditor: React.FC<{
 
               {blocks.map((block, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  {/* Plain <input>, NOT the shared <Input> (its w-full
-                      wrapper makes two-per-row split + misalign with the
-                      trailing buttons). Fixed width keeps columns aligned. */}
-                  <input
-                    type="time"
-                    lang={timeInputLang}
+                  <TimeField
                     value={block.start}
-                    onChange={(e) => updateBlock(iso, idx, { start: e.target.value })}
-                    aria-label={t('businessProfile.businessHours.startTime', 'Opening time') as string}
-                    className="input w-32 shrink-0"
+                    onChange={(v) => updateBlock(iso, idx, { start: v })}
+                    ariaLabel={t('businessProfile.businessHours.startTime', 'Opening time') as string}
                   />
                   <span className="text-neutral-400">–</span>
-                  <input
-                    type="time"
-                    lang={timeInputLang}
+                  <TimeField
                     value={block.end}
-                    onChange={(e) => updateBlock(iso, idx, { end: e.target.value })}
-                    aria-label={t('businessProfile.businessHours.endTime', 'Closing time') as string}
-                    className="input w-32 shrink-0"
+                    onChange={(v) => updateBlock(iso, idx, { end: v })}
+                    ariaLabel={t('businessProfile.businessHours.endTime', 'Closing time') as string}
                   />
                   <button
                     type="button"
