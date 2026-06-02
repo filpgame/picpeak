@@ -1211,6 +1211,21 @@
       "clients": {
         "title": "CRM",
         "description": "Master switch for the CRM sidebar section. Off hides the section and every sub-feature below regardless of their individual toggles — re-enable to restore them to whatever you set last."
+      },
+      "contracts": {
+        "title": "Contracts",
+        "description": "Compose contracts from a library of reusable blocks (image rights, NDA, model release, cancellation, jurisdiction…) and have customers sign in-browser or upload a wet-signed PDF. Seeded block bodies are EXAMPLES ONLY — review with your lawyer before sending.",
+        "sidebar": "Contracts"
+      },
+      "crmDevelopment": {
+        "title": "CRM developer tools",
+        "description": "Internal helpers for verifying CRM flows (e.g. fire the admin payment-check email instantly, bypass throttles). Surfaces as a \"Development\" sub-tab under Clients. Strictly opt-in — fires real side effects, use against test data only.",
+        "sidebar": "Development"
+      },
+      "hoursLogging": {
+        "title": "Hours logging",
+        "description": "Per-customer time tracking. Admin logs date + start/end times + optional rate override + note. Monthly-mode customers auto-accumulate hours into the running monthly draft; per-event customers see a \"Create draft invoice\" button that mints a standalone draft invoice with one line per entry. Independent of Bills — log hours even before turning the full billing surface on.",
+        "sidebar": "Hours"
       }
     },
     "customerSurface": {
@@ -1223,6 +1238,12 @@
       "save": "Save changes",
       "saved": "Customer dashboard branding saved",
       "error": "Could not save settings"
+    },
+    "businessProfile": {
+      "title": "Business profile"
+    },
+    "crm": {
+      "title": "CRM behaviour"
     }
   },
   "analytics": {
@@ -3918,7 +3939,11 @@
       "quotes": "Quotes",
       "invoices": "Invoices",
       "paymentDefaults": "Default payment conditions",
-      "installmentDefaults": "Default installment triggers"
+      "installmentDefaults": "Default installment triggers",
+      "contracts": "Contracts",
+      "quotesTos": "Terms of Service / AGB step",
+      "dashboardOverview": "Dashboard CRM overview",
+      "dashboardOverviewHint": "Hide CRM overview tiles on the admin dashboard. All tiles render by default; uncheck to hide."
     },
     "paymentDefaults": {
       "help": "Pre-filled on every new quote and invoice. The editor still lets you pick a different combination per document.",
@@ -3993,6 +4018,48 @@
     },
     "crm_invoices_late_fee_enabled": {
       "label": "Add a late fee on the second reminder"
+    },
+    "crm_quotes_tos_required": {
+      "label": "Require customers to tick \"I accept the Terms of Service\" before accepting"
+    },
+    "crm_quotes_tos_url": {
+      "label": "Terms of Service URL (optional)"
+    },
+    "crm_quotes_tos_text": {
+      "label": "Inline Terms text shown on the quote page",
+      "placeholder": "Paste the contract terms here. Plain text. Leave empty to only show the checkbox + URL."
+    },
+    "crm_contracts_pdf_attachment_enabled": {
+      "label": "Attach contract PDF to email"
+    },
+    "crm_contracts_require_drawn_signature": {
+      "label": "Require drawn signature (typed name alone is not enough)"
+    },
+    "crm_contracts_allow_pdf_upload": {
+      "label": "Allow customer to upload a wet-signed PDF"
+    },
+    "crm_contracts_store_ip": {
+      "label": "Store signer's IP address (recommended — corroborating evidence in civil disputes)",
+      "help": "When off, the customer's and admin's IP at signing time is NOT recorded into the contract row or the public sign-page audit confirmation. Per GDPR data-minimisation principle some operators prefer this — but IP is corroborating identity evidence if the contract is challenged, so we recommend keeping it on."
+    },
+    "crm_contracts_default_valid_days": {
+      "label": "Signing window (days)"
+    },
+    "crm_contracts_number_format": {
+      "label": "Contract number format",
+      "help": "Supported tokens: {YEAR}, {MONTH}, {SEQ:04d}. Example: LBM-C-{YEAR}-{SEQ:04d} → LBM-C-2026-0001."
+    },
+    "crm_overview_show_revenue": {
+      "label": "Revenue tiles (30 / 90 / 365 days)"
+    },
+    "crm_overview_show_outstanding": {
+      "label": "Outstanding payments tile"
+    },
+    "crm_overview_show_quotes": {
+      "label": "Quotes pipeline (per-status)"
+    },
+    "crm_overview_show_invoices": {
+      "label": "Invoices pipeline (per-status)"
     }
   },
   "quoteResponse": {
@@ -4137,6 +4204,43 @@
         "actual": "actual",
         "error": "Integrity check failed."
       }
+    },
+    "editor": {
+      "back": "Back to list",
+      "backToDetail": "Back to contract",
+      "create": "Create draft",
+      "createdToast": "Contract created.",
+      "customer": "Customer",
+      "disclaimerBody": "The seeded block bodies are EXAMPLES ONLY — written by the maintainer, not by a lawyer. Have your own lawyer review every block you include before sending the contract. See docs/crm-disclaimers.md.",
+      "disclaimerTitle": "Lawyer review required",
+      "eventDate": "Event date",
+      "eventHelp": "Snapshotted onto the contract and propagated to any event / invoice generated from it. Set this so the customer portal and dunning emails show the right \"Wedding Doe / Müller\" label.",
+      "eventName": "Event name",
+      "eventNamePlaceholder": "e.g. Wedding Doe / Müller",
+      "eventSection": "Event (optional)",
+      "eventTimeEnd": "End",
+      "eventTimeStart": "Start",
+      "intro": "Intro text (optional)",
+      "issueDate": "Issue date",
+      "language": "Language",
+      "locked": "Sent contracts cannot be edited. Cancel and create a fresh one for amendments.",
+      "noBlocksInSection": "No blocks for this section yet.",
+      "outro": "Closing text (optional)",
+      "popupBlocked": "Allow pop-ups for this site to preview the PDF.",
+      "preview": "Preview PDF",
+      "previewAfterSave": "Save the draft first, then preview.",
+      "previewError": "Preview failed",
+      "save": "Save",
+      "saveError": "Save failed",
+      "savedToast": "Contract saved.",
+      "schriftformWarning": "Signature type: simple electronic signature (SES). Sufficient for routine photography contracts in CH / DE / AT / FL. NOT sufficient for documents that legally require Schriftform / form qualifiée: Bürgschaft (DE § 766 BGB), Verbraucherdarlehensvertrag (DE § 492 BGB), befristete Arbeitsverträge (DE § 14 Abs. 4 TzBfG), and similar. For those, a qualified electronic signature (QES) from a Trust Service Provider is required — picpeak does not provide QES.",
+      "searchCustomer": "Search by email…",
+      "systemBadge": "System",
+      "titleEdit": "Edit contract",
+      "titleField": "Contract title",
+      "titleNew": "New contract",
+      "titlePlaceholder": "e.g. Wedding contract Doe / Müller",
+      "validUntil": "Sign by (optional)"
     }
   }
 }
