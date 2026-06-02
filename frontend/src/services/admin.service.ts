@@ -201,6 +201,102 @@ export interface Activity {
   createdAt: string;
 }
 
+// Backup-integrity verifier — diagnostic endpoint that walks every
+// CRM document-artefact path column and confirms files exist on disk
+// (plus SHA-256 match where the schema stores one). Mirrors the
+// shape returned by backupIntegrityService.verifyDocumentArtefacts.
+export type BackupIntegrityScope =
+  | 'quote'
+  | 'contract'
+  | 'contract-signature'
+  | 'invoice';
+
+export interface BackupIntegrityMissingRow {
+  table: string;
+  rowId: number;
+  column: string;
+  expectedPath: string;
+}
+
+export interface BackupIntegrityHashMismatchRow extends BackupIntegrityMissingRow {
+  expectedSha: string;
+  actualSha: string;
+}
+
+export interface BackupIntegrityExistsButNoHashRow {
+  table: string;
+  rowId: number;
+  column: string;
+  path: string;
+}
+
+export interface BackupIntegrityReport {
+  scannedAt: string;
+  scopes: BackupIntegrityScope[];
+  summary: {
+    totalRows: number;
+    verifiedOk: number;
+    missingFiles: number;
+    hashMismatches: number;
+    existsButNoHash: number;
+  };
+  missing: BackupIntegrityMissingRow[];
+  hashMismatches: BackupIntegrityHashMismatchRow[];
+  existsButNoHash: BackupIntegrityExistsButNoHashRow[];
+}
+
+// ---- Backup-coverage (Stage C of backup-hardening plan) -----------------
+
+export type BackupPathCoverage =
+  | 'will-scan'
+  | 'skipped-by-toggle'
+  | 'skipped-by-feature-flag'
+  | 'missing-on-disk';
+
+export interface BackupCoveragePath {
+  path: string;
+  includeInDefault: boolean;
+  featureFlag: string | null;
+  featureFlagValue: boolean | null;
+  displayOrder: number;
+  description: string | null;
+  existsOnDisk: boolean;
+  coverage: BackupPathCoverage;
+}
+
+export interface BackupCoverageDatabase {
+  mode: 'inline' | 'scheduled-only';
+  inlineDumpExplicitlyDisabled: boolean;
+  lastDumpAt: string | null;
+  lastDumpType: string | null;
+  lastDumpSizeBytes: number;
+  lastDumpFilePath: string | null;
+  lastDumpAgeMs: number | null;
+  lastDumpStale: boolean | null;
+  ok: boolean;
+}
+
+export interface BackupCoverageReport {
+  generatedAt: string;
+  database: BackupCoverageDatabase;
+  paths: BackupCoveragePath[];
+  drift: {
+    unconfiguredOnDisk: string[];
+    expectedNonBackupDirs: string[];
+  };
+  summary: {
+    configuredCount: number;
+    willScanCount: number;
+    skippedByToggleCount: number;
+    skippedByFeatureFlagCount: number;
+    missingOnDiskCount: number;
+    driftCount: number;
+    tableMissingFallbackInUse: boolean;
+    databaseOk: boolean;
+    overallOk: boolean;
+  };
+}
+
 export interface AdminProfile {
   id: number;
   username: string;
@@ -260,6 +356,29 @@ export const adminService = {
   async getSystemHealth(): Promise<SystemHealth> {
     const response = await api.get<SystemHealth>('/admin/dashboard/health');
     return response.data;
+  },
+
+  // Backup-integrity verifier (read-only diagnostic). `scope` filters
+  // which document classes to walk; omit for a full scan.
+  async getBackupIntegrity(
+    scope?: BackupIntegrityScope[],
+  ): Promise<BackupIntegrityReport> {
+    const params = scope && scope.length > 0 ? { scope: scope.join(',') } : undefined;
+    const response = await api.get<{ report: BackupIntegrityReport }>(
+      '/admin/system-health/backup-integrity',
+      { params },
+    );
+    return response.data.report;
+  },
+
+  // Backup-coverage diagnostic (Stage C). Answers "what will the
+  // next backup actually include / skip / silently miss?" — read-only,
+  // no parameters. See backupCoverageService.js for the full report shape.
+  async getBackupCoverage(): Promise<BackupCoverageReport> {
+    const response = await api.get<{ report: BackupCoverageReport }>(
+      '/admin/system-health/backup-coverage',
+    );
+    return response.data.report;
   },
 
   // Format activity message

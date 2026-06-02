@@ -5,6 +5,34 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.60.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.0-beta.0...v3.60.1-beta.0) (2026-06-02)
+
+
+### Bug Fixes
+
+* **notifications:** restore /clear-all route the frontend already calls ([#597](https://github.com/the-luap/picpeak/issues/597)) ([940fc60](https://github.com/the-luap/picpeak/commit/940fc607400afa528f7f464c1d41541f46a4070d))
+
+## [3.60.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.59.1-beta.0...v3.60.0-beta.0) (2026-06-02)
+
+
+### Features
+
+* **restore:** docker-logs visibility + ADMIN_CREDENTIALS.txt restore notice ([3322a1d](https://github.com/the-luap/picpeak/commit/3322a1d998bedf39274dbb473b44e7b1e7cbff51))
+
+
+### Bug Fixes
+
+* **backup-ui:** respect general_date_format + general_time_format ([09f6a1a](https://github.com/the-luap/picpeak/commit/09f6a1af6acfce5ef0da173fb3c17a16bb679047))
+* **restore:** coerce pg bigint counts to Number before comparing (PR [#596](https://github.com/the-luap/picpeak/issues/596) round 2) ([354fbed](https://github.com/the-luap/picpeak/commit/354fbed18220b47167b9bf6b11b3881fc120b7ae))
+* **restore:** hoist preservedMeta above SQLite/PG split (PR [#596](https://github.com/the-luap/picpeak/issues/596) blocker) ([a23fa3b](https://github.com/the-luap/picpeak/commit/a23fa3bb12cd05a922c0fb860ae97ffd3fe2baff))
+* **restore:** move operator-meta replay after post-restore verification (PR [#596](https://github.com/the-luap/picpeak/issues/596) round 3) ([20e3092](https://github.com/the-luap/picpeak/commit/20e3092c146dd9151b6e7a370f885154f0adeecc))
+* **restore:** set was_successful=true on the completed update ([7988c18](https://github.com/the-luap/picpeak/commit/7988c189723fa4639413b3a5339c148521c92c11))
+
+
+### Documentation
+
+* consolidate disaster-recovery into Backup & Restore guide ([43cb0ea](https://github.com/the-luap/picpeak/commit/43cb0ea4bfc4f241a55d2681f14c064df6b87920))
+
 ## [3.59.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.59.0-beta.0...v3.59.1-beta.0) (2026-05-31)
 
 

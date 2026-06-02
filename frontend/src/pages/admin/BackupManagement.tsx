@@ -10,6 +10,8 @@ import {
   Clock,
   Loader2,
   Shield,
+  ShieldCheck,
+  FolderTree,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -21,9 +23,11 @@ import { BackupDashboard } from '../../components/admin/BackupDashboard';
 import { BackupConfiguration } from '../../components/admin/BackupConfiguration';
 import { BackupHistory } from '../../components/admin/BackupHistory';
 import { RestoreWizard } from '../../components/admin/RestoreWizard';
+import { BackupIntegrityCard } from '../../components/admin/BackupIntegrityCard';
+import { BackupCoverageCard } from '../../components/admin/BackupCoverageCard';
 import { api } from '../../config/api';
 
-type TabId = 'dashboard' | 'configuration' | 'history' | 'restore';
+type TabId = 'dashboard' | 'configuration' | 'history' | 'restore' | 'integrity' | 'coverage';
 
 export const BackupManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
@@ -35,6 +39,8 @@ export const BackupManagement: React.FC = () => {
     { id: 'configuration' as const, label: t('backup.tabs.configuration'), icon: Settings },
     { id: 'history' as const, label: t('backup.tabs.history'), icon: History },
     { id: 'restore' as const, label: t('backup.tabs.restore'), icon: RefreshCw },
+    { id: 'integrity' as const, label: t('backup.tabs.integrity', 'Integrity'), icon: ShieldCheck },
+    { id: 'coverage' as const, label: t('backup.tabs.coverage', 'Coverage'), icon: FolderTree },
   ];
 
   const { data: backupStatus, isLoading: statusLoading } = useQuery({
@@ -218,7 +224,15 @@ export const BackupManagement: React.FC = () => {
         )}
 
         {activeTab === 'restore' && (
-          <RestoreWizard />
+          <RestoreWizard onVerifyIntegrity={() => setActiveTab('integrity')} />
+        )}
+
+        {activeTab === 'integrity' && (
+          <BackupIntegrityCard />
+        )}
+
+        {activeTab === 'coverage' && (
+          <BackupCoverageCard />
         )}
       </div>
     </div>
