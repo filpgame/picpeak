@@ -19,6 +19,7 @@ import {
   Mail,
   MessageCircle,
   MessageSquare,
+  Receipt,
   Lock,
   Eye,
   EyeOff,
@@ -990,6 +991,26 @@ export const EventDetailsPage: React.FC = () => {
                         onClick={() => navigate(`/admin/events/${id}/feedback`)}
                       >
                         {t('feedback.manage', 'Manage Feedback')}
+                      </Button>
+                    )}
+                    {/* Create a draft invoice for this event — pre-fills the
+                        bill editor with the event snapshot + (when exactly
+                        one is linked) the customer. Gated on the bills flag. */}
+                    {flags.bills && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<Receipt className="w-4 h-4" />}
+                        onClick={() => {
+                          const accts = ((event as { customer_accounts?: Array<{ id: number }> }).customer_accounts) || [];
+                          const params = new URLSearchParams({ eventId: String(event.id) });
+                          if (event.event_name) params.set('eventName', event.event_name);
+                          if (event.event_date) params.set('eventDate', String(event.event_date).slice(0, 10));
+                          if (accts.length === 1) params.set('customerAccountId', String(accts[0].id));
+                          navigate(`/admin/clients/bills/new?${params.toString()}`);
+                        }}
+                      >
+                        {t('events.createInvoice', 'Create invoice')}
                       </Button>
                     )}
                   </>

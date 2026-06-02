@@ -240,6 +240,9 @@ const INVOICE_BODY_VALIDATORS = [
   body('skontoDisabled').optional().isBoolean(),
   // Inline event snapshot (migration 123). Mirrors quotes — kept
   // optional because standalone invoices may not have an event yet.
+  // eventId links the invoice to a gallery event (FK) when created from
+  // the event detail page; persisted by createInvoice (event_id).
+  body('eventId').optional({ values: 'falsy' }).isInt({ min: 1 }),
   body('eventName').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
   body('eventDate').optional({ values: 'falsy' }).isISO8601(),
   body('eventTimeStart').optional({ values: 'falsy' }).isString().isLength({ max: 8 }),

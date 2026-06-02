@@ -83,6 +83,7 @@ export const BillEditorPage: React.FC = () => {
   // event section — admin can type a free-text label without needing
   // an actual events row, and it carries through to the customer
   // portal + tax report + email templates.
+  const [eventId, setEventId] = useState<number | null>(null);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventTimeStart, setEventTimeStart] = useState('');
@@ -143,6 +144,7 @@ export const BillEditorPage: React.FC = () => {
       setPaymentTimingTemplateId(inv.paymentTimingTemplateId ?? null);
       setBusinessBankAccountId(inv.businessBankAccountId ?? null);
       setSkontoDisabled(Boolean(inv.skontoDisabled));
+      setEventId(inv.eventId ?? null);
       setEventName(inv.eventName || '');
       setEventDate(inv.eventDate || '');
       setEventTimeStart(inv.eventTimeStart || '');
@@ -215,6 +217,23 @@ export const BillEditorPage: React.FC = () => {
       }
     })();
   }, [isEdit, searchParams, customerId]);
+
+  // Pre-fill the event link + snapshot when opened from an event's
+  // "Create invoice" button (/admin/clients/bills/new?eventId=&eventName=&eventDate=).
+  const didPrefillEventRef = useRef(false);
+  useEffect(() => {
+    if (isEdit) return;
+    if (didPrefillEventRef.current) return;
+    const eidRaw = searchParams.get('eventId');
+    const eid = eidRaw ? parseInt(eidRaw, 10) : NaN;
+    const en = searchParams.get('eventName');
+    const ed = searchParams.get('eventDate');
+    if (!(Number.isFinite(eid) && eid > 0) && !en && !ed) return;
+    didPrefillEventRef.current = true;
+    if (Number.isFinite(eid) && eid > 0) setEventId(eid);
+    if (en) setEventName((prev) => prev || en);
+    if (ed) setEventDate((prev) => prev || ed);
+  }, [isEdit, searchParams]);
 
   // Pre-fill from a fully-signed contract when the editor is opened
   // via `?fromContractId=<id>` (the "New invoice" link on
@@ -384,6 +403,7 @@ export const BillEditorPage: React.FC = () => {
     // so the backend can distinguish "not provided" from a deliberate
     // clear (which the route's `optional({ values: 'falsy' })` already
     // treats identically — falsy values bypass validation entirely).
+    eventId: eventId ?? undefined,
     eventName: eventName || undefined,
     eventDate: eventDate || undefined,
     eventTimeStart: eventTimeStart || undefined,
