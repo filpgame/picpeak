@@ -15,7 +15,7 @@ import {
   type BankAccount,
   type QrFormat,
 } from '../../../services/businessProfile.service';
-import { Button, Card, Loading, Input } from '../../../components/common';
+import { Button, Card, Loading, Input, CountrySelect } from '../../../components/common';
 import { toast } from 'react-toastify';
 
 export const SettingsBusinessProfilePage: React.FC = () => {
@@ -82,11 +82,9 @@ export const SettingsBusinessProfilePage: React.FC = () => {
             onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
           <Input label={t('businessProfile.field.state', 'State / Region') as string} value={profile.state}
             onChange={(e) => setProfile({ ...profile, state: e.target.value })} />
-          <Input label={t('businessProfile.field.countryCode', 'Country abbreviation (FL, CH, DE …)') as string}
-            value={profile.countryCode}
-            maxLength={2}
-            placeholder="FL"
-            onChange={(e) => setProfile({ ...profile, countryCode: e.target.value.toUpperCase() })} />
+          <CountrySelect label={t('businessProfile.field.countryCode', 'Country') as string}
+            value={profile.countryCode || ''}
+            onChange={(code) => setProfile({ ...profile, countryCode: code })} />
           {/* Free-text country name override (migration 107). When
               left empty the renderer falls back to the COUNTRY_NAMES
               lookup on the abbreviation. */}
