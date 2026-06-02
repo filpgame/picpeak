@@ -19,6 +19,7 @@ import {
 } from '../../../services/businessProfile.service';
 import { Button, Card, Loading, Input, CountrySelect } from '../../../components/common';
 import { DecimalInput } from '../../../components/common/DecimalInput';
+import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import { toast } from 'react-toastify';
 
 export const SettingsBusinessProfilePage: React.FC = () => {
@@ -354,6 +355,13 @@ const BusinessHoursEditor: React.FC<{
   onChange: (next: BusinessHours) => void;
 }> = ({ value, onChange }) => {
   const { t } = useTranslation();
+  const { timeFormat } = useLocalizedDate();
+  // A native <input type="time"> renders 12h (AM/PM) or 24h purely from the
+  // browser/OS locale — it ignores our `general_time_format` setting. Pin a
+  // `lang` hint so Chrome/Edge render the admin's chosen format. (Safari /
+  // Firefox follow the OS locale regardless — same caveat as date inputs.)
+  // The stored value is always 24h "HH:MM" either way, so this is display-only.
+  const timeInputLang = timeFormat === '12h' ? 'en-US' : 'en-GB';
 
   // Always work with a fully-populated 7-day object so toggling a day on
   // and off doesn't drop sibling keys.
@@ -427,6 +435,7 @@ const BusinessHoursEditor: React.FC<{
                 <div key={idx} className="flex items-center gap-2">
                   <Input
                     type="time"
+                    lang={timeInputLang}
                     value={block.start}
                     onChange={(e) => updateBlock(iso, idx, { start: e.target.value })}
                     className="w-32"
@@ -434,6 +443,7 @@ const BusinessHoursEditor: React.FC<{
                   <span className="text-neutral-400">–</span>
                   <Input
                     type="time"
+                    lang={timeInputLang}
                     value={block.end}
                     onChange={(e) => updateBlock(iso, idx, { end: e.target.value })}
                     className="w-32"
