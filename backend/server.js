@@ -660,6 +660,7 @@ app.use('/api/admin/contracts',  require('./src/routes/adminContracts'));
 app.use('/api/admin/calendar',   require('./src/routes/adminCalendar'));
 app.use('/api/admin/deals',      require('./src/routes/adminDeals'));
 app.use('/api/admin/tax-report', require('./src/routes/adminTaxReport'));
+app.use('/api/admin/system-health', require('./src/routes/adminSystemHealth'));
 app.use('/api/admin/dev',        require('./src/routes/adminDev'));
 app.use('/api/public/quotes',  require('./src/routes/publicQuotes'));
 app.use('/api/public/contracts', require('./src/routes/publicContracts'));
@@ -798,6 +799,48 @@ async function startServer() {
     // for S3-mode deployments that drop files into the bucket directly.
     const { startS3AutoImporter } = require('./src/services/s3AutoImporter');
     startS3AutoImporter();
+
+    // Self-heal the `backup_paths` table before the backup service
+    // starts — the file-backup walker reads from it, so missing
+    // canonical rows (a new subdirectory shipped by a future feature)
+    // get re-seeded here on every boot. See _backupPathsBoot.js for
+    // the full rationale; pattern mirrors _emailTemplateBoot.js.
+    try {
+      const { seedBackupPathsAtBoot } = require('./src/services/_backupPathsBoot');
+      await seedBackupPathsAtBoot(db, logger);
+    } catch (err) {
+      logger.warn('backup_paths self-heal failed at boot:', err.message);
+    }
+
+    // Self-heal restore-meta settings — currently just
+    // `restore_allow_force` defaulting to ON so fresh installs can
+    // recover from disaster without a SQL incantation. Only seeds on
+    // FRESH installs (existing rows, true or false, are preserved).
+    // See _restoreSettingsBoot.js for the full rationale.
+    try {
+      const { seedRestoreSettingsAtBoot } = require('./src/services/_restoreSettingsBoot');
+      await seedRestoreSettingsAtBoot(db, logger);
+    } catch (err) {
+      logger.warn('restore-settings self-heal failed at boot:', err.message);
+    }
+
+    // Install-from-backup trigger. If `RESTORE_ON_INSTALL` (or
+    // `.txt`) exists in the /backup mount AND the DB is empty, run
+    // the restore HERE before any admin UI surfaces. Lets admins
+    // recover a picpeak install with: (a) place backup files in the
+    // bind mount, (b) drop the trigger file, (c) `docker compose up`.
+    // No onboarding wizard, no throwaway admin, no compose-file
+    // changes. See _installFromBackupBoot.js for the full rationale
+    // + the safety gates.
+    try {
+      const { tryInstallFromBackup } = require('./src/services/_installFromBackupBoot');
+      const result = await tryInstallFromBackup(db, logger);
+      if (result.ran) {
+        logger.info(`Install-from-backup: completed from ${result.manifestPath}. Server will start with restored state.`);
+      }
+    } catch (err) {
+      logger.warn('Install-from-backup hook threw:', err.message);
+    }
 
     // Start backup service
     await startBackupService();
