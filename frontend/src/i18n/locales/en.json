@@ -3430,6 +3430,9 @@
     "send": "Send",
     "resend": "Resend",
     "convert": "Convert to event",
+    "declineOnBehalf": "Decline on behalf",
+    "declineReasonPrompt": "Mark this quote as declined on behalf of the customer? Optionally note why (leave blank to skip).",
+    "declinedOnBehalfToast": "Quote marked as declined.",
     "field": {
       "issueDate": "Issued",
       "validUntil": "Valid until",
@@ -3438,6 +3441,7 @@
       "sentAt": "Sent at",
       "acceptedAt": "Accepted at",
       "declinedAt": "Declined at",
+      "declineReason": "Decline reason",
       "responseWindow": "Response window",
       "eventTimeStart": "Start time",
       "eventTimeEnd": "End time",

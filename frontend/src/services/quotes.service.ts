@@ -98,6 +98,10 @@ export interface QuoteDetail extends QuoteSummary {
   ccPdfEmail: string | null;
   respondedAt: string | null;
   responseLockedAt: string | null;
+  /** Free-text reason captured when an admin declines on the customer's
+   *  behalf (migration 115). Null for customer-side declines + non-declined
+   *  quotes. */
+  declineReason: string | null;
   pdfPath: string | null;
   businessBankAccountId: number | null;
 }
@@ -249,6 +253,14 @@ export const quotesService = {
    *  phone-call workflows where the customer verbally agrees. */
   async acceptOnBehalf(id: number): Promise<{ status: string; lockedAt: string }> {
     const { data } = await api.post(`/admin/quotes/${id}/accept`);
+    return data.data || data;
+  },
+
+  /** Admin decline-on-behalf — flips the quote to `declined` without the
+   *  customer's public response page. Optional free-text reason. Used
+   *  when the customer says no by phone/email. */
+  async declineOnBehalf(id: number, reason?: string): Promise<{ status: string; declinedAt: string }> {
+    const { data } = await api.post(`/admin/quotes/${id}/decline`, reason ? { reason } : {});
     return data.data || data;
   },
 

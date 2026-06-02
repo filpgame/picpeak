@@ -3438,6 +3438,9 @@
     "send": "Senden",
     "resend": "Erneut senden",
     "convert": "In Anlass umwandeln",
+    "declineOnBehalf": "Im Namen ablehnen",
+    "declineReasonPrompt": "Dieses Angebot im Namen des Kunden als abgelehnt markieren? Optional einen Grund angeben (leer lassen zum Überspringen).",
+    "declinedOnBehalfToast": "Angebot als abgelehnt markiert.",
     "field": {
       "issueDate": "Ausgestellt am",
       "validUntil": "Gültig bis",
@@ -3446,6 +3449,7 @@
       "sentAt": "Gesendet am",
       "acceptedAt": "Angenommen am",
       "declinedAt": "Abgelehnt am",
+      "declineReason": "Ablehnungsgrund",
       "responseWindow": "Antwortfrist",
       "eventTimeStart": "Startzeit",
       "eventTimeEnd": "Endzeit",
