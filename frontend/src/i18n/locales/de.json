@@ -2435,6 +2435,30 @@
       "success": "Warteschlange geleert – {{sent}} gesendet, {{failed}} fehlgeschlagen",
       "empty": "Keine ausstehenden E-Mails zum Senden"
     },
+    "sentEmails": {
+      "tab": "Gesendete E-Mails",
+      "title": "Gesendete E-Mails",
+      "subtitle": "Versandstatus aller eingereihten und gesendeten Benachrichtigungen.",
+      "searchPlaceholder": "Nach Empfänger oder Typ suchen…",
+      "from": "Von",
+      "to": "Bis",
+      "empty": "Keine E-Mails entsprechen diesen Filtern.",
+      "retries": "{{count}} Versuche",
+      "pagination": "Seite {{page}} von {{total}} · {{count}} E-Mails",
+      "status": {
+        "pending": "Ausstehend",
+        "sent": "Gesendet",
+        "failed": "Fehlgeschlagen"
+      },
+      "col": {
+        "recipient": "Empfänger",
+        "type": "Typ",
+        "status": "Status",
+        "created": "Eingereiht",
+        "sent": "Gesendet",
+        "event": "Anlass"
+      }
+    },
     "commonSmtpSettings": "Häufige SMTP-Einstellungen:",
     "editTemplate": "Vorlage bearbeiten",
     "templateName": "Vorlagenname",

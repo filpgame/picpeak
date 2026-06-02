@@ -2008,6 +2008,30 @@
       "success": "Email queue flushed — {{sent}} sent, {{failed}} failed",
       "empty": "No pending emails to send"
     },
+    "sentEmails": {
+      "tab": "Sent emails",
+      "title": "Sent emails",
+      "subtitle": "Delivery status of every queued and sent notification.",
+      "searchPlaceholder": "Search by recipient or type…",
+      "from": "From",
+      "to": "To",
+      "empty": "No emails match these filters.",
+      "retries": "{{count}} retries",
+      "pagination": "Page {{page}} of {{total}} · {{count}} emails",
+      "status": {
+        "pending": "Pending",
+        "sent": "Sent",
+        "failed": "Failed"
+      },
+      "col": {
+        "recipient": "Recipient",
+        "type": "Type",
+        "status": "Status",
+        "created": "Queued",
+        "sent": "Sent",
+        "event": "Event"
+      }
+    },
     "commonSmtpSettings": "Common SMTP Settings:",
     "editTemplate": "Edit Template",
     "templateName": "Template Name",

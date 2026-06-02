@@ -18,6 +18,7 @@ import { toast } from 'react-toastify';
 import { Button, Input, Card, Loading } from '../../components/common';
 import { EmailPreviewModal } from '../../components/admin/EmailPreviewModal';
 import { EmailTemplateEditor } from '../../components/admin/EmailTemplateEditor';
+import { SentEmailsPanel } from '../../components/admin/SentEmailsPanel';
 import { Palette, RefreshCw, Info } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { emailService, type EmailConfig, type EmailTemplate, type EmailTemplateTranslation } from '../../services/email.service';
@@ -129,7 +130,7 @@ The Photo Sharing Team`,
 
 export const EmailConfigPage: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'smtp' | 'templates'>('smtp');
+  const [activeTab, setActiveTab] = useState<'smtp' | 'templates' | 'sent'>('smtp');
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>('gallery_created');
   const [editedTemplate, setEditedTemplate] = useState<Partial<EmailTemplate>>({});
   const [editingLang, setEditingLang] = useState<string>('en');
@@ -476,8 +477,21 @@ export const EmailConfigPage: React.FC = () => {
           >
             {t('email.emailTemplates')}
           </button>
+          <button
+            onClick={() => setActiveTab('sent')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === 'sent'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
+            }`}
+          >
+            {t('email.sentEmails.tab', 'Sent emails')}
+          </button>
         </nav>
       </div>
+
+      {/* Sent emails Tab */}
+      {activeTab === 'sent' && <SentEmailsPanel />}
 
       {/* SMTP Settings Tab */}
       {activeTab === 'smtp' && (
