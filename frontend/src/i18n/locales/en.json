@@ -3849,6 +3849,7 @@
     "payment": {
       "paidAt": "Date",
       "amount": "Amount",
+      "date": "Payment date",
       "method": "Method",
       "reference": "Reference",
       "notes": "Notes",

@@ -3860,6 +3860,7 @@
     "payment": {
       "paidAt": "Bezahlt am",
       "amount": "Betrag",
+      "date": "Zahlungsdatum",
       "method": "Methode",
       "reference": "Referenz",
       "notes": "Notizen",
