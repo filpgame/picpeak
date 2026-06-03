@@ -573,12 +573,21 @@ app.get(
       const raw = await getAppSetting('branding_favicon_url', null);
       const url = (raw && String(raw).trim()) || null;
       if (url) {
-        // Absolute URL → redirect as-is. Otherwise it's an /uploads path the
-        // backend already serves with the correct content-type + headers.
-        const target = /^https?:\/\//i.test(url)
-          ? url
-          : (url.startsWith('/') ? url : `/uploads/${url.replace(/^uploads\//, '')}`);
-        return res.redirect(302, target);
+        // External URL — can't stream the bytes, so redirect (best effort).
+        if (/^https?:\/\//i.test(url)) return res.redirect(302, url);
+        // Local upload → stream the file bytes DIRECTLY rather than 302'ing.
+        // Safari does NOT reliably follow a redirect for favicon requests
+        // (it falls back to the HTML <link>, i.e. the bundled default),
+        // whereas Firefox/Chrome do — so a 302 worked everywhere except
+        // Safari. sendFile sets the right content-type from the extension.
+        const rel = String(url).replace(/^\/+/, '').replace(/^uploads\//, '');
+        const uploadsRoot = path.resolve(path.join(storagePath, 'uploads'));
+        const resolved = path.resolve(path.join(uploadsRoot, rel));
+        // Path containment — never serve outside the uploads dir.
+        if (resolved.startsWith(uploadsRoot + path.sep) && fs.existsSync(resolved)) {
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          return res.sendFile(resolved);
+        }
       }
     } catch (error) {
       logger.warn('Favicon lookup failed; serving bundled default', { error: error.message });
