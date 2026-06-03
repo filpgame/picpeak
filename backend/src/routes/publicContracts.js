@@ -24,6 +24,15 @@ const { handleAsync, validateRequest, successResponse } = require('../utils/rout
 const { validateFileType } = require('../utils/fileSecurityUtils');
 const contractService = require('../services/contractService');
 const { getAppSetting } = require('../utils/appSettings');
+
+// Normalise a Settings → Branding logo value (absolute URL, /-rooted path,
+// or bare `uploads/...` filename) into a URL the public page can load.
+function normalizeBrandingLogoUrl(raw) {
+  const value = (raw && String(raw).trim()) || null;
+  if (!value) return null;
+  if (value.startsWith('/') || /^https?:\/\//i.test(value)) return value;
+  return `/uploads/${value.replace(/^uploads\//, '')}`;
+}
 const { clientIpForAudit } = require('../utils/clientIp');
 const { loadActionToken, preMulterTokenGuard } = require('../utils/publicTokenGuards');
 const { db } = require('../database/db');
@@ -69,7 +78,7 @@ const signedPdfUpload = multer({
  * The IP / signature image paths are NEVER exposed publicly even after
  * signing — they're audit evidence.
  */
-function publicContractView(contract, inclusions, customer, profile, locale) {
+function publicContractView(contract, inclusions, customer, profile, locale, brandingLogoUrl, brandingLogoUrlDark) {
   const orderedSections = ['basics', 'scope', 'privacy', 'commercial', 'nda', 'closing'];
   const blocksBySection = {};
   for (const s of orderedSections) blocksBySection[s] = [];
@@ -143,6 +152,12 @@ function publicContractView(contract, inclusions, customer, profile, locale) {
       city: profile.city,
       email: profile.email,
       website: profile.website,
+      // Light + dark branding logos (Settings → Branding), so the public
+      // sign page renders the logo that reads in its resolved colour mode.
+      // Mirrors publicQuotes — the print-only business_profile.logo_path is
+      // intentionally NOT used here.
+      logoUrl: normalizeBrandingLogoUrl(brandingLogoUrl),
+      logoUrlDark: normalizeBrandingLogoUrl(brandingLogoUrlDark),
     } : null,
   };
 }
@@ -168,12 +183,16 @@ router.get(
     // re-enforces both, so client tampering only changes the UX.
     const allowPdfUpload = (await getAppSetting('crm_contracts_allow_pdf_upload')) !== false;
     const requireDrawnSignature = (await getAppSetting('crm_contracts_require_drawn_signature')) === true;
+    const brandingLogoUrl = await getAppSetting('branding_logo_url', null);
+    const brandingLogoUrlDark = await getAppSetting('branding_logo_url_dark', null);
     const view = publicContractView(
       data.contract,
       data.inclusions,
       customer,
       profile,
       data.contract.language || 'de',
+      brandingLogoUrl,
+      brandingLogoUrlDark,
     );
     view.allowPdfUpload = allowPdfUpload;
     view.requireDrawnSignature = requireDrawnSignature;

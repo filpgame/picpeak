@@ -32,6 +32,8 @@ export interface PaymentCheckIssuer {
   email?: string;
   website?: string;
   logoUrl: string | null;
+  /** Dark-mode branding logo; the page picks per its colour mode. */
+  logoUrlDark?: string | null;
 }
 export interface PaymentCheckResponse {
   invoice: PaymentCheckView;
