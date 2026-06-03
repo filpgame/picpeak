@@ -5,7 +5,7 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Eye, Save as SaveIcon } from 'lucide-react';
 import { Button, Card, Loading, Input, LocalizedDateInput, TimeField } from '../../../components/common';
@@ -653,10 +653,10 @@ export const BillEditorPage: React.FC = () => {
           only has the single FK still resolve their preview text. */}
       <Card>
         <h3 className="font-semibold mb-2">{t('bills.section.payment', 'Payment conditions')}</h3>
-        <a href="/admin/settings?tab=crm" target="_blank" rel="noopener noreferrer"
+        <Link to="/admin/settings?tab=crm"
           className="text-xs text-accent hover:underline mb-2 inline-block">
           {t('common.configureInSettings', 'Configure defaults in Settings ↗')}
-        </a>
+        </Link>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium mb-1">{t('bills.field.paymentNetDays', 'Net days')}</label>
