@@ -73,6 +73,26 @@
       "message": "Sind Sie sicher, dass Sie die Einladung für {{email}} abbrechen möchten?"
     }
   },
+  "systemHealth": {
+    "title": "Systemzustand",
+    "subtitle": "Hintergrundfehler, die Aufmerksamkeit erfordern.",
+    "retry": "Erneut versuchen",
+    "dismiss": "Verwerfen",
+    "retriedToast": "E-Mail erneut eingereiht.",
+    "dismissedToast": "Verworfen.",
+    "stuckEmails": {
+      "title": "Hängende / fehlgeschlagene E-Mails",
+      "empty": "Keine hängenden oder fehlgeschlagenen E-Mails — alles in Ordnung.",
+      "noError": "Versuche aufgebraucht",
+      "col": {
+        "recipient": "Empfänger",
+        "type": "Typ",
+        "error": "Fehler",
+        "queued": "Eingereiht",
+        "actions": "Aktionen"
+      }
+    }
+  },
   "common": {
     "loading": "Wird geladen...",
     "error": "Fehler",
@@ -166,6 +186,7 @@
     "dashboard": "Dashboard",
     "events": "Veranstaltungen",
     "settings": "Einstellungen",
+    "systemHealth": "Systemzustand",
     "archives": "Archive",
     "emailSettings": "E-Mail-Einstellungen",
     "branding": "Markenidentität",
