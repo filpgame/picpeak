@@ -33,10 +33,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const { data: brandingSettings } = usePublicSettings();
 
   const companyName = brandingSettings?.branding_company_name?.trim() || 'PicPeak';
-  // Dark-mode logo variant: use it when the admin theme is dark and a dark
-  // logo was uploaded; otherwise fall back to the light logo.
-  const logoUrl = (isDark && brandingSettings?.branding_logo_url_dark?.trim())
-    || brandingSettings?.branding_logo_url?.trim();
+  // Dark-mode logo variant. Symmetric fallback: if only one logo is set,
+  // use it for both modes (dark → dark||light, light → light||dark).
+  const lightLogo = brandingSettings?.branding_logo_url?.trim();
+  const darkLogo = brandingSettings?.branding_logo_url_dark?.trim();
+  const logoUrl = isDark ? (darkLogo || lightLogo) : (lightLogo || darkLogo);
   const logoDisplayMode = brandingSettings?.branding_logo_display_mode || 'logo_and_text';
   // Logo placement honours the same Branding > Logo Position setting
   // the gallery does. 'sidepanel' moves the logo into the AdminSidebar
