@@ -818,6 +818,7 @@
     "noTemplate": "Keine Vorlage",
     "useThemeOnly": "Nur Design-Vorlage verwenden",
     "customTemplate": "Benutzerdefinierte Vorlage",
+    "createInvoice": "Rechnung erstellen",
     "title": "Veranstaltungen",
     "create": "Veranstaltung erstellen",
     "createEvent": "Veranstaltung erstellen",
