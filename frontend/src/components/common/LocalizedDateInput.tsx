@@ -123,7 +123,19 @@ export const LocalizedDateInput: React.FC<LocalizedDateInputProps> = ({
           value={text}
           placeholder={placeholder}
           disabled={disabled}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value;
+            setText(next);
+            // Commit live as soon as a complete, valid date is typed —
+            // don't wait for blur. Otherwise a value entered then submitted
+            // without blurring (or before React re-renders after the
+            // blur-time setState) is lost and the parent keeps its previous
+            // value (e.g. the import form's "today" default). toIso returns
+            // '' for partial/invalid input, so intermediate keystrokes emit
+            // nothing.
+            const iso = toIso(next);
+            if (iso) onChange(iso);
+          }}
           onBlur={() => {
             const iso = toIso(text);
             if (iso) {
