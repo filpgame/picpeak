@@ -536,6 +536,10 @@ export const QuoteEditorPage: React.FC = () => {
           below now reads from the timing template. */}
       <Card>
         <h3 className="font-semibold mb-2">4. {t('quotes.section.payment', 'Payment conditions')}</h3>
+        <a href="/admin/settings?tab=crm" target="_blank" rel="noopener noreferrer"
+          className="text-xs text-accent hover:underline mb-2 inline-block">
+          {t('common.configureInSettings', 'Configure defaults in Settings ↗')}
+        </a>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium mb-1">{t('quotes.field.paymentNetDays', 'Net days')}</label>
