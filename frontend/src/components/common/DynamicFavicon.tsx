@@ -35,8 +35,16 @@ export const DynamicFavicon: React.FC = () => {
       link.rel = 'icon';
       if (ext && typeByExt[ext]) link.type = typeByExt[ext];
       link.href = href;
-
       document.head.appendChild(link);
+
+      // Safari uses apple-touch-icon for bookmarks / home-screen and is
+      // unreliable about JS-injected rel="icon". The backend /favicon.ico +
+      // /apple-touch-icon routes are the primary mechanism; this is
+      // belt-and-braces for browsers that do read the DOM link.
+      const appleLink = document.createElement('link');
+      appleLink.rel = 'apple-touch-icon';
+      appleLink.href = href;
+      document.head.appendChild(appleLink);
     }
   }, [settings?.branding_favicon_url]);
 
