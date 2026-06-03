@@ -23,6 +23,15 @@ const { loadActionToken } = require('../utils/publicTokenGuards');
 
 const router = express.Router();
 
+// Normalise a Settings → Branding logo value (absolute URL, /-rooted path,
+// or bare `uploads/...` filename) into a URL the public page can load.
+function normalizeBrandingLogoUrl(raw) {
+  const value = (raw && String(raw).trim()) || null;
+  if (!value) return null;
+  if (value.startsWith('/') || /^https?:\/\//i.test(value)) return value;
+  return `/uploads/${value.replace(/^uploads\//, '')}`;
+}
+
 // Rate-limit: 30 token previews per IP per minute, 10 responses.
 const previewLimiter = rateLimit({
   windowMs: 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false,
@@ -31,7 +40,7 @@ const respondLimiter = rateLimit({
   windowMs: 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false,
 });
 
-function publicQuoteView(quote, lineItems, customer, profile, tosRequired, tosText, tosUrl, brandingLogoUrl) {
+function publicQuoteView(quote, lineItems, customer, profile, tosRequired, tosText, tosUrl, brandingLogoUrl, brandingLogoUrlDark) {
   return {
     quoteNumber: quote.quote_number,
     status: quote.status,
@@ -98,13 +107,11 @@ function publicQuoteView(quote, lineItems, customer, profile, tosRequired, tosTe
       // there). On the web page the existing site branding already
       // serves both light + dark modes correctly, so falling back
       // to a PDF-only image would override that with a light
-      // version that doesn't read in dark mode.
-      logoUrl: (() => {
-        const raw = (brandingLogoUrl && String(brandingLogoUrl).trim()) || null;
-        if (!raw) return null;
-        if (raw.startsWith('/') || /^https?:\/\//i.test(raw)) return raw;
-        return `/uploads/${raw.replace(/^uploads\//, '')}`;
-      })(),
+      // version that doesn't read in dark mode. Both light + dark
+      // branding URLs are surfaced so the page can pick the one that
+      // matches its resolved colour mode (see usePublicDarkMode).
+      logoUrl: normalizeBrandingLogoUrl(brandingLogoUrl),
+      logoUrlDark: normalizeBrandingLogoUrl(brandingLogoUrlDark),
     } : null,
   };
 }
@@ -137,9 +144,10 @@ router.get(
     // — admins typically upload one logo via Settings → Branding and
     // expect it to flow through the customer-facing pages too.
     const brandingLogoUrl = await getAppSetting('branding_logo_url', null);
+    const brandingLogoUrlDark = await getAppSetting('branding_logo_url_dark', null);
 
     return successResponse(res, {
-      quote: publicQuoteView(data.quote, data.lineItems, customer, profile, tosRequired, tosText, tosUrl, brandingLogoUrl),
+      quote: publicQuoteView(data.quote, data.lineItems, customer, profile, tosRequired, tosText, tosUrl, brandingLogoUrl, brandingLogoUrlDark),
     });
   })
 );

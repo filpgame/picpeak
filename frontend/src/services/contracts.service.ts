@@ -429,6 +429,9 @@ export interface PublicContractView {
     city: string | null;
     email: string | null;
     website: string | null;
+    /** Light + dark branding logo URLs; the page picks per its colour mode. */
+    logoUrl?: string | null;
+    logoUrlDark?: string | null;
   } | null;
   /** Admin-set behaviour flags surfaced for the public sign page.
    *  Server re-enforces both — these only drive the UI. */

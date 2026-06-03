@@ -390,6 +390,8 @@ export interface PublicQuoteView {
     footerLine: string;
     /** Absolute or /uploads/-prefixed URL set by the public route. */
     logoUrl?: string | null;
+    /** Dark-mode branding logo; the page picks per its colour mode. */
+    logoUrlDark?: string | null;
   } | null;
 }
 
