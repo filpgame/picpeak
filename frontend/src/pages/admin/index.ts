@@ -8,6 +8,7 @@ export { ArchivesPage } from './ArchivesPage';
 export { AnalyticsPage } from './AnalyticsPage';
 export { BrandingPage } from './BrandingPage';
 export { SettingsPage } from './SettingsPage';
+export { SystemHealthPage } from './SystemHealthPage';
 export { CMSPage } from './CMSPage';
 export { BackupManagement } from './BackupManagement';
 export { EventFeedbackPage } from './EventFeedbackPage';

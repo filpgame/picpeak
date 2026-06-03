@@ -23,6 +23,7 @@ const { requirePermission } = require('../middleware/permissions');
 const { handleAsync, validateRequest, successResponse } = require('../utils/routeHelpers');
 const { verifyDocumentArtefacts } = require('../services/backupIntegrityService');
 const { getCoverageReport } = require('../services/backupCoverageService');
+const { db } = require('../database/db');
 
 const router = express.Router();
 
@@ -81,6 +82,83 @@ router.get(
   handleAsync(async (req, res) => {
     const report = await getCoverageReport();
     return successResponse(res, { report });
+  }),
+);
+
+/**
+ * GET /api/admin/system-health/failures
+ *
+ * Surfaces background failures that would otherwise go unnoticed. v1
+ * covers stuck/failed outbound emails: rows the queue processor has
+ * given up on (status='failed') or exhausted its retries on
+ * (status='pending' AND retry_count >= 3 — the processor only picks up
+ * retry_count < 3). Trigger: a 14h window where 'quote_sent' template
+ * errors left invoices unsent with no admin-visible signal.
+ */
+router.get(
+  '/failures',
+  requirePermission('settings.view'),
+  handleAsync(async (req, res) => {
+    const stuckEmails = await db('email_queue')
+      .where(function () {
+        this.where('status', 'failed')
+          .orWhere(function () {
+            this.where('status', 'pending').andWhere('retry_count', '>=', 3);
+          });
+      })
+      .orderBy('created_at', 'desc')
+      .limit(200)
+      .select('id', 'recipient_email', 'email_type', 'status', 'retry_count', 'error_message', 'created_at');
+
+    return successResponse(res, {
+      stuckEmails: stuckEmails.map((r) => ({
+        id: r.id,
+        recipientEmail: r.recipient_email,
+        emailType: r.email_type,
+        status: r.status,
+        retryCount: r.retry_count,
+        errorMessage: r.error_message,
+        createdAt: r.created_at,
+      })),
+      counts: { stuckEmails: stuckEmails.length },
+    });
+  }),
+);
+
+/**
+ * POST /failures/email/:id/retry — re-queue a stuck email (status back to
+ * pending, retry_count reset, error cleared, scheduled_at cleared so the
+ * 60s processor picks it up on its next pass).
+ */
+router.post(
+  '/failures/email/:id/retry',
+  requirePermission('settings.edit'),
+  handleAsync(async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'Invalid id' });
+    const updated = await db('email_queue').where({ id }).update({
+      status: 'pending',
+      retry_count: 0,
+      error_message: null,
+      scheduled_at: null,
+    });
+    if (!updated) return res.status(404).json({ error: 'Email not found' });
+    return successResponse(res, { retried: true });
+  }),
+);
+
+/**
+ * DELETE /failures/email/:id — dismiss a stuck email (remove the row so
+ * it stops surfacing). Use when the failure is understood + won't be sent.
+ */
+router.delete(
+  '/failures/email/:id',
+  requirePermission('settings.edit'),
+  handleAsync(async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'Invalid id' });
+    await db('email_queue').where({ id }).del();
+    return successResponse(res, { dismissed: true });
   }),
 );
 
