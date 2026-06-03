@@ -21,7 +21,7 @@ import { Lock, MapPin, Phone, User as UserIcon, AlertCircle, CheckCircle } from 
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 
-import { Button, Input, Card, Loading } from '../../components/common';
+import { Button, Input, Card, Loading, CountrySelect } from '../../components/common';
 import {
   customerService,
   type CustomerInvitationInfo,
@@ -393,7 +393,7 @@ export const CustomerAcceptInvitePage: React.FC = () => {
                       onChange={(e) => update('postal_code', e.target.value)}
                     />
                   </div>
-                  <div className="sm:col-span-3">
+                  <div className="sm:col-span-4">
                     <label className="block text-sm font-medium text-theme mb-1" htmlFor="invite-city">
                       {t('customer.profile.field.city', 'City')}
                     </label>
@@ -403,20 +403,6 @@ export const CustomerAcceptInvitePage: React.FC = () => {
                       autoComplete="billing address-level2"
                       value={form.city}
                       onChange={(e) => update('city', e.target.value)}
-                    />
-                  </div>
-                  <div className="sm:col-span-1">
-                    <label className="block text-sm font-medium text-theme mb-1" htmlFor="invite-country">
-                      {t('customer.profile.field.countryCode', 'Country')}
-                    </label>
-                    <Input
-                      id="invite-country"
-                      name="country"
-                      autoComplete="billing country"
-                      placeholder="DE"
-                      maxLength={2}
-                      value={form.country_code}
-                      onChange={(e) => update('country_code', e.target.value.toUpperCase().slice(0, 2))}
                     />
                   </div>
                   <div className="sm:col-span-3">
@@ -429,6 +415,16 @@ export const CustomerAcceptInvitePage: React.FC = () => {
                       autoComplete="billing address-level1"
                       value={form.state}
                       onChange={(e) => update('state', e.target.value)}
+                    />
+                  </div>
+                  <div className="sm:col-span-3">
+                    {/* Country picker (ISO code) — dropdown, mirroring the
+                        admin customer / business-profile forms, placed after
+                        State / region. Replaces the old free-text 2-char input. */}
+                    <CountrySelect
+                      label={t('customer.profile.field.countryCode', 'Country') as string}
+                      value={form.country_code}
+                      onChange={(code) => update('country_code', code)}
                     />
                   </div>
                 </div>
