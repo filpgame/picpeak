@@ -1322,7 +1322,7 @@
     "currentFavicon": "Current favicon",
     "uploadFavicon": "Upload Favicon",
     "removeFavicon": "Remove Favicon",
-    "faviconHelp": "PNG or ICO format. Use a square image — 512×512px is recommended for crisp display on high-resolution screens; smaller sizes work too.",
+    "faviconHelp": "PNG, ICO, or SVG format. Use a square image — an SVG (or a 512×512px PNG) gives the crispest display on high-resolution screens; smaller sizes work too.",
     "watermarkSettings": "Watermark Settings",
     "enableWatermarks": "Enable Watermarks",
     "watermarkHelp": "Add your company name as a watermark on downloaded photos",

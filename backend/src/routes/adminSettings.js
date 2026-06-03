@@ -76,7 +76,8 @@ const faviconUpload = multer({
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB — roomy enough for a 512×512+ square PNG
   fileFilter: (req, file, cb) => {
     const allowedMimeTypes = ['image/png', 'image/x-icon', 'image/vnd.microsoft.icon'];
-    
+    const name = file.originalname.toLowerCase();
+
     // For ICO files, we can't use the standard validateFileType
     if (file.mimetype === 'image/png') {
       if (validateFileType(file.originalname, file.mimetype, ['image/png'])) {
@@ -84,12 +85,16 @@ const faviconUpload = multer({
       } else {
         cb(new Error('Invalid PNG file'));
       }
-    } else if (allowedMimeTypes.includes(file.mimetype) && 
-               (file.originalname.toLowerCase().endsWith('.ico') || 
-                file.originalname.toLowerCase().endsWith('.png'))) {
+    } else if (file.mimetype === 'image/svg+xml' && name.endsWith('.svg')) {
+      // SVG favicons are supported by modern browsers and are crisp at any
+      // size. Served SVGs are CSP-locked (no script execution) by the
+      // secureStatic middleware, so an admin-uploaded SVG is render-only.
+      cb(null, true);
+    } else if (allowedMimeTypes.includes(file.mimetype) &&
+               (name.endsWith('.ico') || name.endsWith('.png'))) {
       cb(null, true);
     } else {
-      cb(new Error('Favicon must be PNG or ICO format'));
+      cb(new Error('Favicon must be PNG, ICO, or SVG format'));
     }
   }
 });
