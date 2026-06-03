@@ -2,7 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <!-- Point the favicon at the backend's dynamic /favicon.ico route so the
+         admin-configured branding favicon is used from the very first paint,
+         in every browser. CRITICAL: a hardcoded href here (e.g. the bundled
+         /favicon-32x32.png) makes the browser use THAT and never request
+         /favicon.ico — Safari then shows the default and ignores the JS that
+         DynamicFavicon uses to swap it. No type/sizes so the byte stream
+         (png/ico/svg) is honoured via the response content-type. -->
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!--
       Static fallback title + Open Graph defaults (#521).
