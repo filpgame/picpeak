@@ -5,6 +5,22 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.1-beta.0](https://github.com/filpgame/picpeak/compare/v4.3.0-beta.0...v4.3.1-beta.0) (2026-06-03)
+
+
+### Bug Fixes
+
+* **fileWatcher:** limit concurrent photo processing to prevent OOM crashes ([70c01bd](https://github.com/filpgame/picpeak/commit/70c01bdbd9dd860079ed5dd9d5a449264a858523))
+* **fileWatcher:** limit concurrent processNewPhoto calls to 2 via p-limit ([8bd0b25](https://github.com/filpgame/picpeak/commit/8bd0b25acc70b945458688bc7afbc8610f5db036))
+* **fileWatcher:** make watcher concurrency env-configurable; fix env leak in tests ([5ce571a](https://github.com/filpgame/picpeak/commit/5ce571a80ebb7cc306a7f93d1ed6f3b0bf7edfd6))
+* **sharp:** cap libvips concurrency and cache at startup ([5524d1f](https://github.com/filpgame/picpeak/commit/5524d1fdee8a7183777c36ae89a171cd97ef2712))
+
+
+### Documentation
+
+* add file watcher concurrency fix design spec ([79b3f5a](https://github.com/filpgame/picpeak/commit/79b3f5af0a614fd7149ffe485bbbefb8ae219502))
+* add file watcher concurrency implementation plan ([b67dd5e](https://github.com/filpgame/picpeak/commit/b67dd5e1819dc43875c2ff4f3627bc719788d882))
+
 ## [4.3.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.2.0-beta.0...v4.3.0-beta.0) (2026-05-31)
 
 
