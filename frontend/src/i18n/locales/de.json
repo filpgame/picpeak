@@ -76,6 +76,7 @@
   "common": {
     "loading": "Wird geladen...",
     "error": "Fehler",
+    "configureInSettings": "Standards in den Einstellungen anpassen ↗",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "delete": "Löschen",
