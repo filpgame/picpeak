@@ -123,9 +123,11 @@ export const GalleryLayout: React.FC<GalleryLayoutProps> = ({
   const { t } = useTranslation();
   const { format } = useLocalizedDate();
   const { theme } = useTheme();
-  // Dark-mode logo variant: prefer it on dark gallery themes, else light.
-  const brandLogoUrl = (theme.colorMode === 'dark' && brandingSettings?.logo_url_dark)
-    || brandingSettings?.logo_url;
+  // Dark-mode logo variant. Symmetric fallback: a single uploaded logo
+  // serves both modes (dark → dark||light, light → light||dark).
+  const brandLogoUrl = theme.colorMode === 'dark'
+    ? (brandingSettings?.logo_url_dark || brandingSettings?.logo_url)
+    : (brandingSettings?.logo_url || brandingSettings?.logo_url_dark);
   const guestIdentity = useGuestIdentityOptional();
 
   // Footer legal-link config. Cached aggressively because the toggle state

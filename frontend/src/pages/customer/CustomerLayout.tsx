@@ -65,7 +65,16 @@ export const CustomerLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const companyName = settingsData?.branding_company_name?.trim() || 'PicPeak';
-  const logoUrl = settingsData?.branding_logo_url?.trim();
+  // Theme-aware logo: the customer surface follows branding_force_color_mode
+  // ('auto' → OS preference). Symmetric fallback so a single uploaded logo
+  // serves both modes.
+  const forceMode = settingsData?.branding_force_color_mode;
+  const customerIsDark = forceMode === 'dark'
+    || (forceMode === 'auto' && typeof window !== 'undefined'
+        && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+  const lightLogo = settingsData?.branding_logo_url?.trim();
+  const darkLogo = settingsData?.branding_logo_url_dark?.trim();
+  const logoUrl = customerIsDark ? (darkLogo || lightLogo) : (lightLogo || darkLogo);
   const resolvedLogoUrl = logoUrl || '/picpeak-logo-transparent.png';
 
   // Filter out feature-gated entries the customer can't see. Galleries +
