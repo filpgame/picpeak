@@ -2,6 +2,7 @@ const chokidar = require('chokidar');
 const path = require('path');
 const fs = require('fs').promises;
 const sharp = require('sharp');
+const pLimit = require('p-limit');
 const { db } = require('../database/db');
 const { formatBoolean } = require('../utils/dbCompat');
 const { generateThumbnail, generateVideoPlaceholder } = require('./imageProcessor');
@@ -12,6 +13,9 @@ const downloadZipService = require('./downloadZipService');
 
 const getStoragePath = () => process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
 const WATCH_PATH = () => path.join(getStoragePath(), 'events/active');
+
+const WATCHER_CONCURRENCY = Math.max(1, parseInt(process.env.FILE_WATCHER_CONCURRENCY || '2', 10));
+const processLimit = pLimit(WATCHER_CONCURRENCY);
 
 function startFileWatcher() {
   // Auto-import via filesystem watching only works with the local storage
@@ -34,12 +38,10 @@ function startFileWatcher() {
   });
 
   watcher
-    .on('add', async (filePath) => {
-      try {
-        await processNewPhoto(filePath);
-      } catch (error) {
+    .on('add', (filePath) => {
+      processLimit(() => processNewPhoto(filePath)).catch((error) => {
         logger.error('Error processing new photo:', error);
-      }
+      });
     })
     .on('unlink', async (filePath) => {
       try {
@@ -175,4 +177,4 @@ async function removePhoto(filePath) {
   logger.info(`Removed photo: ${relativePath}`);
 }
 
-module.exports = { startFileWatcher };
+module.exports = { startFileWatcher, processNewPhoto };

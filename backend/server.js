@@ -12,6 +12,14 @@ logger.info('Server starting up', {
   timestamp: new Date().toISOString()
 });
 
+// Cap libvips concurrency and cache so large photo batches don't OOM.
+// concurrency(1): one libvips thread per sharp operation (operations still
+// run in parallel at the rate controlled by backgroundProcessor + p-limit).
+// cache({memory:100}): libvips internal tile/decode cache capped at 100 MB.
+const sharp = require('sharp');
+sharp.concurrency(1);
+sharp.cache({ memory: 100 });
+
 const fs = require('fs');
 const express = require('express');
 const helmet = require('helmet');
