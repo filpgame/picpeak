@@ -559,6 +559,34 @@ app.get('/robots.txt', async (req, res) => {
   }
 });
 
+// Dynamic favicon endpoints. Browsers — notably Safari — request
+// /favicon.ico and /apple-touch-icon*.png directly at the site root and are
+// unreliable about honouring JS-injected <link rel="icon"> tags. Serving the
+// admin's configured branding favicon here makes it work without client-side
+// JS (and survive aggressive favicon caches). Falls back to the bundled asset
+// shipped with the frontend build when no custom favicon is set.
+app.get(
+  ['/favicon.ico', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png'],
+  async (req, res) => {
+    try {
+      const { getAppSetting } = require('./src/utils/appSettings');
+      const raw = await getAppSetting('branding_favicon_url', null);
+      const url = (raw && String(raw).trim()) || null;
+      if (url) {
+        // Absolute URL → redirect as-is. Otherwise it's an /uploads path the
+        // backend already serves with the correct content-type + headers.
+        const target = /^https?:\/\//i.test(url)
+          ? url
+          : (url.startsWith('/') ? url : `/uploads/${url.replace(/^uploads\//, '')}`);
+        return res.redirect(302, target);
+      }
+    } catch (error) {
+      logger.warn('Favicon lookup failed; serving bundled default', { error: error.message });
+    }
+    return res.redirect(302, '/favicon-32x32.png');
+  }
+);
+
 // Health check endpoint. `pid` + `uptime` let monitors (and the local E2E
 // watchdog) detect a silent process restart between two checks.
 app.get('/health', async (req, res) => {
