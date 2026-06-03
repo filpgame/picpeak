@@ -610,6 +610,7 @@
     "noTemplate": "No Template",
     "useThemeOnly": "Use theme preset only",
     "customTemplate": "Custom Template",
+    "createInvoice": "Create invoice",
     "rename": {
       "button": "Rename",
       "title": "Rename Event",

@@ -53,11 +53,16 @@ export const LocalizedDateInput: React.FC<LocalizedDateInputProps> = ({
   })();
   const placeholder = normalisedFormat.toLowerCase();
 
-  // ISO → display
+  // ISO → display. NOTE: no `$` anchor — Postgres serialises DATE columns
+  // as a full ISO datetime ("2026-04-06T00:00:00.000Z"), so we match the
+  // leading yyyy-MM-dd and ignore any trailing time. (SQLite returns the
+  // bare date string, which also matches.) Coerced to String in case a
+  // Date object slips through. Without this the field rendered the raw
+  // ISO timestamp on pg — see feedback_pg_date_columns_serialize.
   const toDisplay = (iso: string): string => {
     if (!iso) return '';
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-    if (!m) return iso;
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso));
+    if (!m) return String(iso);
     const [, y, mo, d] = m;
     switch (normalisedFormat) {
       case 'MM/DD/YYYY': return `${mo}/${d}/${y}`;
@@ -148,7 +153,9 @@ export const LocalizedDateInput: React.FC<LocalizedDateInputProps> = ({
         <input
           ref={nativeRef}
           type="date"
-          value={value || ''}
+          // Bare yyyy-MM-dd — a native date input rejects a full ISO
+          // datetime (pg serialisation), which would blank the picker.
+          value={value ? String(value).slice(0, 10) : ''}
           min={min}
           max={max}
           disabled={disabled}
