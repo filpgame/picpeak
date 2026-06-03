@@ -15,7 +15,7 @@
 import React, { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Clock, AlertTriangle } from 'lucide-react';
 import { Button, Card, LocalizedDateInput, TimeField } from '../common';
@@ -46,6 +46,7 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
 }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { format: fmtDate, formatTime: fmtTime } = useLocalizedDate();
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [startTime, setStartTime] = useState('09:00');
@@ -154,10 +155,13 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
 
   const billMutation = useMutation({
     mutationFn: () => customerAdminService.billUnbilledHourEntries(customerId),
-    onSuccess: () => {
+    onSuccess: ({ invoiceId }) => {
       qc.invalidateQueries({ queryKey: ['admin-customer-hour-entries', customerId] });
       qc.invalidateQueries({ queryKey: ['admin-customer', customerId] });
       toast.success(t('customers.hours.toast.billed', 'Hours billed'));
+      // Open the new scheduled invoice so the admin can add other line
+      // items in addition to the hours before it ships.
+      if (invoiceId) navigate(`/admin/clients/bills/${invoiceId}/edit`);
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.error || 'Failed to bill hours');
@@ -202,7 +206,7 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
           ? t('customers.hours.monthlyHint',
             'Entries auto-append to the current monthly draft. Edit / delete remains possible until the scheduler arms the draft for send.')
           : t('customers.hours.perEventHint',
-            'Logged entries stay unbilled until you click "Create draft invoice" — a standalone draft invoice is generated with one line per entry, ready for you to review before sending.')}
+            'Logged entries stay unbilled until you click "Create draft invoice" — one scheduled invoice is generated with a line per entry and opened in the editor, so you can add other items before it ships.')}
       </p>
 
       {/* Rate summary — hidden in compact mode (history-only on the
