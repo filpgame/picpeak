@@ -228,14 +228,23 @@ export const EmailConfigPage: React.FC = () => {
   }, [selectedTemplate]);
 
   // Mutations
+  // Surface the actual backend error (SMTP auth/connection failure, masked
+  // password, private-host rejection, …) instead of a generic toast — for
+  // email config these messages are the whole diagnosis.
+  const errMsg = (e: any, fallback: string): string =>
+    e?.response?.data?.error
+    || e?.response?.data?.details
+    || e?.message
+    || fallback;
+
   const saveConfigMutation = useMutation({
     mutationFn: (config: EmailConfig) => emailService.updateConfig(config),
     onSuccess: () => {
       toast.success(t('toast.emailConfigSaved'));
       queryClient.invalidateQueries({ queryKey: ['email-config'] });
     },
-    onError: () => {
-      toast.error(t('toast.saveError'));
+    onError: (e: any) => {
+      toast.error(errMsg(e, t('toast.saveError')));
     }
   });
 
@@ -244,8 +253,8 @@ export const EmailConfigPage: React.FC = () => {
     onSuccess: () => {
       toast.success(t('email.testEmailSuccess'));
     },
-    onError: () => {
-      toast.error(t('toast.saveError'));
+    onError: (e: any) => {
+      toast.error(errMsg(e, t('toast.saveError')));
     }
   });
 
@@ -258,8 +267,8 @@ export const EmailConfigPage: React.FC = () => {
         toast.success(t('email.flushQueue.success', { sent: summary.sent, failed: summary.failed }));
       }
     },
-    onError: () => {
-      toast.error(t('toast.saveError'));
+    onError: (e: any) => {
+      toast.error(errMsg(e, t('toast.saveError')));
     }
   });
 
