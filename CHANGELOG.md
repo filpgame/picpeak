@@ -5,6 +5,14 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.60.2-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.1-beta.0...v3.60.2-beta.0) (2026-06-04)
+
+
+### Bug Fixes
+
+* **admin-header:** skeleton brand block + move LanguageSelector into profile menu on &lt;sm ([#523](https://github.com/the-luap/picpeak/issues/523) follow-up) ([b48b5b0](https://github.com/the-luap/picpeak/commit/b48b5b0000fd95bc149335614eb062dd373fc50a))
+* **admin-header:** skeleton brand block + move LanguageSelector into profile menu on &lt;sm ([#523](https://github.com/the-luap/picpeak/issues/523) follow-up) ([fe10191](https://github.com/the-luap/picpeak/commit/fe10191b82546473f035435731bf6d6ecca2efd6))
+
 ## [3.60.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.0-beta.0...v3.60.1-beta.0) (2026-06-02)
 
 
