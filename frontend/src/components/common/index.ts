@@ -21,7 +21,7 @@ export { OfflineIndicator, useOnlineStatus } from './OfflineIndicator';
 export { SkipLink } from './SkipLink';
 export { DynamicFavicon } from './DynamicFavicon';
 export { RobotsMetaTags } from './RobotsMetaTags';
-export { LanguageSelector } from './LanguageSelector';
+export { LanguageSelector, SUPPORTED_LANGUAGES } from './LanguageSelector';
 export { AuthenticatedImage } from './AuthenticatedImage';
 export { AuthenticatedVideo } from './AuthenticatedVideo';
 export { ProtectedImage } from './ProtectedImage';
