@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, User, LogOut, Settings, Bell, Lock, CheckCircle, Trash2, Sun, Moon } from 'lucide-react';
+import { Menu, User, LogOut, Settings, Bell, Lock, CheckCircle, Trash2, Sun, Moon, Globe, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ import { useAdminDarkMode } from '../../contexts/AdminDarkModeContext';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import { usePublicSettings } from '../../hooks/usePublicSettings';
 import { PasswordChangeModal } from './PasswordChangeModal';
-import { LanguageSelector } from '../common';
+import { LanguageSelector, SUPPORTED_LANGUAGES } from '../common';
 import { notificationsService } from '../../services/notifications.service';
 import { toast } from 'react-toastify';
 import { buildResourceUrl } from '../../utils/url';
@@ -23,14 +23,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const { user, logout } = useAdminAuth();
   const { isDark, toggle: toggleDarkMode, forcedMode } = useAdminDarkMode();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { format, formatDistanceToNow } = useLocalizedDate();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showUserMenuLangSection, setShowUserMenuLangSection] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const queryClient = useQueryClient();
-  
-  const { data: brandingSettings } = usePublicSettings();
+
+  const { data: brandingSettings, isLoading: brandingLoading } = usePublicSettings();
+  const currentLanguage = SUPPORTED_LANGUAGES.find(lang => lang.code === i18n.language) || SUPPORTED_LANGUAGES[0];
 
   const companyName = brandingSettings?.branding_company_name?.trim() || 'PicPeak';
   const logoUrl = brandingSettings?.branding_logo_url?.trim();
@@ -59,24 +61,55 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   // Rekoo-PS's "Arkan Studio" screenshot in v3.59.0-beta.0). text_only
   // mode keeps the wordmark on every width — nothing else would render.
   const wordmarkVisibilityClass = showLogo ? 'hidden sm:inline' : 'inline';
-  const renderBrandBlock = () => (
+  const renderBrandBlock = () => {
+    // Skeleton placeholder while `usePublicSettings()` is in flight (#523
+    // follow-up — Rekoo-PS's "logo took some time to load" screenshot in
+    // 3.60.1-beta.0). The previous code used the static fallback image
+    // /picpeak-kamera-transparent.png as the during-loading state, and
+    // because the wordmark is `hidden sm:inline` whenever a logo is
+    // *intended* to be shown, a phone-width admin saw an empty header
+    // for the ~hundreds-of-ms window before the real branding payload
+    // arrived. The skeleton block holds the same h-8 (so no layout
+    // shift when the real content lands) and is wider on sm+ to hint
+    // at the wordmark slot.
+    if (brandingLoading) {
+      return (
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-8 w-8 sm:w-32 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
+        </div>
+      );
+    }
     // min-w-0 + truncate on the name span so long company names shrink
     // within the left cluster instead of pushing into the right-side
     // action buttons on narrow mobile widths (#523 regression).
-    <div className="flex items-center gap-2 min-w-0">
-      {showLogo && (
-        <img src={resolvedLogoUrl} alt={companyName} className="h-8 w-auto object-contain flex-shrink-0" />
-      )}
-      {showText && (
-        <span className={`${wordmarkVisibilityClass} text-xl sm:text-2xl truncate`} style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, color: '#145346' }}>{companyName}</span>
-      )}
-    </div>
-  );
+    return (
+      <div className="flex items-center gap-2 min-w-0">
+        {showLogo && (
+          <img src={resolvedLogoUrl} alt={companyName} className="h-8 w-auto object-contain flex-shrink-0" />
+        )}
+        {showText && (
+          <span className={`${wordmarkVisibilityClass} text-xl sm:text-2xl truncate`} style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, color: '#145346' }}>{companyName}</span>
+        )}
+      </div>
+    );
+  };
+
+  // #523 follow-up: closes the user-menu lang sub-section whenever the
+  // outer dropdown closes, so re-opening it doesn't surprise the user
+  // with the language list already expanded from the previous session.
+  const closeUserMenu = () => {
+    setShowUserMenu(false);
+    setShowUserMenuLangSection(false);
+  };
+  const handleUserMenuLangSelect = (languageCode: string) => {
+    i18n.changeLanguage(languageCode);
+    closeUserMenu();
+  };
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
 
-  useOnClickOutside(userMenuRef, () => setShowUserMenu(false));
+  useOnClickOutside(userMenuRef, closeUserMenu);
   useOnClickOutside(notificationRef, () => setShowNotifications(false));
 
   const handleLogout = () => {
@@ -200,8 +233,14 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                 {renderBrandBlock()}
               </div>
             )}
-            {/* Language Selector */}
-            <LanguageSelector />
+            {/* Language Selector — hidden on <sm where it's surfaced
+                via the user dropdown instead (#523 follow-up: phone
+                view header was too crowded with 4 widgets; language
+                is a set-once preference so it doesn't deserve permanent
+                header real estate on mobile per Rekoo-PS's feedback). */}
+            <div className="hidden sm:block">
+              <LanguageSelector />
+            </div>
 
             {/* Dark Mode Toggle — hidden entirely when an admin has locked
                 the instance to a specific mode via Branding > Force color mode. */}
@@ -322,9 +361,44 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                     <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{user?.username}</p>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400">{user?.email}</p>
                   </div>
+                  {/* Language sub-section — phone-only (#523 follow-up).
+                      Rekoo-PS asked for language to live inside the profile
+                      menu since it's a set-once preference; on sm+ it
+                      stays in the header cluster where it's been. Collapsible
+                      so the menu isn't 8 rows taller by default. */}
+                  <div className="sm:hidden border-b border-neutral-100 dark:border-neutral-700">
+                    <button
+                      onClick={() => setShowUserMenuLangSection(!showUserMenuLangSection)}
+                      className="w-full px-4 py-2 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 flex items-center gap-3"
+                      aria-expanded={showUserMenuLangSection}
+                    >
+                      <Globe className="w-4 h-4" />
+                      <span className="flex-1">{t('common.language', 'Language')}</span>
+                      <currentLanguage.Flag className="w-4 h-4" />
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenuLangSection ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showUserMenuLangSection && (
+                      <div className="bg-neutral-50 dark:bg-neutral-900 py-1">
+                        {SUPPORTED_LANGUAGES.map((language) => (
+                          <button
+                            key={language.code}
+                            onClick={() => handleUserMenuLangSelect(language.code)}
+                            className={`w-full pl-11 pr-4 py-2 text-left text-sm flex items-center gap-3 hover:bg-neutral-100 dark:hover:bg-neutral-700 ${
+                              language.code === i18n.language
+                                ? 'text-accent bg-accent-dark/15'
+                                : 'text-neutral-700 dark:text-neutral-300'
+                            }`}
+                          >
+                            <language.Flag className="w-4 h-4" />
+                            <span>{language.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => {
-                      setShowUserMenu(false);
+                      closeUserMenu();
                       navigate('/admin/settings');
                     }}
                     className="w-full px-4 py-2 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 flex items-center gap-3"
@@ -334,7 +408,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                   </button>
                   <button
                     onClick={() => {
-                      setShowUserMenu(false);
+                      closeUserMenu();
                       setShowPasswordModal(true);
                     }}
                     className="w-full px-4 py-2 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 flex items-center gap-3"
