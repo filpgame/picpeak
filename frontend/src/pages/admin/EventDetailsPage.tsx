@@ -18,6 +18,7 @@ import {
   Key,
   Mail,
   MessageSquare,
+  Receipt,
   Lock,
   Eye,
   EyeOff,
@@ -57,7 +58,7 @@ const safeParseDate = (dateValue: unknown): Date | null => {
 import { toast } from 'react-toastify';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
-import { Button, Input, Card, Loading, MarkdownContent } from '../../components/common';
+import { Button, Input, Card, Loading, MarkdownContent, LocalizedDateInput } from '../../components/common';
 import { EventCategoryManager, AdminPhotoGrid, AdminPhotoViewer, PhotoFilters, PasswordResetModal, ThemeCustomizerEnhanced, ThemeDisplay, HeroPhotoSelector, FocalPointPicker, PhotoUploadModal, FeedbackSettings, FeedbackModerationPanel, EventRenameDialog, PhotoFilterPanel, PhotoExportMenu, AdminGuestsList } from '../../components/admin';
 import { CustomerAccountPicker } from '../../components/admin/CustomerAccountPicker';
 import { EventReminderOverrideCard } from '../../components/admin/EventReminderOverrideCard';
@@ -244,7 +245,7 @@ export const EventDetailsPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { format } = useLocalizedDate();
+  const { format, formatDateTime: fmtDateTime } = useLocalizedDate();
   const { flags } = useFeatureFlags();
 
   // Validate ID parameter
@@ -980,6 +981,26 @@ export const EventDetailsPage: React.FC = () => {
                         {t('feedback.manage', 'Manage Feedback')}
                       </Button>
                     )}
+                    {/* Create a draft invoice for this event — pre-fills the
+                        bill editor with the event snapshot + (when exactly
+                        one is linked) the customer. Gated on the bills flag. */}
+                    {flags.bills && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<Receipt className="w-4 h-4" />}
+                        onClick={() => {
+                          const accts = ((event as { customer_accounts?: Array<{ id: number }> }).customer_accounts) || [];
+                          const params = new URLSearchParams({ eventId: String(event.id) });
+                          if (event.event_name) params.set('eventName', event.event_name);
+                          if (event.event_date) params.set('eventDate', String(event.event_date).slice(0, 10));
+                          if (accts.length === 1) params.set('customerAccountId', String(accts[0].id));
+                          navigate(`/admin/clients/bills/new?${params.toString()}`);
+                        }}
+                      >
+                        {t('events.createInvoice', 'Create invoice')}
+                      </Button>
+                    )}
                   </>
                 )}
               </>
@@ -1194,10 +1215,9 @@ export const EventDetailsPage: React.FC = () => {
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                     {t('events.expirationDate')}
                   </label>
-                  <Input
-                    type="date"
+                  <LocalizedDateInput
                     value={editForm.expires_at}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, expires_at: e.target.value }))}
+                    onChange={(iso) => setEditForm(prev => ({ ...prev, expires_at: iso }))}
                     min={format(new Date(), 'yyyy-MM-dd')}
                   />
                 </div>
@@ -2331,7 +2351,7 @@ export const EventDetailsPage: React.FC = () => {
                 <div>
                   <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{t('events.archivedOn')}</p>
                   <p className="text-sm text-neutral-900 dark:text-neutral-100">
-                    {event.archived_at && format(safeParseDate(event.archived_at)!, 'PPp')}
+                    {event.archived_at && fmtDateTime(safeParseDate(event.archived_at)!)}
                   </p>
                 </div>
                 

@@ -142,6 +142,10 @@ function transformProfile(p) {
     taxId: p.tax_id || '',
     vatLabel: p.vat_label || 'MwSt.',
     vatRateDefault: p.vat_rate_default == null ? null : Number(p.vat_rate_default),
+    // Install-wide fallback hourly rate (migration 113), minor units.
+    // null = no global default; the hours page then requires a per-
+    // customer or per-entry rate.
+    defaultHourlyRateMinor: p.default_hourly_rate_minor == null ? null : Number(p.default_hourly_rate_minor),
     defaultCurrency: p.default_currency || 'CHF',
     defaultLocale: p.default_locale || 'de',
     defaultQrFormat: p.default_qr_format || 'none',
@@ -163,9 +167,32 @@ function transformProfile(p) {
     // Migration 137 — IANA timezone for the admin calendar. Null when
     // the admin hasn't picked one; frontend falls back to the browser.
     timezone: p.timezone || null,
+    // Migration 114 — per-ISO-weekday opening hours (object keyed
+    // "1".."7"). Stored as JSON TEXT; parse to an object for the API.
+    // null/blank = no hours configured.
+    businessHours: parseBusinessHours(p.business_hours),
+    // Migration 114 — master switch for the scheduled-email floor.
+    // Defaults true (column is NOT NULL default true).
+    scheduledEmailFloorEnabled: p.scheduled_email_floor_enabled == null
+      ? true
+      : (p.scheduled_email_floor_enabled === true
+        || p.scheduled_email_floor_enabled === 1
+        || p.scheduled_email_floor_enabled === '1'),
     createdAt: p.created_at,
     updatedAt: p.updated_at,
   };
+}
+
+/** Parse the stored business_hours JSON to an object, or null. */
+function parseBusinessHours(raw) {
+  if (raw == null || raw === '') return null;
+  if (typeof raw === 'object') return raw; // pg jsonb path (column is text today)
+  try {
+    const obj = JSON.parse(raw);
+    return obj && typeof obj === 'object' ? obj : null;
+  } catch (_) {
+    return null;
+  }
 }
 
 function transformBank(b) {
@@ -346,6 +373,11 @@ router.put(
     body('taxId').optional({ values: 'falsy' }).isString().isLength({ max: 64 }),
     body('vatLabel').optional({ values: 'falsy' }).isString().isLength({ max: 64 }),
     body('vatRateDefault').optional({ values: 'falsy' }).isFloat({ min: 0, max: 100 }),
+    // Migration 113 — install-wide default hourly rate, minor units.
+    // nullable so the admin can clear it; values: 'falsy' would drop a
+    // legitimate 0 (which we treat as "explicitly free"), so use the
+    // nullable form and let the service coerce.
+    body('defaultHourlyRateMinor').optional({ nullable: true }).isInt({ min: 0 }),
     body('defaultCurrency').optional({ values: 'falsy' }).isString().isLength({ min: 3, max: 3 }),
     body('defaultLocale').optional({ values: 'falsy' }).isString().isLength({ max: 8 }),
     body('defaultQrFormat').optional({ values: 'falsy' }).isIn(['swiss', 'epc', 'none']),
@@ -371,6 +403,15 @@ router.put(
     // "Europe/Zurich"). Free-text; backend stores up to 64 chars.
     // Frontend falls back to browser Intl when this is blank.
     body('timezone').optional({ values: 'falsy', nullable: true }).isString().isLength({ max: 64 }),
+    // Migration 114 — per-weekday opening hours. Object keyed "1".."7" or
+    // null to clear. Shape is validated + sanitised in the service layer
+    // (normaliseSchedule); here we only reject obviously-wrong types.
+    body('businessHours').optional({ nullable: true }).custom((v) => {
+      if (v === null || typeof v === 'object') return true;
+      throw new Error('businessHours must be an object or null');
+    }),
+    // Migration 114 — scheduled-email floor master switch.
+    body('scheduledEmailFloorEnabled').optional().isBoolean(),
   ],
   handleAsync(async (req, res) => {
     validateRequest(req);
@@ -393,6 +434,7 @@ router.put(
       taxId: 'tax_id',
       vatLabel: 'vat_label',
       vatRateDefault: 'vat_rate_default',
+      defaultHourlyRateMinor: 'default_hourly_rate_minor',
       defaultCurrency: 'default_currency',
       defaultLocale: 'default_locale',
       defaultQrFormat: 'default_qr_format',
@@ -408,6 +450,9 @@ router.put(
       pdfQuoteShowSkonto: 'pdf_quote_show_skonto',
       // Migration 137 — admin calendar timezone.
       timezone: 'timezone',
+      // Migration 114 — business hours + scheduled-email floor switch.
+      businessHours: 'business_hours',
+      scheduledEmailFloorEnabled: 'scheduled_email_floor_enabled',
     };
     for (const [api, db] of Object.entries(map)) {
       if (Object.prototype.hasOwnProperty.call(req.body, api)) {

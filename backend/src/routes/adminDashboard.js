@@ -429,11 +429,18 @@ router.get('/crm-stats', adminAuth, async (req, res) => {
           if (r.status in invoiceCounts) invoiceCounts[r.status] = Number(r.count) || 0;
         }
 
-        // Revenue windows: sum of `paid_amount_minor` for invoices
-        // marked PAID where paid_at falls inside the window. Using
-        // paid_amount (not total) so partial payments are tracked
-        // accurately. Stornos excluded — they're never status='paid'
-        // in normal flow but the guard is defensive.
+        // Revenue windows: sum of `paid_amount_minor` for invoices marked
+        // PAID whose payment date (`paid_at`) falls inside the window —
+        // cash-basis recognition (revenue counts when the money arrives).
+        // Using paid_amount (not total) so partial payments are tracked
+        // accurately. Stornos excluded — never status='paid' in normal flow,
+        // the guard is defensive.
+        //
+        // `paid_at` is admin-controllable, so an old/imported invoice lands
+        // in the right window without any special-casing here: the mark-paid
+        // dialog takes an optional payment date (backdate to when the money
+        // actually arrived) and the historical-import route anchors paid_at
+        // to the invoice's issue_date.
         const winSum = async (cutoff) => {
           const row = await db('invoices')
             .where('status', 'paid')

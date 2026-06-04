@@ -559,6 +559,52 @@ app.get('/robots.txt', async (req, res) => {
   }
 });
 
+// Dynamic favicon endpoints. Browsers — notably Safari — request
+// /favicon.ico and /apple-touch-icon*.png directly at the site root and are
+// unreliable about honouring JS-injected <link rel="icon"> tags. Serving the
+// admin's configured branding favicon here makes it work without client-side
+// JS (and survive aggressive favicon caches). Falls back to the bundled asset
+// shipped with the frontend build when no custom favicon is set.
+app.get(
+  ['/favicon.ico', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png'],
+  async (req, res) => {
+    try {
+      const { getAppSetting } = require('./src/utils/appSettings');
+      const raw = await getAppSetting('branding_favicon_url', null);
+      const url = (raw && String(raw).trim()) || null;
+      if (url) {
+        // External URL — can't stream the bytes, so redirect (best effort).
+        if (/^https?:\/\//i.test(url)) return res.redirect(302, url);
+        // Local upload → stream the file bytes DIRECTLY rather than 302'ing.
+        // Safari does NOT reliably follow a redirect for favicon requests
+        // (it falls back to the HTML <link>, i.e. the bundled default),
+        // whereas Firefox/Chrome do — so a 302 worked everywhere except
+        // Safari. sendFile sets the right content-type from the extension.
+        const rel = String(url).replace(/^\/+/, '').replace(/^uploads\//, '');
+        const uploadsRoot = path.resolve(path.join(storagePath, 'uploads'));
+        const resolved = path.resolve(path.join(uploadsRoot, rel));
+        // Path containment — never serve outside the uploads dir.
+        if (resolved.startsWith(uploadsRoot + path.sep) && fs.existsSync(resolved)) {
+          // This route streams the file directly, bypassing the secureStatic
+          // middleware — so re-apply its SVG hardening here. An admin-uploaded
+          // SVG favicon could contain <script>; served at the top-level
+          // /favicon.ico origin without CSP that would be stored XSS. Keep in
+          // sync with secureStatic.js.
+          if (/\.svg$/i.test(resolved)) {
+            res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:");
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+          }
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          return res.sendFile(resolved);
+        }
+      }
+    } catch (error) {
+      logger.warn('Favicon lookup failed; serving bundled default', { error: error.message });
+    }
+    return res.redirect(302, '/favicon-32x32.png');
+  }
+);
+
 // Health check endpoint. `pid` + `uptime` let monitors (and the local E2E
 // watchdog) detect a silent process restart between two checks.
 app.get('/health', async (req, res) => {

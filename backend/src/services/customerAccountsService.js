@@ -555,6 +555,9 @@ async function updateCustomer(id, updates, updatedByAdminId) {
     // Hour-logging default rate (migration 129). Minor units; null
     // means admin must enter a per-entry override on every entry.
     'hourly_rate_minor',
+    // Per-customer Skonto opt-out (migration 112). Boolean, coerced
+    // via formatBoolean below for SQLite compatibility.
+    'skonto_disabled',
   ];
   for (const f of fields) {
     if (updates[f] !== undefined) {
@@ -567,6 +570,7 @@ async function updateCustomer(id, updates, updatedByAdminId) {
       } else if (
         f === 'feature_calendar' || f === 'feature_quotes'
         || f === 'feature_bills' || f === 'feature_hours_logging'
+        || f === 'skonto_disabled'
       ) {
         allowed[f] = formatBoolean(updates[f]);
       } else if (f === 'hourly_rate_minor') {

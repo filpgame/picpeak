@@ -15,9 +15,10 @@
 import React, { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Clock } from 'lucide-react';
-import { Button, Card } from '../common';
+import { Clock, AlertTriangle } from 'lucide-react';
+import { Button, Card, LocalizedDateInput, TimeField } from '../common';
 import { DecimalInput } from '../common/DecimalInput';
 import { parseLocaleDecimal, parseDuration } from '../../utils/parsers';
 import { customerAdminService } from '../../services/customerAdmin.service';
@@ -45,13 +46,8 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
 }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const { format: fmtDate, formatTime: fmtTime, timeFormat } = useLocalizedDate();
-  // `lang` hint on <input type="time"> nudges Chrome/Edge to render the
-  // picker in the matching clock convention (de-DE → 24h, en-US → 12h).
-  // Safari/Firefox follow OS locale and ignore this — that's a browser
-  // limitation, not something we can fix in the page. The underlying
-  // value stays HH:mm (24h) regardless of how the picker presents it.
-  const timeInputLang = timeFormat === '12h' ? 'en-US' : 'de-DE';
+  const navigate = useNavigate();
+  const { format: fmtDate, formatTime: fmtTime } = useLocalizedDate();
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
@@ -91,6 +87,22 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
     staleTime: 5 * 60 * 1000,
   });
   const profileDefaultCurrency = profileSnapshot?.profile?.defaultCurrency || 'CHF';
+  // Install-wide fallback rate (migration 113). Last link in the rate
+  // chain after the per-entry override and the per-customer default.
+  const installDefaultRateMinor = profileSnapshot?.profile?.defaultHourlyRateMinor ?? null;
+  // The rate that applies to a NEW entry when no per-entry override is
+  // typed: customer rate, else the install default. null = neither set,
+  // so a save would fail unless the admin enters an override.
+  const effectiveDefaultRateMinor = customerHourlyRateMinor ?? installDefaultRateMinor;
+  // True when there's genuinely no rate to bill at — drives the inline
+  // CTA + disables the save button. An override typed in the form lifts
+  // this (handled below where the button is rendered).
+  const noRateConfigured = effectiveDefaultRateMinor == null;
+  const overrideTyped = (() => {
+    if (!rateOverride.trim()) return false;
+    const n = parseLocaleDecimal(rateOverride);
+    return Number.isFinite(n) && n >= 0;
+  })();
 
   const createMutation = useMutation({
     mutationFn: () => customerAdminService.createHourEntry(customerId, {
@@ -114,7 +126,17 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
       toast.success(t('customers.hours.toast.created', 'Entry logged'));
     },
     onError: (err: any) => {
-      const msg = err?.response?.data?.error || err?.message || 'Failed to log entry';
+      // The save-time "no rate" failure is translated here off the
+      // backend error code (the raw message is English-only). The inline
+      // guard below normally prevents this, but a race (rate cleared in
+      // another tab) can still surface it.
+      if (err?.response?.data?.code === 'HOURLY_RATE_REQUIRED') {
+        toast.error(t('customers.hours.error.noRate',
+          'No hourly rate set for this customer. Enter a rate override, set a rate on the customer, or configure an install-wide default in Settings.'));
+        return;
+      }
+      const msg = err?.response?.data?.error || err?.message
+        || t('customers.hours.error.createFailed', 'Failed to log entry');
       toast.error(msg);
     },
   });
@@ -133,10 +155,13 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
 
   const billMutation = useMutation({
     mutationFn: () => customerAdminService.billUnbilledHourEntries(customerId),
-    onSuccess: () => {
+    onSuccess: ({ invoiceId }) => {
       qc.invalidateQueries({ queryKey: ['admin-customer-hour-entries', customerId] });
       qc.invalidateQueries({ queryKey: ['admin-customer', customerId] });
       toast.success(t('customers.hours.toast.billed', 'Hours billed'));
+      // Open the new scheduled invoice so the admin can add other line
+      // items in addition to the hours before it ships.
+      if (invoiceId) navigate(`/admin/clients/bills/${invoiceId}/edit`);
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.error || 'Failed to bill hours');
@@ -153,11 +178,11 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
     for (const e of entries) {
       if (e.status !== 'unbilled') continue;
       count += 1;
-      const rateMinor = e.hourlyRateMinorOverride ?? customerHourlyRateMinor ?? 0;
+      const rateMinor = e.hourlyRateMinorOverride ?? effectiveDefaultRateMinor ?? 0;
       minor += rateMinor * e.durationMinutes / 60;
     }
     return { unbilledCount: count, unbilledTotalMajor: minor / 100 };
-  }, [entries, customerHourlyRateMinor]);
+  }, [entries, effectiveDefaultRateMinor]);
   const isMonthly = billingCadence === 'monthly';
 
   // Local lockout check — mirrors customerHoursService.isEntryLocked
@@ -181,36 +206,75 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
           ? t('customers.hours.monthlyHint',
             'Entries auto-append to the current monthly draft. Edit / delete remains possible until the scheduler arms the draft for send.')
           : t('customers.hours.perEventHint',
-            'Logged entries stay unbilled until you click "Create draft invoice" — a standalone draft invoice is generated with one line per entry, ready for you to review before sending.')}
+            'Logged entries stay unbilled until you click "Create draft invoice" — one scheduled invoice is generated with a line per entry and opened in the editor, so you can add other items before it ships.')}
       </p>
 
-      {/* Default rate — hidden in compact mode (history-only on the
-          customer detail page; admin edits the rate elsewhere). */}
+      {/* Rate summary — hidden in compact mode (history-only on the
+          customer detail page). When a caller wires onHourlyRateChange
+          the field is editable; otherwise (the standalone hours page)
+          we show the RESOLVED rate read-only so a disabled input can't
+          masquerade as an editable value, and surface a CTA when no rate
+          is configured anywhere along the chain. */}
       {!compact && (
         <div className="mb-4">
           <label className="block text-sm font-medium text-theme mb-1">
             {t('customers.field.hourlyRate', 'Default hourly rate')}
           </label>
-          <DecimalInput
-            value={customerHourlyRateMinor != null ? customerHourlyRateMinor / 100 : NaN}
-            fractionDigits={2}
-            onChange={(n) => {
-              if (!onHourlyRateChange) return;
-              if (!Number.isFinite(n)) {
-                onHourlyRateChange(null);
-                return;
-              }
-              onHourlyRateChange(Math.max(0, Math.round(n * 100)));
-            }}
-            disabled={!onHourlyRateChange}
-            className="w-40 input"
-            placeholder="150.00"
-          />
-          <p className="text-xs text-muted-theme mt-1">
-            {t('customers.field.hourlyRateHint',
-              'Major units (e.g. 150.00 for {{currency}} 150). Leave blank to require a per-entry override on every block.',
-              { currency: profileDefaultCurrency })}
-          </p>
+          {onHourlyRateChange ? (
+            <>
+              <DecimalInput
+                value={customerHourlyRateMinor != null ? customerHourlyRateMinor / 100 : NaN}
+                fractionDigits={2}
+                onChange={(n) => {
+                  if (!Number.isFinite(n)) { onHourlyRateChange(null); return; }
+                  onHourlyRateChange(Math.max(0, Math.round(n * 100)));
+                }}
+                className="w-40 input"
+                placeholder="150.00"
+              />
+              <p className="text-xs text-muted-theme mt-1">
+                {t('customers.field.hourlyRateHint',
+                  'Major units (e.g. 150.00 for {{currency}} 150). Leave blank to require a per-entry override on every block.',
+                  { currency: profileDefaultCurrency })}
+              </p>
+            </>
+          ) : noRateConfigured ? (
+            <div className="rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-3 text-sm">
+              <div className="flex items-start gap-2 text-amber-800 dark:text-amber-200">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-medium">
+                    {t('customers.hours.noRate.title', 'No hourly rate configured')}
+                  </p>
+                  <p className="mt-0.5 text-amber-700 dark:text-amber-300">
+                    {t('customers.hours.noRate.body',
+                      'Logging needs a rate. Set one for this customer, type a per-entry override below, or configure an install-wide default.')}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    <Link to={`/admin/clients/accounts/${customerId}`}
+                      className="text-accent-dark hover:underline font-medium">
+                      {t('customers.hours.noRate.setForCustomer', 'Set a rate for this customer')}
+                    </Link>
+                    <Link to="/admin/settings?tab=businessProfile" target="_blank" rel="noopener noreferrer"
+                      className="text-accent-dark hover:underline font-medium">
+                      {t('customers.hours.noRate.setInstallDefault', 'Set an install-wide default')}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-theme">
+              <span className="tabular-nums font-medium">
+                {profileDefaultCurrency} {((effectiveDefaultRateMinor as number) / 100).toFixed(2)}
+              </span>
+              <span className="text-xs text-muted-theme ml-2">
+                {customerHourlyRateMinor != null
+                  ? t('customers.hours.rateSource.customer', 'from this customer')
+                  : t('customers.hours.rateSource.installDefault', 'install-wide default')}
+              </span>
+            </p>
+          )}
         </div>
       )}
 
@@ -224,22 +288,19 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
             <label className="block text-xs text-muted-theme mb-1">
               {t('customers.hours.form.date', 'Date')}
             </label>
-            <input type="date" value={entryDate}
-              onChange={(e) => setEntryDate(e.target.value)} className="input w-full" />
+            <LocalizedDateInput value={entryDate} onChange={setEntryDate} />
           </div>
           <div>
             <label className="block text-xs text-muted-theme mb-1">
               {t('customers.hours.form.start', 'Start')}
             </label>
-            <input type="time" lang={timeInputLang} value={startTime}
-              onChange={(e) => setStartTime(e.target.value)} className="input w-full" />
+            <TimeField value={startTime} onChange={setStartTime} />
           </div>
           <div>
             <label className="block text-xs text-muted-theme mb-1">
               {t('customers.hours.form.end', 'End')}
             </label>
-            <input type="time" lang={timeInputLang} value={endTime}
-              onChange={(e) => setEndTime(e.target.value)} className="input w-full" />
+            <TimeField value={endTime} onChange={setEndTime} />
           </div>
           <div>
             <label className="block text-xs text-muted-theme mb-1">
@@ -271,8 +332,8 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
               inputMode="decimal"
               value={rateOverride}
               onChange={(e) => setRateOverride(e.target.value)}
-              placeholder={customerHourlyRateMinor != null
-                ? (customerHourlyRateMinor / 100).toFixed(2)
+              placeholder={effectiveDefaultRateMinor != null
+                ? (effectiveDefaultRateMinor / 100).toFixed(2)
                 : '—'}
               className="input w-full" />
           </div>
@@ -287,10 +348,15 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
             placeholder={t('customers.hours.form.notePlaceholder',
               'What was worked on?') as string} />
         </div>
-        <div className="mt-3 flex justify-end">
+        <div className="mt-3 flex items-center justify-end gap-3">
+          {noRateConfigured && !overrideTyped && (
+            <span className="text-xs text-amber-700 dark:text-amber-300">
+              {t('customers.hours.form.needRate', 'Set a rate or enter an override to log time.')}
+            </span>
+          )}
           <Button
             variant="primary"
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || (noRateConfigured && !overrideTyped)}
             isLoading={createMutation.isPending}
             onClick={() => createMutation.mutate()}
           >
@@ -348,7 +414,7 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
             </thead>
             <tbody>
               {entries.map((e) => {
-                const rate = e.hourlyRateMinorOverride ?? customerHourlyRateMinor ?? 0;
+                const rate = e.hourlyRateMinorOverride ?? effectiveDefaultRateMinor ?? 0;
                 const hours = e.durationMinutes / 60;
                 const total = (hours * rate) / 100;
                 const locked = isLocked(e);

@@ -31,7 +31,7 @@ import { formatShortDate } from '../../utils/dateShort';
 
 export const QuoteResponsePage: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { formatDateTime: fmtDateTime } = useLocalizedDate();
+  const { formatDateTime: fmtDateTime, formatTime: fmtTime } = useLocalizedDate();
   const { token } = useParams<{ token: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,8 @@ export const QuoteResponsePage: React.FC = () => {
   // Apply dark mode per the branding settings (forced dark/light)
   // or fall back to the OS preference. Without this the public
   // quote page renders in light mode regardless of admin settings.
-  usePublicDarkMode();
+  // `isDark` drives the theme-aware logo pick below.
+  const { isDark } = usePublicDarkMode();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['public-quote', token],
@@ -153,13 +154,18 @@ export const QuoteResponsePage: React.FC = () => {
             the backend storage directory directly. */}
         {quote.issuer && (
           <div className="text-center mb-6">
-            {quote.issuer.logoUrl && (
-              <img
-                src={quote.issuer.logoUrl}
-                alt={quote.issuer.companyName || 'Logo'}
-                className="mx-auto mb-3 h-16 object-contain"
-              />
-            )}
+            {(() => {
+              const logo = isDark
+                ? (quote.issuer.logoUrlDark || quote.issuer.logoUrl)
+                : (quote.issuer.logoUrl || quote.issuer.logoUrlDark);
+              return logo ? (
+                <img
+                  src={logo}
+                  alt={quote.issuer.companyName || 'Logo'}
+                  className="mx-auto mb-3 h-16 object-contain"
+                />
+              ) : null;
+            })()}
             <h2 className="text-xl font-bold">{quote.issuer.companyName}</h2>
             {quote.issuer.website && (
               <p className="text-sm text-neutral-500 dark:text-neutral-400">{quote.issuer.website}</p>
@@ -309,7 +315,7 @@ export const QuoteResponsePage: React.FC = () => {
                           ? Math.max(0, Math.ceil((lockAt.getTime() - Date.now()) / 60000))
                           : 0;
                         return {
-                          at: lockAt ? lockAt.toLocaleTimeString() : '',
+                          at: lockAt ? fmtTime(lockAt) : '',
                           minutes,
                         };
                       })())

@@ -34,6 +34,11 @@ export interface BusinessProfile {
   taxId: string;
   vatLabel: string;
   vatRateDefault: number | null;
+  /** Install-wide fallback hourly rate in MINOR units (migration 113).
+   *  Last link in the hour-entry rate chain after the per-entry
+   *  override and the per-customer default. null = no global default;
+   *  the hours page then requires a per-customer or per-entry rate. */
+  defaultHourlyRateMinor: number | null;
   defaultCurrency: string;
   defaultLocale: string;
   defaultQrFormat: QrFormat;
@@ -79,9 +84,27 @@ export interface BusinessProfile {
    *  via publicSettings. When null/empty, the calendar UI falls back
    *  to the browser's `Intl.DateTimeFormat().resolvedOptions().timeZone`. */
   timezone: string | null;
+  /** Per-ISO-weekday opening hours (migration 114). Keyed "1".."7"
+   *  (1=Mon … 7=Sun); each value is a list of {start,end} "HH:MM" blocks,
+   *  so a day can carry a lunch break or differ from its neighbours. A day
+   *  with no blocks is closed. null = no hours configured. Interpreted in
+   *  `timezone`. Drives the scheduled-email business-hours floor. */
+  businessHours: BusinessHours | null;
+  /** Master switch for the scheduled-email business-hours floor
+   *  (migration 114). Defaults true. When off, scheduled emails send at
+   *  their requested instant regardless of `businessHours`. */
+  scheduledEmailFloorEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface BusinessHoursBlock {
+  start: string; // "HH:MM"
+  end: string;   // "HH:MM"
+}
+
+/** ISO-weekday-keyed ("1".."7") opening blocks. */
+export type BusinessHours = Record<string, BusinessHoursBlock[]>;
 
 export interface BankAccount {
   id: number;

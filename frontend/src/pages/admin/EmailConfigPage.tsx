@@ -18,6 +18,7 @@ import { toast } from 'react-toastify';
 import { Button, Input, Card, Loading } from '../../components/common';
 import { EmailPreviewModal } from '../../components/admin/EmailPreviewModal';
 import { EmailTemplateEditor } from '../../components/admin/EmailTemplateEditor';
+import { SentEmailsPanel } from '../../components/admin/SentEmailsPanel';
 import { Palette, RefreshCw, Info } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { emailService, type EmailConfig, type EmailTemplate, type EmailTemplateTranslation } from '../../services/email.service';
@@ -129,7 +130,7 @@ The Photo Sharing Team`,
 
 export const EmailConfigPage: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'smtp' | 'templates'>('smtp');
+  const [activeTab, setActiveTab] = useState<'smtp' | 'templates' | 'sent'>('smtp');
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>('gallery_created');
   const [editedTemplate, setEditedTemplate] = useState<Partial<EmailTemplate>>({});
   const [editingLang, setEditingLang] = useState<string>('en');
@@ -227,14 +228,23 @@ export const EmailConfigPage: React.FC = () => {
   }, [selectedTemplate]);
 
   // Mutations
+  // Surface the actual backend error (SMTP auth/connection failure, masked
+  // password, private-host rejection, …) instead of a generic toast — for
+  // email config these messages are the whole diagnosis.
+  const errMsg = (e: any, fallback: string): string =>
+    e?.response?.data?.error
+    || e?.response?.data?.details
+    || e?.message
+    || fallback;
+
   const saveConfigMutation = useMutation({
     mutationFn: (config: EmailConfig) => emailService.updateConfig(config),
     onSuccess: () => {
       toast.success(t('toast.emailConfigSaved'));
       queryClient.invalidateQueries({ queryKey: ['email-config'] });
     },
-    onError: () => {
-      toast.error(t('toast.saveError'));
+    onError: (e: any) => {
+      toast.error(errMsg(e, t('toast.saveError')));
     }
   });
 
@@ -243,8 +253,22 @@ export const EmailConfigPage: React.FC = () => {
     onSuccess: () => {
       toast.success(t('email.testEmailSuccess'));
     },
-    onError: () => {
-      toast.error(t('toast.saveError'));
+    onError: (e: any) => {
+      toast.error(errMsg(e, t('toast.saveError')));
+    }
+  });
+
+  const flushQueueMutation = useMutation({
+    mutationFn: () => emailService.flushQueue(),
+    onSuccess: (summary) => {
+      if (summary.processed === 0) {
+        toast.info(t('email.flushQueue.empty'));
+      } else {
+        toast.success(t('email.flushQueue.success', { sent: summary.sent, failed: summary.failed }));
+      }
+    },
+    onError: (e: any) => {
+      toast.error(errMsg(e, t('toast.saveError')));
     }
   });
 
@@ -462,8 +486,21 @@ export const EmailConfigPage: React.FC = () => {
           >
             {t('email.emailTemplates')}
           </button>
+          <button
+            onClick={() => setActiveTab('sent')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === 'sent'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
+            }`}
+          >
+            {t('email.sentEmails.tab', 'Sent emails')}
+          </button>
         </nav>
       </div>
+
+      {/* Sent emails Tab */}
+      {activeTab === 'sent' && <SentEmailsPanel />}
 
       {/* SMTP Settings Tab */}
       {activeTab === 'smtp' && (
@@ -664,6 +701,20 @@ export const EmailConfigPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </Card>
+
+          <Card padding="md">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{t('email.flushQueue.title')}</h2>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">{t('email.flushQueue.help')}</p>
+            <Button
+              variant="outline"
+              onClick={() => flushQueueMutation.mutate()}
+              isLoading={flushQueueMutation.isPending}
+              leftIcon={<Send className="w-5 h-5" />}
+              className="w-full"
+            >
+              {t('email.flushQueue.button')}
+            </Button>
           </Card>
         </div>
       )}

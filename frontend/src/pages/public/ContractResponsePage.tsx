@@ -81,8 +81,9 @@ export const ContractResponsePage: React.FC = () => {
   // Honour branding dark/light mode the same way QuoteResponsePage
   // does — without this the page renders in light regardless of admin
   // settings. The wrapper styling below still has `dark:` variants
-  // so the page reads cleanly in either mode.
-  usePublicDarkMode();
+  // so the page reads cleanly in either mode. `isDark` drives the
+  // theme-aware logo pick in the header.
+  const { isDark } = usePublicDarkMode();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const padRef = useRef<SignaturePad | null>(null);
@@ -233,6 +234,18 @@ export const ContractResponsePage: React.FC = () => {
       <div className="max-w-3xl mx-auto py-8 px-4">
         {/* Issuer header — same shape as QuoteResponsePage. */}
         <div className="text-center mb-6">
+          {(() => {
+            const logo = isDark
+              ? (c.issuer?.logoUrlDark || c.issuer?.logoUrl)
+              : (c.issuer?.logoUrl || c.issuer?.logoUrlDark);
+            return logo ? (
+              <img
+                src={logo}
+                alt={c.issuer?.companyName || 'Logo'}
+                className="mx-auto mb-3 h-16 object-contain"
+              />
+            ) : null;
+          })()}
           {c.issuer?.companyName && (
             <h2 className="text-xl font-bold">{c.issuer.companyName}</h2>
           )}

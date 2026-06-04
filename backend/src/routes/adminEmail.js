@@ -1,10 +1,10 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
-const { body, validationResult } = require('express-validator');
+const { body, query, validationResult } = require('express-validator');
 const { db, logActivity } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
-const { wrapEmailHtml } = require('../services/emailProcessor');
+const { wrapEmailHtml, processEmailQueue } = require('../services/emailProcessor');
 const router = express.Router();
 
 // Get email configuration
@@ -93,6 +93,16 @@ router.post('/config', [
     } else {
       await db('email_configs').insert(configData);
     }
+
+    // Refresh the cached transporter so the new SMTP settings take effect
+    // immediately. Without this, a previously-initialised transporter stays
+    // cached (the queue processor only re-inits when it's null), so changing
+    // the email account had no effect until a backend restart — emails kept
+    // failing against the old/empty config. initializeTransporter catches its
+    // own errors and returns null, so this never throws; an invalid config
+    // simply leaves the transporter null (surfaced via the Test-email button).
+    const { initializeTransporter } = require('../services/emailProcessor');
+    await initializeTransporter(true);
 
     // Log activity
     await logActivity('email_config_updated', 
@@ -245,6 +255,114 @@ router.post('/test', adminAuth, requirePermission('email.send'), async (req, res
       code: error.code,
       responseCode: error.responseCode
     });
+  }
+});
+
+// Flush the email queue now. Sends every pending email immediately,
+// bypassing the business-hours floor (`scheduled_at`) — the escape hatch
+// for "drain the queue before I take the server down for an update".
+router.post('/flush-queue', adminAuth, requirePermission('email.send'), async (req, res) => {
+  try {
+    const summary = await processEmailQueue({ ignoreSchedule: true, limit: 1000 });
+    try {
+      await logActivity('email_queue_flushed',
+        { processed: summary.processed, sent: summary.sent, failed: summary.failed },
+        null,
+        { type: 'admin', id: req.admin.id, name: req.admin.username }
+      );
+    } catch (_) { /* activity logging is best-effort */ }
+    res.json({ message: 'Email queue flushed', ...summary });
+  } catch (error) {
+    console.error('Flush email queue error:', error);
+    res.status(500).json({ error: 'Failed to flush email queue', details: error.message });
+  }
+});
+
+// Read-only "Sent emails" feed — paginated view of email_queue with
+// filters (status, type, recipient search, date range). email_data is
+// deliberately NOT returned (it can carry attachment paths / PII); the
+// list only needs the envelope + delivery state. event_id is joined to
+// events so the UI can link back to the source gallery when present.
+router.get('/queue', adminAuth, requirePermission('email.view'), [
+  query('status').optional({ values: 'falsy' }).isIn(['pending', 'sent', 'failed']),
+  query('emailType').optional({ values: 'falsy' }).isString().isLength({ max: 64 }),
+  query('q').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
+  query('from').optional({ values: 'falsy' }).isISO8601(),
+  query('to').optional({ values: 'falsy' }).isISO8601(),
+  query('page').optional({ values: 'falsy' }).isInt({ min: 1 }),
+  query('pageSize').optional({ values: 'falsy' }).isInt({ min: 1, max: 100 }),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const page = req.query.page ? parseInt(req.query.page, 10) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize, 10) : 25;
+
+    const applyFilters = (qb) => {
+      if (req.query.status) qb.where('email_queue.status', req.query.status);
+      if (req.query.emailType) qb.where('email_queue.email_type', req.query.emailType);
+      if (req.query.from) qb.where('email_queue.created_at', '>=', new Date(req.query.from));
+      if (req.query.to) qb.where('email_queue.created_at', '<=', new Date(req.query.to));
+      if (req.query.q) {
+        const term = `%${String(req.query.q).trim()}%`;
+        qb.where(function () {
+          this.where('email_queue.recipient_email', 'like', term)
+            .orWhere('email_queue.email_type', 'like', term);
+        });
+      }
+      return qb;
+    };
+
+    const [{ count }] = await applyFilters(db('email_queue')).count({ count: '*' });
+    const total = parseInt(count, 10) || 0;
+
+    const rows = await applyFilters(
+      db('email_queue')
+        .leftJoin('events', 'events.id', 'email_queue.event_id')
+        .select(
+          'email_queue.id',
+          'email_queue.recipient_email',
+          'email_queue.email_type',
+          'email_queue.status',
+          'email_queue.created_at',
+          'email_queue.scheduled_at',
+          'email_queue.sent_at',
+          'email_queue.error_message',
+          'email_queue.retry_count',
+          'email_queue.event_id',
+          'events.event_name as event_name',
+          'events.slug as event_slug'
+        )
+    )
+      .orderBy('email_queue.created_at', 'desc')
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+
+    const items = rows.map((r) => ({
+      id: r.id,
+      recipientEmail: r.recipient_email,
+      emailType: r.email_type,
+      status: r.status,
+      createdAt: r.created_at,
+      scheduledAt: r.scheduled_at,
+      sentAt: r.sent_at,
+      errorMessage: r.error_message,
+      retryCount: r.retry_count,
+      eventId: r.event_id,
+      eventName: r.event_name || null,
+      eventSlug: r.event_slug || null,
+    }));
+
+    res.json({
+      items,
+      pagination: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) || 1 },
+    });
+  } catch (error) {
+    console.error('List email queue error:', error);
+    res.status(500).json({ error: 'Failed to load email queue', details: error.message });
   }
 });
 

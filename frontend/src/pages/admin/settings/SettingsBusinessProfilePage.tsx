@@ -8,14 +8,17 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Star, Pencil, Save } from 'lucide-react';
+import { Plus, Trash2, Star, Pencil, Save, Clock, Copy } from 'lucide-react';
 import {
   businessProfileService,
   type BusinessProfile,
   type BankAccount,
+  type BusinessHours,
+  type BusinessHoursBlock,
   type QrFormat,
 } from '../../../services/businessProfile.service';
-import { Button, Card, Loading, Input } from '../../../components/common';
+import { Button, Card, Loading, Input, CountrySelect, TimeField } from '../../../components/common';
+import { DecimalInput } from '../../../components/common/DecimalInput';
 import { toast } from 'react-toastify';
 
 export const SettingsBusinessProfilePage: React.FC = () => {
@@ -82,18 +85,14 @@ export const SettingsBusinessProfilePage: React.FC = () => {
             onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
           <Input label={t('businessProfile.field.state', 'State / Region') as string} value={profile.state}
             onChange={(e) => setProfile({ ...profile, state: e.target.value })} />
-          <Input label={t('businessProfile.field.countryCode', 'Country abbreviation (FL, CH, DE …)') as string}
-            value={profile.countryCode}
-            maxLength={2}
-            placeholder="FL"
-            onChange={(e) => setProfile({ ...profile, countryCode: e.target.value.toUpperCase() })} />
-          {/* Free-text country name override (migration 107). When
-              left empty the renderer falls back to the COUNTRY_NAMES
-              lookup on the abbreviation. */}
-          <Input label={t('businessProfile.field.countryName', 'Country (full name)') as string}
-            value={profile.countryName || ''}
-            placeholder="Liechtenstein"
-            onChange={(e) => setProfile({ ...profile, countryName: e.target.value })} />
+          <CountrySelect label={t('businessProfile.field.countryCode', 'Country') as string}
+            value={profile.countryCode || ''}
+            onChange={(code) => setProfile({ ...profile, countryCode: code })} />
+          {/* The free-text "Country (full name)" override (migration 107) was
+              removed as redundant — the picker stores the ISO code and the PDF
+              renderer derives the localized full name from it
+              (pdfService.countryName). The DB column + `country_name ||`
+              fallback remain, so any legacy override still renders. */}
         </div>
       </Card>
 
@@ -134,6 +133,30 @@ export const SettingsBusinessProfilePage: React.FC = () => {
           <Input type="number" step="0.01" label={t('businessProfile.field.vatRateDefault', 'Default VAT rate %') as string}
             value={profile.vatRateDefault ?? 0}
             onChange={(e) => setProfile({ ...profile, vatRateDefault: Number(e.target.value) })} />
+          {/* Install-wide fallback hourly rate (migration 113). Stored in
+              minor units; entered here in major units. Blank = no global
+              default, so hours-logging then needs a per-customer or
+              per-entry rate. Comma-tolerant via DecimalInput. */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {t('businessProfile.field.defaultHourlyRate', 'Default hourly rate')}
+            </label>
+            <DecimalInput
+              value={profile.defaultHourlyRateMinor != null ? profile.defaultHourlyRateMinor / 100 : NaN}
+              fractionDigits={2}
+              onChange={(n) => setProfile({
+                ...profile,
+                defaultHourlyRateMinor: Number.isFinite(n) ? Math.max(0, Math.round(n * 100)) : null,
+              })}
+              className="w-full px-3 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm"
+              placeholder={t('businessProfile.field.defaultHourlyRatePlaceholder', 'e.g. 120.00') as string}
+            />
+            <p className="text-xs text-muted-theme mt-1">
+              {t('businessProfile.field.defaultHourlyRateHint',
+                'Fallback used when a customer has no own rate. In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.',
+                { currency: profile.defaultCurrency || 'CHF' })}
+            </p>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">{t('businessProfile.field.defaultQrFormat', 'Default invoice QR')}</label>
             <select value={profile.defaultQrFormat} onChange={(e) => setProfile({ ...profile, defaultQrFormat: e.target.value as QrFormat })}
@@ -228,6 +251,37 @@ export const SettingsBusinessProfilePage: React.FC = () => {
         </div>
       </Card>
 
+      {/* Business hours (migration 114). Per-weekday opening blocks with
+          lunch-break support, interpreted in the profile timezone above.
+          Drives the scheduled-email floor: an email scheduled outside the
+          open blocks is held until the next opening. */}
+      <Card>
+        <div className="flex items-center gap-2 mb-1">
+          <Clock className="w-5 h-5 text-neutral-500" />
+          <h3 className="font-semibold">{t('businessProfile.businessHours.title', 'Business hours')}</h3>
+        </div>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+          {t('businessProfile.businessHours.subtitle',
+            'Set opening hours per weekday — add a second block for a lunch break. Interpreted in the timezone above ({{tz}}).',
+            { tz: profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone })}
+        </p>
+
+        <BusinessHoursEditor
+          value={profile.businessHours}
+          onChange={(next) => setProfile({ ...profile, businessHours: next })}
+        />
+
+        <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <PdfToggleRow
+            label={t('businessProfile.businessHours.floorToggle', 'Hold scheduled emails until business hours') as string}
+            description={t('businessProfile.businessHours.floorToggleHelp',
+              'When on, an automated email scheduled outside the hours above is delivered at the next opening instead of at an odd hour. When off, scheduled emails send at their exact time.') as string}
+            enabled={profile.scheduledEmailFloorEnabled}
+            onChange={(v) => setProfile({ ...profile, scheduledEmailFloorEnabled: v })}
+          />
+        </div>
+      </Card>
+
       {/* Disclaimer banner for QR-bill / IBAN data. picpeak renders
           what the operator types — it cannot validate IBAN/BIC, QR-IID
           or scan-compatibility with any specific bank's e-banking app.
@@ -283,6 +337,143 @@ const PdfToggleRow: React.FC<PdfToggleRowProps> = ({ label, description, enabled
     </button>
   </label>
 );
+
+/**
+ * Per-weekday business-hours editor (migration 114). Google-style: each
+ * weekday holds zero or more {start,end} blocks, so a day can be closed
+ * (no blocks), open all day (one block), or have a lunch break (two).
+ * Edits the parent's `businessHours` object directly; the page-level Save
+ * persists it. ISO weekday keys "1".."7" (1=Mon … 7=Sun).
+ */
+const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7];
+
+const BusinessHoursEditor: React.FC<{
+  value: BusinessHours | null;
+  onChange: (next: BusinessHours) => void;
+}> = ({ value, onChange }) => {
+  const { t } = useTranslation();
+
+  // Always work with a fully-populated 7-day object so toggling a day on
+  // and off doesn't drop sibling keys.
+  const full: BusinessHours = {};
+  for (const iso of WEEKDAYS) {
+    const blocks = value?.[String(iso)];
+    full[String(iso)] = Array.isArray(blocks) ? blocks : [];
+  }
+
+  const setDay = (iso: number, blocks: BusinessHoursBlock[]) => {
+    onChange({ ...full, [String(iso)]: blocks });
+  };
+
+  const addBlock = (iso: number) => {
+    const blocks = full[String(iso)];
+    // First block defaults to a full workday; a second one defaults to a
+    // post-lunch afternoon so the common 09–12 / 13–18 split is one click.
+    const next: BusinessHoursBlock = blocks.length === 0
+      ? { start: '09:00', end: '17:00' }
+      : { start: '13:00', end: '18:00' };
+    setDay(iso, [...blocks, next]);
+  };
+
+  const updateBlock = (iso: number, idx: number, patch: Partial<BusinessHoursBlock>) => {
+    setDay(iso, full[String(iso)].map((b, i) => (i === idx ? { ...b, ...patch } : b)));
+  };
+
+  const removeBlock = (iso: number, idx: number) => {
+    setDay(iso, full[String(iso)].filter((_, i) => i !== idx));
+  };
+
+  const copyToAll = (iso: number) => {
+    const src = full[String(iso)];
+    const next: BusinessHours = {};
+    for (const d of WEEKDAYS) next[String(d)] = src.map((b) => ({ ...b }));
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-2">
+      {WEEKDAYS.map((iso) => {
+        const blocks = full[String(iso)];
+        const isOpen = blocks.length > 0;
+        return (
+          <div
+            key={iso}
+            className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 py-2 border-b border-neutral-100 dark:border-neutral-800 last:border-0"
+          >
+            <div className="w-28 shrink-0 pt-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              {t(`businessProfile.businessHours.weekday.${iso}`)}
+            </div>
+
+            <div className="flex-1 space-y-2">
+              {!isOpen && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                    {t('businessProfile.businessHours.closed', 'Closed')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => addBlock(iso)}
+                    className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t('businessProfile.businessHours.addHours', 'Add hours')}
+                  </button>
+                </div>
+              )}
+
+              {blocks.map((block, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <TimeField
+                    value={block.start}
+                    onChange={(v) => updateBlock(iso, idx, { start: v })}
+                    ariaLabel={t('businessProfile.businessHours.startTime', 'Opening time') as string}
+                    className="w-32 shrink-0"
+                  />
+                  <span className="text-neutral-400">–</span>
+                  <TimeField
+                    value={block.end}
+                    onChange={(v) => updateBlock(iso, idx, { end: v })}
+                    ariaLabel={t('businessProfile.businessHours.endTime', 'Closing time') as string}
+                    className="w-32 shrink-0"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeBlock(iso, idx)}
+                    aria-label={t('common.remove', 'Remove') as string}
+                    className="p-1.5 text-neutral-400 hover:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  {idx === blocks.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => addBlock(iso)}
+                      aria-label={t('businessProfile.businessHours.addBlock', 'Add another block') as string}
+                      className="p-1.5 text-primary-600 hover:text-primary-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {isOpen && (
+              <button
+                type="button"
+                onClick={() => copyToAll(iso)}
+                className="shrink-0 inline-flex items-center gap-1 pt-2 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                {t('businessProfile.businessHours.copyToAll', 'Copy to all days')}
+              </button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 /**
  * Dedicated PDF letterhead logo uploader. Accepts PNG / JPEG / SVG;

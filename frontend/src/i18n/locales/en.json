@@ -73,15 +73,37 @@
       "message": "Are you sure you want to cancel the invitation for {{email}}?"
     }
   },
+  "systemHealth": {
+    "title": "System health",
+    "subtitle": "Background failures that need attention.",
+    "retry": "Retry",
+    "dismiss": "Dismiss",
+    "retriedToast": "Email re-queued.",
+    "dismissedToast": "Dismissed.",
+    "stuckEmails": {
+      "title": "Stuck / failed emails",
+      "empty": "No stuck or failed emails — all clear.",
+      "noError": "retries exhausted",
+      "col": {
+        "recipient": "Recipient",
+        "type": "Type",
+        "error": "Error",
+        "queued": "Queued",
+        "actions": "Actions"
+      }
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
+    "configureInSettings": "Configure defaults in Settings ↗",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
     "sortBy": "Sort by",
+    "selectCountry": "Select country…",
     "yes": "Yes",
     "no": "No",
     "back": "Back",
@@ -165,6 +187,7 @@
     "events": "Events",
     "archives": "Archives",
     "settings": "Settings",
+    "systemHealth": "System health",
     "eventTypes": "Event Types",
     "branding": "Branding",
     "emailSettings": "Email Settings",
@@ -398,6 +421,7 @@
     "copyLink": "Copy Link",
     "linkCopied": "Link copied!",
     "viewGallery": "View Gallery",
+    "createInvoice": "Create invoice",
     "uploadPhotos": "Upload Photos",
     "archiveEvent": "Archive Event",
     "archiveConfirm": "Are you sure you want to archive this event? This action cannot be undone.",
@@ -1185,6 +1209,21 @@
       "clients": {
         "title": "CRM",
         "description": "Master switch for the CRM sidebar section. Off hides the section and every sub-feature below regardless of their individual toggles — re-enable to restore them to whatever you set last."
+      },
+      "contracts": {
+        "title": "Contracts",
+        "description": "Compose contracts from a library of reusable blocks (image rights, NDA, model release, cancellation, jurisdiction…) and have customers sign in-browser or upload a wet-signed PDF. Seeded block bodies are EXAMPLES ONLY — review with your lawyer before sending.",
+        "sidebar": "Contracts"
+      },
+      "crmDevelopment": {
+        "title": "CRM developer tools",
+        "description": "Internal helpers for verifying CRM flows (e.g. fire the admin payment-check email instantly, bypass throttles). Surfaces as a \"Development\" sub-tab under Clients. Strictly opt-in — fires real side effects, use against test data only.",
+        "sidebar": "Development"
+      },
+      "hoursLogging": {
+        "title": "Hours logging",
+        "description": "Per-customer time tracking. Admin logs date + start/end times + optional rate override + note. Monthly-mode customers auto-accumulate hours into the running monthly draft; per-event customers see a \"Create draft invoice\" button that mints a standalone draft invoice with one line per entry. Independent of Bills — log hours even before turning the full billing surface on.",
+        "sidebar": "Hours"
       }
     },
     "customerSurface": {
@@ -1197,6 +1236,12 @@
       "save": "Save changes",
       "saved": "Customer dashboard branding saved",
       "error": "Could not save settings"
+    },
+    "businessProfile": {
+      "title": "Business profile"
+    },
+    "crm": {
+      "title": "CRM behaviour"
     }
   },
   "analytics": {
@@ -1246,11 +1291,13 @@
     "logo": "Logo",
     "uploadLogo": "Upload Logo",
     "logoHelp": "Recommended size: 200x60px, PNG or JPEG",
+    "logoDark": "Dark-mode logo",
+    "logoDarkHelp": "Optional. Shown on dark themes / dark mode; falls back to the main logo when unset.",
     "favicon": "Favicon",
     "currentFavicon": "Current favicon",
     "uploadFavicon": "Upload Favicon",
     "removeFavicon": "Remove Favicon",
-    "faviconHelp": "PNG or ICO format, recommended size: 32x32px",
+    "faviconHelp": "PNG, ICO, or SVG format. Use a square image — an SVG (or a 512×512px PNG) gives the crispest display on high-resolution screens; smaller sizes work too.",
     "watermarkSettings": "Watermark Settings",
     "enableWatermarks": "Enable Watermarks",
     "watermarkHelp": "Add your company name as a watermark on downloaded photos",
@@ -1958,6 +2005,37 @@
     "gmailAppPassword": "For Gmail, use an app-specific password",
     "testEmailAddressLabel": "Test Email Address",
     "sendTestEmailButton": "Send Test Email",
+    "flushQueue": {
+      "title": "Send queued emails now",
+      "help": "Immediately send every pending email, ignoring the business-hours schedule. Useful for draining the queue before maintenance or updates.",
+      "button": "Send queued emails now",
+      "success": "Email queue flushed — {{sent}} sent, {{failed}} failed",
+      "empty": "No pending emails to send"
+    },
+    "sentEmails": {
+      "tab": "Sent emails",
+      "title": "Sent emails",
+      "subtitle": "Delivery status of every queued and sent notification.",
+      "searchPlaceholder": "Search by recipient or type…",
+      "from": "From",
+      "to": "To",
+      "empty": "No emails match these filters.",
+      "retries": "{{count}} retries",
+      "pagination": "Page {{page}} of {{total}} · {{count}} emails",
+      "status": {
+        "pending": "Pending",
+        "sent": "Sent",
+        "failed": "Failed"
+      },
+      "col": {
+        "recipient": "Recipient",
+        "type": "Type",
+        "status": "Status",
+        "created": "Queued",
+        "sent": "Sent",
+        "event": "Event"
+      }
+    },
     "commonSmtpSettings": "Common SMTP Settings:",
     "editTemplate": "Edit Template",
     "templateName": "Template Name",
@@ -3028,7 +3106,7 @@
     "hours": {
       "section": "Hours",
       "monthlyHint": "Entries auto-append to the current monthly draft. Edit / delete remains possible until the scheduler arms the draft for send.",
-      "perEventHint": "Logged entries stay unbilled until you click \"Create draft invoice\" — a standalone draft invoice is generated with one line per entry, ready for you to review before sending.",
+      "perEventHint": "Logged entries stay unbilled until you click \"Create draft invoice\" — one scheduled invoice is generated with a line per entry and opened in the editor, so you can add other items before it ships.",
       "form": {
         "title": "Log new entry",
         "date": "Date",
@@ -3040,7 +3118,8 @@
         "rateOverride": "Rate override",
         "note": "Note / description",
         "notePlaceholder": "What was worked on?",
-        "save": "Add entry"
+        "save": "Add entry",
+        "needRate": "Set a rate or enter an override to log time."
       },
       "col": {
         "date": "Date",
@@ -3065,6 +3144,20 @@
         "created": "Entry logged",
         "deleted": "Entry deleted",
         "billed": "Hours billed"
+      },
+      "noRate": {
+        "title": "No hourly rate configured",
+        "body": "Logging needs a rate. Set one for this customer, type a per-entry override below, or configure an install-wide default.",
+        "setForCustomer": "Set a rate for this customer",
+        "setInstallDefault": "Set an install-wide default"
+      },
+      "rateSource": {
+        "customer": "from this customer",
+        "installDefault": "install-wide default"
+      },
+      "error": {
+        "noRate": "No hourly rate set for this customer. Enter a rate override, set a rate on the customer, or configure an install-wide default in Settings.",
+        "createFailed": "Failed to log entry"
       }
     },
     "create": {
@@ -3078,7 +3171,8 @@
       "savedPassiveToast": "Passive customer created.",
       "savedActiveToast": "Customer created and portal invitation sent.",
       "inviteFailedToast": "Customer saved (passive). Invitation email failed — retry from the customer detail page.",
-      "emailRequired": "A valid email is required."
+      "emailRequired": "A valid email is required.",
+      "nameRequired": "Enter at least a company name or a contact name."
     },
     "passive": {
       "badge": "Passive — admin only",
@@ -3183,6 +3277,7 @@
       "city": "City",
       "state": "State / region",
       "countryCode": "Country (ISO 2)",
+      "country": "Country",
       "countryName": "Country (full name)",
       "notesHint": "Visible only to admins. Never shown to the customer.",
       "featuresSection": "Customer features",
@@ -3205,20 +3300,26 @@
     },
     "billing": {
       "section": "Billing cadence",
-      "hint": "Per-event (default): every invoice is sent on its own schedule. Monthly: all invoices issued in the period accumulate into one bill that fires on the configured day.",
+      "hint": "Per-event (default): every invoice is sent on its own schedule. Monthly: all invoices issued in the period accumulate into one bill that fires on the configured day. Manual: items accumulate the same way, but the bill ships only when you trigger it.",
       "cadence": "Billing cadence",
       "perEvent": "Per event",
       "monthly": "Monthly",
       "quarterly": "Quarterly",
+      "manual": "Manual (trigger only)",
       "cycleDay": "Cycle day",
       "cycleDayHint": "1..28 = day of month. Use negative -1..-15 for \"N days before month end\" (so -3 fires on the 28th of a 31-day month).",
+      "skontoDisabled": "No Skonto for this customer",
+      "skontoDisabledHint": "Disables the early-payment discount on all of this customer’s invoices, regardless of template or global defaults.",
       "triggerNow": "Trigger invoice now",
       "triggerConfirm": "Issue this customer's monthly bill now? The customer receives the email immediately.",
+      "triggerConfirmManual": "Issue this customer's accumulated bill now? The customer receives the email immediately.",
       "triggerHint": "Bypasses the cadence day and issues the running draft immediately. Refuses when nothing has been queued for the current period.",
+      "triggerHintManual": "Issues the running draft immediately. Manual-cadence drafts never ship automatically — this is the only way to send them. Refuses when nothing has been queued.",
       "triggered": "Monthly bill issued: {{number}}",
       "triggerError": "Could not trigger the monthly bill.",
       "draftPreview": {
         "title": "Pending in this month's bill",
+        "titleManual": "Pending — ships on manual trigger",
         "periodRange": "{{number}} · {{from}} – {{to}}"
       }
     },
@@ -3325,7 +3426,16 @@
     "pickPlaceholder": "— Select customer —",
     "emptyList": "No customers have hours logging enabled yet. Flip \"Hours logging\" on a customer's detail page first.",
     "searchPlaceholder": "Search by email or company…",
-    "customerLoggingDisabled": "This customer has hour logging disabled. Enable it on the customer's detail page to log hours."
+    "customerLoggingDisabled": "This customer has hour logging disabled. Enable it on the customer's detail page to log hours.",
+    "openHours": {
+      "title": "Open hours across all customers",
+      "subtitle": "Unbilled time blocks waiting to be billed. Pick a customer above, or click a row to drill in.",
+      "empty": "No unbilled hours right now — everything is billed or no time has been logged yet.",
+      "entryLine_one": "{{count}} entry · {{hours}}h",
+      "entryLine_other": "{{count}} entries · {{hours}}h",
+      "passive": "Passive",
+      "needsRate": "Rate not set"
+    }
   },
   "crmDev": {
     "title": "CRM Development",
@@ -3471,6 +3581,9 @@
     "send": "Send",
     "resend": "Resend",
     "convert": "Convert to event",
+    "declineOnBehalf": "Decline on behalf",
+    "declineReasonPrompt": "Mark this quote as declined on behalf of the customer? Optionally note why (leave blank to skip).",
+    "declinedOnBehalfToast": "Quote marked as declined.",
     "field": {
       "issueDate": "Issued",
       "validUntil": "Valid until",
@@ -3479,6 +3592,7 @@
       "sentAt": "Sent at",
       "acceptedAt": "Accepted at",
       "declinedAt": "Declined at",
+      "declineReason": "Decline reason",
       "responseWindow": "Response window",
       "eventTimeStart": "Start time",
       "eventTimeEnd": "End time",
@@ -3594,6 +3708,7 @@
       "customer": "Customer",
       "event": "Event",
       "installment": "Installment",
+      "issueDate": "Issued",
       "dueDate": "Due",
       "total": "Total",
       "status": "Status"
@@ -3635,6 +3750,8 @@
     "field": {
       "issueDate": "Issued",
       "dueDate": "Due",
+      "dueDateOverrideOn": "Manual due date — untick to auto-set from send date + payment term",
+      "dueDateOverrideOff": "Auto from send date + payment term — tick to set manually",
       "scheduledSendAt": "Scheduled send",
       "installment": "Installment",
       "total": "Total",
@@ -3657,6 +3774,7 @@
       "selectTiming": "— Select schedule —",
       "eventName": "Event",
       "eventDate": "Event date",
+      "eventNamePlaceholder": "e.g. Smith wedding 2024",
       "eventTimeStart": "Start time",
       "eventTimeEnd": "End time",
       "customer": "Customer",
@@ -3689,6 +3807,7 @@
     "payment": {
       "paidAt": "Date",
       "amount": "Amount",
+      "date": "Payment date",
       "method": "Method",
       "reference": "Reference",
       "notes": "Notes",
@@ -3727,6 +3846,27 @@
     "savedToast": "Business profile saved.",
     "title": "Business profile",
     "subtitle": "Issuer block shown on every quote and invoice PDF.",
+    "businessHours": {
+      "title": "Business hours",
+      "subtitle": "Set opening hours per weekday — add a second block for a lunch break. Interpreted in the timezone above ({{tz}}).",
+      "closed": "Closed",
+      "addHours": "Add hours",
+      "addBlock": "Add another block",
+      "copyToAll": "Copy to all days",
+      "startTime": "Opening time",
+      "endTime": "Closing time",
+      "floorToggle": "Hold scheduled emails until business hours",
+      "floorToggleHelp": "When on, an automated email scheduled outside the hours above is delivered at the next opening instead of at an odd hour. When off, scheduled emails send at their exact time.",
+      "weekday": {
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday",
+        "7": "Sunday"
+      }
+    },
     "section": {
       "company": "Company",
       "contact": "Contact",
@@ -3752,6 +3892,9 @@
       "timezone": "Timezone (IANA)",
       "vatLabel": "VAT label (e.g. MwSt., VAT)",
       "vatRateDefault": "Default VAT rate %",
+      "defaultHourlyRate": "Default hourly rate",
+      "defaultHourlyRatePlaceholder": "e.g. 120.00",
+      "defaultHourlyRateHint": "Fallback used when a customer has no own rate. In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.",
       "defaultQrFormat": "Default invoice QR",
       "footerLine": "PDF footer line"
     },
@@ -3782,7 +3925,11 @@
       "quotes": "Quotes",
       "invoices": "Invoices",
       "paymentDefaults": "Default payment conditions",
-      "installmentDefaults": "Default installment triggers"
+      "installmentDefaults": "Default installment triggers",
+      "contracts": "Contracts",
+      "quotesTos": "Terms of Service / AGB step",
+      "dashboardOverview": "Dashboard CRM overview",
+      "dashboardOverviewHint": "Hide CRM overview tiles on the admin dashboard. All tiles render by default; uncheck to hide."
     },
     "paymentDefaults": {
       "help": "Pre-filled on every new quote and invoice. The editor still lets you pick a different combination per document.",
@@ -3857,6 +4004,48 @@
     },
     "crm_invoices_late_fee_enabled": {
       "label": "Add a late fee on the second reminder"
+    },
+    "crm_quotes_tos_required": {
+      "label": "Require customers to tick \"I accept the Terms of Service\" before accepting"
+    },
+    "crm_quotes_tos_url": {
+      "label": "Terms of Service URL (optional)"
+    },
+    "crm_quotes_tos_text": {
+      "label": "Inline Terms text shown on the quote page",
+      "placeholder": "Paste the contract terms here. Plain text. Leave empty to only show the checkbox + URL."
+    },
+    "crm_contracts_pdf_attachment_enabled": {
+      "label": "Attach contract PDF to email"
+    },
+    "crm_contracts_require_drawn_signature": {
+      "label": "Require drawn signature (typed name alone is not enough)"
+    },
+    "crm_contracts_allow_pdf_upload": {
+      "label": "Allow customer to upload a wet-signed PDF"
+    },
+    "crm_contracts_store_ip": {
+      "label": "Store signer's IP address (recommended — corroborating evidence in civil disputes)",
+      "help": "When off, the customer's and admin's IP at signing time is NOT recorded into the contract row or the public sign-page audit confirmation. Per GDPR data-minimisation principle some operators prefer this — but IP is corroborating identity evidence if the contract is challenged, so we recommend keeping it on."
+    },
+    "crm_contracts_default_valid_days": {
+      "label": "Signing window (days)"
+    },
+    "crm_contracts_number_format": {
+      "label": "Contract number format",
+      "help": "Supported tokens: {YEAR}, {MONTH}, {SEQ:04d}. Example: LBM-C-{YEAR}-{SEQ:04d} → LBM-C-2026-0001."
+    },
+    "crm_overview_show_revenue": {
+      "label": "Revenue tiles (30 / 90 / 365 days)"
+    },
+    "crm_overview_show_outstanding": {
+      "label": "Outstanding payments tile"
+    },
+    "crm_overview_show_quotes": {
+      "label": "Quotes pipeline (per-status)"
+    },
+    "crm_overview_show_invoices": {
+      "label": "Invoices pipeline (per-status)"
     }
   },
   "quoteResponse": {
@@ -3986,6 +4175,7 @@
       "new": "New contract"
     },
     "detail": {
+      "previewPdf": "Preview PDF",
       "integrity": {
         "title": "PDF integrity check",
         "help": "Re-hashes the unsigned + signed PDFs on disk and compares them to the SHA-256 stored when the document was issued. Catches backup corruption or manual edits since the customer received their copy.",
@@ -4000,7 +4190,108 @@
         "expected": "expected",
         "actual": "actual",
         "error": "Integrity check failed."
-      }
+      },
+      "alreadyEventToast": "Already linked to an event.",
+      "auditEmpty": "No audit-log entries yet.",
+      "auditTrail": "Audit trail",
+      "auditTrailHelp": "Every event recorded on this contract. The list is append-only and is the source of truth if the contract is challenged.",
+      "back": "Back to list",
+      "blocks": "Included blocks",
+      "cancel": "Cancel",
+      "cancelConfirm": "Cancel this contract? Customer signing link will be invalidated.",
+      "cancelError": "Cancel failed",
+      "cancelledToast": "Contract cancelled.",
+      "clearSignature": "Clear",
+      "confirmConvertEvent": "Convert this contract into an event + scheduled invoices?",
+      "confirmConvertInvoice": "Convert this contract into invoice(s) only? No gallery / event will be created.",
+      "confirmCountersign": "Counter-sign",
+      "confirmResendSigned": "Re-send the signed contract PDF to both parties?",
+      "confirmRestamp": "Re-stamp & re-render PDF",
+      "convertError": "Convert failed",
+      "convertToEvent": "Convert to event",
+      "convertToInvoice": "Convert to invoice only",
+      "convertedToEvent": "Converted to event",
+      "convertedToEventToast": "Contract converted to event #{{id}}",
+      "convertedToInvoiceToast": "{{count}} invoice(s) created from this contract",
+      "countersignError": "Counter-sign failed",
+      "countersignHelp": "Type your name AND draw your signature below — both are stamped onto the re-rendered PDF. IP and timestamp are recorded for audit.",
+      "countersignSignaturePrompt": "Draw your signature",
+      "countersignTitle": "Counter-sign to make it binding",
+      "countersignedToast": "Counter-signed.",
+      "customer": "Customer",
+      "dates": "Dates",
+      "downloadPdf": "Download PDF",
+      "downloadSignedPdf": "Download signed PDF",
+      "edit": "Edit",
+      "fromQuote": "From quote",
+      "issued": "Issued",
+      "linkedInvoice": "Invoice",
+      "newInvoice": "New invoice",
+      "noBlocks": "No blocks included.",
+      "noSignatureImage": "No signature image captured — use \"Re-stamp signatures\" below to add one.",
+      "notFound": "Contract not found.",
+      "parties": "Parties",
+      "popupBlocked": "Allow pop-ups for this site to preview the PDF.",
+      "renderFailedBody": "The signature evidence is recorded, but the stamped PDF was not generated on the last attempt. Click \"Re-send signed PDF\" above to re-stamp from the original document and resend.",
+      "renderFailedTitle": "Signed PDF stamp failed — re-stamp required",
+      "resendError": "Resend failed",
+      "resendSigned": "Re-send signed PDF",
+      "resentSignedToast": "Signed contract re-sent to both parties.",
+      "restampAdmin": "Admin signature",
+      "restampCustomer": "Customer signature",
+      "restampError": "Re-stamp failed",
+      "restampHelp": "One or both signatures didn't capture an image. Draw the missing signature(s) here and we'll re-render the PDF. The typed names, timestamps, and IPs already on file stay untouched.",
+      "restampTitle": "Re-stamp missing signatures",
+      "restampedToast": "Signatures re-stamped and PDF re-rendered.",
+      "send": "Send to customer",
+      "sendError": "Send failed",
+      "sentAt": "Sent at",
+      "sentToast": "Contract sent.",
+      "signBy": "Sign by",
+      "signatures": "Signatures",
+      "signedByAdmin": "Counter-signed",
+      "signedByCustomer": "Signed by customer",
+      "signedNamePlaceholder": "Your full name",
+      "uploadError": "Upload failed",
+      "uploadSigned": "Upload signed PDF",
+      "uploadedToast": "Signed PDF uploaded."
+    },
+    "editor": {
+      "back": "Back to list",
+      "backToDetail": "Back to contract",
+      "create": "Create draft",
+      "createdToast": "Contract created.",
+      "customer": "Customer",
+      "disclaimerBody": "The seeded block bodies are EXAMPLES ONLY — written by the maintainer, not by a lawyer. Have your own lawyer review every block you include before sending the contract. See docs/crm-disclaimers.md.",
+      "disclaimerTitle": "Lawyer review required",
+      "eventDate": "Event date",
+      "eventHelp": "Snapshotted onto the contract and propagated to any event / invoice generated from it. Set this so the customer portal and dunning emails show the right \"Wedding Doe / Müller\" label.",
+      "eventName": "Event name",
+      "eventNamePlaceholder": "e.g. Wedding Doe / Müller",
+      "eventSection": "Event (optional)",
+      "eventTimeEnd": "End",
+      "eventTimeStart": "Start",
+      "intro": "Intro text (optional)",
+      "issueDate": "Issue date",
+      "language": "Language",
+      "locked": "Sent contracts cannot be edited. Cancel and create a fresh one for amendments.",
+      "noBlocksInSection": "No blocks for this section yet.",
+      "outro": "Closing text (optional)",
+      "popupBlocked": "Allow pop-ups for this site to preview the PDF.",
+      "preview": "Preview PDF",
+      "previewAfterSave": "Save the draft first, then preview.",
+      "previewError": "Preview failed",
+      "save": "Save",
+      "saveError": "Save failed",
+      "savedToast": "Contract saved.",
+      "schriftformWarning": "Signature type: simple electronic signature (SES). Sufficient for routine photography contracts in CH / DE / AT / FL. NOT sufficient for documents that legally require Schriftform / form qualifiée: Bürgschaft (DE § 766 BGB), Verbraucherdarlehensvertrag (DE § 492 BGB), befristete Arbeitsverträge (DE § 14 Abs. 4 TzBfG), and similar. For those, a qualified electronic signature (QES) from a Trust Service Provider is required — picpeak does not provide QES.",
+      "searchCustomer": "Search by email…",
+      "systemBadge": "System",
+      "titleEdit": "Edit contract",
+      "titleField": "Contract title",
+      "titleNew": "New contract",
+      "titlePlaceholder": "e.g. Wedding contract Doe / Müller",
+      "validUntil": "Sign by (optional)"
     }
   }
 }

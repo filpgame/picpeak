@@ -25,6 +25,7 @@
 const { db, logActivity } = require('../database/db');
 const { formatBoolean } = require('../utils/dbCompat');
 const { AppError } = require('../utils/errors');
+const { hasColumnCached } = require('../utils/schemaCache');
 const logger = require('../utils/logger');
 const invoiceService = require('./invoiceService');
 
@@ -50,22 +51,50 @@ function computeDurationMinutes(start, end) {
 }
 
 /**
- * Resolve the rate this entry should bill at. Override on the entry
- * wins; otherwise we fall back to the customer's default rate. If
- * neither is set we throw — saves can't go through without a rate.
+ * Resolve the rate this entry should bill at. Resolution chain:
+ *   1. per-entry override
+ *   2. per-customer default rate
+ *   3. install-wide default rate (business_profile, migration 113)
+ * Only when all three are unset do we throw — the hours UI surfaces a
+ * "set a rate" CTA off the back of HOURLY_RATE_REQUIRED rather than a
+ * raw error. `installDefaultMinor` is loaded once per request by the
+ * caller (see getInstallDefaultRateMinor) and passed in so this stays
+ * a pure function.
  */
-function resolveEffectiveRate(entry, customer) {
+function resolveEffectiveRate(entry, customer, installDefaultMinor = null) {
   if (entry.hourly_rate_minor_override != null) {
     return Number(entry.hourly_rate_minor_override);
   }
   if (customer.hourly_rate_minor != null) {
     return Number(customer.hourly_rate_minor);
   }
+  if (installDefaultMinor != null) {
+    return Number(installDefaultMinor);
+  }
   throw new AppError(
-    'No hourly rate: set a per-entry override or a customer default.',
+    'No hourly rate: set a per-entry override, a customer default, or an install-wide default rate.',
     400,
     'HOURLY_RATE_REQUIRED',
   );
+}
+
+/**
+ * Read the install-wide default hourly rate (minor units) off the
+ * singleton business_profile row. Returns null when unset OR when the
+ * column doesn't exist yet (pre-migration-113 install) — callers then
+ * fall through to the HOURLY_RATE_REQUIRED path. Accepts an optional
+ * transaction so it joins the caller's atomic unit.
+ */
+async function getInstallDefaultRateMinor(trx) {
+  const conn = trx || db;
+  if (!(await hasColumnCached('business_profile', 'default_hourly_rate_minor'))) {
+    return null;
+  }
+  const row = await conn('business_profile').where({ id: 1 })
+    .first('default_hourly_rate_minor');
+  return row && row.default_hourly_rate_minor != null
+    ? Number(row.default_hourly_rate_minor)
+    : null;
 }
 
 /**
@@ -181,9 +210,14 @@ async function createEntry(customerId, payload, adminId) {
   }
   const description = payload.description ? String(payload.description).slice(0, 1000) : null;
 
+  // Install-wide fallback rate (migration 113) — the last link in the
+  // resolution chain. Loaded once and reused for the pre-validate and
+  // the accumulator append below.
+  const installDefaultMinor = await getInstallDefaultRateMinor();
+
   // Pre-validate the rate resolves to something — fail before insert
-  // if neither override nor customer default is set.
-  resolveEffectiveRate({ hourly_rate_minor_override: override }, customer);
+  // if neither override, customer default, nor install default is set.
+  resolveEffectiveRate({ hourly_rate_minor_override: override }, customer, installDefaultMinor);
 
   return await db.transaction(async (trx) => {
     const row = {
@@ -202,10 +236,12 @@ async function createEntry(customerId, payload, adminId) {
     const inserted = await trx('customer_hour_entries').insert(row).returning('id');
     const entryId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
 
-    // Monthly-mode customers get the auto-append treatment.
-    if (customer.billing_cadence === 'monthly') {
+    // Accumulator-mode customers (monthly + manual) get the auto-append
+    // treatment — the entry lands on the running draft instead of staying
+    // unbilled. Manual differs only in that its draft never auto-flushes.
+    if (customer.billing_cadence === 'monthly' || customer.billing_cadence === 'manual') {
       const fullEntry = { ...row, id: entryId };
-      const rate = resolveEffectiveRate(fullEntry, customer);
+      const rate = resolveEffectiveRate(fullEntry, customer, installDefaultMinor);
       const lineItem = buildLineItemFromEntry(fullEntry, rate);
       const { invoiceId, lineItemId } = await invoiceService.appendOneLineItemToMonthlyDraft(
         customer, lineItem, adminId, trx,
@@ -286,7 +322,8 @@ async function updateEntry(entryId, payload, adminId) {
     // Recompute the linked line item if the entry is billed (on a
     // draft — the lock check above already proved it's mutable).
     if (entry.invoice_id && entry.invoice_line_item_id) {
-      const rate = resolveEffectiveRate(next, customer);
+      const installDefaultMinor = await getInstallDefaultRateMinor(trx);
+      const rate = resolveEffectiveRate(next, customer, installDefaultMinor);
       const newLineItem = buildLineItemFromEntry(next, rate);
       await trx('invoice_line_items').where({ id: entry.invoice_line_item_id }).update({
         description: newLineItem.description,
@@ -387,15 +424,16 @@ async function deleteEntry(entryId, adminId) {
 /**
  * Per-event flow: mint a standalone invoice from all unbilled entries
  * for this customer, one line per entry. Refuses when the customer is
- * monthly-mode (those entries auto-billed on save, so there should be
- * no unbilled rows). Returns the new invoice id.
+ * in an accumulator mode (monthly / manual) — those entries auto-billed
+ * onto the running draft on save, so there should be no unbilled rows.
+ * Returns the new invoice id.
  */
 async function billUnbilledEntries(customerId, adminId) {
   const customer = await db('customer_accounts').where({ id: customerId }).first();
   if (!customer) throw new AppError('Customer not found', 404);
-  if (customer.billing_cadence === 'monthly') {
+  if (customer.billing_cadence === 'monthly' || customer.billing_cadence === 'manual') {
     throw new AppError(
-      'Monthly-mode customers auto-append entries to the running draft; "Bill these hours" is for per-event customers.',
+      'Accumulator-mode customers (monthly / manual) auto-append entries to the running draft; "Bill these hours" is for per-event customers.',
       409,
       'CADENCE_MISMATCH',
     );
@@ -409,8 +447,9 @@ async function billUnbilledEntries(customerId, adminId) {
       throw new AppError('No unbilled entries to bill', 409, 'NO_UNBILLED');
     }
 
+    const installDefaultMinor = await getInstallDefaultRateMinor(trx);
     const lineItems = unbilled.map((entry, idx) => {
-      const rate = resolveEffectiveRate(entry, customer);
+      const rate = resolveEffectiveRate(entry, customer, installDefaultMinor);
       const li = buildLineItemFromEntry(entry, rate);
       return { ...li, position: idx + 1 };
     });
@@ -456,12 +495,85 @@ async function billUnbilledEntries(customerId, adminId) {
   });
 }
 
+/**
+ * Landing aggregate for /admin/clients/hours: one row per customer that
+ * currently carries unbilled hour entries, with the open hours + open
+ * monetary amount. In practice only per-event customers surface here —
+ * monthly/manual cadences auto-append each entry onto the running draft
+ * at save time (status flips straight to 'billed'), so they never leave
+ * unbilled rows behind. Each entry's amount resolves through the usual
+ * override → customer-rate → install-default chain; if an entry has no
+ * resolvable rate it still counts toward hours/entries but the row is
+ * flagged rateResolvable=false so the UI can prompt for a rate rather
+ * than silently undercounting. Sorted by open amount desc.
+ */
+async function getUnbilledSummaryByCustomer() {
+  const installDefaultMinor = await getInstallDefaultRateMinor();
+  const rows = await db('customer_hour_entries as h')
+    .join('customer_accounts as c', 'h.customer_account_id', 'c.id')
+    .where('h.status', 'unbilled')
+    .select(
+      'h.customer_account_id',
+      'h.duration_minutes',
+      'h.hourly_rate_minor_override',
+      'c.hourly_rate_minor as customer_hourly_rate_minor',
+      'c.company_name',
+      'c.display_name',
+      'c.first_name',
+      'c.last_name',
+      'c.email',
+      'c.password_hash',
+      'c.billing_cadence',
+    );
+
+  const byCustomer = new Map();
+  for (const r of rows) {
+    let agg = byCustomer.get(r.customer_account_id);
+    if (!agg) {
+      agg = {
+        customerAccountId: r.customer_account_id,
+        companyName: r.company_name || null,
+        displayName: r.display_name || null,
+        firstName: r.first_name || null,
+        lastName: r.last_name || null,
+        email: r.email || null,
+        // passive = no portal password set, same rule as the customer
+        // list / picker (adminCustomers transform).
+        isPassive: r.password_hash == null,
+        billingCadence: r.billing_cadence || null,
+        entryCount: 0,
+        totalMinutes: 0,
+        openAmountMinor: 0,
+        rateResolvable: true,
+      };
+      byCustomer.set(r.customer_account_id, agg);
+    }
+    agg.entryCount += 1;
+    const minutes = Number(r.duration_minutes || 0);
+    agg.totalMinutes += minutes;
+    let rateMinor = null;
+    if (r.hourly_rate_minor_override != null) rateMinor = Number(r.hourly_rate_minor_override);
+    else if (r.customer_hourly_rate_minor != null) rateMinor = Number(r.customer_hourly_rate_minor);
+    else if (installDefaultMinor != null) rateMinor = installDefaultMinor;
+    if (rateMinor == null) {
+      agg.rateResolvable = false;
+    } else {
+      agg.openAmountMinor += Math.round((minutes / 60) * rateMinor);
+    }
+  }
+
+  return Array.from(byCustomer.values())
+    .sort((a, b) => b.openAmountMinor - a.openAmountMinor);
+}
+
 module.exports = {
   listEntries,
+  getUnbilledSummaryByCustomer,
   createEntry,
   updateEntry,
   deleteEntry,
   billUnbilledEntries,
+  getInstallDefaultRateMinor,
   _internal: {
     computeDurationMinutes,
     resolveEffectiveRate,

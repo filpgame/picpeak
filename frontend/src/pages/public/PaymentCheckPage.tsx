@@ -260,12 +260,16 @@ export const PaymentCheckPage: React.FC = () => {
 };
 
 const BrandingHeader: React.FC<{ issuer: PaymentCheckIssuer | null }> = ({ issuer }) => {
-  if (!issuer || (!issuer.logoUrl && !issuer.companyName)) return null;
+  const { isDark } = usePublicDarkMode();
+  if (!issuer || (!issuer.logoUrl && !issuer.logoUrlDark && !issuer.companyName)) return null;
+  const logo = isDark
+    ? (issuer.logoUrlDark || issuer.logoUrl)
+    : (issuer.logoUrl || issuer.logoUrlDark);
   return (
     <header className="text-center mb-8">
-      {issuer.logoUrl && (
+      {logo && (
         <img
-          src={issuer.logoUrl}
+          src={logo}
           alt={issuer.companyName || 'Logo'}
           className="mx-auto h-16 w-auto object-contain mb-3"
         />

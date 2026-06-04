@@ -8,13 +8,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Upload, X } from 'lucide-react';
 import { billsService, type InvoiceStatus, type InvoiceSort } from '../../../services/bills.service';
-import { Button, Card, Input, Loading } from '../../../components/common';
+import { Button, Card, Input, Loading, LocalizedDateInput, SortableHeader, useColumnSort, type SortColumnMap } from '../../../components/common';
 import { formatMoney } from '../../../components/admin/LineItemsTable';
 import { customerAdminService } from '../../../services/customerAdmin.service';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import { toast } from 'react-toastify';
 
 const STATUSES: InvoiceStatus[] = ['scheduled', 'pending_delivery', 'sent', 'paid', 'overdue', 'cancelled', 'skipped'];
+
+// Maps each clickable column to its server-side sort enum pair. The "#"
+// column sorts by creation order (newest/oldest) since that's how the
+// invoice sequence is assigned; "Issued" sorts the admin-controlled
+// issue_date and is the default (newest issued first).
+const SORT_COLUMNS: SortColumnMap = {
+  number: { asc: 'oldest', desc: 'newest', defaultDir: 'desc' },
+  customer: { asc: 'customer_asc', desc: 'customer_desc' },
+  issue: { asc: 'issue_asc', desc: 'issue_desc', defaultDir: 'desc' },
+  due: { asc: 'due_asc', desc: 'due_desc' },
+  value: { asc: 'value_asc', desc: 'value_desc', defaultDir: 'desc' },
+};
 
 export const BillsListPage: React.FC = () => {
   const { t } = useTranslation();
@@ -23,9 +35,11 @@ export const BillsListPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus[]>([]);
   const [unpaidOnly, setUnpaidOnly] = useState(false);
-  const [sort, setSort] = useState<InvoiceSort>('newest');
+  const { sort, activeKey, activeDir, toggle } = useColumnSort<InvoiceSort>(SORT_COLUMNS, 'issue_desc');
   const [page, setPage] = useState(1);
   const [importOpen, setImportOpen] = useState(false);
+
+  const onSort = (key: string) => { toggle(key); setPage(1); };
 
   const { data, isLoading } = useQuery({
     queryKey: ['invoices', { search, statusFilter, unpaidOnly, sort, page }],
@@ -87,18 +101,6 @@ export const BillsListPage: React.FC = () => {
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             />
           </div>
-          <select
-            className="px-3 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as InvoiceSort)}
-          >
-            <option value="newest">{t('bills.sort.newest', 'Newest first')}</option>
-            <option value="due_asc">{t('bills.sort.dueAsc', 'Due soon first')}</option>
-            <option value="due_desc">{t('bills.sort.dueDesc', 'Due latest first')}</option>
-            <option value="customer_asc">{t('bills.sort.customerAsc', 'Customer A→Z')}</option>
-            <option value="value_asc">{t('bills.sort.valueAsc', 'Value low→high')}</option>
-            <option value="value_desc">{t('bills.sort.valueDesc', 'Value high→low')}</option>
-          </select>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={unpaidOnly} onChange={(e) => setUnpaidOnly(e.target.checked)} />
             {t('bills.filter.unpaidOnly', 'Unpaid only')}
@@ -127,12 +129,13 @@ export const BillsListPage: React.FC = () => {
                 <table className="w-full text-sm">
                   <thead className="bg-neutral-50 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                     <tr>
-                      <th className="px-3 py-2 text-left">#</th>
-                      <th className="px-3 py-2 text-left">{t('bills.table.customer', 'Customer')}</th>
+                      <SortableHeader label="#" columnKey="number" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
+                      <SortableHeader label={t('bills.table.customer', 'Customer')} columnKey="customer" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
                       <th className="px-3 py-2 text-left">{t('bills.table.event', 'Event')}</th>
                       <th className="px-3 py-2 text-left">{t('bills.table.installment', 'Installment')}</th>
-                      <th className="px-3 py-2 text-left">{t('bills.table.dueDate', 'Due')}</th>
-                      <th className="px-3 py-2 text-right">{t('bills.table.total', 'Total')}</th>
+                      <SortableHeader label={t('bills.table.issueDate', 'Issued')} columnKey="issue" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
+                      <SortableHeader label={t('bills.table.dueDate', 'Due')} columnKey="due" activeKey={activeKey} activeDir={activeDir} onSort={onSort} />
+                      <SortableHeader label={t('bills.table.total', 'Total')} columnKey="value" activeKey={activeKey} activeDir={activeDir} onSort={onSort} align="right" />
                       <th className="px-3 py-2 text-left">{t('bills.table.status', 'Status')}</th>
                     </tr>
                   </thead>
@@ -167,10 +170,17 @@ export const BillsListPage: React.FC = () => {
                           )}
                         </td>
                         <td className="px-3 py-2">{inv.customer.companyName || inv.customer.displayName || inv.customer.email}</td>
-                        <td className="px-3 py-2 truncate max-w-xs">{inv.eventName || '—'}</td>
+                        <td className="px-3 py-2 truncate max-w-xs">
+                          {inv.eventName
+                            ? (inv.eventId
+                                ? <Link to={`/admin/events/${inv.eventId}`} className="text-theme hover:underline" onClick={(e) => e.stopPropagation()}>{inv.eventName}</Link>
+                                : inv.eventName)
+                            : '—'}
+                        </td>
                         <td className="px-3 py-2 text-xs text-muted-theme">
                           {inv.installmentTotal > 1 ? `${inv.installmentIndex + 1}/${inv.installmentTotal} · ${inv.installmentLabel || ''}` : '—'}
                         </td>
+                        <td className="px-3 py-2 whitespace-nowrap">{inv.issueDate ? fmtDate(inv.issueDate) : '—'}</td>
                         <td className="px-3 py-2">{fmtDate(inv.dueDate)}</td>
                         <td className="px-3 py-2 text-right tabular-nums">
                           {formatMoney(Number(inv.totalAmountMinor) / 100, inv.currency)}
@@ -215,6 +225,8 @@ const ImportHistoricalInvoiceModal: React.FC<ImportModalProps> = ({ onClose }) =
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [customerLabel, setCustomerLabel] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState('');
   const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState('');
   const [totalMajor, setTotalMajor] = useState('');
@@ -239,6 +251,8 @@ const ImportHistoricalInvoiceModal: React.FC<ImportModalProps> = ({ onClose }) =
       await billsService.importHistorical({
         customerAccountId: customerId,
         invoiceNumber,
+        eventName: eventName.trim() || undefined,
+        eventDate: eventDate || undefined,
         issueDate,
         dueDate: dueDate || undefined,
         totalAmountMinor: Math.round(Number(totalMajor) * 100),
@@ -321,6 +335,17 @@ const ImportHistoricalInvoiceModal: React.FC<ImportModalProps> = ({ onClose }) =
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="md:col-span-2">
+              <Input label={t('bills.field.eventName', 'Event / occasion (optional)') as string}
+                value={eventName}
+                placeholder={t('bills.field.eventNamePlaceholder', 'e.g. Smith wedding 2024') as string}
+                onChange={(e) => setEventName(e.target.value)} />
+            </div>
+            <LocalizedDateInput
+              label={t('bills.field.eventDate', 'Event date (optional)') as string}
+              value={eventDate}
+              onChange={setEventDate}
+            />
             <Input label={t('bills.field.invoiceNumber', 'Invoice number') as string}
               value={invoiceNumber}
               placeholder="R-2024-0001"
@@ -329,12 +354,12 @@ const ImportHistoricalInvoiceModal: React.FC<ImportModalProps> = ({ onClose }) =
               value={currency}
               maxLength={3}
               onChange={(e) => setCurrency(e.target.value.toUpperCase())} />
-            <LocalizedDateField
+            <LocalizedDateInput
               label={t('bills.field.issueDate', 'Issued') as string}
               value={issueDate}
               onChange={setIssueDate}
             />
-            <LocalizedDateField
+            <LocalizedDateInput
               label={t('bills.field.dueDate', 'Due') as string}
               value={dueDate}
               onChange={setDueDate}
@@ -392,113 +417,3 @@ const ImportHistoricalInvoiceModal: React.FC<ImportModalProps> = ({ onClose }) =
     </div>
   );
 };
-
-/**
- * Date field that displays + accepts values in the admin-configured
- * format from Settings → General (`general_date_format`). Stores
- * + emits ISO (YYYY-MM-DD) so the rest of the form / API surface
- * keeps the canonical shape.
- *
- * Native `<input type="date">` always renders in the browser's
- * locale (en-US users see MM/DD/YYYY), which mismatched what
- * customers + the rest of the app see elsewhere. This component
- * uses a plain text input + parses on blur, with the configured
- * format shown as both placeholder and helper text. A small
- * shadow native date input next to the field gives the click-to-
- * open calendar without affecting the displayed format.
- */
-interface LocalizedDateFieldProps {
-  label: string;
-  value: string;
-  onChange: (iso: string) => void;
-}
-const LocalizedDateField: React.FC<LocalizedDateFieldProps> = ({ label, value, onChange }) => {
-  const { dateFormat } = useLocalizedDate();
-  // Normalise the configured format down to the four shapes our
-  // parser understands. Defaults to DD.MM.YYYY (the maintainer's
-  // primary locale) when unknown.
-  const normalisedFormat = ((): 'DD.MM.YYYY' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD' => {
-    const f = String(dateFormat || 'dd.MM.yyyy').toLowerCase();
-    if (f.startsWith('mm/dd')) return 'MM/DD/YYYY';
-    if (f.startsWith('yyyy'))  return 'YYYY-MM-DD';
-    if (f.includes('/'))       return 'DD/MM/YYYY';
-    return 'DD.MM.YYYY';
-  })();
-  const placeholder = normalisedFormat.toLowerCase();
-
-  // ISO → display
-  const toDisplay = (iso: string): string => {
-    if (!iso) return '';
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-    if (!m) return iso;
-    const [, y, mo, d] = m;
-    switch (normalisedFormat) {
-    case 'MM/DD/YYYY': return `${mo}/${d}/${y}`;
-    case 'YYYY-MM-DD': return `${y}-${mo}-${d}`;
-    case 'DD/MM/YYYY': return `${d}/${mo}/${y}`;
-    case 'DD.MM.YYYY':
-    default:           return `${d}.${mo}.${y}`;
-    }
-  };
-
-  // display → ISO (accepts variant separators leniently)
-  const toIso = (raw: string): string => {
-    const s = raw.trim();
-    if (!s) return '';
-    // Already ISO?
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-    // Split on . / -
-    const parts = s.split(/[./-]/);
-    if (parts.length !== 3) return '';
-    let [a, b, c] = parts;
-    let y: string, mo: string, d: string;
-    if (normalisedFormat === 'YYYY-MM-DD' || a.length === 4) {
-      [y, mo, d] = [a, b, c];
-    } else if (normalisedFormat === 'MM/DD/YYYY') {
-      [mo, d, y] = [a, b, c];
-    } else {
-      // DD.MM.YYYY or DD/MM/YYYY
-      [d, mo, y] = [a, b, c];
-    }
-    if (!/^\d{1,2}$/.test(d) || !/^\d{1,2}$/.test(mo) || !/^\d{4}$/.test(y)) return '';
-    return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
-  };
-
-  const [text, setText] = React.useState(toDisplay(value));
-  React.useEffect(() => { setText(toDisplay(value)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [value]);
-
-  return (
-    <div>
-      <label className="block text-sm font-medium mb-1">{label}</label>
-      <div className="flex gap-2">
-        <Input
-          value={text}
-          placeholder={placeholder}
-          onChange={(e) => setText(e.target.value)}
-          onBlur={() => {
-            const iso = toIso(text);
-            if (iso) {
-              onChange(iso);
-              setText(toDisplay(iso));
-            } else if (!text.trim()) {
-              onChange('');
-            }
-          }}
-        />
-        {/* Tiny native date picker shortcut — gives the calendar
-            without polluting the visible text input. Hidden value
-            stays in ISO so it's always parseable. */}
-        <input
-          type="date"
-          value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
-          aria-label={label}
-          className="text-sm px-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800"
-          style={{ width: 36 }}
-        />
-      </div>
-      <p className="text-xs text-neutral-500 mt-1">{placeholder}</p>
-    </div>
-  );
-};
-

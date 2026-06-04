@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Eye, Send, CheckCircle, BellRing, XCircle, Truck, Edit2, RefreshCw } from 'lucide-react';
-import { Button, Card, Loading, Input } from '../../../components/common';
+import { Button, Card, Loading, Input, LocalizedDateInput } from '../../../components/common';
 import { DocumentLineageCard } from '../../../components/admin/DocumentLineageCard';
 import { billsService } from '../../../services/bills.service';
 import { formatMoney } from '../../../components/admin/LineItemsTable';
@@ -29,6 +29,9 @@ export const BillDetailPage: React.FC = () => {
 
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [payAmount, setPayAmount] = useState('');
+  // Optional payment date — defaults to today, backdate it to when the
+  // payment actually arrived. Drives `paid_at` (cash-basis revenue windows).
+  const [payDate, setPayDate] = useState(new Date().toISOString().slice(0, 10));
   const [payMethod, setPayMethod] = useState('');
   const [payReference, setPayReference] = useState('');
   const [payNotes, setPayNotes] = useState('');
@@ -210,6 +213,7 @@ export const BillDetailPage: React.FC = () => {
     try {
       await billsService.markPaid(inv.id, {
         amountMinor: Math.round(Number(payAmount) * 100),
+        paidAt: payDate || undefined,
         paymentMethod: payMethod || undefined,
         reference: payReference || undefined,
         notes: payNotes || undefined,
@@ -218,6 +222,7 @@ export const BillDetailPage: React.FC = () => {
       setPayDialogOpen(false);
       setPayAmount(''); setPayMethod(''); setPayReference(''); setPayNotes('');
       setPayWithSkonto(false);
+      setPayDate(new Date().toISOString().slice(0, 10));
       qc.invalidateQueries({ queryKey: ['invoice', id] });
       toast.success(t('bills.paymentRecordedToast', 'Payment recorded.'));
     } catch (e: any) {
@@ -386,7 +391,14 @@ export const BillDetailPage: React.FC = () => {
       <Card>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           {inv.eventName && (
-            <div><div className="text-neutral-600 dark:text-neutral-300">{t('bills.field.eventName', 'Event')}</div><div>{inv.eventName}{inv.eventDate ? ` · ${inv.eventDate}` : ''}</div></div>
+            <div><div className="text-neutral-600 dark:text-neutral-300">{t('bills.field.eventName', 'Event')}</div>
+              <div>
+                {inv.eventId ? (
+                  <Link to={`/admin/events/${inv.eventId}`} className="text-theme hover:underline">{inv.eventName}</Link>
+                ) : inv.eventName}
+                {inv.eventDate ? ` · ${fmtDate(inv.eventDate)}` : ''}
+              </div>
+            </div>
           )}
           <div><div className="text-neutral-600 dark:text-neutral-300">{t('bills.field.issueDate', 'Issued')}</div><div>{fmtDate(inv.issueDate)}</div></div>
           <div><div className="text-neutral-600 dark:text-neutral-300">{t('bills.field.dueDate', 'Due')}</div><div>{fmtDate(inv.dueDate)}</div></div>
@@ -459,6 +471,14 @@ export const BillDetailPage: React.FC = () => {
             <div className="space-y-3">
               <Input type="number" step="0.01" label={t('bills.payment.amount', 'Amount') as string} value={payAmount}
                 onChange={(e) => setPayAmount(e.target.value)} placeholder={String(outstanding.toFixed(2))} />
+              {/* Optional payment date — drives `paid_at`, which the
+                  dashboard's cash-basis revenue windows key on. Defaults
+                  to today; backdate it to when the payment actually arrived. */}
+              <LocalizedDateInput
+                label={t('bills.payment.date', 'Payment date') as string}
+                value={payDate}
+                onChange={setPayDate}
+              />
               {/* Skonto checkbox (migration 126). Only surfaced when
                   the invoice's payment terms actually offer Skonto —
                   the backend resolves skontoPercent from the snapshot

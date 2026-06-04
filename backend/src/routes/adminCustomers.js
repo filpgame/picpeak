@@ -67,6 +67,10 @@ function transformCustomer(c) {
     // per-entry override on every logged block.
     featureHoursLogging: c.feature_hours_logging === true || c.feature_hours_logging === 1,
     hourlyRateMinor: c.hourly_rate_minor != null ? Number(c.hourly_rate_minor) : null,
+    // Per-customer Skonto opt-out (migration 112). When true, none of
+    // this customer's invoices qualify for an early-payment discount,
+    // regardless of template / global defaults.
+    skontoDisabled: c.skonto_disabled === true || c.skonto_disabled === 1,
     lastLogin: c.last_login,
     createdAt: c.created_at,
     updatedAt: c.updated_at,
@@ -245,6 +249,17 @@ router.post('/', [
   body('prefill.country_code').optional({ nullable: true }).isString().isLength({ max: 2 }),
   body('prefill.country_name').optional({ nullable: true }).isString().isLength({ max: 120 }),
   body('prefill.preferred_language').optional({ nullable: true }).isString().isLength({ min: 2, max: 8 }),
+  // At least one human-readable identifier so the record isn't a
+  // nameless row that's impossible to recognise in lists later.
+  body('prefill').custom((prefill) => {
+    const p = prefill || {};
+    const hasName = ['company_name', 'display_name', 'first_name', 'last_name']
+      .some((k) => typeof p[k] === 'string' && p[k].trim());
+    if (!hasName) {
+      throw new Error('At least a company name or a contact name is required');
+    }
+    return true;
+  }),
 ], handleAsync(async (req, res) => {
   validateRequest(req);
   const { id } = await customerAccountsService.createDirect({
@@ -380,9 +395,11 @@ router.put('/:id', [
   // generated invoice to billing_cycle_day of the next period.
   // Cycle day spans -15..-1 (days before month end) and 1..28
   // (day of month) per migration 128 + service-layer clamp.
-  body('billing_cadence').optional().isIn(['per_event', 'monthly', 'quarterly']),
+  body('billing_cadence').optional().isIn(['per_event', 'monthly', 'quarterly', 'manual']),
   body('billing_cycle_day').optional().isInt({ min: -15, max: 28 })
     .withMessage('billing_cycle_day must be -15..-1 (days before month end) or 1..28 (day of month)'),
+  // Per-customer Skonto opt-out (migration 112).
+  body('skonto_disabled').optional().isBoolean(),
 ], handleAsync(async (req, res) => {
   validateRequest(req);
   const customer = await customerAccountsService.updateCustomer(
@@ -517,6 +534,18 @@ router.put('/:id/events', [
 // tier is customers.create, same as the rest of the customer-write
 // surface.
 // ---------------------------------------------------------------------
+
+// Aggregate landing view for /admin/clients/hours — every customer with
+// open (unbilled) hours + the open monetary amount. Registered before
+// the /:id/hour-entries routes; the literal first segment ("hour-entries")
+// can't collide with the int-validated :id pattern.
+router.get('/hour-entries/unbilled-summary', [
+  adminAuth,
+  requirePermission('customers.view'),
+], handleAsync(async (req, res) => {
+  const summary = await customerHoursService.getUnbilledSummaryByCustomer();
+  successResponse(res, { summary });
+}));
 
 router.get('/:id/hour-entries', [
   adminAuth,

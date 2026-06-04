@@ -6,6 +6,7 @@ import {
   Archive,
   BarChart3,
   Settings,
+  Activity,
   X,
   Users,
   Briefcase,
@@ -17,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { settingsService } from '../../services/settings.service';
 import { VersionInfo } from './VersionInfo';
 import { usePermissions } from '../../contexts/PermissionsContext';
+import { useAdminDarkMode } from '../../contexts/AdminDarkModeContext';
 import { useFeatureFlags, type FeatureKey } from '../../contexts/FeatureFlagsContext';
 import { usePublicSettings } from '../../hooks/usePublicSettings';
 import { buildResourceUrl } from '../../utils/url';
@@ -62,6 +64,7 @@ const navigation: NavItem[] = [
   { nameKey: 'navigation.archives',  href: '/admin/archives',  icon: Archive,         permission: 'archives.view' },
   { nameKey: 'admin.analytics',      href: '/admin/analytics', icon: BarChart3,       permission: 'analytics.view', featureFlag: 'analytics' },
   { nameKey: 'navigation.settings',  href: '/admin/settings',  icon: Settings,        permission: 'settings.view' },
+  { nameKey: 'navigation.systemHealth', href: '/admin/system-health', icon: Activity,  permission: 'settings.view' },
   { nameKey: 'navigation.users',     href: '/admin/users',     icon: Users,           permission: 'users.view',     featureFlag: 'userManagement' },
   // Clients section (#354 follow-up) — admin-side surface for the
   // CRM-area sub-features. Today this entry leads to /admin/clients
@@ -104,8 +107,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose, col
   // chosen, the logo replaces the "PicPeak Admin" text in the brand
   // row, and the favicon takes over in the collapsed icon rail.
   const { data: publicSettings } = usePublicSettings();
+  const { isDark } = useAdminDarkMode();
   const logoInSidebar = publicSettings?.branding_logo_position === 'sidepanel';
-  const rawLogoUrl = publicSettings?.branding_logo_url?.trim();
+  // Theme-aware logo with symmetric fallback (one logo serves both modes).
+  const lightLogo = publicSettings?.branding_logo_url?.trim();
+  const darkLogo = publicSettings?.branding_logo_url_dark?.trim();
+  const rawLogoUrl = isDark ? (darkLogo || lightLogo) : (lightLogo || darkLogo);
   const rawFaviconUrl = publicSettings?.branding_favicon_url?.trim();
   const resolvedLogoUrl = rawLogoUrl
     ? (rawLogoUrl.startsWith('http') ? rawLogoUrl : buildResourceUrl(rawLogoUrl))

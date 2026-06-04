@@ -105,6 +105,7 @@ function transformQuote(q) {
     responseLockedAt: q.response_locked_at,
     acceptedAt: q.accepted_at,
     declinedAt: q.declined_at,
+    declineReason: q.decline_reason ?? null,
     convertedEventId: q.converted_event_id,
     // Migration 130 lineage. Null until quoteService.createFromQuote
     // sets it. Surfaced so QuoteDetailPage can render a "Linked
@@ -257,7 +258,7 @@ router.get(
     query('q').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
     query('from').optional({ values: 'falsy' }).isISO8601(),
     query('to').optional({ values: 'falsy' }).isISO8601(),
-    query('sort').optional({ values: 'falsy' }).isIn(['newest', 'oldest', 'customer_asc', 'value_asc', 'value_desc']),
+    query('sort').optional({ values: 'falsy' }).isIn(['newest', 'oldest', 'issue_asc', 'issue_desc', 'customer_asc', 'customer_desc', 'value_asc', 'value_desc']),
     query('page').optional({ values: 'falsy' }).isInt({ min: 1 }),
     query('pageSize').optional({ values: 'falsy' }).isInt({ min: 1, max: 100 }),
   ],
@@ -272,7 +273,7 @@ router.get(
         customerAccountId: req.query.customerAccountId ? parseInt(req.query.customerAccountId, 10) : null,
         from: req.query.from, to: req.query.to, q: req.query.q,
       },
-      sort: req.query.sort || 'newest',
+      sort: req.query.sort || 'issue_desc',
       page: req.query.page ? parseInt(req.query.page, 10) : 1,
       pageSize: req.query.pageSize ? parseInt(req.query.pageSize, 10) : 25,
     });
@@ -447,6 +448,24 @@ router.post(
     const id = parseInt(req.params.id, 10);
     const result = await quoteService.adminAcceptQuote(id, req.admin.id);
     return successResponse(res, result, 200, 'Quote accepted');
+  })
+);
+
+// Admin "decline on behalf" — flips a draft/sent/expired quote to
+// `declined` without the customer's public link. For "they said no by
+// phone" workflows. Optional free-text reason persisted on the row.
+router.post(
+  '/:id/decline',
+  requirePermission('quotes.manage'),
+  [
+    param('id').isInt({ min: 1 }),
+    body('reason').optional({ values: 'falsy' }).isString().isLength({ max: 5000 }),
+  ],
+  handleAsync(async (req, res) => {
+    validateRequest(req);
+    const id = parseInt(req.params.id, 10);
+    const result = await quoteService.adminDeclineQuote(id, req.admin.id, req.body.reason);
+    return successResponse(res, result, 200, 'Quote declined');
   })
 );
 

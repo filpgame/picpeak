@@ -21,6 +21,7 @@ import {
   ArchivesPage,
   AnalyticsPage,
   SettingsPage,
+  SystemHealthPage,
   UserManagementPage,
   CustomerManagementPage,
   CustomerDetailPage,
@@ -267,6 +268,7 @@ function App() {
                       <Route path="customers/:id" element={<RedirectCustomerDetail />} />
 
                       <Route path="settings" element={<SettingsPage />} />
+                      <Route path="system-health" element={<SystemHealthPage />} />
                       <Route path="webhooks/:id/deliveries" element={<WebhookDeliveriesPage />} />
 
                       {/* Old top-level routes — these surfaces now live as

@@ -23,7 +23,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { Save, Send, X } from 'lucide-react';
-import { Button, Input } from '../common';
+import { Button, CountrySelect, Input } from '../common';
 import {
   customerAdminService,
   type CustomerAccountDetail,
@@ -136,26 +136,40 @@ export const InlineCustomerCreate: React.FC<Props> = ({ onCreated, onCancel, mod
     staleTime: 5 * 60 * 1000,
   });
   const profileDefaultLocale = profileSnapshot?.profile?.defaultLocale || 'en';
+  const profileCountryCode = profileSnapshot?.profile?.countryCode || '';
 
-  // Seed preferredLanguage with the profile default once the profile
-  // arrives (only if the field is still empty so we don't clobber
-  // explicit user input).
+  // Seed preferredLanguage + countryCode with the profile defaults once
+  // the profile arrives (only if the field is still empty so we don't
+  // clobber explicit user input).
   React.useEffect(() => {
-    if (profileDefaultLocale && !form.preferredLanguage) {
-      setForm((prev) => prev.preferredLanguage ? prev : { ...prev, preferredLanguage: profileDefaultLocale });
-    }
+    setForm((prev) => {
+      const next = { ...prev };
+      if (profileDefaultLocale && !prev.preferredLanguage) next.preferredLanguage = profileDefaultLocale;
+      if (profileCountryCode && !prev.countryCode) next.countryCode = profileCountryCode.toUpperCase();
+      return next;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileDefaultLocale]);
+  }, [profileDefaultLocale, profileCountryCode]);
 
   const setField = (key: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
-  const isValid = !!form.email && /\S+@\S+\.\S+/.test(form.email);
+  const hasEmail = !!form.email && /\S+@\S+\.\S+/.test(form.email);
+  // At least one human-readable identifier so the record isn't a
+  // nameless row that's impossible to recognise in lists later.
+  const hasName = !!(form.companyName.trim() || form.displayName.trim()
+    || form.firstName.trim() || form.lastName.trim());
+  const isValid = hasEmail && hasName;
 
   const handleSave = async (mode: 'passive' | 'invite') => {
-    if (!isValid) {
+    if (!hasEmail) {
       toast.error(t('customers.create.emailRequired', 'A valid email is required.'));
+      return;
+    }
+    if (!hasName) {
+      toast.error(t('customers.create.nameRequired',
+        'Enter at least a company name or a contact name.'));
       return;
     }
     setBusy(mode);
@@ -298,12 +312,10 @@ export const InlineCustomerCreate: React.FC<Props> = ({ onCreated, onCancel, mod
           value={form.state}
           onChange={setField('state')}
         />
-        <Input
-          label={t('customers.detail.countryCode', 'Country (ISO code)') as string}
+        <CountrySelect
+          label={t('customers.detail.country', 'Country') as string}
           value={form.countryCode}
-          onChange={setField('countryCode')}
-          placeholder="CH"
-          maxLength={2}
+          onChange={(code) => setForm((prev) => ({ ...prev, countryCode: code }))}
         />
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">

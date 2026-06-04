@@ -15,7 +15,7 @@ import {
 import { addDays } from 'date-fns';
 import { toast } from 'react-toastify';
 
-import { Button, Input, Card, PasswordGenerator } from '../../components/common';
+import { Button, Input, Card, PasswordGenerator, LocalizedDateInput, TimeField } from '../../components/common';
 import { ThemeCustomizerEnhanced, GalleryPreview, WelcomeMessageEditor, FeedbackSettings } from '../../components/admin';
 import { CustomerAccountPicker } from '../../components/admin/CustomerAccountPicker';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -587,13 +587,11 @@ export const CreateEventPage: React.FC = () => {
                 leftIcon={<Calendar className="w-5 h-5" />}
               />
 
-              <Input
-                type="date"
+              <LocalizedDateInput
                 label={requireEventDate ? t('events.eventDate') : `${t('events.eventDate')} (${t('common.optional')})`}
                 value={formData.event_date}
-                onChange={handleInputChange('event_date')}
+                onChange={(iso) => setFormData(prev => ({ ...prev, event_date: iso }))}
                 error={errors.event_date}
-                leftIcon={<Calendar className="w-5 h-5" />}
               />
             </div>
 
@@ -615,19 +613,15 @@ export const CreateEventPage: React.FC = () => {
               </label>
               {!formData.is_full_day && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    type="time"
-                    step={900}
+                  <TimeField
                     label={t('events.eventTimeStart', 'Start time') as string}
                     value={formData.event_time_start}
-                    onChange={handleInputChange('event_time_start')}
+                    onChange={(v) => setFormData(prev => ({ ...prev, event_time_start: v }))}
                   />
-                  <Input
-                    type="time"
-                    step={900}
+                  <TimeField
                     label={t('events.eventTimeEnd', 'End time') as string}
                     value={formData.event_time_end}
-                    onChange={handleInputChange('event_time_end')}
+                    onChange={(v) => setFormData(prev => ({ ...prev, event_time_end: v }))}
                   />
                 </div>
               )}

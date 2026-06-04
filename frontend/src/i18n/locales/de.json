@@ -73,15 +73,37 @@
       "message": "Sind Sie sicher, dass Sie die Einladung für {{email}} abbrechen möchten?"
     }
   },
+  "systemHealth": {
+    "title": "Systemzustand",
+    "subtitle": "Hintergrundfehler, die Aufmerksamkeit erfordern.",
+    "retry": "Erneut versuchen",
+    "dismiss": "Verwerfen",
+    "retriedToast": "E-Mail erneut eingereiht.",
+    "dismissedToast": "Verworfen.",
+    "stuckEmails": {
+      "title": "Hängende / fehlgeschlagene E-Mails",
+      "empty": "Keine hängenden oder fehlgeschlagenen E-Mails — alles in Ordnung.",
+      "noError": "Versuche aufgebraucht",
+      "col": {
+        "recipient": "Empfänger",
+        "type": "Typ",
+        "error": "Fehler",
+        "queued": "Eingereiht",
+        "actions": "Aktionen"
+      }
+    }
+  },
   "common": {
     "loading": "Wird geladen...",
     "error": "Fehler",
+    "configureInSettings": "Standards in den Einstellungen anpassen ↗",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "add": "Hinzufügen",
     "sortBy": "Sortieren nach",
+    "selectCountry": "Land auswählen…",
     "yes": "Ja",
     "no": "Nein",
     "back": "Zurück",
@@ -164,6 +186,7 @@
     "dashboard": "Dashboard",
     "events": "Veranstaltungen",
     "settings": "Einstellungen",
+    "systemHealth": "Systemzustand",
     "archives": "Archive",
     "emailSettings": "E-Mail-Einstellungen",
     "branding": "Markenidentität",
@@ -817,6 +840,7 @@
     "noTemplate": "Keine Vorlage",
     "useThemeOnly": "Nur Design-Vorlage verwenden",
     "customTemplate": "Benutzerdefinierte Vorlage",
+    "createInvoice": "Rechnung erstellen",
     "title": "Veranstaltungen",
     "create": "Veranstaltung erstellen",
     "createEvent": "Veranstaltung erstellen",
@@ -1627,6 +1651,21 @@
       "clients": {
         "title": "CRM",
         "description": "Hauptschalter für den CRM-Bereich in der Seitenleiste. Aus blendet den Bereich und alle Unterfunktionen aus, unabhängig von deren individuellen Schaltern – beim erneuten Einschalten wird der vorherige Zustand wiederhergestellt."
+      },
+      "contracts": {
+        "title": "Verträge",
+        "description": "Erstellen Sie Verträge aus einer Bibliothek wiederverwendbarer Bausteine (Bildrechte, Geheimhaltung, Model-Release, Stornierung, Gerichtsstand …) und lassen Sie Kunden im Browser unterschreiben oder eine handsignierte PDF hochladen. Die vorausgefüllten Baustein-Texte sind NUR BEISPIELE — vor dem Versand mit Ihrem Anwalt prüfen.",
+        "sidebar": "Verträge"
+      },
+      "crmDevelopment": {
+        "title": "CRM-Entwicklerwerkzeuge",
+        "description": "Interne Helfer zum Prüfen von CRM-Abläufen (z. B. die Admin-Zahlungsprüfungs-E-Mail sofort auslösen, Drosselungen umgehen). Erscheint als Unterreiter „Entwicklung“ unter Kunden. Strikt opt-in — löst echte Seiteneffekte aus, nur mit Testdaten verwenden.",
+        "sidebar": "Entwicklung"
+      },
+      "hoursLogging": {
+        "title": "Stundenerfassung",
+        "description": "Zeiterfassung pro Kunde. Admin erfasst Datum + Start-/Endzeit + optionalen Satz-Override + Notiz. Kunden im Monatsmodus akkumulieren Stunden automatisch in den laufenden Monatsentwurf; Kunden pro Anlass sehen eine Schaltfläche „Entwurfsrechnung erstellen“, die eine eigenständige Entwurfsrechnung mit einer Zeile pro Eintrag erzeugt. Unabhängig von Rechnungen — Stunden erfassen, noch bevor die volle Abrechnungsoberfläche aktiviert ist.",
+        "sidebar": "Stunden"
       }
     },
     "customerSurface": {
@@ -1639,6 +1678,12 @@
       "save": "Änderungen speichern",
       "saved": "Branding des Kundendashboards gespeichert",
       "error": "Einstellungen konnten nicht gespeichert werden"
+    },
+    "businessProfile": {
+      "title": "Geschäftsprofil"
+    },
+    "crm": {
+      "title": "CRM-Verhalten"
     }
   },
   "branding": {
@@ -1657,11 +1702,13 @@
     "logo": "Logo",
     "uploadLogo": "Logo hochladen",
     "logoHelp": "Empfohlene Größe: 200x60px, PNG oder JPEG",
+    "logoDark": "Logo für Dunkelmodus",
+    "logoDarkHelp": "Optional. Wird bei dunklen Designs / im Dunkelmodus angezeigt; fällt auf das Hauptlogo zurück, wenn nicht gesetzt.",
     "favicon": "Favicon",
     "currentFavicon": "Aktuelles Favicon",
     "uploadFavicon": "Favicon hochladen",
     "removeFavicon": "Favicon entfernen",
-    "faviconHelp": "PNG- oder ICO-Format, empfohlene Größe: 32x32px",
+    "faviconHelp": "PNG-, ICO- oder SVG-Format. Bitte ein quadratisches Bild verwenden – ein SVG (oder ein 512×512px-PNG) liefert die schärfste Darstellung auf hochauflösenden Bildschirmen; kleinere Größen funktionieren ebenfalls.",
     "watermarkSettings": "Wasserzeichen-Einstellungen",
     "enableWatermarks": "Wasserzeichen aktivieren",
     "watermarkHelp": "Fügen Sie Ihren Firmennamen als Wasserzeichen auf heruntergeladenen Fotos hinzu",
@@ -2385,6 +2432,37 @@
     "gmailAppPassword": "Für Gmail verwenden Sie ein App-spezifisches Passwort",
     "testEmailAddressLabel": "Test-E-Mail-Adresse",
     "sendTestEmailButton": "Test-E-Mail senden",
+    "flushQueue": {
+      "title": "Wartende E-Mails jetzt senden",
+      "help": "Sendet sofort alle ausstehenden E-Mails, unabhängig von den Geschäftszeiten. Nützlich, um die Warteschlange vor Wartungsarbeiten oder Updates zu leeren.",
+      "button": "Wartende E-Mails jetzt senden",
+      "success": "Warteschlange geleert – {{sent}} gesendet, {{failed}} fehlgeschlagen",
+      "empty": "Keine ausstehenden E-Mails zum Senden"
+    },
+    "sentEmails": {
+      "tab": "Gesendete E-Mails",
+      "title": "Gesendete E-Mails",
+      "subtitle": "Versandstatus aller eingereihten und gesendeten Benachrichtigungen.",
+      "searchPlaceholder": "Nach Empfänger oder Typ suchen…",
+      "from": "Von",
+      "to": "Bis",
+      "empty": "Keine E-Mails entsprechen diesen Filtern.",
+      "retries": "{{count}} Versuche",
+      "pagination": "Seite {{page}} von {{total}} · {{count}} E-Mails",
+      "status": {
+        "pending": "Ausstehend",
+        "sent": "Gesendet",
+        "failed": "Fehlgeschlagen"
+      },
+      "col": {
+        "recipient": "Empfänger",
+        "type": "Typ",
+        "status": "Status",
+        "created": "Eingereiht",
+        "sent": "Gesendet",
+        "event": "Anlass"
+      }
+    },
     "commonSmtpSettings": "Häufige SMTP-Einstellungen:",
     "editTemplate": "Vorlage bearbeiten",
     "templateName": "Vorlagenname",
@@ -3028,7 +3106,7 @@
     "hours": {
       "section": "Stunden",
       "monthlyHint": "Einträge werden automatisch dem aktuellen monatlichen Entwurf angehängt. Bearbeiten/Löschen möglich, bis der Scheduler den Versand auslöst.",
-      "perEventHint": "Erfasste Einträge bleiben unverrechnet, bis Sie auf „Rechnungsentwurf erstellen“ klicken — dann wird ein eigenständiger Rechnungsentwurf mit einer Zeile pro Eintrag erzeugt, den Sie vor dem Versand prüfen können.",
+      "perEventHint": "Erfasste Einträge bleiben unverrechnet, bis Sie auf „Rechnungsentwurf erstellen“ klicken — dann wird eine geplante Rechnung mit einer Zeile pro Eintrag erzeugt und im Editor geöffnet, sodass Sie vor dem Versand weitere Positionen hinzufügen können.",
       "form": {
         "title": "Neuen Eintrag erfassen",
         "date": "Datum",
@@ -3040,7 +3118,8 @@
         "rateOverride": "Satz-Override",
         "note": "Notiz / Beschreibung",
         "notePlaceholder": "Was wurde gearbeitet?",
-        "save": "Eintrag hinzufügen"
+        "save": "Eintrag hinzufügen",
+        "needRate": "Satz festlegen oder Override eingeben, um Zeit zu erfassen."
       },
       "col": {
         "date": "Datum",
@@ -3065,6 +3144,20 @@
         "created": "Eintrag erfasst",
         "deleted": "Eintrag gelöscht",
         "billed": "Stunden verrechnet"
+      },
+      "noRate": {
+        "title": "Kein Stundensatz hinterlegt",
+        "body": "Für die Erfassung wird ein Satz benötigt. Legen Sie einen für diesen Kunden fest, geben Sie unten einen Override pro Eintrag ein oder konfigurieren Sie einen installationsweiten Standardsatz.",
+        "setForCustomer": "Satz für diesen Kunden festlegen",
+        "setInstallDefault": "Installationsweiten Standard festlegen"
+      },
+      "rateSource": {
+        "customer": "von diesem Kunden",
+        "installDefault": "installationsweiter Standard"
+      },
+      "error": {
+        "noRate": "Für diesen Kunden ist kein Stundensatz hinterlegt. Geben Sie einen Satz-Override ein, hinterlegen Sie einen Satz beim Kunden oder konfigurieren Sie in den Einstellungen einen installationsweiten Standardsatz.",
+        "createFailed": "Eintrag konnte nicht erfasst werden"
       }
     },
     "create": {
@@ -3078,7 +3171,8 @@
       "savedPassiveToast": "Passiver Kunde erstellt.",
       "savedActiveToast": "Kunde erstellt und Portal-Einladung gesendet.",
       "inviteFailedToast": "Kunde gespeichert (passiv). Einladungs-E-Mail fehlgeschlagen — bitte aus dem Kundendetail erneut versuchen.",
-      "emailRequired": "Eine gültige E-Mail-Adresse ist erforderlich."
+      "emailRequired": "Eine gültige E-Mail-Adresse ist erforderlich.",
+      "nameRequired": "Geben Sie mindestens einen Firmennamen oder einen Ansprechpartner an."
     },
     "passive": {
       "badge": "Passiv — nur Admin",
@@ -3183,6 +3277,7 @@
       "city": "Stadt",
       "state": "Bundesland / Region",
       "countryCode": "Land (ISO-2)",
+      "country": "Land",
       "countryName": "Land (vollständiger Name)",
       "notesHint": "Nur für Administratoren sichtbar. Wird dem Kunden nie gezeigt.",
       "featuresSection": "Kundenfunktionen",
@@ -3205,20 +3300,26 @@
     },
     "billing": {
       "section": "Abrechnungsrhythmus",
-      "hint": "Per-Event (Standard): jede Rechnung wird einzeln versendet. Monatlich: alle Rechnungen einer Periode werden zu einer Sammelrechnung gebündelt, die am konfigurierten Stichtag ausgelöst wird.",
+      "hint": "Per-Event (Standard): jede Rechnung wird einzeln versendet. Monatlich: alle Rechnungen einer Periode werden zu einer Sammelrechnung gebündelt, die am konfigurierten Stichtag ausgelöst wird. Manuell: Positionen sammeln sich genauso, aber die Rechnung wird erst versendet, wenn Sie sie auslösen.",
       "cadence": "Abrechnungsrhythmus",
       "perEvent": "Per Event",
       "monthly": "Monatlich",
       "quarterly": "Quartalsweise",
+      "manual": "Manuell (nur auf Auslösung)",
       "cycleDay": "Stichtag",
       "cycleDayHint": "1..28 = Tag im Monat. Negativ -1..-15 für „N Tage vor Monatsende“ (so löst -3 in einem 31-Tage-Monat am 28. aus).",
+      "skontoDisabled": "Kein Skonto für diesen Kunden",
+      "skontoDisabledHint": "Deaktiviert den Skonto-Abzug auf allen Rechnungen dieses Kunden – unabhängig von Vorlage oder globalen Standardwerten.",
       "triggerNow": "Rechnung jetzt ausstellen",
       "triggerConfirm": "Monatsrechnung für diesen Kunden jetzt ausstellen? Der Kunde erhält die E-Mail sofort.",
+      "triggerConfirmManual": "Gesammelte Rechnung für diesen Kunden jetzt ausstellen? Der Kunde erhält die E-Mail sofort.",
       "triggerHint": "Überspringt den Stichtag und stellt den aktuellen Entwurf sofort aus. Wird abgelehnt, wenn für die aktuelle Periode nichts erfasst wurde.",
+      "triggerHintManual": "Stellt den aktuellen Entwurf sofort aus. Entwürfe mit manuellem Rhythmus werden nie automatisch versendet – dies ist der einzige Weg, sie zu versenden. Wird abgelehnt, wenn nichts erfasst wurde.",
       "triggered": "Monatsrechnung ausgestellt: {{number}}",
       "triggerError": "Monatsrechnung konnte nicht ausgelöst werden.",
       "draftPreview": {
         "title": "Offen für die Rechnung dieses Monats",
+        "titleManual": "Offen – wird auf manuelle Auslösung versendet",
         "periodRange": "{{number}} · {{from}} – {{to}}"
       }
     },
@@ -3325,7 +3426,16 @@
     "pickPlaceholder": "— Kunde wählen —",
     "emptyList": "Noch keine Kunden mit aktivierter Stundenerfassung. Aktivieren Sie „Stundenerfassung“ zuerst auf der Kundendetailseite.",
     "searchPlaceholder": "Nach E-Mail oder Firma suchen…",
-    "customerLoggingDisabled": "Bei diesem Kunden ist die Stundenerfassung deaktiviert. Aktiviere sie auf der Kundendetailseite, um Stunden zu erfassen."
+    "customerLoggingDisabled": "Bei diesem Kunden ist die Stundenerfassung deaktiviert. Aktiviere sie auf der Kundendetailseite, um Stunden zu erfassen.",
+    "openHours": {
+      "title": "Offene Stunden über alle Kunden",
+      "subtitle": "Noch nicht abgerechnete Zeitblöcke. Oben einen Kunden wählen oder auf eine Zeile klicken, um Details zu öffnen.",
+      "empty": "Aktuell keine offenen Stunden – alles abgerechnet oder noch keine Zeit erfasst.",
+      "entryLine_one": "{{count}} Eintrag · {{hours}} Std.",
+      "entryLine_other": "{{count}} Einträge · {{hours}} Std.",
+      "passive": "Passiv",
+      "needsRate": "Kein Satz hinterlegt"
+    }
   },
   "crmDev": {
     "title": "CRM-Entwicklung",
@@ -3479,6 +3589,9 @@
     "send": "Senden",
     "resend": "Erneut senden",
     "convert": "In Anlass umwandeln",
+    "declineOnBehalf": "Im Namen ablehnen",
+    "declineReasonPrompt": "Dieses Angebot im Namen des Kunden als abgelehnt markieren? Optional einen Grund angeben (leer lassen zum Überspringen).",
+    "declinedOnBehalfToast": "Angebot als abgelehnt markiert.",
     "field": {
       "issueDate": "Ausgestellt am",
       "validUntil": "Gültig bis",
@@ -3487,6 +3600,7 @@
       "sentAt": "Gesendet am",
       "acceptedAt": "Angenommen am",
       "declinedAt": "Abgelehnt am",
+      "declineReason": "Ablehnungsgrund",
       "responseWindow": "Antwortfrist",
       "eventTimeStart": "Startzeit",
       "eventTimeEnd": "Endzeit",
@@ -3588,8 +3702,9 @@
       "status": "Status",
       "dueDate": "Fällig",
       "total": "Gesamt",
-      "sourceQuote": "Vom Angebot",
       "issueDate": "Ausgestellt am",
+      "dueDateOverrideOn": "Manuelles Fälligkeitsdatum — Häkchen entfernen, um es automatisch aus Versanddatum + Zahlungsziel zu berechnen",
+      "dueDateOverrideOff": "Automatisch aus Versanddatum + Zahlungsziel — ankreuzen, um es manuell zu setzen",
       "scheduledSendAt": "Geplanter Versand (optional)",
       "installment": "Rate",
       "paid": "Bezahlt",
@@ -3611,6 +3726,7 @@
       "selectTiming": "— Zahlungsablauf wählen —",
       "eventName": "Anlass",
       "eventDate": "Anlassdatum",
+      "eventNamePlaceholder": "z.B. Hochzeit Schmidt 2024",
       "eventTimeStart": "Startzeit",
       "eventTimeEnd": "Endzeit",
       "customer": "Kunde",
@@ -3651,6 +3767,7 @@
       "customer": "Kunde",
       "event": "Anlass",
       "installment": "Rate",
+      "issueDate": "Ausgestellt",
       "dueDate": "Fällig",
       "total": "Gesamt",
       "status": "Status"
@@ -3701,6 +3818,7 @@
     "payment": {
       "paidAt": "Bezahlt am",
       "amount": "Betrag",
+      "date": "Zahlungsdatum",
       "method": "Methode",
       "reference": "Referenz",
       "notes": "Notizen",
@@ -3730,6 +3848,27 @@
     "savedToast": "Geschäftsprofil gespeichert.",
     "title": "Geschäftsprofil",
     "subtitle": "Briefkopf, Kontaktdaten und Standardwerte für Angebote und Rechnungen.",
+    "businessHours": {
+      "title": "Geschäftszeiten",
+      "subtitle": "Öffnungszeiten je Wochentag festlegen — für eine Mittagspause einfach einen zweiten Block hinzufügen. Werden in der oben gewählten Zeitzone interpretiert ({{tz}}).",
+      "closed": "Geschlossen",
+      "addHours": "Zeiten hinzufügen",
+      "addBlock": "Weiteren Block hinzufügen",
+      "copyToAll": "Auf alle Tage übertragen",
+      "startTime": "Öffnungszeit",
+      "endTime": "Schließzeit",
+      "floorToggle": "Geplante E-Mails bis zu den Geschäftszeiten zurückhalten",
+      "floorToggleHelp": "Wenn aktiv, wird eine automatische E-Mail, die außerhalb der obigen Zeiten geplant ist, erst zur nächsten Öffnungszeit zugestellt statt zu einer ungünstigen Uhrzeit. Wenn aus, werden geplante E-Mails exakt zum geplanten Zeitpunkt versendet.",
+      "weekday": {
+        "1": "Montag",
+        "2": "Dienstag",
+        "3": "Mittwoch",
+        "4": "Donnerstag",
+        "5": "Freitag",
+        "6": "Samstag",
+        "7": "Sonntag"
+      }
+    },
     "section": {
       "company": "Firma",
       "contact": "Kontakt",
@@ -3755,6 +3894,9 @@
       "timezone": "Zeitzone (IANA)",
       "vatLabel": "MwSt-Bezeichnung",
       "vatRateDefault": "Standard-MwSt-Satz %",
+      "defaultHourlyRate": "Standard-Stundensatz",
+      "defaultHourlyRatePlaceholder": "z. B. 120.00",
+      "defaultHourlyRateHint": "Fallback, wenn ein Kunde keinen eigenen Satz hat. In {{currency}}, in ganzen Einheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen.",
       "defaultQrFormat": "Standard-QR-Format",
       "footerLine": "Fusszeile"
     },
@@ -3785,7 +3927,11 @@
       "quotes": "Angebote",
       "invoices": "Rechnungen",
       "paymentDefaults": "Standard-Zahlungsbedingungen",
-      "installmentDefaults": "Standard-Trigger für Teilzahlungen"
+      "installmentDefaults": "Standard-Trigger für Teilzahlungen",
+      "contracts": "Verträge",
+      "quotesTos": "AGB-Schritt",
+      "dashboardOverview": "CRM-Übersicht im Dashboard",
+      "dashboardOverviewHint": "CRM-Übersichtskacheln im Admin-Dashboard ausblenden. Alle Kacheln werden standardmäßig angezeigt; zum Ausblenden abwählen."
     },
     "installmentDefaults": {
       "help": "Vorbelegung der Trigger für neue Zeilen im Teilzahlungs-Panel. Pro-Dokument-Anpassungen überschreiben; bestehende Dokumente behalten ihren gespeicherten Plan.",
@@ -3860,6 +4006,48 @@
     },
     "crm_invoices_late_fee_enabled": {
       "label": "Mahngebühr aktivieren"
+    },
+    "crm_quotes_tos_required": {
+      "label": "Kunden müssen „Ich akzeptiere die AGB“ ankreuzen, bevor sie annehmen können"
+    },
+    "crm_quotes_tos_url": {
+      "label": "AGB-URL (optional)"
+    },
+    "crm_quotes_tos_text": {
+      "label": "AGB-Text, der auf der Angebotsseite angezeigt wird",
+      "placeholder": "Fügen Sie hier die Vertragsbedingungen ein. Nur Text. Leer lassen, um nur Häkchen + URL anzuzeigen."
+    },
+    "crm_contracts_pdf_attachment_enabled": {
+      "label": "Vertrags-PDF an E-Mail anhängen"
+    },
+    "crm_contracts_require_drawn_signature": {
+      "label": "Gezeichnete Unterschrift verlangen (getippter Name allein genügt nicht)"
+    },
+    "crm_contracts_allow_pdf_upload": {
+      "label": "Kunden erlauben, eine handsignierte PDF hochzuladen"
+    },
+    "crm_contracts_store_ip": {
+      "label": "IP-Adresse des Unterzeichners speichern (empfohlen — stützendes Beweismittel in Zivilstreitigkeiten)",
+      "help": "Wenn deaktiviert, wird die IP-Adresse von Kunde und Admin zum Signaturzeitpunkt NICHT in der Vertragszeile oder der öffentlichen Signaturseiten-Bestätigung erfasst. Nach dem DSGVO-Grundsatz der Datenminimierung bevorzugen das manche Betreiber — die IP ist jedoch ein stützendes Identitätsmerkmal, falls der Vertrag angefochten wird, daher empfehlen wir, sie aktiviert zu lassen."
+    },
+    "crm_contracts_default_valid_days": {
+      "label": "Unterzeichnungsfrist (Tage)"
+    },
+    "crm_contracts_number_format": {
+      "label": "Vertragsnummern-Format",
+      "help": "Unterstützte Platzhalter: {YEAR}, {MONTH}, {SEQ:04d}. Beispiel: LBM-C-{YEAR}-{SEQ:04d} → LBM-C-2026-0001."
+    },
+    "crm_overview_show_revenue": {
+      "label": "Umsatz-Kacheln (30 / 90 / 365 Tage)"
+    },
+    "crm_overview_show_outstanding": {
+      "label": "Kachel offene Zahlungen"
+    },
+    "crm_overview_show_quotes": {
+      "label": "Angebots-Pipeline (nach Status)"
+    },
+    "crm_overview_show_invoices": {
+      "label": "Rechnungs-Pipeline (nach Status)"
     }
   },
   "quoteResponse": {
@@ -3989,6 +4177,7 @@
       "new": "Neuer Vertrag"
     },
     "detail": {
+      "previewPdf": "PDF-Vorschau",
       "integrity": {
         "title": "PDF-Integritätsprüfung",
         "help": "Berechnet die SHA-256-Hashes der unsignierten und signierten PDFs neu und vergleicht sie mit den beim Ausstellen gespeicherten Werten. Deckt Backup-Beschädigungen oder nachträgliche Änderungen an der Kundenkopie auf.",
@@ -4003,7 +4192,108 @@
         "expected": "erwartet",
         "actual": "tatsächlich",
         "error": "Integritätsprüfung fehlgeschlagen."
-      }
+      },
+      "alreadyEventToast": "Bereits mit einem Anlass verknüpft.",
+      "auditEmpty": "Noch keine Audit-Log-Einträge.",
+      "auditTrail": "Audit-Verlauf",
+      "auditTrailHelp": "Jedes auf diesem Vertrag erfasste Ereignis. Die Liste ist anhängend (append-only) und ist die Quelle der Wahrheit, falls der Vertrag angefochten wird.",
+      "back": "Zurück zur Liste",
+      "blocks": "Enthaltene Bausteine",
+      "cancel": "Stornieren",
+      "cancelConfirm": "Diesen Vertrag stornieren? Der Signatur-Link des Kunden wird ungültig.",
+      "cancelError": "Stornierung fehlgeschlagen",
+      "cancelledToast": "Vertrag storniert.",
+      "clearSignature": "Löschen",
+      "confirmConvertEvent": "Diesen Vertrag in einen Anlass + geplante Rechnungen umwandeln?",
+      "confirmConvertInvoice": "Diesen Vertrag nur in Rechnung(en) umwandeln? Es wird keine Galerie / kein Anlass erstellt.",
+      "confirmCountersign": "Gegenzeichnen",
+      "confirmResendSigned": "Das signierte Vertrags-PDF erneut an beide Parteien senden?",
+      "confirmRestamp": "PDF neu stempeln & neu rendern",
+      "convertError": "Umwandlung fehlgeschlagen",
+      "convertToEvent": "In Anlass umwandeln",
+      "convertToInvoice": "Nur in Rechnung umwandeln",
+      "convertedToEvent": "In Anlass umgewandelt",
+      "convertedToEventToast": "Vertrag in Anlass #{{id}} umgewandelt",
+      "convertedToInvoiceToast": "{{count}} Rechnung(en) aus diesem Vertrag erstellt",
+      "countersignError": "Gegenzeichnen fehlgeschlagen",
+      "countersignHelp": "Geben Sie Ihren Namen ein UND zeichnen Sie unten Ihre Unterschrift — beide werden auf das neu gerenderte PDF gestempelt. IP und Zeitstempel werden für das Audit erfasst.",
+      "countersignSignaturePrompt": "Zeichnen Sie Ihre Unterschrift",
+      "countersignTitle": "Gegenzeichnen, um den Vertrag bindend zu machen",
+      "countersignedToast": "Gegengezeichnet.",
+      "customer": "Kunde",
+      "dates": "Daten",
+      "downloadPdf": "PDF herunterladen",
+      "downloadSignedPdf": "Signiertes PDF herunterladen",
+      "edit": "Bearbeiten",
+      "fromQuote": "Aus Angebot",
+      "issued": "Ausgestellt",
+      "linkedInvoice": "Rechnung",
+      "newInvoice": "Neue Rechnung",
+      "noBlocks": "Keine Bausteine enthalten.",
+      "noSignatureImage": "Kein Unterschriftsbild erfasst — nutzen Sie unten „Unterschriften neu stempeln“, um eines hinzuzufügen.",
+      "notFound": "Vertrag nicht gefunden.",
+      "parties": "Parteien",
+      "popupBlocked": "Erlauben Sie Pop-ups für diese Seite, um die PDF-Vorschau anzuzeigen.",
+      "renderFailedBody": "Der Signaturnachweis ist erfasst, aber das gestempelte PDF wurde beim letzten Versuch nicht erzeugt. Klicken Sie oben auf „Signiertes PDF erneut senden“, um es aus dem Originaldokument neu zu stempeln und erneut zu senden.",
+      "renderFailedTitle": "Stempeln des signierten PDFs fehlgeschlagen — Neustempeln erforderlich",
+      "resendError": "Erneutes Senden fehlgeschlagen",
+      "resendSigned": "Signiertes PDF erneut senden",
+      "resentSignedToast": "Signierter Vertrag erneut an beide Parteien gesendet.",
+      "restampAdmin": "Admin-Unterschrift",
+      "restampCustomer": "Kundenunterschrift",
+      "restampError": "Neustempeln fehlgeschlagen",
+      "restampHelp": "Bei einer oder beiden Unterschriften wurde kein Bild erfasst. Zeichnen Sie die fehlende(n) Unterschrift(en) hier und wir rendern das PDF neu. Die bereits gespeicherten getippten Namen, Zeitstempel und IPs bleiben unverändert.",
+      "restampTitle": "Fehlende Unterschriften neu stempeln",
+      "restampedToast": "Unterschriften neu gestempelt und PDF neu gerendert.",
+      "send": "An Kunden senden",
+      "sendError": "Senden fehlgeschlagen",
+      "sentAt": "Gesendet am",
+      "sentToast": "Vertrag gesendet.",
+      "signBy": "Unterzeichnen bis",
+      "signatures": "Unterschriften",
+      "signedByAdmin": "Gegengezeichnet",
+      "signedByCustomer": "Vom Kunden signiert",
+      "signedNamePlaceholder": "Ihr vollständiger Name",
+      "uploadError": "Upload fehlgeschlagen",
+      "uploadSigned": "Signiertes PDF hochladen",
+      "uploadedToast": "Signiertes PDF hochgeladen."
+    },
+    "editor": {
+      "back": "Zurück zur Liste",
+      "backToDetail": "Zurück zum Vertrag",
+      "create": "Entwurf erstellen",
+      "createdToast": "Vertrag erstellt.",
+      "customer": "Kunde",
+      "disclaimerBody": "Die vorausgefüllten Baustein-Texte sind NUR BEISPIELE — vom Maintainer verfasst, nicht von einem Anwalt. Lassen Sie jeden verwendeten Baustein von Ihrem eigenen Anwalt prüfen, bevor Sie den Vertrag versenden. Siehe docs/crm-disclaimers.md.",
+      "disclaimerTitle": "Anwaltliche Prüfung erforderlich",
+      "eventDate": "Anlassdatum",
+      "eventHelp": "Wird auf den Vertrag übernommen und an jeden daraus erzeugten Anlass / jede Rechnung weitergegeben. Setzen Sie dies, damit Kundenportal und Mahn-E-Mails die richtige Bezeichnung \"Hochzeit Doe / Müller\" anzeigen.",
+      "eventName": "Anlassname",
+      "eventNamePlaceholder": "z. B. Hochzeit Doe / Müller",
+      "eventSection": "Anlass (optional)",
+      "eventTimeEnd": "Ende",
+      "eventTimeStart": "Beginn",
+      "intro": "Einleitungstext (optional)",
+      "issueDate": "Ausstellungsdatum",
+      "language": "Sprache",
+      "locked": "Gesendete Verträge können nicht bearbeitet werden. Für Änderungen stornieren und einen neuen erstellen.",
+      "noBlocksInSection": "Noch keine Bausteine für diesen Abschnitt.",
+      "outro": "Schlusstext (optional)",
+      "popupBlocked": "Erlauben Sie Pop-ups für diese Seite, um die PDF-Vorschau anzuzeigen.",
+      "preview": "PDF-Vorschau",
+      "previewAfterSave": "Zuerst den Entwurf speichern, dann Vorschau anzeigen.",
+      "previewError": "Vorschau fehlgeschlagen",
+      "save": "Speichern",
+      "saveError": "Speichern fehlgeschlagen",
+      "savedToast": "Vertrag gespeichert.",
+      "schriftformWarning": "Signaturtyp: einfache elektronische Signatur (EES). Ausreichend für routinemäßige Fotografieverträge in CH / DE / AT / FL. NICHT ausreichend für Dokumente, die gesetzlich Schriftform / forme qualifiée verlangen: Bürgschaft (DE § 766 BGB), Verbraucherdarlehensvertrag (DE § 492 BGB), befristete Arbeitsverträge (DE § 14 Abs. 4 TzBfG) und Ähnliches. Dafür ist eine qualifizierte elektronische Signatur (QES) eines Vertrauensdiensteanbieters erforderlich — picpeak bietet keine QES.",
+      "searchCustomer": "Nach E-Mail suchen…",
+      "systemBadge": "System",
+      "titleEdit": "Vertrag bearbeiten",
+      "titleField": "Vertragstitel",
+      "titleNew": "Neuer Vertrag",
+      "titlePlaceholder": "z. B. Hochzeitsvertrag Doe / Müller",
+      "validUntil": "Unterzeichnen bis (optional)"
     }
   }
 }

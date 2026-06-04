@@ -43,7 +43,10 @@ export type ContractStatus =
   | 'fully_signed'
   | 'cancelled';
 
-export type ContractSort = 'newest' | 'oldest' | 'customer_asc';
+export type ContractSort =
+  | 'newest' | 'oldest'
+  | 'issue_asc' | 'issue_desc'
+  | 'customer_asc' | 'customer_desc';
 
 /** Canonical section enum kept in sync with backend SECTIONS_ORDER
  *  and contractBlocksService.ALLOWED_SECTIONS. Renaming any value
@@ -426,6 +429,9 @@ export interface PublicContractView {
     city: string | null;
     email: string | null;
     website: string | null;
+    /** Light + dark branding logo URLs; the page picks per its colour mode. */
+    logoUrl?: string | null;
+    logoUrlDark?: string | null;
   } | null;
   /** Admin-set behaviour flags surfaced for the public sign page.
    *  Server re-enforces both — these only drive the UI. */

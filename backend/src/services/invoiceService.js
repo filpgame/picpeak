@@ -105,6 +105,65 @@ function computeDueDate(scheduledSendAt, netDays = 30) {
 }
 
 /**
+ * Resolve the net-days a new invoice's due date should be anchored to.
+ * Single source of truth so the editor (split picker), legacy callers,
+ * and quote→invoice conversion all land on the same number. Priority:
+ *
+ *   1. `payload.netDays` — explicit caller override (installment spawn
+ *      passes the snapshot's net_days here).
+ *   2. Split picker (migration 124): payment_net_days_templates.net_days
+ *      via `payload.paymentNetDaysTemplateId`. This is what the bill
+ *      editor actually sends; the old code only read the legacy FK and
+ *      so silently ignored Net 60 / 90 selections.
+ *   3. Legacy single FK: payment_term_templates.net_days via
+ *      `payload.paymentTermTemplateId`.
+ *   4. The `crm_payment_default_net_days` setting (admin-configured).
+ *   5. 30 — historical hard default.
+ */
+async function resolveNetDays(payload, trx = db) {
+  if (payload && payload.netDays != null && payload.netDays !== '') {
+    const n = ensureInt(payload.netDays);
+    if (n) return n;
+  }
+  if (payload && payload.paymentNetDaysTemplateId) {
+    const probe = await trx('payment_net_days_templates')
+      .where({ id: payload.paymentNetDaysTemplateId })
+      .select('net_days')
+      .first();
+    if (probe && probe.net_days != null) return ensureInt(probe.net_days) || 30;
+  }
+  if (payload && payload.paymentTermTemplateId) {
+    const probe = await trx('payment_term_templates')
+      .where({ id: payload.paymentTermTemplateId })
+      .select('net_days')
+      .first();
+    if (probe && probe.net_days != null) return ensureInt(probe.net_days) || 30;
+  }
+  const setting = ensureInt(await getAppSetting('crm_payment_default_net_days'));
+  if (setting) return setting;
+  return 30;
+}
+
+/**
+ * Net-days for an already-persisted invoice row (no payload). Reads the
+ * snapshot's net_days, then the crm_payment_default_net_days setting,
+ * then 30. Used at send time to re-anchor the due date when the issue
+ * date is stamped. Mirrors resolveNetDays' tail.
+ */
+async function resolveNetDaysForRow(invoice) {
+  const snap = typeof invoice.payment_term_snapshot === 'string'
+    ? (() => { try { return JSON.parse(invoice.payment_term_snapshot); } catch { return null; } })()
+    : invoice.payment_term_snapshot;
+  if (snap && snap.net_days != null) {
+    const n = ensureInt(snap.net_days);
+    if (n) return n;
+  }
+  const setting = ensureInt(await getAppSetting('crm_payment_default_net_days'));
+  if (setting) return setting;
+  return 30;
+}
+
+/**
  * Resolve the deal_uuid for a new invoice row (migration 140). Priority:
  *
  *   1. `payload.dealUuid` — explicit caller override. Used by
@@ -234,6 +293,13 @@ async function getOrCreateMonthlyDraft(customer, adminId, trx) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Manual cadence has no billing cycle: the draft accumulates
+  // indefinitely and ships ONLY via the admin "Trigger invoice now"
+  // gesture, so it carries NO period_end. The scheduler's auto-flush
+  // filter is `monthly_period_end <= today`, which a NULL period_end
+  // can never satisfy — keeping manual drafts out of the cron path.
+  const isManual = customer.billing_cadence === 'manual';
+
   // Resolve period_end: prefer the cadence in the current month, but
   // if it has already passed, roll to next month so the new draft
   // gathers items toward the NEXT bill.
@@ -243,8 +309,11 @@ async function getOrCreateMonthlyDraft(customer, adminId, trx) {
     const nextMonth = today.getMonth() + 1;
     target = computeMonthlyCadenceDate(today.getFullYear(), nextMonth, cycleDay);
   }
-  const periodStart = new Date(target.getFullYear(), target.getMonth(), 1);
-  const periodEnd = target;
+  const periodStart = isManual ? null : new Date(target.getFullYear(), target.getMonth(), 1);
+  const periodEnd = isManual ? null : target;
+  // Placeholder issue/due date for the empty draft row — recomputed at
+  // issuance time. Manual drafts have no period_end, so fall back to today.
+  const placeholderDate = (periodEnd || today).toISOString().slice(0, 10);
 
   // Look up any existing open draft for this customer. We deliberately
   // do NOT filter by monthly_period_end here — only one draft can be
@@ -282,8 +351,8 @@ async function getOrCreateMonthlyDraft(customer, adminId, trx) {
     event_id: null,
     language,
     currency,
-    issue_date: periodEnd.toISOString().slice(0, 10),
-    due_date: periodEnd.toISOString().slice(0, 10), // recomputed at issuance time
+    issue_date: placeholderDate,
+    due_date: placeholderDate, // recomputed at issuance time
     installment_index: 0,
     installment_total: 1,
     status: 'scheduled',
@@ -296,8 +365,8 @@ async function getOrCreateMonthlyDraft(customer, adminId, trx) {
     business_bank_account_id: bank?.id || null,
     qr_format: null,
     is_monthly_draft: true,
-    monthly_period_start: periodStart.toISOString().slice(0, 10),
-    monthly_period_end: periodEnd.toISOString().slice(0, 10),
+    monthly_period_start: periodStart ? periodStart.toISOString().slice(0, 10) : null,
+    monthly_period_end: periodEnd ? periodEnd.toISOString().slice(0, 10) : null,
     // Migration 140 — each monthly-draft cycle is its own deal (no
     // quote/contract chain). Fresh UUID at creation; subsequent line
     // appends just mutate this same row, so the uuid sticks.
@@ -341,7 +410,7 @@ async function getOrCreateMonthlyDraft(customer, adminId, trx) {
 // Public API
 // ---------------------------------------------------------------------
 
-async function listInvoices({ filters = {}, sort = 'newest', page = 1, pageSize = 25 } = {}) {
+async function listInvoices({ filters = {}, sort = 'issue_desc', page = 1, pageSize = 25 } = {}) {
   return await withRetry(async () => {
     let query = db('invoices')
       .leftJoin('customer_accounts', 'invoices.customer_account_id', 'customer_accounts.id')
@@ -408,6 +477,8 @@ async function listInvoices({ filters = {}, sort = 'newest', page = 1, pageSize 
       // reflects when the row landed in the DB. id is the tiebreaker
       // for rows that share a created_at second.
       case 'oldest':       query = query.orderBy('invoices.created_at', 'asc').orderBy('invoices.id', 'asc'); break;
+      case 'issue_asc':    query = query.orderBy('invoices.issue_date', 'asc').orderBy('invoices.id', 'asc'); break;
+      case 'issue_desc':   query = query.orderBy('invoices.issue_date', 'desc').orderBy('invoices.id', 'desc'); break;
       case 'due_asc':      query = query.orderBy('invoices.due_date', 'asc'); break;
       case 'due_desc':     query = query.orderBy('invoices.due_date', 'desc'); break;
       case 'value_asc':    query = query.orderBy('invoices.total_amount_minor', 'asc'); break;
@@ -415,6 +486,11 @@ async function listInvoices({ filters = {}, sort = 'newest', page = 1, pageSize 
       case 'customer_asc':
         query = query
           .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) asc')
+          .orderBy('invoices.id', 'desc');
+        break;
+      case 'customer_desc':
+        query = query
+          .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) desc')
           .orderBy('invoices.id', 'desc');
         break;
       case 'newest':
@@ -618,15 +694,19 @@ async function createInvoice(payload, adminId, trx = db) {
   const customer = await trx('customer_accounts').where({ id: payload.customerAccountId }).first();
   ensureCustomerCanBill(customer);
 
-  // Monthly-billing intercept (migration 128). For customers in
-  // billing_cadence='monthly' mode every createInvoice call APPENDS
-  // line items onto the running monthly-draft instead of minting a
+  // Accumulator intercept (migration 128). For customers in
+  // billing_cadence='monthly' OR 'manual' mode every createInvoice call
+  // APPENDS line items onto a single running draft instead of minting a
   // fresh invoice. Admin sees the editor flow exactly as before; the
   // returned id is the draft's id so the UI can redirect to the
-  // accumulator. `_skipMonthlyRouting` is the escape hatch used by
-  // internal helpers that need to mint a non-draft row (e.g. the
-  // accumulator itself, or future test fixtures).
-  if (customer.billing_cadence === 'monthly' && !payload._skipMonthlyRouting) {
+  // accumulator. The two modes differ only in WHEN the draft ships:
+  // 'monthly' auto-flushes on the cadence day (scheduler), 'manual'
+  // never auto-flushes (no period_end) and ships only via the admin
+  // "Trigger invoice now" gesture. `_skipMonthlyRouting` is the escape
+  // hatch used by internal helpers that need to mint a non-draft row
+  // (e.g. the accumulator itself, or future test fixtures).
+  if ((customer.billing_cadence === 'monthly' || customer.billing_cadence === 'manual')
+      && !payload._skipMonthlyRouting) {
     const draft = await appendToMonthlyDraft(payload, customer, adminId, trx);
     return { invoiceIds: draft?.id ? [draft.id] : [] };
   }
@@ -642,18 +722,13 @@ async function createInvoice(payload, adminId, trx = db) {
   // used `invoiceNumber` here.
   const issueDate = payload.issueDate || new Date().toISOString().slice(0, 10);
   const scheduledSendAt = payload.scheduledSendAt ? new Date(payload.scheduledSendAt) : null;
-  // Resolve the selected payment-term template's net_days BEFORE
-  // computing the due date so Net 60 / 90 templates actually push
-  // the due date out. Falls back to 30 when no template is set
-  // (matches the historical default).
-  let resolvedNetDays = 30;
-  if (payload.paymentTermTemplateId) {
-    const probe = await trx('payment_term_templates')
-      .where({ id: payload.paymentTermTemplateId })
-      .select('net_days')
-      .first();
-    if (probe && probe.net_days != null) resolvedNetDays = ensureInt(probe.net_days) || 30;
-  }
+  // Resolve net_days BEFORE computing the due date so Net 60 / 90
+  // selections actually push the due date out. resolveNetDays honors
+  // the split picker FK the editor sends, the legacy single FK, and
+  // the crm_payment_default_net_days setting (see helper). The clock
+  // starts on the SEND date when the invoice is scheduled, otherwise
+  // the issue date — so a future send pushes the due date out too.
+  const resolvedNetDays = await resolveNetDays(payload, trx);
   const dueDate = payload.dueDate || computeDueDate(scheduledSendAt || new Date(issueDate), resolvedNetDays)
     .toISOString().slice(0, 10);
 
@@ -927,10 +1002,13 @@ async function spawnInstallmentInvoices({ trx, eventId, quoteId, customer, curre
   }
 
   // netDays drives the due-date offset on every scheduled invoice
-  // created here. Defaults to 30 when the caller doesn't pass one;
-  // callers in quoteService now pass the converting quote's
-  // payment-term net_days so Net 60 / 90 templates flow through.
-  const resolvedNetDays = ensureInt(netDays) || 30;
+  // created here. Callers in quoteService pass the converting quote's
+  // payment-term net_days so Net 60 / 90 templates flow through; when
+  // absent we fall back to the crm_payment_default_net_days setting
+  // (then 30) rather than silently using 30, matching createInvoice.
+  const resolvedNetDays = ensureInt(netDays)
+    || ensureInt(await getAppSetting('crm_payment_default_net_days'))
+    || 30;
   const total = installments.length;
   const acceptanceTime = new Date();
   const invoiceIds = [];
@@ -1633,8 +1711,10 @@ async function buildInvoiceRenderContext(invoice, lineItems) {
   // but still printed the discount row on the PDF. Zero out both
   // fields here so pdfService.drawPaymentBlock's
   // `paymentTerm?.skontoPercent && paymentTerm?.skontoWithinDays`
-  // guard suppresses the row.
-  if (invoice.skonto_disabled) {
+  // guard suppresses the row. The per-customer opt-out (migration 112)
+  // is honoured here too — a customer flagged skonto_disabled never
+  // prints the discount row, mirroring resolveSkontoPercentForInvoice.
+  if (invoice.skonto_disabled || customer?.skonto_disabled) {
     paymentTerm.skontoPercent = null;
     paymentTerm.skontoWithinDays = null;
   }
@@ -1864,6 +1944,39 @@ async function sendInvoice(id, adminId) {
       updated_at: new Date(),
     });
     invoice.language = customer.preferred_language;
+  }
+
+  // Stamp the issue date at the moment the invoice actually goes out.
+  // A scheduled invoice's issue_date is provisional — set to the
+  // authoring day at creation — but the legal issue date is when it
+  // ships. Anchoring it here keeps the printed invoice date, the Skonto
+  // window (a relative "pay within N working days" counted from that
+  // date) and the net-days due date all consistent with the send date.
+  // Only on the first send (status 'scheduled'); 'sent' / 'overdue'
+  // rows are immutable legal records and keep their stamped date.
+  if (invoice.status === 'scheduled') {
+    const sendDateIso = new Date().toISOString().slice(0, 10);
+    const netDays = await resolveNetDaysForRow(invoice);
+    // Re-anchor the due date too, but only when it was machine-set: if
+    // the stored due_date still equals the auto formula off the OLD
+    // base (scheduled_send_at, else the old issue_date), the admin never
+    // hand-edited it and we slide it to the new issue date. A divergent
+    // value means a manual override (the editor's "Override due date"
+    // toggle) — leave it untouched.
+    const oldBase = invoice.scheduled_send_at
+      ? new Date(invoice.scheduled_send_at)
+      : new Date(invoice.issue_date);
+    const oldAutoDue = computeDueDate(oldBase, netDays).toISOString().slice(0, 10);
+    const storedDue = invoice.due_date
+      ? new Date(invoice.due_date).toISOString().slice(0, 10)
+      : null;
+    const updates = { issue_date: sendDateIso, updated_at: new Date() };
+    if (storedDue && storedDue === oldAutoDue) {
+      updates.due_date = computeDueDate(new Date(sendDateIso), netDays).toISOString().slice(0, 10);
+    }
+    await db('invoices').where({ id }).update(updates);
+    invoice.issue_date = updates.issue_date;
+    if (updates.due_date) invoice.due_date = updates.due_date;
   }
 
   const ctx = await buildInvoiceRenderContext(invoice, lineItems);
@@ -2537,7 +2650,9 @@ async function applyReminder(invoice, lineItems, level, adminId) {
       contentPath: pdfPath,
       contentType: 'application/pdf',
     }],
-  });
+  // Dunning reminders are relationship mail — hold to business hours so
+  // the customer isn't pinged overnight (no-op unless hours configured).
+  }, { respectBusinessHours: true });
 
   try {
     await logActivity('invoice_reminder_sent', { invoiceId: invoice.id, level, lateFeeMinor },
@@ -2577,6 +2692,17 @@ async function resolveSkontoPercentForInvoice(invoice) {
   // installments that shouldn't qualify for the discount even when
   // the global default offers it.
   if (invoice.skonto_disabled) return null;
+  // Per-customer opt-out (migration 112) — a customer that negotiated
+  // "no Skonto" as a contract term never qualifies, so the admin
+  // doesn't have to tick the per-invoice toggle on every invoice.
+  // Falls through customer → invoice → snapshot → quote → global.
+  if (invoice.customer_account_id) {
+    const cust = await db('customer_accounts')
+      .where({ id: invoice.customer_account_id })
+      .select('skonto_disabled')
+      .first();
+    if (cust && cust.skonto_disabled) return null;
+  }
   const parseSnap = (raw) => {
     if (!raw) return null;
     if (typeof raw === 'object') return raw;

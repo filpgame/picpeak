@@ -13,10 +13,10 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Eye, Send } from 'lucide-react';
-import { Button, Card, Loading, Input } from '../../../components/common';
+import { Button, Card, Loading, Input, LocalizedDateInput, TimeField } from '../../../components/common';
 import {
   quotesService,
   type QuoteCreatePayload,
@@ -29,7 +29,6 @@ import { customerAdminService } from '../../../services/customerAdmin.service';
 import { userManagementService } from '../../../services/userManagement.service';
 import { settingsService } from '../../../services/settings.service';
 import { useAdminAuth } from '../../../contexts/AdminAuthContext';
-import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import { toast } from 'react-toastify';
 
 interface FormState {
@@ -140,8 +139,6 @@ function buildPayload(f: FormState): QuoteCreatePayload {
 
 export const QuoteEditorPage: React.FC = () => {
   const { t } = useTranslation();
-  const { timeFormat } = useLocalizedDate();
-  const timeInputLang = timeFormat === '12h' ? 'en-US' : 'de-DE';
   const { id } = useParams<{ id?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -490,17 +487,17 @@ export const QuoteEditorPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Input label={t('quotes.field.eventName', 'Event name') as string} value={form.eventName}
             onChange={(e) => setForm((f) => ({ ...f, eventName: e.target.value }))} />
-          <Input type="date" label={t('quotes.field.eventDate', 'Event date') as string} value={form.eventDate}
-            onChange={(e) => setForm((f) => ({ ...f, eventDate: e.target.value }))} />
-          <Input type="time" lang={timeInputLang} label={t('quotes.field.eventTimeStart', 'Start time') as string} value={form.eventTimeStart}
-            onChange={(e) => setForm((f) => ({ ...f, eventTimeStart: e.target.value }))} />
-          <Input type="time" lang={timeInputLang} label={t('quotes.field.eventTimeEnd', 'End time') as string} value={form.eventTimeEnd}
-            onChange={(e) => setForm((f) => ({ ...f, eventTimeEnd: e.target.value }))} />
+          <LocalizedDateInput label={t('quotes.field.eventDate', 'Event date') as string} value={form.eventDate}
+            onChange={(iso) => setForm((f) => ({ ...f, eventDate: iso }))} />
+          <TimeField label={t('quotes.field.eventTimeStart', 'Start time') as string} value={form.eventTimeStart}
+            onChange={(v) => setForm((f) => ({ ...f, eventTimeStart: v }))} />
+          <TimeField label={t('quotes.field.eventTimeEnd', 'End time') as string} value={form.eventTimeEnd}
+            onChange={(v) => setForm((f) => ({ ...f, eventTimeEnd: v }))} />
           <Input type="number" step="0.5" label={t('quotes.field.expectedDuration', 'Expected duration (h)') as string}
             value={form.expectedDurationHours}
             onChange={(e) => setForm((f) => ({ ...f, expectedDurationHours: e.target.value }))} />
-          <Input type="date" label={t('quotes.field.validUntil', 'Valid until') as string} value={form.validUntil}
-            onChange={(e) => setForm((f) => ({ ...f, validUntil: e.target.value }))} />
+          <LocalizedDateInput label={t('quotes.field.validUntil', 'Valid until') as string} value={form.validUntil}
+            onChange={(iso) => setForm((f) => ({ ...f, validUntil: iso }))} />
         </div>
       </Card>
 
@@ -539,6 +536,10 @@ export const QuoteEditorPage: React.FC = () => {
           below now reads from the timing template. */}
       <Card>
         <h3 className="font-semibold mb-2">4. {t('quotes.section.payment', 'Payment conditions')}</h3>
+        <Link to="/admin/settings?tab=crm"
+          className="text-xs text-accent hover:underline mb-2 inline-block">
+          {t('common.configureInSettings', 'Configure defaults in Settings ↗')}
+        </Link>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium mb-1">{t('quotes.field.paymentNetDays', 'Net days')}</label>

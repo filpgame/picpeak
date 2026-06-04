@@ -240,6 +240,9 @@ const INVOICE_BODY_VALIDATORS = [
   body('skontoDisabled').optional().isBoolean(),
   // Inline event snapshot (migration 123). Mirrors quotes — kept
   // optional because standalone invoices may not have an event yet.
+  // eventId links the invoice to a gallery event (FK) when created from
+  // the event detail page; persisted by createInvoice (event_id).
+  body('eventId').optional({ values: 'falsy' }).isInt({ min: 1 }),
   body('eventName').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
   body('eventDate').optional({ values: 'falsy' }).isISO8601(),
   body('eventTimeStart').optional({ values: 'falsy' }).isString().isLength({ max: 8 }),
@@ -319,7 +322,7 @@ router.get(
     query('sourceQuoteId').optional({ values: 'falsy' }).isInt({ min: 1 }),
     query('unpaidOnly').optional({ values: 'falsy' }).isBoolean(),
     query('q').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
-    query('sort').optional({ values: 'falsy' }).isIn(['newest', 'oldest', 'due_asc', 'due_desc', 'value_asc', 'value_desc', 'customer_asc']),
+    query('sort').optional({ values: 'falsy' }).isIn(['newest', 'oldest', 'issue_asc', 'issue_desc', 'due_asc', 'due_desc', 'value_asc', 'value_desc', 'customer_asc', 'customer_desc']),
     query('page').optional({ values: 'falsy' }).isInt({ min: 1 }),
     query('pageSize').optional({ values: 'falsy' }).isInt({ min: 1, max: 100 }),
   ],
@@ -336,7 +339,7 @@ router.get(
         unpaidOnly: req.query.unpaidOnly === 'true' || req.query.unpaidOnly === true,
         q: req.query.q,
       },
-      sort: req.query.sort || 'newest',
+      sort: req.query.sort || 'issue_desc',
       page: req.query.page ? parseInt(req.query.page, 10) : 1,
       pageSize: req.query.pageSize ? parseInt(req.query.pageSize, 10) : 25,
     });
@@ -417,6 +420,8 @@ router.post(
 //   currency           3-letter ISO (optional, default profile/CHF)
 //   status             'sent' | 'paid' | 'overdue' (default 'sent')
 //   paidAmountMinor    int (optional, for status='paid')
+//   paidAt             ISO date (optional — the real historical payment
+//                      date; defaults to issueDate, never import time)
 //   language           string (optional, default 'de')
 router.post(
   '/import',
@@ -425,12 +430,15 @@ router.post(
   [
     body('customerAccountId').isInt({ min: 1 }),
     body('invoiceNumber').isString().isLength({ min: 1, max: 64 }),
+    body('eventName').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
+    body('eventDate').optional({ values: 'falsy' }).isISO8601(),
     body('issueDate').isISO8601(),
     body('dueDate').optional({ values: 'falsy' }).isISO8601(),
     body('totalAmountMinor').isInt({ min: 0 }),
     body('currency').optional({ values: 'falsy' }).isString().isLength({ min: 3, max: 3 }),
     body('status').optional({ values: 'falsy' }).isIn(['sent', 'paid', 'overdue']),
     body('paidAmountMinor').optional({ values: 'falsy' }).isInt({ min: 0 }),
+    body('paidAt').optional({ values: 'falsy' }).isISO8601(),
     body('language').optional({ values: 'falsy' }).isString().isLength({ max: 8 }),
   ],
   handleAsync(async (req, res) => {
@@ -466,10 +474,24 @@ router.post(
     }
 
     const totalMinor = parseInt(req.body.totalAmountMinor, 10);
-    const paidMinor  = parseInt(req.body.paidAmountMinor || '0', 10) || 0;
     const status     = req.body.status || 'sent';
+    // A paid import with no explicit paid amount means FULLY paid — default
+    // paid_amount_minor to the total. The dashboard revenue windows sum
+    // paid_amount_minor (not total), so a blank paid amount used to store 0
+    // and the paid invoice contributed nothing to revenue.
+    const explicitPaid = req.body.paidAmountMinor != null && String(req.body.paidAmountMinor) !== '';
+    const paidMinor  = explicitPaid
+      ? (parseInt(req.body.paidAmountMinor, 10) || 0)
+      : (status === 'paid' ? totalMinor : 0);
     const issueDate  = req.body.issueDate;
     const dueDate    = req.body.dueDate || issueDate;
+    // Imported docs are historical: their real send/payment dates are
+    // the document's own dates, NOT the moment of import. Stamping
+    // import-time here put year-old paid invoices inside the dashboard's
+    // rolling "Revenue · last 30 days" window (which keys on paid_at).
+    // Anchor to the historical date; let the admin override paid_at when
+    // they know the exact payment date.
+    const paidAt     = req.body.paidAt || issueDate;
     const currency   = (req.body.currency || customer.preferred_currency || 'CHF').toUpperCase();
     const language   = req.body.language || customer.preferred_language || 'de';
 
@@ -477,7 +499,12 @@ router.post(
       invoice_number: req.body.invoiceNumber,
       customer_account_id: customer.id,
       source_quote_id: null,
+      // No FK link on import — the event may predate picpeak. Store the
+      // free-text snapshot only, mirroring createInvoice's event_name /
+      // event_date columns (migration 107).
       event_id: null,
+      event_name: req.body.eventName || null,
+      event_date: req.body.eventDate || null,
       language,
       currency,
       issue_date: issueDate,
@@ -488,14 +515,14 @@ router.post(
       installment_trigger: null,
       status,
       scheduled_send_at: null,
-      sent_at: status !== 'scheduled' ? new Date() : null,
+      sent_at: new Date(issueDate),
       net_amount_minor: totalMinor,         // imported docs lack a breakdown
       vat_rate: 0,                          // VAT info lives in the imported PDF
       vat_amount_minor: 0,
       shipping_amount_minor: 0,
       total_amount_minor: totalMinor,
       paid_amount_minor: paidMinor,
-      paid_at: status === 'paid' ? new Date() : null,
+      paid_at: status === 'paid' ? new Date(paidAt) : null,
       // Store the path RELATIVE to STORAGE_PATH so the value survives
       // a host migration (Docker volume remount on a new host with a
       // different absolute path).

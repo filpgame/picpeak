@@ -5,10 +5,10 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Eye, Save as SaveIcon } from 'lucide-react';
-import { Button, Card, Loading, Input } from '../../../components/common';
+import { Button, Card, Loading, Input, LocalizedDateInput, TimeField } from '../../../components/common';
 import { billsService, type InvoiceCreatePayload, type InvoiceQrFormat } from '../../../services/bills.service';
 import { quotesService } from '../../../services/quotes.service';
 import { contractsService } from '../../../services/contracts.service';
@@ -20,7 +20,6 @@ import { customerAdminService } from '../../../services/customerAdmin.service';
 import { userManagementService } from '../../../services/userManagement.service';
 import { settingsService } from '../../../services/settings.service';
 import { useAdminAuth } from '../../../contexts/AdminAuthContext';
-import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import { toast } from 'react-toastify';
 
 function toMinor(amount: number) {
@@ -29,8 +28,6 @@ function toMinor(amount: number) {
 
 export const BillEditorPage: React.FC = () => {
   const { t } = useTranslation();
-  const { timeFormat } = useLocalizedDate();
-  const timeInputLang = timeFormat === '12h' ? 'en-US' : 'de-DE';
   const { id } = useParams<{ id?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -48,6 +45,12 @@ export const BillEditorPage: React.FC = () => {
   const [currency, setCurrency] = useState('CHF');
   const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState('');
+  // Due date is normally view-only: it auto-tracks (send date else issue
+  // date) + the selected Net-days template, so the payment clock starts
+  // on the day the invoice actually goes out. Flipping this lets the
+  // admin type a different date by hand; we keep it pinned so the auto
+  // effect below stops clobbering their value.
+  const [dueDateOverridden, setDueDateOverridden] = useState(false);
   const [scheduledSendAt, setScheduledSendAt] = useState('');
   // null = inherit profile default at render time. 'none' / 'swiss' /
   // 'epc' = explicit per-invoice override. (Existing invoices that
@@ -80,6 +83,7 @@ export const BillEditorPage: React.FC = () => {
   // event section — admin can type a free-text label without needing
   // an actual events row, and it carries through to the customer
   // portal + tax report + email templates.
+  const [eventId, setEventId] = useState<number | null>(null);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventTimeStart, setEventTimeStart] = useState('');
@@ -124,6 +128,10 @@ export const BillEditorPage: React.FC = () => {
       setCurrency(inv.currency);
       setIssueDate(inv.issueDate);
       setDueDate(inv.dueDate);
+      // The invoice already carries a due date — preserve it rather than
+      // letting the auto effect recompute and surprise the admin. They
+      // can untick "Override" to re-enable auto-tracking.
+      setDueDateOverridden(true);
       setScheduledSendAt(inv.scheduledSendAt ? inv.scheduledSendAt.slice(0, 16) : '');
       // Preserve null when the saved invoice has no explicit format —
       // it inherits the profile default at render time.
@@ -136,6 +144,7 @@ export const BillEditorPage: React.FC = () => {
       setPaymentTimingTemplateId(inv.paymentTimingTemplateId ?? null);
       setBusinessBankAccountId(inv.businessBankAccountId ?? null);
       setSkontoDisabled(Boolean(inv.skontoDisabled));
+      setEventId(inv.eventId ?? null);
       setEventName(inv.eventName || '');
       setEventDate(inv.eventDate || '');
       setEventTimeStart(inv.eventTimeStart || '');
@@ -208,6 +217,23 @@ export const BillEditorPage: React.FC = () => {
       }
     })();
   }, [isEdit, searchParams, customerId]);
+
+  // Pre-fill the event link + snapshot when opened from an event's
+  // "Create invoice" button (/admin/clients/bills/new?eventId=&eventName=&eventDate=).
+  const didPrefillEventRef = useRef(false);
+  useEffect(() => {
+    if (isEdit) return;
+    if (didPrefillEventRef.current) return;
+    const eidRaw = searchParams.get('eventId');
+    const eid = eidRaw ? parseInt(eidRaw, 10) : NaN;
+    const en = searchParams.get('eventName');
+    const ed = searchParams.get('eventDate');
+    if (!(Number.isFinite(eid) && eid > 0) && !en && !ed) return;
+    didPrefillEventRef.current = true;
+    if (Number.isFinite(eid) && eid > 0) setEventId(eid);
+    if (en) setEventName((prev) => prev || en);
+    if (ed) setEventDate((prev) => prev || ed);
+  }, [isEdit, searchParams]);
 
   // Pre-fill from a fully-signed contract when the editor is opened
   // via `?fromContractId=<id>` (the "New invoice" link on
@@ -317,6 +343,25 @@ export const BillEditorPage: React.FC = () => {
     setPaymentTimingTemplateId((prev) => prev ?? defaultTiming.id);
   }, [isEdit, netDaysTemplates, timingTemplates, appSettings]);
 
+  // Auto-track the due date off (scheduled send date else issue date) +
+  // the selected Net-days template, mirroring the backend's
+  // computeDueDate. The clock starts the day the invoice goes out, so
+  // scheduling a future send pushes the due date out with it. Skipped
+  // once the admin overrides the field by hand. Date math is in UTC to
+  // match the backend (which parses the YYYY-MM-DD base as UTC midnight).
+  useEffect(() => {
+    if (dueDateOverridden) return;
+    const base = (scheduledSendAt ? scheduledSendAt.slice(0, 10) : issueDate) || '';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(base)) return;
+    const tpl = netDaysTemplates?.templates?.find((t) => t.id === paymentNetDaysTemplateId);
+    const netDays = tpl?.netDays != null
+      ? Number(tpl.netDays)
+      : Number(appSettings?.crm_payment_default_net_days) || 30;
+    const d = new Date(`${base}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + netDays);
+    setDueDate(d.toISOString().slice(0, 10));
+  }, [dueDateOverridden, scheduledSendAt, issueDate, paymentNetDaysTemplateId, netDaysTemplates, appSettings]);
+
   const buildPayload = (): InvoiceCreatePayload => ({
     customerAccountId: customerId || 0,
     currency,
@@ -358,6 +403,7 @@ export const BillEditorPage: React.FC = () => {
     // so the backend can distinguish "not provided" from a deliberate
     // clear (which the route's `optional({ values: 'falsy' })` already
     // treats identically — falsy values bypass validation entirely).
+    eventId: eventId ?? undefined,
     eventName: eventName || undefined,
     eventDate: eventDate || undefined,
     eventTimeStart: eventTimeStart || undefined,
@@ -488,20 +534,38 @@ export const BillEditorPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Input label={t('bills.field.eventName', 'Event') as string}
             value={eventName} onChange={(e) => setEventName(e.target.value)} />
-          <Input type="date" label={t('bills.field.eventDate', 'Event date') as string}
-            value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
-          <Input type="time" lang={timeInputLang} label={t('bills.field.eventTimeStart', 'Start time') as string}
-            value={eventTimeStart} onChange={(e) => setEventTimeStart(e.target.value)} />
-          <Input type="time" lang={timeInputLang} label={t('bills.field.eventTimeEnd', 'End time') as string}
-            value={eventTimeEnd} onChange={(e) => setEventTimeEnd(e.target.value)} />
+          <LocalizedDateInput label={t('bills.field.eventDate', 'Event date') as string}
+            value={eventDate} onChange={setEventDate} />
+          <TimeField label={t('bills.field.eventTimeStart', 'Start time') as string}
+            value={eventTimeStart} onChange={setEventTimeStart} />
+          <TimeField label={t('bills.field.eventTimeEnd', 'End time') as string}
+            value={eventTimeEnd} onChange={setEventTimeEnd} />
         </div>
       </Card>
 
       <Card>
         <h3 className="font-semibold mb-2">{t('bills.section.details', 'Details')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Input type="date" label={t('bills.field.issueDate', 'Issue date') as string} value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
-          <Input type="date" label={t('bills.field.dueDate', 'Due date') as string} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          <LocalizedDateInput label={t('bills.field.issueDate', 'Issue date') as string} value={issueDate} onChange={setIssueDate} />
+          <div>
+            <LocalizedDateInput
+              label={t('bills.field.dueDate', 'Due date') as string}
+              value={dueDate}
+              onChange={setDueDate}
+              disabled={!dueDateOverridden}
+            />
+            <label className="mt-1.5 flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+              <input
+                type="checkbox"
+                checked={dueDateOverridden}
+                onChange={(e) => setDueDateOverridden(e.target.checked)}
+                className="rounded border-neutral-300 dark:border-neutral-600"
+              />
+              {dueDateOverridden
+                ? t('bills.field.dueDateOverrideOn', 'Manual due date — untick to auto-set from send date + payment term')
+                : t('bills.field.dueDateOverrideOff', 'Auto from send date + payment term — tick to set manually')}
+            </label>
+          </div>
           <Input type="datetime-local" label={t('bills.field.scheduledSendAt', 'Scheduled send (optional)') as string}
             value={scheduledSendAt} onChange={(e) => setScheduledSendAt(e.target.value)} />
           <div>
@@ -589,6 +653,10 @@ export const BillEditorPage: React.FC = () => {
           only has the single FK still resolve their preview text. */}
       <Card>
         <h3 className="font-semibold mb-2">{t('bills.section.payment', 'Payment conditions')}</h3>
+        <Link to="/admin/settings?tab=crm"
+          className="text-xs text-accent hover:underline mb-2 inline-block">
+          {t('common.configureInSettings', 'Configure defaults in Settings ↗')}
+        </Link>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium mb-1">{t('bills.field.paymentNetDays', 'Net days')}</label>

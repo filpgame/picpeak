@@ -7,7 +7,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Eye, Send, Copy, ArrowRightCircle, Edit2, Receipt, CheckCircle2, ScrollText } from 'lucide-react';
+import { ArrowLeft, Eye, Send, Copy, ArrowRightCircle, Edit2, Receipt, CheckCircle2, ScrollText, XCircle } from 'lucide-react';
 import { Button, Card, Loading } from '../../../components/common';
 import { DocumentLineageCard } from '../../../components/admin/DocumentLineageCard';
 import { quotesService } from '../../../services/quotes.service';
@@ -125,6 +125,26 @@ export const QuoteDetailPage: React.FC = () => {
     }
   };
 
+  /**
+   * Admin decline-on-behalf. Used when the customer says no by phone/
+   * email — admin flips the quote to declined and (optionally) records
+   * why. The quote can still be duplicated to start a fresh round.
+   */
+  const handleDeclineOnBehalf = async () => {
+    const reason = window.prompt(t('quotes.declineReasonPrompt',
+      'Mark this quote as declined on behalf of the customer? Optionally note why (leave blank to skip).'));
+    // prompt returns null on Cancel; '' (empty) means "decline, no reason".
+    if (reason === null) return;
+    try {
+      await quotesService.declineOnBehalf(q.id, reason.trim() || undefined);
+      toast.success(t('quotes.declinedOnBehalfToast', 'Quote marked as declined.'));
+      qc.invalidateQueries({ queryKey: ['quote', id] });
+      qc.invalidateQueries({ queryKey: ['quotes'] });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Decline failed');
+    }
+  };
+
   const handleDuplicate = async () => {
     try {
       const result = await quotesService.duplicate(q.id);
@@ -168,6 +188,15 @@ export const QuoteDetailPage: React.FC = () => {
               {t('quotes.acceptOnBehalf', 'Accept on behalf')}
             </Button>
           )}
+          {/* Decline-on-behalf — same states as accept-on-behalf. Flips
+              the quote to declined for "customer said no by phone"
+              cases; hidden once accepted / declined / converted. */}
+          {['draft', 'sent', 'expired'].includes(q.status) && (
+            <Button variant="outline" onClick={handleDeclineOnBehalf}>
+              <XCircle className="w-4 h-4 mr-1" />
+              {t('quotes.declineOnBehalf', 'Decline on behalf')}
+            </Button>
+          )}
           {q.status === 'accepted' && (
             <>
               <Button onClick={handleConvert}>
@@ -207,6 +236,7 @@ export const QuoteDetailPage: React.FC = () => {
           {q.sentAt && <div><div className="text-neutral-600 dark:text-neutral-300">{t('quotes.field.sentAt', 'Sent at')}</div><div>{fmtDateTime(q.sentAt)}</div></div>}
           {q.acceptedAt && <div><div className="text-neutral-600 dark:text-neutral-300">{t('quotes.field.acceptedAt', 'Accepted at')}</div><div>{fmtDateTime(q.acceptedAt)}</div></div>}
           {q.declinedAt && <div><div className="text-neutral-600 dark:text-neutral-300">{t('quotes.field.declinedAt', 'Declined at')}</div><div>{fmtDateTime(q.declinedAt)}</div></div>}
+          {q.declineReason && <div className="col-span-2 md:col-span-4"><div className="text-neutral-600 dark:text-neutral-300">{t('quotes.field.declineReason', 'Decline reason')}</div><div className="whitespace-pre-line">{q.declineReason}</div></div>}
           {q.respondedAt && !responseLocked && (
             <div><div className="text-neutral-600 dark:text-neutral-300">{t('quotes.field.responseWindow', 'Response window')}</div>
               <div className="text-amber-700">{t('quotes.responseWindowOpen', 'Open until {{at}}', { at: q.responseLockedAt ? fmtDateTime(q.responseLockedAt) : '' })}</div></div>

@@ -19,7 +19,7 @@ import {
   Clock,
 } from 'lucide-react';
 
-import { Button, Card, Input, Loading } from '../../components/common';
+import { Button, Card, CountrySelect, Input, Loading } from '../../components/common';
 import { SUPPORTED_LANGUAGES } from '../../components/common/LanguageSelector';
 import { DecimalInput } from '../../components/common/DecimalInput';
 import { AssignedEventsDialog } from '../../components/admin/AssignedEventsDialog';
@@ -40,7 +40,7 @@ type EditableFields =
   | 'addressLine1' | 'addressLine2' | 'postalCode' | 'city' | 'state'
   | 'countryCode' | 'countryName' | 'preferredLanguage' | 'notes'
   | 'featureCalendar' | 'featureQuotes' | 'featureBills' | 'featureHoursLogging'
-  | 'hourlyRateMinor' | 'billingCadence' | 'billingCycleDay';
+  | 'hourlyRateMinor' | 'billingCadence' | 'billingCycleDay' | 'skontoDisabled';
 
 // `fmtDate` (from useLocalizedDate, below) is the single canonical date
 // formatter. It honors the admin's `general_date_format` setting AND
@@ -77,7 +77,7 @@ export const CustomerDetailPage: React.FC = () => {
     queryKey: ['admin-customer-monthly-draft', customerId],
     queryFn: () => customerAdminService.getMonthlyDraft(customerId),
     enabled: Number.isFinite(customerId) && customerId > 0
-      && (customer?.billingCadence === 'monthly'),
+      && (customer?.billingCadence === 'monthly' || customer?.billingCadence === 'manual'),
   });
   const monthlyDraft = monthlyDraftRes?.draft || null;
 
@@ -140,6 +140,7 @@ export const CustomerDetailPage: React.FC = () => {
         hourlyRateMinor: customer.hourlyRateMinor ?? null,
         billingCadence: customer.billingCadence ?? 'per_event',
         billingCycleDay: customer.billingCycleDay ?? 1,
+        skontoDisabled: customer.skontoDisabled ?? false,
       } as any);
     }
   }, [customer, form]);
@@ -538,27 +539,17 @@ export const CustomerDetailPage: React.FC = () => {
             <Input value={form.state || ''} onChange={setField('state')} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-theme mb-1">{t('customers.detail.countryCode', 'Country abbreviation (FL, CH, DE …)')}</label>
-            <Input
+            <CountrySelect
+              label={t('customers.detail.country', 'Country') as string}
               value={form.countryCode || ''}
-              onChange={setField('countryCode')}
-              maxLength={2}
-              placeholder="FL"
+              onChange={(code) => setForm((prev) => ({ ...prev, countryCode: code }))}
             />
           </div>
-          <div>
-            {/* Free-text country name override (migration 107). When
-                left empty the PDF renderer falls back to the locale-
-                aware lookup on the abbreviation; useful when the
-                abbreviation isn't an ISO code (e.g. "FL" for
-                Liechtenstein, which is "LI" in ISO). */}
-            <label className="block text-sm font-medium text-theme mb-1">{t('customers.detail.countryName', 'Country (full name)')}</label>
-            <Input
-              value={form.countryName || ''}
-              onChange={setField('countryName')}
-              placeholder="Liechtenstein"
-            />
-          </div>
+          {/* The free-text "Country (full name)" override (migration 107) was
+              removed as redundant — the country picker stores the ISO code and
+              the PDF renderer derives the localized full name from it
+              (pdfService.countryName). The DB column + the `country_name ||`
+              fallback stay, so any legacy override still renders. */}
         </div>
       </Card>
 
@@ -717,9 +708,10 @@ export const CustomerDetailPage: React.FC = () => {
               <option value="per_event">{t('customers.billing.perEvent', 'Per event')}</option>
               <option value="monthly">{t('customers.billing.monthly', 'Monthly')}</option>
               <option value="quarterly">{t('customers.billing.quarterly', 'Quarterly')}</option>
+              <option value="manual">{t('customers.billing.manual', 'Manual (trigger only)')}</option>
             </select>
           </div>
-          {form.billingCadence && form.billingCadence !== 'per_event' && (
+          {(form.billingCadence === 'monthly' || form.billingCadence === 'quarterly') && (
             <div>
               <label className="block text-sm font-medium text-theme mb-1">
                 {t('customers.billing.cycleDay', 'Cycle day')}
@@ -740,26 +732,50 @@ export const CustomerDetailPage: React.FC = () => {
           )}
         </div>
 
+        {/* Per-customer Skonto opt-out (migration 112). For B2B
+            customers who negotiated "no early-payment discount" — set
+            once instead of ticking the per-invoice toggle every time. */}
+        <label className="mt-4 flex items-start gap-2 text-sm text-theme">
+          <input
+            type="checkbox"
+            checked={!!form.skontoDisabled}
+            onChange={(e) => setForm((prev) => ({ ...prev, skontoDisabled: e.target.checked } as any))}
+            className="mt-0.5 rounded border-neutral-300 dark:border-neutral-600"
+          />
+          <span>
+            {t('customers.billing.skontoDisabled', 'No Skonto for this customer')}
+            <span className="block text-xs text-muted-theme">
+              {t('customers.billing.skontoDisabledHint',
+                'Disables the early-payment discount on all of this customer’s invoices, regardless of template or global defaults.')}
+            </span>
+          </span>
+        </label>
+
         {/* Preview of the open monthly draft (migration 128). Shows
             every line item queued for the customer's current billing
             period so admin sees exactly what "Trigger invoice now"
             would ship. Hidden when no draft exists yet (admin hasn't
             saved anything onto the period). */}
-        {form.billingCadence === 'monthly' && monthlyDraft && monthlyDraft.lineItems.length > 0 && (
+        {(form.billingCadence === 'monthly' || form.billingCadence === 'manual') && monthlyDraft && monthlyDraft.lineItems.length > 0 && (
           <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-theme">
-                {t('customers.billing.draftPreview.title',
-                  'Pending in this month\'s bill')}
+                {form.billingCadence === 'manual'
+                  ? t('customers.billing.draftPreview.titleManual',
+                      'Pending — ships on manual trigger')
+                  : t('customers.billing.draftPreview.title',
+                      'Pending in this month\'s bill')}
               </h3>
               <span className="text-xs text-muted-theme">
-                {t('customers.billing.draftPreview.periodRange',
-                  '{{number}} · {{from}} – {{to}}',
-                  {
-                    number: monthlyDraft.invoiceNumber,
-                    from: fmtDate(monthlyDraft.periodStart),
-                    to: fmtDate(monthlyDraft.periodEnd),
-                  })}
+                {monthlyDraft.periodStart && monthlyDraft.periodEnd
+                  ? t('customers.billing.draftPreview.periodRange',
+                      '{{number}} · {{from}} – {{to}}',
+                      {
+                        number: monthlyDraft.invoiceNumber,
+                        from: fmtDate(monthlyDraft.periodStart),
+                        to: fmtDate(monthlyDraft.periodEnd),
+                      })
+                  : monthlyDraft.invoiceNumber}
               </span>
             </div>
             <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
@@ -816,20 +832,25 @@ export const CustomerDetailPage: React.FC = () => {
           </div>
         )}
 
-        {/* Manual trigger — issue the running monthly draft NOW
-            instead of waiting for the cadence-day scheduler tick.
-            Only shown for monthly-mode customers (per-event has no
-            draft to arm; the equivalent action there is "Bill these
-            hours" on the standalone Hours-logging page). */}
-        {form.billingCadence === 'monthly' && (
+        {/* Manual trigger — issue the running draft NOW. For monthly
+            customers this bypasses the cadence-day scheduler tick; for
+            manual-cadence customers it's the ONLY way the draft ships
+            (the scheduler never auto-flushes a manual draft). Per-event
+            has no draft to arm; the equivalent action there is "Bill
+            these hours" on the standalone Hours-logging page. */}
+        {(form.billingCadence === 'monthly' || form.billingCadence === 'manual') && (
           <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
             <Button
               variant="outline"
               disabled={triggerMonthlyBillMutation.isPending}
               isLoading={triggerMonthlyBillMutation.isPending}
               onClick={() => {
-                if (window.confirm(t('customers.billing.triggerConfirm',
-                  'Issue this customer\'s monthly bill now? The customer receives the email immediately.') as string)) {
+                const confirmMsg = form.billingCadence === 'manual'
+                  ? t('customers.billing.triggerConfirmManual',
+                      'Issue this customer\'s accumulated bill now? The customer receives the email immediately.')
+                  : t('customers.billing.triggerConfirm',
+                      'Issue this customer\'s monthly bill now? The customer receives the email immediately.');
+                if (window.confirm(confirmMsg as string)) {
                   triggerMonthlyBillMutation.mutate();
                 }
               }}
@@ -837,8 +858,11 @@ export const CustomerDetailPage: React.FC = () => {
               {t('customers.billing.triggerNow', 'Trigger invoice now')}
             </Button>
             <p className="text-xs text-muted-theme mt-2">
-              {t('customers.billing.triggerHint',
-                'Bypasses the cadence day and issues the running draft immediately. Refuses when nothing has been queued for the current period.')}
+              {form.billingCadence === 'manual'
+                ? t('customers.billing.triggerHintManual',
+                    'Issues the running draft immediately. Manual-cadence drafts never ship automatically — this is the only way to send them. Refuses when nothing has been queued.')
+                : t('customers.billing.triggerHint',
+                    'Bypasses the cadence day and issues the running draft immediately. Refuses when nothing has been queued for the current period.')}
             </p>
           </div>
         )}

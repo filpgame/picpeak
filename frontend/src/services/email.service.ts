@@ -1,5 +1,27 @@
 import { api } from '../config/api';
 
+export type EmailQueueStatus = 'pending' | 'sent' | 'failed';
+
+export interface EmailQueueItem {
+  id: number;
+  recipientEmail: string;
+  emailType: string;
+  status: EmailQueueStatus;
+  createdAt: string;
+  scheduledAt: string | null;
+  sentAt: string | null;
+  errorMessage: string | null;
+  retryCount: number;
+  eventId: number | null;
+  eventName: string | null;
+  eventSlug: string | null;
+}
+
+export interface EmailQueueListResponse {
+  items: EmailQueueItem[];
+  pagination: { total: number; page: number; pageSize: number; totalPages: number };
+}
+
 export interface EmailConfig {
   smtp_host: string;
   smtp_port: number;
@@ -72,6 +94,31 @@ export const emailService = {
   // Test email configuration
   async testEmail(testEmail: string): Promise<void> {
     await api.post('/admin/email/test', { test_email: testEmail });
+  },
+
+  /** Flush the email queue immediately. Sends every pending email now,
+   *  bypassing the business-hours floor — the escape hatch for draining
+   *  the queue before maintenance/updates. */
+  async flushQueue(): Promise<{ processed: number; sent: number; failed: number }> {
+    const response = await api.post<{ processed: number; sent: number; failed: number }>(
+      '/admin/email/flush-queue'
+    );
+    return response.data;
+  },
+
+  /** Read-only "Sent emails" feed — paginated view of the email_queue
+   *  table with filters. email_data is never returned. */
+  async listQueue(params: {
+    status?: EmailQueueStatus;
+    emailType?: string;
+    q?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    pageSize?: number;
+  } = {}): Promise<EmailQueueListResponse> {
+    const response = await api.get<EmailQueueListResponse>('/admin/email/queue', { params });
+    return response.data;
   },
 
   // Get all email templates

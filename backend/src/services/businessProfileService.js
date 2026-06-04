@@ -17,6 +17,7 @@ const { db, withRetry } = require('../database/db');
 const logger = require('../utils/logger');
 const { AppError } = require('../utils/errors');
 const { formatBoolean } = require('../utils/dbCompat');
+const { normaliseSchedule } = require('../utils/businessHours');
 
 const ALLOWED_PROFILE_FIELDS = [
   'company_name',
@@ -41,6 +42,10 @@ const ALLOWED_PROFILE_FIELDS = [
   'tax_id',
   'vat_label',
   'vat_rate_default',
+  // Install-wide fallback hourly rate (migration 113), minor units.
+  // Last link in the hour-entry rate chain after the per-entry
+  // override and the per-customer default.
+  'default_hourly_rate_minor',
   'default_currency',
   'default_locale',
   'default_qr_format',
@@ -75,6 +80,11 @@ const ALLOWED_PROFILE_FIELDS = [
   // by the calendar UI to render timed blocks in the operator's
   // working tz. Admin-only; never exposed via publicSettings.
   'timezone',
+  // Per-ISO-weekday opening hours (migration 114). JSON TEXT; drives the
+  // scheduled-email floor and is interpreted in `timezone`.
+  'business_hours',
+  // Master switch for the scheduled-email business-hours floor (mig 114).
+  'scheduled_email_floor_enabled',
 ];
 
 const ALLOWED_BANK_FIELDS = [
@@ -160,6 +170,32 @@ function sanitiseProfilePayload(payload) {
     updates.pdf_logo_height = Number.isFinite(n)
       ? Math.max(24, Math.min(200, n))
       : 56;
+  }
+  // Install-wide default hourly rate (minor units). Empty / null clears
+  // it back to "no global default"; otherwise coerce to a non-negative
+  // integer so a stray decimal can't land sub-cent values in the column.
+  if (updates.default_hourly_rate_minor !== undefined) {
+    if (updates.default_hourly_rate_minor === null || updates.default_hourly_rate_minor === '') {
+      updates.default_hourly_rate_minor = null;
+    } else {
+      const n = parseInt(updates.default_hourly_rate_minor, 10);
+      updates.default_hourly_rate_minor = Number.isFinite(n) && n >= 0 ? n : null;
+    }
+  }
+
+  // Per-weekday opening hours. Accept the API object (or a JSON string),
+  // run it through the shared validator (drops bad blocks, sorts, fills
+  // all 7 days), and persist the canonical JSON string. An explicit
+  // null / '' clears the schedule back to "no hours configured".
+  if (updates.business_hours !== undefined) {
+    if (updates.business_hours === null || updates.business_hours === '') {
+      updates.business_hours = null;
+    } else {
+      updates.business_hours = JSON.stringify(normaliseSchedule(updates.business_hours));
+    }
+  }
+  if (updates.scheduled_email_floor_enabled !== undefined) {
+    updates.scheduled_email_floor_enabled = formatBoolean(Boolean(updates.scheduled_email_floor_enabled));
   }
 
   return updates;

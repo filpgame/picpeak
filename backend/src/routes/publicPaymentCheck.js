@@ -50,16 +50,20 @@ router.get(
       const { getAppSetting } = require('../utils/appSettings');
       const profile = await db('business_profile').where({ id: 1 }).first();
       const brandingLogoUrl = await getAppSetting('branding_logo_url', null);
+      const brandingLogoUrlDark = await getAppSetting('branding_logo_url_dark', null);
+      const toUrl = (raw) => {
+        const value = (raw && String(raw).trim()) || null;
+        if (!value) return null;
+        if (value.startsWith('/') || /^https?:\/\//i.test(value)) return value;
+        return `/uploads/${value.replace(/^uploads\//, '')}`;
+      };
       const issuer = profile ? {
         companyName: profile.company_name || '',
         email: profile.email || '',
         website: profile.website || '',
-        logoUrl: (() => {
-          const raw = (brandingLogoUrl && String(brandingLogoUrl).trim()) || null;
-          if (!raw) return null;
-          if (raw.startsWith('/') || /^https?:\/\//i.test(raw)) return raw;
-          return `/uploads/${raw.replace(/^uploads\//, '')}`;
-        })(),
+        // Light + dark branding logos — the page picks per its colour mode.
+        logoUrl: toUrl(brandingLogoUrl),
+        logoUrlDark: toUrl(brandingLogoUrlDark),
       } : null;
 
       return successResponse(res, { invoice: view, issuer });

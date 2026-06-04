@@ -5,7 +5,11 @@
 import { api } from '../config/api';
 
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted';
-export type QuoteSort = 'newest' | 'oldest' | 'customer_asc' | 'value_asc' | 'value_desc';
+export type QuoteSort =
+  | 'newest' | 'oldest'
+  | 'issue_asc' | 'issue_desc'
+  | 'customer_asc' | 'customer_desc'
+  | 'value_asc' | 'value_desc';
 
 export interface QuoteLineItem {
   id?: number;
@@ -94,6 +98,10 @@ export interface QuoteDetail extends QuoteSummary {
   ccPdfEmail: string | null;
   respondedAt: string | null;
   responseLockedAt: string | null;
+  /** Free-text reason captured when an admin declines on the customer's
+   *  behalf (migration 115). Null for customer-side declines + non-declined
+   *  quotes. */
+  declineReason: string | null;
   pdfPath: string | null;
   businessBankAccountId: number | null;
 }
@@ -248,6 +256,14 @@ export const quotesService = {
     return data.data || data;
   },
 
+  /** Admin decline-on-behalf — flips the quote to `declined` without the
+   *  customer's public response page. Optional free-text reason. Used
+   *  when the customer says no by phone/email. */
+  async declineOnBehalf(id: number, reason?: string): Promise<{ status: string; declinedAt: string }> {
+    const { data } = await api.post(`/admin/quotes/${id}/decline`, reason ? { reason } : {});
+    return data.data || data;
+  },
+
   async convert(id: number): Promise<{ eventId: number; alreadyConverted: boolean }> {
     const { data } = await api.post(`/admin/quotes/${id}/convert`);
     return data.data || data;
@@ -374,6 +390,8 @@ export interface PublicQuoteView {
     footerLine: string;
     /** Absolute or /uploads/-prefixed URL set by the public route. */
     logoUrl?: string | null;
+    /** Dark-mode branding logo; the page picks per its colour mode. */
+    logoUrlDark?: string | null;
   } | null;
 }
 
