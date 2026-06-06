@@ -49,7 +49,7 @@ router.get('/', requirePermission('events.view'), handleAsync(async (req, res) =
 
 // Create
 router.post('/',
-  requirePermission('events.manage'),
+  requirePermission('events.edit'),
   [body('name').isString().trim().isLength({ min: 1, max: 255 }), body('customerAccountId').optional({ values: 'falsy' }).isInt({ min: 1 })],
   handleAsync(async (req, res) => {
     validateRequest(req);
@@ -71,7 +71,7 @@ router.get('/:id', requirePermission('events.view'), [param('id').isInt({ min: 1
 
 // Update
 router.put('/:id',
-  requirePermission('events.manage'),
+  requirePermission('events.edit'),
   [
     param('id').isInt({ min: 1 }),
     body('name').optional().isString().trim().isLength({ min: 1, max: 255 }),
@@ -91,7 +91,7 @@ router.put('/:id',
 
 // Attach an event to the project
 router.post('/:id/events',
-  requirePermission('events.manage'),
+  requirePermission('events.edit'),
   [param('id').isInt({ min: 1 }), body('eventId').isInt({ min: 1 })],
   handleAsync(async (req, res) => {
     validateRequest(req);
@@ -102,7 +102,7 @@ router.post('/:id/events',
 
 // Attach a quote to the project (quotes carry no event_id — migration 121).
 router.post('/:id/quotes',
-  requirePermission('events.manage'),
+  requirePermission('events.edit'),
   [param('id').isInt({ min: 1 }), body('quoteId').isInt({ min: 1 })],
   handleAsync(async (req, res) => {
     validateRequest(req);
@@ -113,7 +113,7 @@ router.post('/:id/quotes',
 
 // Attach a contract to the project.
 router.post('/:id/contracts',
-  requirePermission('events.manage'),
+  requirePermission('events.edit'),
   [param('id').isInt({ min: 1 }), body('contractId').isInt({ min: 1 })],
   handleAsync(async (req, res) => {
     validateRequest(req);
