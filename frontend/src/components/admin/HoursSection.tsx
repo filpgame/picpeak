@@ -358,6 +358,7 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
           className="mt-3"
           label={t('customers.hours.form.bookToProject', 'Book to project') as string}
           value={projectId}
+          customerAccountId={customerId}
           onChange={setProjectId}
         />
         <div className="mt-3 flex items-center justify-end gap-3">
