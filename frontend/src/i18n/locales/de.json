@@ -3123,6 +3123,7 @@
         "rateOverride": "Satz-Override",
         "note": "Notiz / Beschreibung",
         "notePlaceholder": "Was wurde gearbeitet?",
+        "bookToProject": "Auf Projekt buchen",
         "save": "Eintrag hinzufügen",
         "needRate": "Satz festlegen oder Override eingeben, um Zeit zu erfassen."
       },
@@ -3370,6 +3371,7 @@
       "body": "Aktiviere „Konten\" (oder eine andere CRM-Unterfunktion) unter Einstellungen → Funktionen, um loszulegen."
     },
     "subnav": {
+      "overview": "Übersicht",
       "accounts": "Konten",
       "quotes": "Angebote",
       "contracts": "Verträge",
@@ -3378,6 +3380,63 @@
       "bills": "Rechnungen",
       "taxReport": "Steuer",
       "development": "Entwicklung"
+    }
+  },
+  "projects": {
+    "title": "Projektübersicht",
+    "subtitle": "Fasse Events zu Projekten zusammen und sieh jede E-Mail, jedes Dokument, jede Galerie und jede Stunde in einem Cockpit.",
+    "search": "Nach Name oder Kunde suchen…",
+    "empty": "Noch keine Projekte. Erstelle oben eines, oder vorhandene Events wurden automatisch gruppiert.",
+    "notFound": "Projekt nicht gefunden",
+    "backToList": "Alle Projekte",
+    "noCustomer": "Kein einzelner Kunde",
+    "rename": "Umbenennen",
+    "timeline": "Meilensteine",
+    "eventCount": "{{count}} Events",
+    "totalHours": "{{hours}} erfasst",
+    "create": {
+      "label": "Name des neuen Projekts",
+      "placeholder": "z. B. Hochzeit Müller 2026",
+      "button": "Projekt erstellen"
+    },
+    "col": {
+      "name": "Projekt",
+      "customer": "Kunde",
+      "events": "Events",
+      "status": "Status",
+      "updated": "Aktualisiert"
+    },
+    "picker": {
+      "label": "Projekt",
+      "none": "Kein Projekt"
+    },
+    "feed": {
+      "title": "Aktivität",
+      "empty": "Diesem Projekt ist noch nichts zugeordnet.",
+      "email": "E-Mail",
+      "quote": "Angebot",
+      "contract": "Vertrag",
+      "invoice": "Rechnung",
+      "gallery": "Galerie",
+      "hours": "Stunden"
+    },
+    "email": {
+      "preview": "Vorschau",
+      "resend": "Erneut senden",
+      "sendNow": "Jetzt senden",
+      "cancel": "Abbrechen",
+      "retry": "Wiederholen",
+      "previewTitle": "E-Mail-Vorschau",
+      "noPreview": "Keine gespeicherte Vorschau für diese E-Mail — sie wurde gesendet, bevor Vorschauen erfasst wurden."
+    },
+    "toast": {
+      "created": "Projekt erstellt",
+      "createFailed": "Projekt konnte nicht erstellt werden",
+      "saved": "Projekt gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "emailAction": "Erledigt",
+      "emailActionFailed": "Aktion fehlgeschlagen",
+      "previewFailed": "Vorschau konnte nicht geladen werden"
     }
   },
   "calendar": {

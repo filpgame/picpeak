@@ -3123,6 +3123,7 @@
         "rateOverride": "Rate override",
         "note": "Note / description",
         "notePlaceholder": "What was worked on?",
+        "bookToProject": "Book to project",
         "save": "Add entry",
         "needRate": "Set a rate or enter an override to log time."
       },
@@ -3370,6 +3371,7 @@
       "body": "Enable Accounts (or another CRM sub-feature) under Settings → Features to get started."
     },
     "subnav": {
+      "overview": "Overview",
       "accounts": "Accounts",
       "quotes": "Quotes",
       "contracts": "Contracts",
@@ -3378,6 +3380,63 @@
       "bills": "Invoices",
       "taxReport": "Tax",
       "development": "Development"
+    }
+  },
+  "projects": {
+    "title": "Project Overview",
+    "subtitle": "Group events into projects and see every email, document, gallery and hour in one cockpit.",
+    "search": "Search by name or customer…",
+    "empty": "No projects yet. Create one above, or events you already have were grouped automatically.",
+    "notFound": "Project not found",
+    "backToList": "All projects",
+    "noCustomer": "No single customer",
+    "rename": "Rename",
+    "timeline": "Milestones",
+    "eventCount": "{{count}} events",
+    "totalHours": "{{hours}} logged",
+    "create": {
+      "label": "New project name",
+      "placeholder": "e.g. Müller wedding 2026",
+      "button": "Create project"
+    },
+    "col": {
+      "name": "Project",
+      "customer": "Customer",
+      "events": "Events",
+      "status": "Status",
+      "updated": "Updated"
+    },
+    "picker": {
+      "label": "Project",
+      "none": "No project"
+    },
+    "feed": {
+      "title": "Activity",
+      "empty": "Nothing rolled up to this project yet.",
+      "email": "Email",
+      "quote": "Quote",
+      "contract": "Contract",
+      "invoice": "Invoice",
+      "gallery": "Gallery",
+      "hours": "Hours"
+    },
+    "email": {
+      "preview": "Preview",
+      "resend": "Resend",
+      "sendNow": "Send now",
+      "cancel": "Cancel",
+      "retry": "Retry",
+      "previewTitle": "Email preview",
+      "noPreview": "No stored preview for this email — it was sent before previews were captured."
+    },
+    "toast": {
+      "created": "Project created",
+      "createFailed": "Could not create project",
+      "saved": "Project saved",
+      "saveFailed": "Save failed",
+      "emailAction": "Done",
+      "emailActionFailed": "Action failed",
+      "previewFailed": "Could not load preview"
     }
   },
   "calendar": {
