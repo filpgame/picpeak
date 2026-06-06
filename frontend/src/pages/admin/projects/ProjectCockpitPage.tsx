@@ -83,6 +83,16 @@ const KIND_ICON: Record<FeedKind, React.ComponentType<{ className?: string }>> =
   hours: Clock,
 };
 
+/** Neutralise links for a read-only preview: force every anchor to target a
+ *  new tab so the sandboxed iframe (no allow-popups) blocks the navigation
+ *  entirely. Without this, clicking "Accept"/"Decline" in the preview would
+ *  hit the live action URLs and actually change the quote's state. */
+function neutralizeLinks(html: string): string {
+  const base = '<base target="_blank">';
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + base);
+  return base + html;
+}
+
 function minutesToHours(min: number): string {
   const h = Math.floor(min / 60);
   const m = min % 60;
@@ -445,13 +455,16 @@ export const ProjectCockpitPage: React.FC = () => {
                       {t('projects.email.reRendered', 'Re-rendered from the current template — this email was sent before previews were captured, so it may differ slightly from what the recipient received.')}
                     </div>
                   )}
-                  {/* Render the email exactly as sent — it carries its own
-                      background from the brand/email theme. isolate the
-                      iframe's color-scheme so the admin's OS dark mode doesn't
-                      tint a document that defines its own colors. */}
+                  {/* Read-only preview: renders the email with its own brand
+                      colors (color-scheme:normal stops the dark app theme from
+                      tinting it), but `sandbox` (no allow-popups/scripts/forms)
+                      + neutralizeLinks make every link inert — so the admin
+                      can't accidentally trigger the live Accept/Decline URLs by
+                      clicking inside the preview. Scrolling still works. */}
                   <iframe
                     title="email-preview"
-                    srcDoc={preview.html}
+                    srcDoc={neutralizeLinks(preview.html)}
+                    sandbox=""
                     style={{ colorScheme: 'normal' }}
                     className="w-full h-[60vh] border border-neutral-200 dark:border-neutral-700 rounded"
                   />
