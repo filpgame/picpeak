@@ -1224,6 +1224,11 @@
         "title": "Hours logging",
         "description": "Per-customer time tracking. Admin logs date + start/end times + optional rate override + note. Monthly-mode customers auto-accumulate hours into the running monthly draft; per-event customers see a \"Create draft invoice\" button that mints a standalone draft invoice with one line per entry. Independent of Bills — log hours even before turning the full billing surface on.",
         "sidebar": "Hours"
+      },
+      "projects": {
+        "title": "Projects",
+        "description": "Admin-only grouping layer above events. Bundle several events under one project and open a 360° Project Overview cockpit — milestone timeline plus a dated feed of every email (with the actual sent preview + resend/cancel/retry actions), quote, contract, invoice, gallery and logged hour. Adds a \"book to project\" control when logging hours. Customers never see projects.",
+        "sidebar": "Overview"
       }
     },
     "customerSurface": {

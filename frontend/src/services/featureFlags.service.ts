@@ -41,7 +41,11 @@ export type FeatureKey =
   // upload. Independent of quotes / bills — contracts can be sent on
   // their own. Seeded block bodies are examples only; admins must
   // have their lawyer review before sending. See docs/crm-disclaimers.md.
-  | 'contracts';
+  | 'contracts'
+  // Projects (migration 120). Admin-only grouping layer above events with the
+  // 360° Project Overview cockpit + the "book to project" hours control. Off
+  // by default; gates the CRM → Overview area entirely.
+  | 'projects';
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 

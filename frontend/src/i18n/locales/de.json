@@ -1666,6 +1666,11 @@
         "title": "Stundenerfassung",
         "description": "Zeiterfassung pro Kunde. Admin erfasst Datum + Start-/Endzeit + optionalen Satz-Override + Notiz. Kunden im Monatsmodus akkumulieren Stunden automatisch in den laufenden Monatsentwurf; Kunden pro Anlass sehen eine Schaltfläche „Entwurfsrechnung erstellen“, die eine eigenständige Entwurfsrechnung mit einer Zeile pro Eintrag erzeugt. Unabhängig von Rechnungen — Stunden erfassen, noch bevor die volle Abrechnungsoberfläche aktiviert ist.",
         "sidebar": "Stunden"
+      },
+      "projects": {
+        "title": "Projekte",
+        "description": "Nur-Admin-Gruppierungsebene über Events. Bündle mehrere Events unter einem Projekt und öffne ein 360°-Projektübersichts-Cockpit — Meilenstein-Zeitleiste plus ein datierter Verlauf aller E-Mails (mit der tatsächlich gesendeten Vorschau + Erneut-senden/Abbrechen/Wiederholen-Aktionen), Angebote, Verträge, Rechnungen, Galerien und erfassten Stunden. Fügt beim Erfassen von Stunden eine „Auf Projekt buchen“-Option hinzu. Kunden sehen Projekte nie.",
+        "sidebar": "Übersicht"
       }
     },
     "customerSurface": {

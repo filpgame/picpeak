@@ -196,6 +196,48 @@ async function getEmailPreview(emailId) {
   };
 }
 
+// ── Email actions (from the cockpit feed) ───────────────────────────────
+
+async function resendEmail(emailId) {
+  const row = await db('email_queue').where({ id: emailId }).first();
+  if (!row) throw new AppError('Email not found', 404);
+  const insert = await db('email_queue').insert({
+    recipient_email: row.recipient_email,
+    email_type: row.email_type,
+    email_data: row.email_data,
+    event_id: row.event_id,
+    status: 'pending',
+    retry_count: 0,
+    created_at: new Date(),
+  }).returning('id');
+  const id = (insert[0] && typeof insert[0] === 'object') ? insert[0].id : insert[0];
+  return { id, status: 'pending' };
+}
+
+async function cancelEmail(emailId) {
+  const row = await db('email_queue').where({ id: emailId }).first();
+  if (!row) throw new AppError('Email not found', 404);
+  if (row.status !== 'pending') throw new AppError('Only pending emails can be cancelled', 409);
+  await db('email_queue').where({ id: emailId }).update({ status: 'cancelled' });
+  return { id: emailId, status: 'cancelled' };
+}
+
+async function retryEmail(emailId) {
+  const row = await db('email_queue').where({ id: emailId }).first();
+  if (!row) throw new AppError('Email not found', 404);
+  await db('email_queue').where({ id: emailId })
+    .update({ status: 'pending', retry_count: 0, error_message: null, scheduled_at: null });
+  return { id: emailId, status: 'pending' };
+}
+
+async function sendEmailNow(emailId) {
+  const row = await db('email_queue').where({ id: emailId }).first();
+  if (!row) throw new AppError('Email not found', 404);
+  await db('email_queue').where({ id: emailId }).update({ status: 'pending', scheduled_at: null });
+  const { processEmailQueue } = require('./emailProcessor');
+  return processEmailQueue({ ignoreSchedule: true, limit: 50 });
+}
+
 module.exports = {
   listProjects,
   getProjectById,
@@ -204,4 +246,8 @@ module.exports = {
   assignEvent,
   getProjectOverview,
   getEmailPreview,
+  resendEmail,
+  cancelEmail,
+  retryEmail,
+  sendEmailNow,
 };

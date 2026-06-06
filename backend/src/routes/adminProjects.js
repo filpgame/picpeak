@@ -14,9 +14,22 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission, userHasAnyPermission } = require('../middleware/permissions');
 const { handleAsync, validateRequest, successResponse } = require('../utils/routeHelpers');
 const projectService = require('../services/projectService');
+const { db } = require('../database/db');
 
 const router = express.Router();
 router.use(adminAuth);
+
+// Projects is feature-flagged like bills/quotes — when off, the whole cockpit
+// (and the "book to project" hours control) is hidden, and the API 403s.
+async function requireProjectsFlag(req, res, next) {
+  try {
+    const row = await db('feature_flags').where({ key: 'projects' }).first();
+    const enabled = row && (row.value === true || row.value === 1 || row.value === '1');
+    if (!enabled) return res.status(403).json({ error: 'Projects feature is disabled', code: 'PROJECTS_DISABLED' });
+    next();
+  } catch (err) { next(err); }
+}
+router.use(requireProjectsFlag);
 
 // List
 router.get('/', requirePermission('events.view'), handleAsync(async (req, res) => {
@@ -98,5 +111,17 @@ router.get('/email/:emailId/preview', requirePermission('events.view'), [param('
   const preview = await projectService.getEmailPreview(parseInt(req.params.emailId, 10));
   return successResponse(res, preview);
 }));
+
+// Email actions from the feed (need email.send). Resend (sent→fresh copy),
+// Cancel (pending→cancelled), Retry (failed→pending), Send now (flush this one).
+const emailAction = (fn) => handleAsync(async (req, res) => {
+  validateRequest(req);
+  const result = await projectService[fn](parseInt(req.params.emailId, 10));
+  return successResponse(res, result);
+});
+router.post('/email/:emailId/resend',   requirePermission('email.send'), [param('emailId').isInt({ min: 1 })], emailAction('resendEmail'));
+router.post('/email/:emailId/cancel',    requirePermission('email.send'), [param('emailId').isInt({ min: 1 })], emailAction('cancelEmail'));
+router.post('/email/:emailId/retry',     requirePermission('email.send'), [param('emailId').isInt({ min: 1 })], emailAction('retryEmail'));
+router.post('/email/:emailId/send-now',  requirePermission('email.send'), [param('emailId').isInt({ min: 1 })], emailAction('sendEmailNow'));
 
 module.exports = router;

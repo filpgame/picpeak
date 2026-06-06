@@ -62,6 +62,10 @@ const KNOWN_FLAGS = [
   // upload). Seeded block bodies are EXAMPLES ONLY; admins must have a
   // lawyer review before sending. See docs/crm-disclaimers.md.
   'contracts',
+  // Projects (migration 120). Admin-only grouping layer above events +
+  // the Project Overview cockpit ("book to project" hours control, 360°
+  // rollup feed). Lights up the Clients section. Customers never see it.
+  'projects',
 ];
 
 // Spec defaults for any flag missing from the DB (e.g. a row added by a
@@ -84,6 +88,7 @@ const DEFAULT_FLAGS = {
   taxReport: false,
   hoursLogging: false,
   contracts: false,
+  projects: false,
 };
 
 async function readAllFlags() {
@@ -123,6 +128,8 @@ function applyDependencyRules(flags) {
     || out.taxReport
     || out.hoursLogging
     || out.contracts
+    // Migration 120 — admin-only Project Overview cockpit lives under Clients.
+    || out.projects
     // Migration 137 — admin calendar lights up the Clients section.
     // (calendarBooking is gated behind `calendar` so adding the parent
     // is sufficient.)
