@@ -13,7 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
   Mail, FileText, ScrollText, Receipt, Image as ImageIcon, Clock,
-  X, Send, RotateCw, Ban, Eye, Save, ArrowLeft,
+  X, Send, RotateCw, Ban, Eye, Save, ArrowLeft, Plus, Search,
 } from 'lucide-react';
 import { Button, Card, Input, Loading } from '../../../components/common';
 import {
@@ -21,6 +21,7 @@ import {
   type ProjectOverview,
   type EmailPreview,
 } from '../../../services/projects.service';
+import { eventsService } from '../../../services/events.service';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import { formatMoneyMinor } from '../../../utils/money';
 
@@ -63,6 +64,7 @@ export const ProjectCockpitPage: React.FC = () => {
   const [editName, setEditName] = useState<string | null>(null);
   const [preview, setPreview] = useState<EmailPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [eventSearch, setEventSearch] = useState('');
 
   const { data, isLoading } = useQuery<ProjectOverview>({
     queryKey: ['project-overview', projectId],
@@ -93,6 +95,25 @@ export const ProjectCockpitPage: React.FC = () => {
       toast.success(t('projects.toast.emailAction', 'Done') as string);
     },
     onError: (err: any) => toast.error(err?.response?.data?.error || (t('projects.toast.emailActionFailed', 'Action failed') as string)),
+  });
+
+  // Event search for the "attach event" control (results exclude events
+  // already on this project).
+  const { data: eventResults } = useQuery({
+    queryKey: ['project-event-search', eventSearch],
+    queryFn: () => eventsService.getEvents(1, 10, undefined, eventSearch),
+    enabled: eventSearch.trim().length >= 2,
+  });
+
+  const attachEventMutation = useMutation({
+    mutationFn: (eventId: number) => projectsService.assignEvent(projectId as number, eventId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project-overview', projectId] });
+      qc.invalidateQueries({ queryKey: ['projects'] });
+      setEventSearch('');
+      toast.success(t('projects.events.attached', 'Event attached') as string);
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.error || (t('projects.events.attachFailed', 'Could not attach event') as string)),
   });
 
   const openPreview = async (emailId: number) => {
@@ -197,6 +218,49 @@ export const ProjectCockpitPage: React.FC = () => {
           </div>
           {editName === null && (
             <Button variant="outline" onClick={() => setEditName(project.name)}>{t('projects.rename', 'Rename')}</Button>
+          )}
+        </div>
+      </Card>
+
+      {/* Events in this project + attach control */}
+      <Card className="mb-4">
+        <h2 className="text-sm font-semibold mb-3 text-neutral-700 dark:text-neutral-300">{t('projects.events.title', 'Events')}</h2>
+        {data.events.length === 0 ? (
+          <p className="text-sm text-neutral-500 mb-3">{t('projects.events.none', 'No events grouped under this project yet.')}</p>
+        ) : (
+          <ul className="space-y-1 mb-3">
+            {data.events.map((ev) => (
+              <li key={ev.id} className="flex items-center justify-between text-sm rounded-md border border-neutral-100 dark:border-neutral-800 px-3 py-1.5">
+                <span className="font-medium text-neutral-900 dark:text-neutral-100">{ev.event_name}</span>
+                <span className="text-xs text-neutral-500">{ev.event_date ? format(ev.event_date) : '—'}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+          <Input
+            value={eventSearch}
+            onChange={(e) => setEventSearch(e.target.value)}
+            placeholder={t('projects.events.searchPlaceholder', 'Attach an event — search by name…') as string}
+            className="pl-9"
+          />
+          {eventSearch.trim().length >= 2 && eventResults?.events && eventResults.events.length > 0 && (
+            <div className="absolute z-10 mt-1 w-full rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-lg max-h-56 overflow-auto">
+              {eventResults.events
+                .filter((ev: any) => !data.events.some((existing) => existing.id === ev.id))
+                .map((ev: any) => (
+                  <button
+                    key={ev.id}
+                    onClick={() => attachEventMutation.mutate(ev.id)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                  >
+                    <Plus className="w-3 h-3 text-neutral-400" />
+                    <span className="flex-1 truncate text-neutral-900 dark:text-neutral-100">{ev.event_name}</span>
+                    <span className="text-xs text-neutral-500">{ev.event_date ? format(ev.event_date) : ''}</span>
+                  </button>
+                ))}
+            </div>
           )}
         </div>
       </Card>

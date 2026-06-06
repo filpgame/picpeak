@@ -3410,6 +3410,13 @@
       "label": "Projekt",
       "none": "Kein Projekt"
     },
+    "events": {
+      "title": "Events",
+      "none": "Diesem Projekt sind noch keine Events zugeordnet.",
+      "searchPlaceholder": "Event zuordnen — nach Name suchen…",
+      "attached": "Event zugeordnet",
+      "attachFailed": "Event konnte nicht zugeordnet werden"
+    },
     "feed": {
       "title": "Aktivität",
       "empty": "Diesem Projekt ist noch nichts zugeordnet.",

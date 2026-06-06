@@ -3410,6 +3410,13 @@
       "label": "Project",
       "none": "No project"
     },
+    "events": {
+      "title": "Events",
+      "none": "No events grouped under this project yet.",
+      "searchPlaceholder": "Attach an event — search by name…",
+      "attached": "Event attached",
+      "attachFailed": "Could not attach event"
+    },
     "feed": {
       "title": "Activity",
       "empty": "Nothing rolled up to this project yet.",
