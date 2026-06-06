@@ -83,14 +83,16 @@ const KIND_ICON: Record<FeedKind, React.ComponentType<{ className?: string }>> =
   hours: Clock,
 };
 
-/** Neutralise links for a read-only preview: force every anchor to target a
- *  new tab so the sandboxed iframe (no allow-popups) blocks the navigation
- *  entirely. Without this, clicking "Accept"/"Decline" in the preview would
- *  hit the live action URLs and actually change the quote's state. */
-function neutralizeLinks(html: string): string {
-  const base = '<base target="_blank">';
-  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + base);
-  return base + html;
+/** Prepare the rendered email for a read-only preview:
+ *  - `<base target="_blank">` so the sandboxed iframe (no allow-popups) blocks
+ *    every link, preventing accidental clicks on the live Accept/Decline URLs.
+ *  - `overflow-wrap:break-word` so a long unbreakable token (e.g. the gallery
+ *    link) wraps inside the container instead of forcing horizontal scroll.
+ *    break-word only kicks in on overflow, so it won't disturb table layout. */
+function preparePreviewHtml(html: string): string {
+  const inject = '<base target="_blank"><style>*{overflow-wrap:break-word}</style>';
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + inject);
+  return inject + html;
 }
 
 function minutesToHours(min: number): string {
@@ -463,7 +465,7 @@ export const ProjectCockpitPage: React.FC = () => {
                       clicking inside the preview. Scrolling still works. */}
                   <iframe
                     title="email-preview"
-                    srcDoc={neutralizeLinks(preview.html)}
+                    srcDoc={preparePreviewHtml(preview.html)}
                     sandbox=""
                     style={{ colorScheme: 'normal' }}
                     className="w-full h-[60vh] border border-neutral-200 dark:border-neutral-700 rounded"
