@@ -763,7 +763,9 @@ async function sendTemplateEmail(to, templateKey, variables) {
     });
 
     logger.info(`Email sent successfully: ${info.messageId} (${language})`);
-    return { success: true, messageId: info.messageId, language };
+    // Return the rendered HTML so the queue processor can persist the ACTUAL
+    // sent body (email_queue.rendered_html) for the Project Overview preview.
+    return { success: true, messageId: info.messageId, language, html: htmlBody };
   } catch (error) {
     logger.error('Error sending template email:', error);
     throw error;
@@ -839,19 +841,25 @@ async function processEmailQueue({ ignoreSchedule = false, limit = 10 } = {}) {
           ? JSON.parse(email.email_data || '{}')
           : email.email_data || {};
         
-        await sendTemplateEmail(
+        const sendResult = await sendTemplateEmail(
           email.recipient_email,
           email.email_type,
           emailData
         );
-        
-        // Mark as sent
+
+        // Mark as sent, persisting the actual rendered HTML for the Project
+        // Overview email preview (guarded — older installs without migration
+        // 119 just skip it).
+        const sentUpdate = { status: 'sent', sent_at: new Date() };
+        try {
+          const { hasColumnCached } = require('../utils/schemaCache');
+          if (sendResult && sendResult.html && await hasColumnCached('email_queue', 'rendered_html')) {
+            sentUpdate.rendered_html = sendResult.html;
+          }
+        } catch (_) { /* best-effort — never block the send on the preview */ }
         await db('email_queue')
           .where('id', email.id)
-          .update({
-            status: 'sent',
-            sent_at: new Date()
-          });
+          .update(sentUpdate);
 
         result.sent += 1;
         logger.info(`Email ${email.id} sent successfully`);
