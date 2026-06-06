@@ -3439,7 +3439,8 @@
       "cancel": "Cancel",
       "retry": "Retry",
       "previewTitle": "Email preview",
-      "noPreview": "No stored preview for this email — it was sent before previews were captured."
+      "noPreview": "No stored preview for this email — it was sent before previews were captured.",
+      "reRendered": "Re-rendered from the current template — this email was sent before previews were captured, so it may differ slightly from what the recipient received."
     },
     "toast": {
       "created": "Project created",

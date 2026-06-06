@@ -772,6 +772,22 @@ async function sendTemplateEmail(to, templateKey, variables) {
   }
 }
 
+/**
+ * Render a queued email's HTML WITHOUT sending it. Used by the Project
+ * Overview cockpit to preview emails that predate the rendered_html column
+ * (so nothing was stored at send time). The result is rendered from the
+ * CURRENT template + the row's stored variables, so it's a faithful
+ * approximation rather than the exact bytes that were sent — callers flag
+ * it as a re-render. Returns null when the template no longer exists.
+ */
+async function renderQueuedEmail(templateKey, variables = {}, to = '') {
+  const template = await db('email_templates').where('template_key', templateKey).first();
+  if (!template) return null;
+  const language = await getRecipientLanguage(to, variables.eventId || null);
+  const { subject, htmlBody } = await processTemplate(template, variables, language);
+  return { subject, html: htmlBody };
+}
+
 // Process email queue.
 //
 // Options:
@@ -1074,6 +1090,7 @@ module.exports = {
   initializeTransporter,
   startEmailQueueProcessor,
   sendTemplateEmail,
+  renderQueuedEmail,
   processEmailQueue,
   queueEmail,
   stopEmailQueueProcessor,

@@ -3439,7 +3439,8 @@
       "cancel": "Abbrechen",
       "retry": "Wiederholen",
       "previewTitle": "E-Mail-Vorschau",
-      "noPreview": "Keine gespeicherte Vorschau für diese E-Mail — sie wurde gesendet, bevor Vorschauen erfasst wurden."
+      "noPreview": "Keine gespeicherte Vorschau für diese E-Mail — sie wurde gesendet, bevor Vorschauen erfasst wurden.",
+      "reRendered": "Neu gerendert aus der aktuellen Vorlage — diese E-Mail wurde gesendet, bevor Vorschauen erfasst wurden, und kann daher leicht von der tatsächlich versendeten abweichen."
     },
     "toast": {
       "created": "Projekt erstellt",

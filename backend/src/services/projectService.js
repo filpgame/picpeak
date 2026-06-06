@@ -230,15 +230,30 @@ async function getProjectOverview(id, perms = {}) {
   const out = { project, events, emails: [], quotes: [], contracts: [], invoices: [], hours: { entries: [], totalMinutes: 0 } };
 
   // Emails — newest first. rendered_html presence flagged, body fetched
-  // lazily by the preview endpoint. Gallery/event mails carry event_id;
-  // CRM document mails (quote_sent, invoice_*, contract_*) are queued with
-  // event_id=null, so we also match the project customer's email address.
+  // lazily by the preview endpoint. Gallery/event mails carry event_id; CRM
+  // document mails (quote_/contract_/invoice_/storno_) are queued with
+  // event_id=null, so we ALSO match the project customer's address — but
+  // ONLY for those CRM document types. Without that type filter, system /
+  // admin alerts (backup_failed, restore_failed, …) sent to the same inbox
+  // (the customer address often doubles as the admin notification target)
+  // would wrongly surface under the project.
   const customerEmail = project.customerEmail || null;
   if (eventIds.length || customerEmail) {
     const emails = await db('email_queue')
       .where(function () {
         if (eventIds.length) this.whereIn('event_id', eventIds);
-        if (customerEmail) this.orWhere('recipient_email', customerEmail);
+        if (customerEmail) {
+          this.orWhere(function () {
+            this.where('recipient_email', customerEmail).andWhere(function () {
+              // LIKE '_' is a single-char wildcard that matches the literal
+              // underscore in every CRM type; no escape clause needed and no
+              // real type collides with the trailing '%'.
+              for (const prefix of ['quote_%', 'contract_%', 'invoice_%', 'storno_%']) {
+                this.orWhere('email_type', 'like', prefix);
+              }
+            });
+          });
+        }
       })
       .select('id', 'recipient_email', 'email_type', 'status', 'created_at', 'sent_at', 'error_message', 'event_id')
       .orderBy('created_at', 'desc')
@@ -311,24 +326,42 @@ async function getProjectOverview(id, perms = {}) {
 }
 
 /**
- * The ACTUAL sent HTML for an email_queue row (cockpit preview). Rows sent
- * before the rendered_html column existed have none → `available:false`, the
- * frontend then shows a "preview not stored" note rather than a stale
- * re-render.
+ * HTML preview for an email_queue row (cockpit). Prefers the exact bytes
+ * stored at send time (rendered_html). Rows sent before that column existed
+ * have none — we then RE-RENDER from the current template + the row's stored
+ * variables (email_data) so the admin still sees the email, flagged `exact:
+ * false`. Only when even re-rendering fails (template gone / no variables)
+ * does `available:false` fall through to the "nothing stored" note.
  */
 async function getEmailPreview(emailId) {
   const row = await db('email_queue')
     .where({ id: emailId })
-    .select('id', 'recipient_email', 'email_type', 'status', 'rendered_html')
+    .select('id', 'recipient_email', 'email_type', 'status', 'rendered_html', 'email_data')
     .first();
   if (!row) throw new AppError('Email not found', 404);
+
+  if (row.rendered_html) {
+    return { id: row.id, recipient: row.recipient_email, type: row.email_type, status: row.status, available: true, exact: true, html: row.rendered_html };
+  }
+
+  // Fallback: re-render from the current template + stored variables.
+  let html = null;
+  try {
+    let variables = row.email_data;
+    if (typeof variables === 'string') variables = JSON.parse(variables);
+    const { renderQueuedEmail } = require('./emailProcessor');
+    const rendered = await renderQueuedEmail(row.email_type, variables || {}, row.recipient_email);
+    html = rendered && rendered.html ? rendered.html : null;
+  } catch (_) { html = null; }
+
   return {
     id: row.id,
     recipient: row.recipient_email,
     type: row.email_type,
     status: row.status,
-    available: !!row.rendered_html,
-    html: row.rendered_html || null,
+    available: !!html,
+    exact: false,
+    html,
   };
 }
 

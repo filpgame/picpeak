@@ -118,6 +118,9 @@ export interface EmailPreview {
   type: string;
   status: string;
   available: boolean;
+  /** true = exact bytes stored at send time; false = re-rendered from the
+   *  current template (approximation for emails sent before capture). */
+  exact: boolean;
   html: string | null;
 }
 

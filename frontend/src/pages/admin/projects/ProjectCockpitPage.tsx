@@ -404,7 +404,14 @@ export const ProjectCockpitPage: React.FC = () => {
               {previewLoading ? (
                 <Loading />
               ) : preview && preview.available && preview.html ? (
-                <iframe title="email-preview" srcDoc={preview.html} className="w-full h-[60vh] border border-neutral-200 dark:border-neutral-700 rounded bg-white" />
+                <>
+                  {!preview.exact && (
+                    <div className="mb-3 rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+                      {t('projects.email.reRendered', 'Re-rendered from the current template — this email was sent before previews were captured, so it may differ slightly from what the recipient received.')}
+                    </div>
+                  )}
+                  <iframe title="email-preview" srcDoc={preview.html} className="w-full h-[60vh] border border-neutral-200 dark:border-neutral-700 rounded bg-white" />
+                </>
               ) : (
                 <div className="text-center py-10 text-neutral-500">
                   {t('projects.email.noPreview', 'No stored preview for this email — it was sent before previews were captured.')}
