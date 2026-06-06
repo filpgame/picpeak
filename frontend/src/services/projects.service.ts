@@ -47,6 +47,8 @@ export interface ProjectEmail {
   sentAt: string | null;
   error: string | null;
   eventId: number | null;
+  /** true = exact HTML stored at send time; false = preview re-rendered. */
+  stored: boolean;
 }
 
 export interface ProjectInvoice {

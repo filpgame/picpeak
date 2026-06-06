@@ -39,6 +39,7 @@ interface FeedItem {
   href?: string | null;
   emailId?: number;
   emailStatus?: string;
+  reRendered?: boolean;
 }
 
 /** Detail-page route for a clickable document, or null when there isn't one
@@ -153,7 +154,7 @@ export const ProjectCockpitPage: React.FC = () => {
         key: `email-${e.id}`, kind: 'email', date: e.sentAt || e.queuedAt,
         title: t(`projects.feed.email`, 'Email') + ` · ${e.type}`,
         subtitle: e.recipient + (e.error ? ` — ${e.error}` : ''),
-        status: e.status, emailId: e.id, emailStatus: e.status,
+        status: e.status, emailId: e.id, emailStatus: e.status, reRendered: !e.stored,
       });
     }
     for (const q of data.quotes) {
@@ -361,6 +362,14 @@ export const ProjectCockpitPage: React.FC = () => {
                           <button onClick={() => openPreview(item.emailId as number)} className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline">
                             <Eye className="w-3 h-3" />{t('projects.email.preview', 'Preview')}
                           </button>
+                          {item.reRendered && (
+                            <span
+                              title={t('projects.email.reRendered', 'Re-rendered from the current template — may differ slightly from what was sent.') as string}
+                              className="inline-block rounded-full px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+                            >
+                              {t('projects.email.reRenderedTag', '≈ re-rendered')}
+                            </span>
+                          )}
                           {item.emailStatus === 'sent' && (
                             <button onClick={() => emailActionMutation.mutate({ action: 'resend', emailId: item.emailId as number })} className="inline-flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-300 hover:underline">
                               <Send className="w-3 h-3" />{t('projects.email.resend', 'Resend')}

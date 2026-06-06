@@ -255,12 +255,16 @@ async function getProjectOverview(id, perms = {}) {
           });
         }
       })
-      .select('id', 'recipient_email', 'email_type', 'status', 'created_at', 'sent_at', 'error_message', 'event_id')
+      .select('id', 'recipient_email', 'email_type', 'status', 'created_at', 'sent_at', 'error_message', 'event_id',
+        // Exact stored preview available? (CASE is cross-DB: SQLite→0/1, PG→int)
+        db.raw('CASE WHEN rendered_html IS NOT NULL THEN 1 ELSE 0 END as has_rendered'))
       .orderBy('created_at', 'desc')
       .limit(200);
     out.emails = emails.map((e) => ({
       id: e.id, recipient: e.recipient_email, type: e.email_type, status: e.status,
       queuedAt: e.created_at, sentAt: e.sent_at, error: e.error_message, eventId: e.event_id,
+      // false → the cockpit preview will re-render from the current template.
+      stored: !!Number(e.has_rendered),
     }));
   }
 
