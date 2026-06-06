@@ -140,7 +140,61 @@ async function assignEvent(projectId, eventId) {
   return { projectId, eventId };
 }
 
-/** Attach (or, with projectId=null, detach) a quote/contract to a project. */
+/**
+ * Cascade a project link across a whole deal's lineage. Given a deal_uuid, link
+ * every quote + contract in that deal to the project, re-point every event the
+ * deal produced (so its invoices / emails / gallery roll up automatically), and
+ * adopt the deal's customer onto the project when it has none. This is what
+ * makes "drop a quote on an empty project" fill the cockpit with the linked
+ * contract, event and invoices. Idempotent; pass a trx to run inside a txn.
+ */
+async function linkDealToProject(dealUuid, projectId, conn = db) {
+  if (!dealUuid || !projectId) return;
+
+  if (await hasColumnCached('quotes', 'project_id') && await hasColumnCached('quotes', 'deal_uuid')) {
+    await conn('quotes').where({ deal_uuid: dealUuid }).update({ project_id: projectId });
+  }
+  if (await hasColumnCached('contracts', 'project_id') && await hasColumnCached('contracts', 'deal_uuid')) {
+    await conn('contracts').where({ deal_uuid: dealUuid }).update({ project_id: projectId });
+  }
+
+  // Collect every event the deal converted into: quote/contract converted_event_id
+  // + any invoice's event_id. Re-point them so invoices/emails/gallery roll up.
+  const eventIds = new Set();
+  let dealCustomerId = null;
+  if (await hasColumnCached('quotes', 'deal_uuid')) {
+    for (const q of await conn('quotes').where({ deal_uuid: dealUuid }).select('converted_event_id', 'customer_account_id')) {
+      if (q.converted_event_id) eventIds.add(q.converted_event_id);
+      if (q.customer_account_id && !dealCustomerId) dealCustomerId = q.customer_account_id;
+    }
+  }
+  if (await hasColumnCached('contracts', 'deal_uuid') && await hasColumnCached('contracts', 'converted_event_id')) {
+    for (const c of await conn('contracts').where({ deal_uuid: dealUuid }).select('converted_event_id', 'customer_account_id')) {
+      if (c.converted_event_id) eventIds.add(c.converted_event_id);
+      if (c.customer_account_id && !dealCustomerId) dealCustomerId = c.customer_account_id;
+    }
+  }
+  if (await hasColumnCached('invoices', 'deal_uuid')) {
+    for (const inv of await conn('invoices').where({ deal_uuid: dealUuid }).select('event_id', 'customer_account_id')) {
+      if (inv.event_id) eventIds.add(inv.event_id);
+      if (inv.customer_account_id && !dealCustomerId) dealCustomerId = inv.customer_account_id;
+    }
+  }
+  if (eventIds.size && await hasColumnCached('events', 'project_id')) {
+    await conn('events').whereIn('id', Array.from(eventIds)).update({ project_id: projectId });
+  }
+
+  // Adopt the deal's customer onto a still-unassigned project.
+  if (dealCustomerId) {
+    const project = await conn('projects').where({ id: projectId }).select('customer_account_id').first();
+    if (project && project.customer_account_id == null) {
+      await conn('projects').where({ id: projectId }).update({ customer_account_id: dealCustomerId, updated_at: new Date() });
+    }
+  }
+}
+
+/** Attach (or, with projectId=null, detach) a quote/contract to a project.
+ *  Attaching cascades the link across the deal lineage (see linkDealToProject). */
 async function assignDocument(table, projectId, documentId) {
   if (!(await hasColumnCached(table, 'project_id'))) {
     throw new AppError('This instance has no project_id column yet — run migrations', 409);
@@ -152,6 +206,9 @@ async function assignDocument(table, projectId, documentId) {
   const doc = await db(table).where({ id: documentId }).first();
   if (!doc) throw new AppError('Document not found', 404);
   await db(table).where({ id: documentId }).update({ project_id: projectId || null });
+  if (projectId && doc.deal_uuid) {
+    await linkDealToProject(doc.deal_uuid, projectId);
+  }
   return { projectId: projectId || null, documentId };
 }
 
@@ -419,6 +476,7 @@ module.exports = {
   assignEvent,
   assignQuote,
   assignContract,
+  linkDealToProject,
   computeValuation,
   getProjectOverview,
   getEmailPreview,

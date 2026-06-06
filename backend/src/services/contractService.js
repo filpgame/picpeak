@@ -808,6 +808,9 @@ async function createContract(payload, adminId) {
       row.project_id = payload.projectId || null;
     }
     const inserted = await trx('contracts').insert(row).returning('id');
+    if (row.project_id && row.deal_uuid) {
+      await require('./projectService').linkDealToProject(row.deal_uuid, row.project_id, trx);
+    }
     const contractId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
 
     // Seed with every active system block, toggled on. Per-section
@@ -899,6 +902,12 @@ async function updateContract(id, payload, adminId) {
       updates.project_id = payload.projectId || null;
     }
     await trx('contracts').where({ id }).update(updates);
+
+    // Cascade across the deal lineage (linked quote / event / invoices).
+    if (updates.project_id) {
+      const dealRow = await trx('contracts').where({ id }).select('deal_uuid').first();
+      await require('./projectService').linkDealToProject(dealRow && dealRow.deal_uuid, updates.project_id, trx);
+    }
 
     // Replace inclusions only when the caller sent an explicit list.
     // (Editor's "save" sends every row; an inline "toggle" save could

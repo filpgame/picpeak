@@ -561,6 +561,13 @@ async function createQuote(payload, adminId) {
     const inserted = await trx('quotes').insert(row).returning('id');
     const quoteId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
 
+    // Cascade the project link across the deal lineage (no-op for a brand-new
+    // quote with no contract/event yet — just adopts the customer onto an
+    // empty project).
+    if (row.project_id) {
+      await require('./projectService').linkDealToProject(row.deal_uuid, row.project_id, trx);
+    }
+
     if (totals.lineItems.length > 0) {
       // Normalise rows for the hierarchical-insert helper. We preserve
       // the wire-only `parent_position` field here so the helper can
@@ -676,6 +683,13 @@ async function updateQuote(id, payload, adminId) {
       updates.project_id = payload.projectId || null;
     }
     await trx('quotes').where({ id }).update(updates);
+
+    // When linked to a project, cascade across the deal lineage so the linked
+    // contract / event / invoices roll up into the same project automatically.
+    if (updates.project_id) {
+      const dealRow = await trx('quotes').where({ id }).select('deal_uuid').first();
+      await require('./projectService').linkDealToProject(dealRow && dealRow.deal_uuid, updates.project_id, trx);
+    }
 
     // Delete + reinsert keeps the editor flow simple: the frontend
     // sends the canonical line-item set on every save, we drop the
