@@ -445,7 +445,16 @@ export const ProjectCockpitPage: React.FC = () => {
                       {t('projects.email.reRendered', 'Re-rendered from the current template — this email was sent before previews were captured, so it may differ slightly from what the recipient received.')}
                     </div>
                   )}
-                  <iframe title="email-preview" srcDoc={preview.html} className="w-full h-[60vh] border border-neutral-200 dark:border-neutral-700 rounded bg-white" />
+                  {/* Render the email exactly as sent — it carries its own
+                      background from the brand/email theme. isolate the
+                      iframe's color-scheme so the admin's OS dark mode doesn't
+                      tint a document that defines its own colors. */}
+                  <iframe
+                    title="email-preview"
+                    srcDoc={preview.html}
+                    style={{ colorScheme: 'normal' }}
+                    className="w-full h-[60vh] border border-neutral-200 dark:border-neutral-700 rounded"
+                  />
                 </>
               ) : (
                 <div className="text-center py-10 text-neutral-500">
