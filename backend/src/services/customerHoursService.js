@@ -233,6 +233,10 @@ async function createEntry(customerId, payload, adminId) {
       created_at: new Date(),
       updated_at: new Date(),
     };
+    // Migration 118 — optional "book to project" link.
+    if (payload.projectId !== undefined && await hasColumnCached('customer_hour_entries', 'project_id')) {
+      row.project_id = payload.projectId || null;
+    }
     const inserted = await trx('customer_hour_entries').insert(row).returning('id');
     const entryId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
 

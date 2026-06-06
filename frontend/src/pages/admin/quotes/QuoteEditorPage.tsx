@@ -24,6 +24,7 @@ import {
 } from '../../../services/quotes.service';
 import { LineItemsTable, type EditableLineItem } from '../../../components/admin/LineItemsTable';
 import { CustomerPicker } from '../../../components/admin/CustomerPicker';
+import { ProjectSelect } from '../../../components/admin/ProjectSelect';
 import { InstallmentsPanel } from '../../../components/admin/InstallmentsPanel';
 import { customerAdminService } from '../../../services/customerAdmin.service';
 import { userManagementService } from '../../../services/userManagement.service';
@@ -59,6 +60,8 @@ interface FormState {
   internalNotes: string;
   ccPdfEmail: string;
   businessBankAccountId: number | null;
+  /** Migration 121 — optional Project Overview link. */
+  projectId: number | null;
   lineItems: EditableLineItem[];
   // Ad-hoc installments (commit #6). null = use the payment-timing
   // template's installments; array = explicit per-quote override.
@@ -88,6 +91,7 @@ const empty: FormState = {
   internalNotes: '',
   ccPdfEmail: '',
   businessBankAccountId: null,
+  projectId: null,
   lineItems: [],
   installments: null,
 };
@@ -123,6 +127,8 @@ function buildPayload(f: FormState): QuoteCreatePayload {
     internalNotes: f.internalNotes || undefined,
     ccPdfEmail: f.ccPdfEmail || undefined,
     businessBankAccountId: f.businessBankAccountId || undefined,
+    // Migration 121 — Project Overview link. Send null to clear.
+    projectId: f.projectId ?? null,
     lineItems: f.lineItems.map((li) => ({
       position: li.position,
       quantity: li.quantity,
@@ -214,6 +220,7 @@ export const QuoteEditorPage: React.FC = () => {
         internalNotes: q.internalNotes || '',
         ccPdfEmail: q.ccPdfEmail || '',
         businessBankAccountId: q.businessBankAccountId,
+        projectId: q.projectId ?? null,
         lineItems: existing.lineItems.map((li) => ({
           id: li.id,
           position: li.position,
@@ -479,6 +486,15 @@ export const QuoteEditorPage: React.FC = () => {
           }))}
           searchPlaceholder={t('quotes.customerSearch', 'Search customer by email or company…') as string}
         />
+        {/* Project link (renders only when the projects feature is on). */}
+        <div className="mt-3">
+          <ProjectSelect
+            label={t('projects.picker.label', 'Project') as string}
+            value={form.projectId}
+            customerAccountId={form.customerAccountId}
+            onChange={(projectId) => setForm((f) => ({ ...f, projectId }))}
+          />
+        </div>
       </Card>
 
       {/* Section: Event */}

@@ -572,6 +572,7 @@ router.post('/:id/hour-entries', [
   body('endTime').matches(/^([01]\d|2[0-3]):[0-5]\d$/),
   body('hourlyRateMinorOverride').optional({ nullable: true }).isInt({ min: 0 }),
   body('description').optional({ nullable: true }).isString().isLength({ max: 1000 }),
+  body('projectId').optional({ nullable: true }).isInt({ min: 1 }),
 ], handleAsync(async (req, res) => {
   validateRequest(req);
   const result = await customerHoursService.createEntry(
