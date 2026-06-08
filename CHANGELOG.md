@@ -5,6 +5,15 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.60.4-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.3-beta.0...v3.60.4-beta.0) (2026-06-08)
+
+
+### Bug Fixes
+
+* **admin:** graceful logo-img fallback + show sidebar widgets during perm hydration ([#523](https://github.com/the-luap/picpeak/issues/523) follow-up 2) ([f51b9cf](https://github.com/the-luap/picpeak/commit/f51b9cf8df2dfba07590b35cc63def689df98c4a))
+* **admin:** logo-img fallback + sidebar perm hydration + filename NFD transliteration ([#523](https://github.com/the-luap/picpeak/issues/523) follow-up 2, [#607](https://github.com/the-luap/picpeak/issues/607)) ([fcd3ca3](https://github.com/the-luap/picpeak/commit/fcd3ca36c659eafa47c036f622da8114433b1c74))
+* **downloads:** transliterate accented characters in filename via NFD instead of dropping them ([#607](https://github.com/the-luap/picpeak/issues/607)) ([620163f](https://github.com/the-luap/picpeak/commit/620163f2db77cda40b81edcac79a32cbb4fd278f))
+
 ## [3.60.3-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.2-beta.0...v3.60.3-beta.0) (2026-06-04)
 
 
