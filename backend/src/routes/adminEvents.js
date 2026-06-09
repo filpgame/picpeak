@@ -286,9 +286,25 @@ async function deleteEventCascade(eventId, adminContext) {
     // Best-effort filesystem cleanup. Failures are logged but don't unwind
     // the transaction — the canonical state lives in the DB; orphan files
     // are recoverable noise, a half-deleted DB row is a permanent mess.
-    if (event.folder_path) {
-      const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
-      const eventFolderPath = path.join(storagePath, 'events', 'active', event.folder_path);
+    //
+    // #608 — previous code read `event.folder_path`, but that column is
+    // never written anywhere in the codebase (grep confirms: two reads in
+    // this function, zero writes). It's always undefined, so the
+    // `if (event.folder_path)` branch silently no-op'd and every event
+    // delete since this cascade landed left its photos orphaned on disk.
+    // jodrmx's Pi report (v3.44.0) was the first surfacing.
+    //
+    // Files actually live at:
+    //   {STORAGE_PATH}/events/active/{slug}/...      (uploaded photos)
+    //   {STORAGE_PATH}/events/archived/{slug}/...    (after the event
+    //     was archived — folder copy survives the archive flow)
+    //
+    // `event.slug` is NOT NULL on the events table and is slugify-sanitized
+    // on every write (lower-case ASCII + dashes only via utils/slug.js),
+    // so path-traversal isn't a concern.
+    const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
+    for (const sub of ['active', 'archived']) {
+      const eventFolderPath = path.join(storagePath, 'events', sub, event.slug);
       try {
         await fs.rm(eventFolderPath, { recursive: true, force: true });
       } catch (fsErr) {
