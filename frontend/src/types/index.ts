@@ -70,6 +70,11 @@ export interface Event {
   client_share_token?: string;
   // Default photo sort order
   default_photo_sort?: string;
+  // Pre-event reminder override (migration 143)
+  event_reminder_disabled?: boolean;
+  event_reminder_offset_days?: number | null;
+  event_reminder_body_override?: string | null;
+  event_reminder_sent_at?: string | null;
 }
 
 export type GalleryAccessLevel = 'guest' | 'client';
@@ -127,6 +132,12 @@ export interface Photo {
   total_ratings?: number;
   comment_count?: number;
   like_count?: number;
+  // Per-viewer flag (#590 follow-up). True when the requesting viewer has
+  // an active like row for this photo, false otherwise. Computed server-side
+  // by gallery.js using the same identity model as galleryFeedback.js
+  // (guest_id when a guest token is present, else IP+UA hash fallback).
+  // Used to seed the lifted likedPhotoIds Set in grid layouts on mount.
+  is_liked?: boolean;
   favorite_count?: number;
 }
 

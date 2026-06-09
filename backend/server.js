@@ -28,6 +28,7 @@ const path = require('path');
 const { initializeDatabase, db } = require('./src/database/db');
 const { startFileWatcher } = require('./src/services/fileWatcher');
 const { startExpirationChecker } = require('./src/services/expirationChecker');
+const { startInvoiceScheduler } = require('./src/services/invoiceSchedulerService');
 const { initializeTransporter, startEmailQueueProcessor } = require('./src/services/emailProcessor');
 const { startWhatsAppQueueProcessor } = require('./src/services/whatsappProcessor');
 const { startBackupService } = require('./src/services/backupService');
@@ -55,9 +56,28 @@ const secureImagesRoutes = require('./src/routes/secureImages');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust proxy headers (required for Traefik/nginx)
-// Set to specific number of proxies or loopback to be more secure
-app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+// Trust proxy headers (required for Traefik/nginx).
+//
+// `req.ip` is computed by Express by walking X-Forwarded-For from
+// right-to-left and stopping at the first hop NOT in this list, so
+// the value picpeak audits (signing IPs, payment-check actions,
+// rate-limit keys) is the originating client IP behind any number
+// of trusted reverse proxies.
+//
+// Default: 'loopback, linklocal, uniquelocal' — covers localhost,
+// link-local (169.254.0.0/16), and unique-local IPv6 (fc00::/7).
+// Standard for nginx-in-front-of-Node deployments on the same host
+// and for Docker bridge networks. Operators with unusual topologies
+// (load balancer in a public subnet, multi-hop NAT) override via
+// TRUST_PROXY env, accepting any value Express accepts: a number,
+// 'loopback', 'linklocal', 'uniquelocal', a CIDR, a comma list, or
+// 'true' (trust ALL proxies — only safe behind a fully-controlled
+// reverse-proxy chain).
+//
+// NEVER read req.headers['x-forwarded-for'] directly in audit paths
+// — see utils/clientIp.js for the rationale.
+const trustProxySetting = process.env.TRUST_PROXY || 'loopback, linklocal, uniquelocal';
+app.set('trust proxy', trustProxySetting === 'true' ? true : trustProxySetting);
 
 // Security middleware with custom CSP
 // In native HTTP installs, do NOT force HTTPS for subresources.
@@ -559,6 +579,52 @@ app.get('/robots.txt', async (req, res) => {
   }
 });
 
+// Dynamic favicon endpoints. Browsers — notably Safari — request
+// /favicon.ico and /apple-touch-icon*.png directly at the site root and are
+// unreliable about honouring JS-injected <link rel="icon"> tags. Serving the
+// admin's configured branding favicon here makes it work without client-side
+// JS (and survive aggressive favicon caches). Falls back to the bundled asset
+// shipped with the frontend build when no custom favicon is set.
+app.get(
+  ['/favicon.ico', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png'],
+  async (req, res) => {
+    try {
+      const { getAppSetting } = require('./src/utils/appSettings');
+      const raw = await getAppSetting('branding_favicon_url', null);
+      const url = (raw && String(raw).trim()) || null;
+      if (url) {
+        // External URL — can't stream the bytes, so redirect (best effort).
+        if (/^https?:\/\//i.test(url)) return res.redirect(302, url);
+        // Local upload → stream the file bytes DIRECTLY rather than 302'ing.
+        // Safari does NOT reliably follow a redirect for favicon requests
+        // (it falls back to the HTML <link>, i.e. the bundled default),
+        // whereas Firefox/Chrome do — so a 302 worked everywhere except
+        // Safari. sendFile sets the right content-type from the extension.
+        const rel = String(url).replace(/^\/+/, '').replace(/^uploads\//, '');
+        const uploadsRoot = path.resolve(path.join(storagePath, 'uploads'));
+        const resolved = path.resolve(path.join(uploadsRoot, rel));
+        // Path containment — never serve outside the uploads dir.
+        if (resolved.startsWith(uploadsRoot + path.sep) && fs.existsSync(resolved)) {
+          // This route streams the file directly, bypassing the secureStatic
+          // middleware — so re-apply its SVG hardening here. An admin-uploaded
+          // SVG favicon could contain <script>; served at the top-level
+          // /favicon.ico origin without CSP that would be stored XSS. Keep in
+          // sync with secureStatic.js.
+          if (/\.svg$/i.test(resolved)) {
+            res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:");
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+          }
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          return res.sendFile(resolved);
+        }
+      }
+    } catch (error) {
+      logger.warn('Favicon lookup failed; serving bundled default', { error: error.message });
+    }
+    return res.redirect(302, '/favicon-32x32.png');
+  }
+);
+
 // Health check endpoint. `pid` + `uptime` let monitors (and the local E2E
 // watchdog) detect a silent process restart between two checks.
 app.get('/health', async (req, res) => {
@@ -640,9 +706,31 @@ app.use('/api/admin/users', require('./src/routes/adminUsers'));
 const { noStoreCache } = require('./src/middleware/noStoreCache');
 app.use('/api/admin/customers', noStoreCache, require('./src/routes/adminCustomers'));
 // Customer-side surface (#354). Strictly separate from /api/admin/* —
-// distinct token type, distinct cookie, distinct middleware.
+// distinct token type, distinct cookie, distinct middleware. The
+// noStoreCache wrapper (upstream) prevents stale customer-portal
+// data from being served after logout. The CRM-area route-flag
+// gate was reverted upstream and lives in the UI now.
 app.use('/api/customer/auth', noStoreCache, require('./src/routes/customerAuth'));
 app.use('/api/customer', noStoreCache, require('./src/routes/customer'));
+
+// --- CRM (#TBD) -------------------------------------------------------
+// Quotes / Invoices / Contracts / Calendar / Tax report / Deals lineage.
+// Business profile (issuer block for PDFs) lives at
+// /api/admin/business-profile, gated by the existing settings.manage
+// permission rather than a CRM-specific one. The public endpoints
+// host the customer-side accept/decline / sign / payment-check pages.
+app.use('/api/admin/business-profile', require('./src/routes/adminBusinessProfile'));
+app.use('/api/admin/quotes',     require('./src/routes/adminQuotes'));
+app.use('/api/admin/invoices',   require('./src/routes/adminInvoices'));
+app.use('/api/admin/contracts',  require('./src/routes/adminContracts'));
+app.use('/api/admin/calendar',   require('./src/routes/adminCalendar'));
+app.use('/api/admin/deals',      require('./src/routes/adminDeals'));
+app.use('/api/admin/tax-report', require('./src/routes/adminTaxReport'));
+app.use('/api/admin/system-health', require('./src/routes/adminSystemHealth'));
+app.use('/api/admin/dev',        require('./src/routes/adminDev'));
+app.use('/api/public/quotes',  require('./src/routes/publicQuotes'));
+app.use('/api/public/contracts', require('./src/routes/publicContracts'));
+app.use('/api/public/payment-check', require('./src/routes/publicPaymentCheck'));
 app.use('/api/admin/event-types', require('./src/routes/adminEventTypes'));
 app.use('/api/admin/api-tokens', require('./src/routes/adminApiTokens'));
 app.use('/api/admin/webhooks', require('./src/routes/adminWebhooks'));
@@ -750,9 +838,23 @@ async function startServer() {
     
     // Start expiration checker
     startExpirationChecker();
+    // CRM invoice scheduler: hourly tick to flush scheduled-send invoices
+    // + run the overdue reminder ladder. No-op when the `bills` feature
+    // flag is OFF (the service short-circuits on empty result sets).
+    startInvoiceScheduler();
     
     // Initialize email transporter and start queue processor
     await initializeTransporter();
+    // Seed CRM / contract / event-reminder email templates and recover
+    // any queue rows that exhausted retries because their template
+    // didn't exist yet. Runs once per boot via module-level caches in
+    // each seeder. See _emailTemplateBoot.js for the full rationale.
+    try {
+      const { seedEmailTemplatesAndRecoverQueue } = require('./src/services/_emailTemplateBoot');
+      await seedEmailTemplatesAndRecoverQueue(db, logger);
+    } catch (err) {
+      logger.warn('Email template self-heal failed at boot:', err.message);
+    }
     startEmailQueueProcessor();
     startWhatsAppQueueProcessor();
     
@@ -765,6 +867,48 @@ async function startServer() {
     // for S3-mode deployments that drop files into the bucket directly.
     const { startS3AutoImporter } = require('./src/services/s3AutoImporter');
     startS3AutoImporter();
+
+    // Self-heal the `backup_paths` table before the backup service
+    // starts — the file-backup walker reads from it, so missing
+    // canonical rows (a new subdirectory shipped by a future feature)
+    // get re-seeded here on every boot. See _backupPathsBoot.js for
+    // the full rationale; pattern mirrors _emailTemplateBoot.js.
+    try {
+      const { seedBackupPathsAtBoot } = require('./src/services/_backupPathsBoot');
+      await seedBackupPathsAtBoot(db, logger);
+    } catch (err) {
+      logger.warn('backup_paths self-heal failed at boot:', err.message);
+    }
+
+    // Self-heal restore-meta settings — currently just
+    // `restore_allow_force` defaulting to ON so fresh installs can
+    // recover from disaster without a SQL incantation. Only seeds on
+    // FRESH installs (existing rows, true or false, are preserved).
+    // See _restoreSettingsBoot.js for the full rationale.
+    try {
+      const { seedRestoreSettingsAtBoot } = require('./src/services/_restoreSettingsBoot');
+      await seedRestoreSettingsAtBoot(db, logger);
+    } catch (err) {
+      logger.warn('restore-settings self-heal failed at boot:', err.message);
+    }
+
+    // Install-from-backup trigger. If `RESTORE_ON_INSTALL` (or
+    // `.txt`) exists in the /backup mount AND the DB is empty, run
+    // the restore HERE before any admin UI surfaces. Lets admins
+    // recover a picpeak install with: (a) place backup files in the
+    // bind mount, (b) drop the trigger file, (c) `docker compose up`.
+    // No onboarding wizard, no throwaway admin, no compose-file
+    // changes. See _installFromBackupBoot.js for the full rationale
+    // + the safety gates.
+    try {
+      const { tryInstallFromBackup } = require('./src/services/_installFromBackupBoot');
+      const result = await tryInstallFromBackup(db, logger);
+      if (result.ran) {
+        logger.info(`Install-from-backup: completed from ${result.manifestPath}. Server will start with restored state.`);
+      }
+    } catch (err) {
+      logger.warn('Install-from-backup hook threw:', err.message);
+    }
 
     // Start backup service
     await startBackupService();

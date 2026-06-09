@@ -79,6 +79,15 @@ cp .env.example .env
 docker-compose -f docker-compose.dev.yml up
 ```
 
+**After pulling changes that touch `backend/package.json` / `backend/package-lock.json` (or the frontend equivalents)**, rebuild the affected image so the live-mounted source can `require()` the new deps:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d --build backend
+# (or `frontend`, or both)
+```
+
+The dev compose bakes `node_modules` into the image while live-mounting `./backend/src` and `./frontend/src` from disk. A dep added on disk won't be picked up until the image is rebuilt — typical symptom is a `MODULE_NOT_FOUND` restart loop on the affected container.
+
 ### Running Tests
 
 ```bash
@@ -146,10 +155,9 @@ picpeak/
 
 ## 🔄 Release Process
 
-1. Update version numbers in package.json files
-2. Update CHANGELOG.md
-3. Create a new release on GitHub
-4. Docker images are automatically built and published
+Releases are cut from the `beta` branch (rolling beta) and promoted to `main` (stable) on a 4–6 week cadence. `release-please` handles version bumps, changelog generation, and Docker image publication automatically — contributors don't update `package.json` or `CHANGELOG.md` by hand.
+
+See [RELEASING.md](RELEASING.md) for the full operational doc (promotion criteria, conflict-resolution checklist for the beta→main merge, hotfix backport path, versioning rules).
 
 ## 📮 Contact
 

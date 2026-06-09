@@ -12,9 +12,11 @@ import { cmsService } from '../../services/cms.service';
 import type { CMSPage as CMSPageType } from '../../services/cms.service';
 import { settingsService, PublicSiteBranding } from '../../services/settings.service';
 import { buildResourceUrl } from '../../utils/url';
+import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 export const CMSPage: React.FC = () => {
   const { t } = useTranslation();
+  const { formatDateTime: fmtDateTime, formatTime: fmtTime } = useLocalizedDate();
   const queryClient = useQueryClient();
   const [selectedPage, setSelectedPage] = useState<string>('impressum');
   const [editingLang, setEditingLang] = useState<'en' | 'de'>('en');
@@ -590,7 +592,7 @@ export const CMSPage: React.FC = () => {
                 {!hasUnsavedChanges && lastSaved && (
                   <div className="flex items-center gap-2 text-green-600">
                     <Clock className="w-4 h-4" />
-                    Saved {new Date(lastSaved).toLocaleTimeString()}
+                    Saved {fmtTime(new Date(lastSaved))}
                   </div>
                 )}
               </div>
@@ -771,7 +773,7 @@ export const CMSPage: React.FC = () => {
 
             {currentPage?.updated_at && (
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-4">
-                {t('cms.lastUpdated')} {new Date(currentPage.updated_at).toLocaleString()}
+                {t('cms.lastUpdated')} {fmtDateTime(currentPage.updated_at)}
               </p>
             )}
           </Card>

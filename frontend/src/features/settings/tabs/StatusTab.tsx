@@ -17,6 +17,7 @@ import { settingsService } from '../../../services/settings.service';
 import { useStatusTab } from '../hooks/useStatusTab';
 import { UpdateNotificationSettings } from '../components/UpdateNotificationSettings';
 import { UpdateCard } from '../components/UpdateCard';
+import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 
 const BYTES_PER_GB = 1024 * 1024 * 1024;
 
@@ -56,6 +57,7 @@ export const StatusTab: React.FC<StatusTabProps> = ({
   setOverrideDirty,
 }) => {
   const { t } = useTranslation();
+  const { formatDateTime: fmtDateTime } = useLocalizedDate();
   const { storageInfo, systemStatus } = useStatusTab(isActive);
   const queryClient = useQueryClient();
 
@@ -617,7 +619,7 @@ export const StatusTab: React.FC<StatusTabProps> = ({
       {systemStatus && (
         <div className="text-xs text-neutral-500 dark:text-neutral-400 text-right flex items-center justify-end gap-1">
           <Clock className="w-3 h-3" />
-          {t('settings.systemStatus.lastUpdate')}: {new Date(systemStatus.timestamp).toLocaleString()}
+          {t('settings.systemStatus.lastUpdate')}: {fmtDateTime(systemStatus.timestamp)}
         </div>
       )}
     </div>

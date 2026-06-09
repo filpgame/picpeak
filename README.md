@@ -97,7 +97,7 @@ Note on Docker file permissions
 
 ## 🔄 Release Channels
 
-PicPeak offers two release channels for different needs:
+PicPeak offers two release channels for different needs. Stable promotions are cut from a known-good beta point every 4–6 weeks — see [RELEASING.md](RELEASING.md) for the maintainer's promotion criteria and cadence policy.
 
 ### Stable Channel (Recommended)
 - Production-ready releases
@@ -146,7 +146,7 @@ Full documentation lives at **[docs.picpeak.app](https://docs.picpeak.app)** —
 - 🚀 [**Deployment**](https://docs.picpeak.app/deployment) - Docker, environment variables, reverse proxy, SSL
 - ⚙️ [**Admin Settings**](https://docs.picpeak.app/guides/admin-settings) - Every tab in the Settings panel
 - 🎯 [**Creating Events**](https://docs.picpeak.app/guides/creating-events) - Full event field reference
-- 💾 [**Backup & Restore**](https://docs.picpeak.app/guides/backup-restore) - Local, S3, rsync destinations
+- 💾 [**Backup & Restore**](https://docs.picpeak.app/guides/backup-restore) - Backup configuration, restore wizard, full disaster recovery
 - 🔌 [**API Reference**](https://docs.picpeak.app/api) - REST endpoints, OpenAPI spec, webhooks
 - 🪝 [**Webhooks**](https://docs.picpeak.app/features/webhooks) - Event payloads, signing, filters, templates
 
@@ -401,6 +401,7 @@ These features are currently in beta testing and may have limited functionality 
 
 | Feature | Description | Status |
 |---------|-------------|--------|
+| **CRM Module** | Quotes, contracts, invoices, hours logging, calendar, and tax report — feature-flagged off by default. Seeded contract blocks, payment terms, and IBAN / tax defaults are **examples only** and need legal / financial review before customer-facing use. See [docs.picpeak.app/features/crm](https://docs.picpeak.app/features/crm). | 🧪 Beta |
 | **Simple Deployment Script** | One-click deployment script for quick server setup with automated configuration and dependency installation | 🧪 Beta |
 
 ### 📋 Future Enhancements
@@ -453,6 +454,23 @@ This project was generated with the assistance of AI technology, but has been:
 - 🧪 **Production-tested** in real-world scenarios
 
 We believe in transparent development practices and the responsible use of AI as a tool to accelerate development while maintaining high standards of quality and security.
+
+## ⚠️ CRM disclaimers — examples only
+
+The CRM module (contracts, invoices, QR-bills) ships seeded content
+that is intended as a **starting point only**:
+
+- **Contract blocks** (image rights, NDA, model release, cancellation,
+  jurisdiction, …) are written by the maintainer, **not by a lawyer**.
+  Every operator must have their lawyer review and adapt them before
+  sending any contract to a customer.
+- **QR-bills and SEPA EPC payloads** are rendered from the data you
+  typed. Picpeak is open source — please scan a test invoice with your
+  bank's app to check the QR actually works. We are not responsible for
+  any mistakes that come from sending an invoice with bad data on it.
+
+Read [`docs/crm-disclaimers.md`](docs/crm-disclaimers.md) before
+enabling the Contracts or Invoices features.
 
 ## 📄 License
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Download, Maximize2, Check, Calendar, Heart, MessageSquare } from 'lucide-react';
 import { format, parseISO, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -8,6 +8,7 @@ import type { Photo } from '../../../types';
 import { FeedbackIdentityModal } from '../../gallery/FeedbackIdentityModal';
 import { feedbackService } from '../../../services/feedback.service';
 import { useGuestIdentityOptional } from '../../../contexts/GuestIdentityContext';
+import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 
 export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
   photos,
@@ -23,7 +24,16 @@ export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
   feedbackOptions
 }) => {
   const { theme } = useTheme();
+  const { formatTime: fmtTime } = useLocalizedDate();
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
+  // Seed from server is_liked on first non-empty payload (#590 follow-up).
+  // Mount-only so refetches don't clobber in-session optimistic toggles.
+  const likedSeededRef = useRef(false);
+  useEffect(() => {
+    if (likedSeededRef.current || photos.length === 0) return;
+    setLikedIds(new Set(photos.filter(p => p.is_liked).map(p => p.id)));
+    likedSeededRef.current = true;
+  }, [photos]);
   const [showIdentityModal, setShowIdentityModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | { type: 'like'; photoId: number }>(null);
   const [savedIdentity, setSavedIdentity] = useState<{ name: string; email: string } | null>(null);
@@ -116,7 +126,7 @@ export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                     
                     {/* Time label */}
                     <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded">
-                      {format(parseISO(photo.uploaded_at), 'h:mm a')}
+                      {fmtTime(photo.uploaded_at)}
                     </div>
                     
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg flex items-center justify-center gap-2">
@@ -155,7 +165,13 @@ export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                                   } catch {
                                     return;
                                   }
-                                  setLikedIds(prev => new Set(prev).add(photo.id));
+                                  // Toggle — server /feedback like is a toggle (#590).
+                                  setLikedIds(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(photo.id)) next.delete(photo.id);
+                                    else next.add(photo.id);
+                                    return next;
+                                  });
                                   try {
                                     await feedbackService.submitFeedback(slug!, String(photo.id), {
                                       feedback_type: 'like',
@@ -168,7 +184,13 @@ export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                                   setShowIdentityModal(true);
                                   return;
                                 }
-                                setLikedIds(prev => new Set(prev).add(photo.id));
+                                // Toggle — server /feedback like is a toggle (#590).
+                                setLikedIds(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(photo.id)) next.delete(photo.id);
+                                  else next.add(photo.id);
+                                  return next;
+                                });
                                 try {
                                   await feedbackService.submitFeedback(slug!, String(photo.id), {
                                     feedback_type: 'like',

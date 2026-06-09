@@ -31,7 +31,22 @@ function secureStatic(basePath, options = {}) {
         // Disable directory listing for security
         index: false,
         // Don't allow dotfiles
-        dotfiles: 'deny'
+        dotfiles: 'deny',
+        setHeaders: (resp, filePath) => {
+          // Preserve any caller-provided header logic (e.g. font caching).
+          if (typeof options.setHeaders === 'function') options.setHeaders(resp, filePath);
+          // SVGs are admin-uploadable (logos, favicon). Served from our
+          // own origin, a malicious SVG opened directly could run embedded
+          // <script>/on* handlers (stored XSS). A restrictive CSP lets the
+          // browser RENDER the vector but blocks all script execution —
+          // so we keep real SVGs (scalable) instead of rasterising them.
+          // `default-src 'none'` already implies script-src 'none';
+          // style-src + img-src(data:) keep normal SVG rendering working.
+          if (/\.svg$/i.test(filePath)) {
+            resp.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:");
+            resp.setHeader('X-Content-Type-Options', 'nosniff');
+          }
+        }
       });
       
       return staticMiddleware(req, res, next);

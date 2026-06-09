@@ -73,10 +73,11 @@ const faviconStorage = multer.diskStorage({
 
 const faviconUpload = multer({
   storage: faviconStorage,
-  limits: { fileSize: 1 * 1024 * 1024 }, // 1MB
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB — roomy enough for a 512×512+ square PNG
   fileFilter: (req, file, cb) => {
     const allowedMimeTypes = ['image/png', 'image/x-icon', 'image/vnd.microsoft.icon'];
-    
+    const name = file.originalname.toLowerCase();
+
     // For ICO files, we can't use the standard validateFileType
     if (file.mimetype === 'image/png') {
       if (validateFileType(file.originalname, file.mimetype, ['image/png'])) {
@@ -84,21 +85,38 @@ const faviconUpload = multer({
       } else {
         cb(new Error('Invalid PNG file'));
       }
-    } else if (allowedMimeTypes.includes(file.mimetype) && 
-               (file.originalname.toLowerCase().endsWith('.ico') || 
-                file.originalname.toLowerCase().endsWith('.png'))) {
+    } else if (file.mimetype === 'image/svg+xml' && name.endsWith('.svg')) {
+      // SVG favicons are supported by modern browsers and are crisp at any
+      // size. Served SVGs are CSP-locked (no script execution) by the
+      // secureStatic middleware, so an admin-uploaded SVG is render-only.
+      cb(null, true);
+    } else if (allowedMimeTypes.includes(file.mimetype) &&
+               (name.endsWith('.ico') || name.endsWith('.png'))) {
       cb(null, true);
     } else {
-      cb(new Error('Favicon must be PNG or ICO format'));
+      cb(new Error('Favicon must be PNG, ICO, or SVG format'));
     }
   }
 });
 
-// Get all settings
+// Get all settings, or a subset when ?keys=k1,k2,… is supplied.
+// Many caller pages only need a handful of keys (e.g. ReminderTemplates
+// reads 2 of the ~100 rows). The keys filter is allowlist-bounded by
+// what's stored, so passing unknown keys just returns them as `null`
+// — no enumeration risk beyond what GET / returned already.
 router.get('/', adminAuth, requirePermission('settings.view'), async (req, res) => {
   try {
-    const settings = await db('app_settings').select('*');
-    
+    const keysParam = typeof req.query.keys === 'string' ? req.query.keys : null;
+    const keysFilter = keysParam
+      ? keysParam.split(',').map((k) => k.trim()).filter(Boolean).slice(0, 100)
+      : null;
+
+    const query = db('app_settings').select('*');
+    if (keysFilter && keysFilter.length > 0) {
+      query.whereIn('setting_key', keysFilter);
+    }
+    const settings = await query;
+
     // Convert to object format
     const settingsObject = {};
     settings.forEach(setting => {
@@ -531,9 +549,16 @@ router.post('/logo', adminAuth, requirePermission('settings.edit'), upload.singl
       return res.status(400).json({ error: 'No logo file uploaded' });
     }
 
+    // ?variant=dark stores a separate dark-mode logo (branding_logo_*_dark);
+    // anything else is the default (light) logo. Consumers pick the dark
+    // variant when the active theme is dark, falling back to the light one.
+    const isDark = req.query.variant === 'dark' || req.body.variant === 'dark';
+    const pathKey = isDark ? 'branding_logo_path_dark' : 'branding_logo_path';
+    const urlKey = isDark ? 'branding_logo_url_dark' : 'branding_logo_url';
+
     // Get old logo to delete
     const oldLogoSetting = await db('app_settings')
-      .where('setting_key', 'branding_logo_path')
+      .where('setting_key', pathKey)
       .first();
 
     if (oldLogoSetting && oldLogoSetting.setting_value) {
@@ -555,7 +580,7 @@ router.post('/logo', adminAuth, requirePermission('settings.edit'), upload.singl
 
     await db('app_settings')
       .insert({
-        setting_key: 'branding_logo_path',
+        setting_key: pathKey,
         setting_value: JSON.stringify(logoPath),
         setting_type: 'branding',
         updated_at: new Date()
@@ -569,7 +594,7 @@ router.post('/logo', adminAuth, requirePermission('settings.edit'), upload.singl
     // Save public URL
     await db('app_settings')
       .insert({
-        setting_key: 'branding_logo_url',
+        setting_key: urlKey,
         setting_value: JSON.stringify(publicPath),
         setting_type: 'branding',
         updated_at: new Date()
@@ -587,6 +612,36 @@ router.post('/logo', adminAuth, requirePermission('settings.edit'), upload.singl
   } catch (error) {
     console.error('Logo upload error:', error);
     res.status(500).json({ error: 'Failed to upload logo' });
+  }
+});
+
+// Remove a logo. ?variant=dark clears the dark-mode logo
+// (branding_logo_*_dark); otherwise the default logo. Best-effort file
+// unlink, then blanks the url + path settings.
+router.delete('/logo', adminAuth, requirePermission('settings.edit'), async (req, res) => {
+  try {
+    const isDark = req.query.variant === 'dark';
+    const pathKey = isDark ? 'branding_logo_path_dark' : 'branding_logo_path';
+    const urlKey = isDark ? 'branding_logo_url_dark' : 'branding_logo_url';
+
+    const pathSetting = await db('app_settings').where('setting_key', pathKey).first();
+    if (pathSetting && pathSetting.setting_value) {
+      try {
+        let p = pathSetting.setting_value;
+        if (p.startsWith('"')) p = JSON.parse(p);
+        await fs.unlink(p);
+      } catch (error) {
+        console.error('Failed to delete logo file:', error);
+      }
+    }
+    await db('app_settings')
+      .whereIn('setting_key', [pathKey, urlKey])
+      .update({ setting_value: JSON.stringify(''), updated_at: new Date() });
+
+    res.json({ message: 'Logo removed' });
+  } catch (error) {
+    console.error('Logo delete error:', error);
+    res.status(500).json({ error: 'Failed to remove logo' });
   }
 });
 

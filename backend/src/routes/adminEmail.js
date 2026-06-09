@@ -1,10 +1,10 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
-const { body, validationResult } = require('express-validator');
+const { body, query, validationResult } = require('express-validator');
 const { db, logActivity } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
-const { wrapEmailHtml } = require('../services/emailProcessor');
+const { wrapEmailHtml, processEmailQueue } = require('../services/emailProcessor');
 const router = express.Router();
 
 // Get email configuration
@@ -93,6 +93,16 @@ router.post('/config', [
     } else {
       await db('email_configs').insert(configData);
     }
+
+    // Refresh the cached transporter so the new SMTP settings take effect
+    // immediately. Without this, a previously-initialised transporter stays
+    // cached (the queue processor only re-inits when it's null), so changing
+    // the email account had no effect until a backend restart — emails kept
+    // failing against the old/empty config. initializeTransporter catches its
+    // own errors and returns null, so this never throws; an invalid config
+    // simply leaves the transporter null (surfaced via the Test-email button).
+    const { initializeTransporter } = require('../services/emailProcessor');
+    await initializeTransporter(true);
 
     // Log activity
     await logActivity('email_config_updated', 
@@ -248,6 +258,114 @@ router.post('/test', adminAuth, requirePermission('email.send'), async (req, res
   }
 });
 
+// Flush the email queue now. Sends every pending email immediately,
+// bypassing the business-hours floor (`scheduled_at`) — the escape hatch
+// for "drain the queue before I take the server down for an update".
+router.post('/flush-queue', adminAuth, requirePermission('email.send'), async (req, res) => {
+  try {
+    const summary = await processEmailQueue({ ignoreSchedule: true, limit: 1000 });
+    try {
+      await logActivity('email_queue_flushed',
+        { processed: summary.processed, sent: summary.sent, failed: summary.failed },
+        null,
+        { type: 'admin', id: req.admin.id, name: req.admin.username }
+      );
+    } catch (_) { /* activity logging is best-effort */ }
+    res.json({ message: 'Email queue flushed', ...summary });
+  } catch (error) {
+    console.error('Flush email queue error:', error);
+    res.status(500).json({ error: 'Failed to flush email queue', details: error.message });
+  }
+});
+
+// Read-only "Sent emails" feed — paginated view of email_queue with
+// filters (status, type, recipient search, date range). email_data is
+// deliberately NOT returned (it can carry attachment paths / PII); the
+// list only needs the envelope + delivery state. event_id is joined to
+// events so the UI can link back to the source gallery when present.
+router.get('/queue', adminAuth, requirePermission('email.view'), [
+  query('status').optional({ values: 'falsy' }).isIn(['pending', 'sent', 'failed']),
+  query('emailType').optional({ values: 'falsy' }).isString().isLength({ max: 64 }),
+  query('q').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
+  query('from').optional({ values: 'falsy' }).isISO8601(),
+  query('to').optional({ values: 'falsy' }).isISO8601(),
+  query('page').optional({ values: 'falsy' }).isInt({ min: 1 }),
+  query('pageSize').optional({ values: 'falsy' }).isInt({ min: 1, max: 100 }),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const page = req.query.page ? parseInt(req.query.page, 10) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize, 10) : 25;
+
+    const applyFilters = (qb) => {
+      if (req.query.status) qb.where('email_queue.status', req.query.status);
+      if (req.query.emailType) qb.where('email_queue.email_type', req.query.emailType);
+      if (req.query.from) qb.where('email_queue.created_at', '>=', new Date(req.query.from));
+      if (req.query.to) qb.where('email_queue.created_at', '<=', new Date(req.query.to));
+      if (req.query.q) {
+        const term = `%${String(req.query.q).trim()}%`;
+        qb.where(function () {
+          this.where('email_queue.recipient_email', 'like', term)
+            .orWhere('email_queue.email_type', 'like', term);
+        });
+      }
+      return qb;
+    };
+
+    const [{ count }] = await applyFilters(db('email_queue')).count({ count: '*' });
+    const total = parseInt(count, 10) || 0;
+
+    const rows = await applyFilters(
+      db('email_queue')
+        .leftJoin('events', 'events.id', 'email_queue.event_id')
+        .select(
+          'email_queue.id',
+          'email_queue.recipient_email',
+          'email_queue.email_type',
+          'email_queue.status',
+          'email_queue.created_at',
+          'email_queue.scheduled_at',
+          'email_queue.sent_at',
+          'email_queue.error_message',
+          'email_queue.retry_count',
+          'email_queue.event_id',
+          'events.event_name as event_name',
+          'events.slug as event_slug'
+        )
+    )
+      .orderBy('email_queue.created_at', 'desc')
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+
+    const items = rows.map((r) => ({
+      id: r.id,
+      recipientEmail: r.recipient_email,
+      emailType: r.email_type,
+      status: r.status,
+      createdAt: r.created_at,
+      scheduledAt: r.scheduled_at,
+      sentAt: r.sent_at,
+      errorMessage: r.error_message,
+      retryCount: r.retry_count,
+      eventId: r.event_id,
+      eventName: r.event_name || null,
+      eventSlug: r.event_slug || null,
+    }));
+
+    res.json({
+      items,
+      pagination: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) || 1 },
+    });
+  } catch (error) {
+    console.error('List email queue error:', error);
+    res.status(500).json({ error: 'Failed to load email queue', details: error.message });
+  }
+});
+
 // Helper: parse variables JSON safely
 function parseVariables(template) {
   try {
@@ -303,6 +421,16 @@ async function getTemplateTranslations(templateId, template) {
 // Get email templates
 router.get('/templates', adminAuth, requirePermission('email.view'), async (req, res) => {
   try {
+    // Self-heal: ensure the seeded event-reminder templates exist + are
+    // backfilled with example content on already-migrated installs. The
+    // function is idempotent and short-circuits via a module-level cache
+    // after one successful pass, so this is free on subsequent calls.
+    try {
+      const { ensureEventReminderTemplatesSeeded } = require('../services/eventReminderTemplates');
+      const log = require('../utils/logger');
+      await ensureEventReminderTemplatesSeeded(db, log);
+    } catch (_e) { /* non-fatal */ }
+
     const templates = await db('email_templates')
       .select('*')
       .orderBy('template_key');
@@ -449,6 +577,94 @@ router.put('/templates/:key', [
   } catch (error) {
     console.error('Email template update error:', error);
     res.status(500).json({ error: 'Failed to update email template' });
+  }
+});
+
+// Create a new email template. Used by the ReminderTemplatesPage to
+// mint a per-event-type reminder (template_key like
+// `event_reminder_<slug_prefix>`). Idempotent at the API level — if
+// the key already exists we return 409 so the caller knows to PUT
+// instead.
+router.post('/templates', [
+  adminAuth,
+  requirePermission('email.edit'),
+], async (req, res) => {
+  try {
+    const {
+      template_key: templateKey,
+      translations,
+      category,
+      subcategory,
+      feature_flag: featureFlag,
+      variables,
+    } = req.body;
+    if (!templateKey || typeof templateKey !== 'string' || !/^[a-z0-9_]+$/.test(templateKey)) {
+      return res.status(400).json({ error: 'template_key must be a snake_case identifier' });
+    }
+    if (!translations || typeof translations !== 'object') {
+      return res.status(400).json({ error: 'translations object is required' });
+    }
+
+    const existing = await db('email_templates').where({ template_key: templateKey }).first();
+    if (existing) {
+      return res.status(409).json({
+        error: 'Template already exists. Use PUT /templates/:key to update.',
+        code: 'TEMPLATE_EXISTS',
+      });
+    }
+
+    const cols = await db('email_templates').columnInfo();
+    const enContent = translations.en || {};
+
+    // Build the master row. The legacy single-row columns are populated
+    // from EN so older readers that don't consult the translations
+    // table still see something sensible.
+    const masterRow = { template_key: templateKey };
+    if (variables && 'variables' in cols) masterRow.variables = JSON.stringify(variables);
+    if (category && 'category' in cols) masterRow.category = category;
+    if (subcategory && 'subcategory' in cols) masterRow.subcategory = subcategory;
+    if (featureFlag && 'feature_flag' in cols) masterRow.feature_flag = featureFlag;
+    if ('created_at' in cols) masterRow.created_at = new Date();
+    if ('updated_at' in cols) masterRow.updated_at = new Date();
+    for (const colName of Object.keys(cols)) {
+      if (colName === 'subject' || /^subject_[a-z]{2,3}$/i.test(colName)) {
+        masterRow[colName] = enContent.subject || '';
+      } else if (colName === 'body_html' || /^body_html_[a-z]{2,3}$/i.test(colName)) {
+        masterRow[colName] = enContent.body_html || '';
+      } else if (colName === 'body_text' || /^body_text_[a-z]{2,3}$/i.test(colName)) {
+        masterRow[colName] = enContent.body_text || '';
+      }
+    }
+
+    const inserted = await db('email_templates').insert(masterRow).returning('id');
+    const templateId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
+
+    // Per-language rows in email_template_translations.
+    const hasTranslations = await db.schema.hasTable('email_template_translations');
+    if (hasTranslations && templateId) {
+      for (const [language, content] of Object.entries(translations)) {
+        if (!content || typeof content !== 'object') continue;
+        await db('email_template_translations').insert({
+          template_id: templateId,
+          language,
+          subject: content.subject || '',
+          body_html: content.body_html || '',
+          body_text: content.body_text || '',
+          created_at: new Date(),
+          updated_at: new Date(),
+        });
+      }
+    }
+
+    await logActivity('email_template_created',
+      { template_key: templateKey, languages: Object.keys(translations) },
+      null,
+      { type: 'admin', id: req.admin.id, name: req.admin.username });
+
+    return res.status(201).json({ template_key: templateKey, id: templateId });
+  } catch (error) {
+    console.error('Email template create error:', error);
+    return res.status(500).json({ error: 'Failed to create email template' });
   }
 });
 

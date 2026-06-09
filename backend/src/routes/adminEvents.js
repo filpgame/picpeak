@@ -5,6 +5,7 @@ const { formatBoolean } = require('../utils/dbCompat');
 const { slugify } = require('../utils/slug');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
+const { IDENTITY_PRESERVING_NORMALIZE_EMAIL } = require('../utils/emailNormalization');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -22,6 +23,8 @@ const logger = require('../utils/logger');
 const { buildShareLinkVariants } = require('../services/shareLinkService');
 const { parseBooleanInput, parseStringInput } = require('../utils/parsers');
 const eventTypeService = require('../services/eventTypeService');
+const { normaliseEventTimeTriple } = require('../services/eventService');
+const { hasColumnCached } = require('../utils/schemaCache');
 const { validateFileType } = require('../utils/fileSecurityUtils');
 const { requireEventOwnership } = require('../middleware/ownership');
 const { getFrontendBaseUrl } = require('../utils/frontendUrl');
@@ -289,9 +292,25 @@ async function deleteEventCascade(eventId, adminContext) {
     // Best-effort filesystem cleanup. Failures are logged but don't unwind
     // the transaction — the canonical state lives in the DB; orphan files
     // are recoverable noise, a half-deleted DB row is a permanent mess.
-    if (event.folder_path) {
-      const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
-      const eventFolderPath = path.join(storagePath, 'events', 'active', event.folder_path);
+    //
+    // #608 — previous code read `event.folder_path`, but that column is
+    // never written anywhere in the codebase (grep confirms: two reads in
+    // this function, zero writes). It's always undefined, so the
+    // `if (event.folder_path)` branch silently no-op'd and every event
+    // delete since this cascade landed left its photos orphaned on disk.
+    // jodrmx's Pi report (v3.44.0) was the first surfacing.
+    //
+    // Files actually live at:
+    //   {STORAGE_PATH}/events/active/{slug}/...      (uploaded photos)
+    //   {STORAGE_PATH}/events/archived/{slug}/...    (after the event
+    //     was archived — folder copy survives the archive flow)
+    //
+    // `event.slug` is NOT NULL on the events table and is slugify-sanitized
+    // on every write (lower-case ASCII + dashes only via utils/slug.js),
+    // so path-traversal isn't a concern.
+    const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
+    for (const sub of ['active', 'archived']) {
+      const eventFolderPath = path.join(storagePath, 'events', sub, event.slug);
       try {
         await fs.rm(eventFolderPath, { recursive: true, force: true });
       } catch (fsErr) {
@@ -340,12 +359,18 @@ router.post('/', adminAuth, requirePermission('events.create'), [
   }),
   body('event_name').notEmpty().trim(),
   body('event_date').optional({ values: 'falsy' }).isDate(),
+  // Migration 137 — calendar time fields.
+  body('event_time_start').optional({ values: 'falsy' }).matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+    .withMessage('event_time_start must be HH:MM 24h'),
+  body('event_time_end').optional({ values: 'falsy' }).matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+    .withMessage('event_time_end must be HH:MM 24h'),
+  body('is_full_day').optional().isBoolean().toBoolean(),
   body('customer_name').optional().trim(),
-  body('customer_email').optional({ values: 'falsy' }).isEmail().normalizeEmail(),
+  body('customer_email').optional({ values: 'falsy' }).isEmail().normalizeEmail(IDENTITY_PRESERVING_NORMALIZE_EMAIL),
   body('customer_phone').optional({ nullable: true, checkFalsy: true })
     .isString().trim()
     .isLength({ max: 32 }).withMessage('Phone number must be at most 32 characters'),
-  body('admin_email').optional({ values: 'falsy' }).isEmail().normalizeEmail(),
+  body('admin_email').optional({ values: 'falsy' }).isEmail().normalizeEmail(IDENTITY_PRESERVING_NORMALIZE_EMAIL),
   body('require_password').optional().isBoolean(),
   body('password').optional().isString().custom((value, { req }) => {
     const input = req.body.require_password;
@@ -431,6 +456,11 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       event_type,
       event_name,
       event_date,
+      // Migration 137 — calendar time fields. is_full_day defaults to
+      // true at the service layer when undefined (legacy form payloads).
+      event_time_start,
+      event_time_end,
+      is_full_day,
       admin_email,
       password,
       welcome_message = '',
@@ -651,12 +681,24 @@ router.post('/', adminAuth, requirePermission('events.create'), [
           ? protectionDefaults.enable_devtools_protection
           : true;
 
+    // Migration 137 — normalise calendar time triple. Throws AppError
+    // 400 when is_full_day=false but times are malformed/inverted.
+    const calendarTriple = normaliseEventTimeTriple({
+      event_time_start, event_time_end, is_full_day,
+    });
+    const calendarColumnsExist = await hasColumnCached('events', 'is_full_day');
+
     // Insert into database
     const insertResult = await db('events').insert({
       slug,
       event_type,
       event_name,
       event_date: event_date || null,
+      ...(calendarColumnsExist ? {
+        event_time_start: calendarTriple.event_time_start,
+        event_time_end: calendarTriple.event_time_end,
+        is_full_day: formatBoolean(calendarTriple.is_full_day),
+      } : {}),
       ...(customerColumnsAvailable ? { customer_name: customerName, customer_email: customerEmail } : {}),
       ...(customerPhone ? { customer_phone: customerPhone } : {}),
       host_name: customerName || null,
@@ -1173,14 +1215,32 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
 // Update event
 router.put('/:id', adminAuth, requirePermission('events.edit'), requireEventOwnership, [
   body('event_name').optional().trim().notEmpty(),
+  body('event_date').optional({ values: 'falsy' }).isDate(),
+  // Migration 137 — calendar time fields. Same regex/range rule as POST.
+  body('event_time_start').optional({ values: 'falsy', nullable: true })
+    .matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+    .withMessage('event_time_start must be HH:MM 24h'),
+  body('event_time_end').optional({ values: 'falsy', nullable: true })
+    .matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+    .withMessage('event_time_end must be HH:MM 24h'),
+  body('is_full_day').optional().isBoolean().toBoolean(),
   body('admin_email').optional().isEmail(),
   body('is_active').optional().isBoolean(),
   body('expires_at').optional({ nullable: true, checkFalsy: true }).isISO8601(),
   body('welcome_message').optional({ nullable: true, checkFalsy: true }).trim(),
   body('color_theme').optional({ nullable: true }),
   body('allow_user_uploads').optional().isBoolean(),
+  // Migration 143 — per-event reminder overrides. All three are
+  // optional; nullable values are accepted so admins can clear an
+  // override (e.g. drop a custom offset back to the global default).
+  body('event_reminder_disabled').optional().isBoolean(),
+  body('event_reminder_offset_days').optional({ nullable: true })
+    .custom((v) => v === null || (Number.isInteger(Number(v)) && Number(v) >= 0))
+    .withMessage('event_reminder_offset_days must be a non-negative integer or null'),
+  body('event_reminder_body_override').optional({ nullable: true, checkFalsy: true })
+    .isString().isLength({ max: 10_000 }),
   body('customer_name').optional({ nullable: true, checkFalsy: true }).trim(),
-  body('customer_email').optional().isEmail().normalizeEmail(),
+  body('customer_email').optional().isEmail().normalizeEmail(IDENTITY_PRESERVING_NORMALIZE_EMAIL),
   body('customer_phone').optional({ nullable: true, checkFalsy: true })
     .isString().trim()
     .isLength({ max: 32 }).withMessage('Phone number must be at most 32 characters'),
@@ -1361,6 +1421,32 @@ router.put('/:id', adminAuth, requirePermission('events.edit'), requireEventOwne
     // the UPDATE statement throws "column does not exist" and crashes
     // the entire edit with 500 Failed to update event.
     delete updates.customer_account_ids;
+
+    // Migration 137 — calendar time triple. Renormalise only when at
+    // least one of the three fields was supplied; otherwise leave the
+    // row's current values alone. is_full_day=true forces both times
+    // to null. Drop the fields silently on un-migrated installs.
+    const timeFieldsTouched = (
+      Object.prototype.hasOwnProperty.call(updates, 'event_time_start')
+      || Object.prototype.hasOwnProperty.call(updates, 'event_time_end')
+      || Object.prototype.hasOwnProperty.call(updates, 'is_full_day')
+    );
+    if (timeFieldsTouched) {
+      if (await hasColumnCached('events', 'is_full_day')) {
+        const triple = normaliseEventTimeTriple({
+          event_time_start: updates.event_time_start,
+          event_time_end: updates.event_time_end,
+          is_full_day: updates.is_full_day,
+        });
+        updates.event_time_start = triple.event_time_start;
+        updates.event_time_end = triple.event_time_end;
+        updates.is_full_day = formatBoolean(triple.is_full_day);
+      } else {
+        delete updates.event_time_start;
+        delete updates.event_time_end;
+        delete updates.is_full_day;
+      }
+    }
 
     // Log the update request for debugging
     logger.debug('Update event request', {

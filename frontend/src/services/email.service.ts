@@ -1,5 +1,27 @@
 import { api } from '../config/api';
 
+export type EmailQueueStatus = 'pending' | 'sent' | 'failed';
+
+export interface EmailQueueItem {
+  id: number;
+  recipientEmail: string;
+  emailType: string;
+  status: EmailQueueStatus;
+  createdAt: string;
+  scheduledAt: string | null;
+  sentAt: string | null;
+  errorMessage: string | null;
+  retryCount: number;
+  eventId: number | null;
+  eventName: string | null;
+  eventSlug: string | null;
+}
+
+export interface EmailQueueListResponse {
+  items: EmailQueueItem[];
+  pagination: { total: number; page: number; pageSize: number; totalPages: number };
+}
+
 export interface EmailConfig {
   smtp_host: string;
   smtp_port: number;
@@ -74,6 +96,31 @@ export const emailService = {
     await api.post('/admin/email/test', { test_email: testEmail });
   },
 
+  /** Flush the email queue immediately. Sends every pending email now,
+   *  bypassing the business-hours floor — the escape hatch for draining
+   *  the queue before maintenance/updates. */
+  async flushQueue(): Promise<{ processed: number; sent: number; failed: number }> {
+    const response = await api.post<{ processed: number; sent: number; failed: number }>(
+      '/admin/email/flush-queue'
+    );
+    return response.data;
+  },
+
+  /** Read-only "Sent emails" feed — paginated view of the email_queue
+   *  table with filters. email_data is never returned. */
+  async listQueue(params: {
+    status?: EmailQueueStatus;
+    emailType?: string;
+    q?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    pageSize?: number;
+  } = {}): Promise<EmailQueueListResponse> {
+    const response = await api.get<EmailQueueListResponse>('/admin/email/queue', { params });
+    return response.data;
+  },
+
   // Get all email templates
   async getTemplates(): Promise<EmailTemplate[]> {
     const response = await api.get<EmailTemplate[]>('/admin/email/templates');
@@ -89,6 +136,22 @@ export const emailService = {
   // Update email template
   async updateTemplate(key: string, data: { translations: Record<string, EmailTemplateTranslation> }): Promise<void> {
     await api.put(`/admin/email/templates/${key}`, data);
+  },
+
+  /** Create a new email template. Used by ReminderTemplatesPage to
+   *  spawn a per-event-type reminder (e.g. `event_reminder_wedding`)
+   *  initialised with the default catch-all's content. Returns 409 if
+   *  the key already exists. */
+  async createTemplate(payload: {
+    template_key: string;
+    translations: Record<string, EmailTemplateTranslation>;
+    category?: string;
+    subcategory?: string;
+    feature_flag?: string;
+    variables?: string[];
+  }): Promise<{ template_key: string; id: number }> {
+    const response = await api.post<{ template_key: string; id: number }>('/admin/email/templates', payload);
+    return response.data;
   },
 
   // Preview email template

@@ -2,6 +2,11 @@ const nodemailer = require('nodemailer');
 const { db } = require('../database/db');
 const logger = require('../utils/logger');
 const { getFrontendBaseUrl } = require('../utils/frontendUrl');
+const {
+  snapToBusinessHours,
+  normaliseSchedule,
+} = require('../utils/businessHours');
+const { hasColumnCached } = require('../utils/schemaCache');
 
 let transporter = null;
 let lastConfigHash = null;
@@ -109,8 +114,29 @@ async function getRecipientLanguage(email, eventId = null) {
       logger.error('Error fetching event language:', error);
     }
   }
-  
-  // Second priority: Check app_settings for general default language
+
+  // Second priority: customer_accounts.preferred_language matched by
+  // recipient email. Honours the customer's own preference instead of
+  // the app-wide default — fixes the CRM bug where every quote /
+  // invoice / customer email shipped in the app default language
+  // (German on a German-locale install) even when the customer was
+  // explicitly set to English. Falls through silently on miss so admin
+  // recipients (no customer_accounts row) still see the app default.
+  if (email) {
+    try {
+      const customer = await db('customer_accounts')
+        .where('email', String(email).toLowerCase().trim())
+        .select('preferred_language')
+        .first();
+      if (customer && customer.preferred_language) {
+        return customer.preferred_language;
+      }
+    } catch (error) {
+      logger.debug('Skip customer_accounts language lookup', { error: error.message });
+    }
+  }
+
+  // Third priority: Check app_settings for general default language
   try {
     const langSetting = await db('app_settings')
       .where('setting_key', 'general_default_language')
@@ -124,7 +150,7 @@ async function getRecipientLanguage(email, eventId = null) {
     logger.error('Error fetching app settings language:', error);
   }
   
-  // Third priority: Check email configs for default language
+  // Fourth priority: Check email configs for default language
   try {
     const emailConfig = await db('email_configs').first();
     if (emailConfig && emailConfig.default_language) {
@@ -133,8 +159,8 @@ async function getRecipientLanguage(email, eventId = null) {
   } catch (error) {
     logger.error('Error fetching email config language:', error);
   }
-  
-  // Fourth priority: Check if the email domain suggests a language
+
+  // Fifth priority: Check if the email domain suggests a language
   if (email) {
     const domain = email.toLowerCase();
     const domainLanguageMap = [
@@ -143,6 +169,7 @@ async function getRecipientLanguage(email, eventId = null) {
       { domains: ['.br', '.pt'], language: 'pt' },
       { domains: ['.ru', '.su'], language: 'ru' },
       { domains: ['.es'], language: 'es' },
+      { domains: ['.si'], language: 'sl' },
     ];
     for (const { domains, language: lang } of domainLanguageMap) {
       if (domains.some(d => domain.endsWith(d))) {
@@ -675,13 +702,34 @@ async function sendTemplateEmail(to, templateKey, variables) {
     // Process template with variables
     const { subject, htmlBody, textBody } = await processTemplate(template, variables, language);
 
+    // Optional plumbing — quote/invoice emails set these. Attachments
+    // are passed by callers as [{ filename, contentPath }] where the
+    // file is already written to disk; nodemailer streams it.
+    const ccList = Array.isArray(variables.cc)
+      ? variables.cc.filter(Boolean)
+      : (typeof variables.cc === 'string' && variables.cc.trim())
+        ? variables.cc.split(/[,;]+/).map((s) => s.trim()).filter(Boolean)
+        : undefined;
+    const attachments = Array.isArray(variables.attachments)
+      ? variables.attachments
+          .filter((a) => a && (a.contentPath || a.path || a.content))
+          .map((a) => ({
+            filename: a.filename,
+            path: a.contentPath || a.path,
+            content: a.content,
+            contentType: a.contentType,
+          }))
+      : undefined;
+
     // Send email
     const info = await transporter.sendMail({
       from: `${config.from_name} <${config.from_email}>`,
       to: to,
+      cc: ccList,
       subject: subject,
       html: htmlBody,
-      text: textBody || htmlToText(htmlBody)
+      text: textBody || htmlToText(htmlBody),
+      attachments,
     });
 
     logger.info(`Email sent successfully: ${info.messageId} (${language})`);
@@ -692,10 +740,22 @@ async function sendTemplateEmail(to, templateKey, variables) {
   }
 }
 
-// Process email queue
-async function processEmailQueue() {
+// Process email queue.
+//
+// Options:
+//   ignoreSchedule  when true, send every pending email regardless of its
+//                   `scheduled_at` floor (used by the admin "send now" flush
+//                   before maintenance/updates). The scheduled interval run
+//                   leaves it false so future-dated emails keep waiting.
+//   limit           max emails per pass. The flush raises this to drain the
+//                   whole queue in a single pass (no re-query, so a failing
+//                   email isn't retried in a tight loop within one flush).
+//
+// Returns { processed, sent, failed }.
+async function processEmailQueue({ ignoreSchedule = false, limit = 10 } = {}) {
   logger.info('Email queue processor: Checking for pending emails...');
-  
+  const result = { processed: 0, sent: 0, failed: 0 };
+
   try {
     // Try to initialize transporter if it's null (in case it failed at startup)
     if (!transporter) {
@@ -703,29 +763,46 @@ async function processEmailQueue() {
       transporter = await initializeTransporter();
       if (!transporter) {
         logger.warn('Email transporter could not be initialized, skipping queue processing');
-        return;
+        return result;
       }
     }
-    
+
     let pendingEmails = [];
     try {
-      pendingEmails = await db('email_queue')
-        .where('status', 'pending')
-        .where('retry_count', '<', 3)
+      // Pick up emails that are pending AND either have no `scheduled_at`
+      // or whose scheduled_at is in the past. Used by CRM invoices to
+      // queue split-payment emails relative to the event date.
+      const now = new Date();
+      const query = db('email_queue')
+        .where('status', 'pending');
+      if (!ignoreSchedule) {
+        // Automatic runs: respect the retry cap (don't hammer a failing
+        // address) AND the schedule (business-hours floor / future send).
+        query.where('retry_count', '<', 3).andWhere(function() {
+          this.whereNull('scheduled_at').orWhere('scheduled_at', '<=', now);
+        });
+      }
+      // A manual "send now" (ignoreSchedule) deliberately bypasses BOTH the
+      // schedule and the retry cap: the admin is forcing a retry, typically
+      // right after fixing SMTP. Without this, emails that failed 3× during
+      // an SMTP outage are stuck "pending" forever with no way to resend.
+      pendingEmails = await query
+        .orderBy('scheduled_at', 'asc')
         .orderBy('created_at', 'asc')
-        .limit(10);
+        .limit(limit);
     } catch (dbError) {
       logger.error('Failed to query email queue:', dbError);
-      return;
+      return result;
     }
-    
+
     if (pendingEmails.length === 0) {
       logger.info('Email queue processor: No pending emails found');
-      return;
+      return result;
     }
 
     logger.info(`Processing ${pendingEmails.length} emails from queue`);
-    
+    result.processed = pendingEmails.length;
+
     for (const email of pendingEmails) {
       try {
         const emailData = typeof email.email_data === 'string' 
@@ -745,9 +822,11 @@ async function processEmailQueue() {
             status: 'sent',
             sent_at: new Date()
           });
-          
+
+        result.sent += 1;
         logger.info(`Email ${email.id} sent successfully`);
       } catch (error) {
+        result.failed += 1;
         // Increment retry count
         try {
           await db('email_queue')
@@ -774,24 +853,112 @@ async function processEmailQueue() {
   } catch (error) {
     logger.error('Error processing email queue:', error);
   }
+
+  return result;
 }
 
-// Queue an email for sending
-async function queueEmail(eventId, recipientEmail, emailType, emailData) {
+// Load + normalise the business-hours config used by queueEmail. The
+// definition lives on the singleton business_profile row (migration 114):
+//   business_hours                 JSON, per-ISO-weekday opening blocks
+//   scheduled_email_floor_enabled  master on/off switch
+//   timezone                       IANA zone the blocks are read in
+// Any failure (column missing on a half-migrated install, bad data) or an
+// unconfigured schedule degrades to `enabled: false` so a queued email is
+// never lost — it just sends at its original time.
+async function getScheduledEmailConfig() {
+  try {
+    if (!(await hasColumnCached('business_profile', 'business_hours'))) {
+      return { enabled: false };
+    }
+    const hasToggle = await hasColumnCached('business_profile', 'scheduled_email_floor_enabled');
+    const cols = ['business_hours', 'timezone'];
+    if (hasToggle) cols.push('scheduled_email_floor_enabled');
+    const profile = await db('business_profile').where({ id: 1 }).first(cols);
+    if (!profile) return { enabled: false };
+
+    const enabled = hasToggle
+      ? (profile.scheduled_email_floor_enabled === true
+        || profile.scheduled_email_floor_enabled === 1
+        || profile.scheduled_email_floor_enabled === '1')
+      : true;
+    if (!enabled) return { enabled: false };
+
+    const schedule = normaliseSchedule(profile.business_hours);
+
+    let timezone = (profile.timezone || '').trim();
+    if (!timezone) timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    // Reject a bogus tz before it reaches Intl in the snap helper.
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: timezone });
+    } catch (_) {
+      timezone = 'UTC';
+    }
+
+    return { enabled: true, timezone, schedule };
+  } catch (err) {
+    logger.warn(`Business-hours config unavailable, skipping email floor: ${err.message}`);
+    return { enabled: false };
+  }
+}
+
+// Queue an email for sending. Optionally takes a 5th `options` arg:
+//   options.scheduledAt — Date | ISO string; row only picks up once
+//                         this moment has passed (used by CRM split-
+//                         payment invoices). NULL = send immediately.
+//   options.respectBusinessHours — when true, snap the send time to the
+//                         next open business-hours block (from "now").
+//                         Use for automated/relationship mail (dunning
+//                         reminders, gallery-expiry warnings) so we don't
+//                         ping customers overnight. No-op when the floor
+//                         is off / business hours unconfigured / already
+//                         inside a block. Leave it off for transactional
+//                         + admin-initiated mail so those send instantly.
+// Attachments + cc travel inside `emailData` (keys: attachments, cc)
+// so callers don't need a new signature for every email shape.
+async function queueEmail(eventId, recipientEmail, emailType, emailData, options = {}) {
   try {
     // Add eventId to emailData for language detection
     emailData.eventId = eventId;
-    await db('email_queue').insert({
+    const row = {
       event_id: eventId,
       recipient_email: recipientEmail,
       email_type: emailType,
       email_data: JSON.stringify(emailData),
       status: 'pending',
       retry_count: 0,
-      created_at: new Date()
-    });
-    
-    logger.info(`Email queued: ${emailType} to ${recipientEmail}`);
+      created_at: new Date(),
+    };
+    let snappedFrom = null;
+    // Base time to schedule from:
+    //   - explicit options.scheduledAt (CRM split-payment invoices), OR
+    //   - "now" when the caller opts into the business-hours floor via
+    //     options.respectBusinessHours — automated / relationship mail
+    //     like dunning reminders + gallery-expiry warnings, so we don't
+    //     ping the customer at 02:00.
+    // Both snap to the next open business-hours block. No-op when the
+    // floor is disabled, business hours are unconfigured, or the instant
+    // already lands inside a block. Transactional / admin-initiated mail
+    // (invoice_sent, storno, invitations, password resets) passes neither
+    // option and sends immediately.
+    const baseTime = options.scheduledAt
+      ? (options.scheduledAt instanceof Date ? options.scheduledAt : new Date(options.scheduledAt))
+      : (options.respectBusinessHours ? new Date() : null);
+    if (baseTime) {
+      const cfg = await getScheduledEmailConfig();
+      const snapped = snapToBusinessHours(baseTime, cfg);
+      if (snapped.getTime() !== baseTime.getTime()) snappedFrom = baseTime;
+      // Persist a future scheduled_at for an explicit scheduledAt always;
+      // for the respectBusinessHours floor only when it actually moved the
+      // time forward (inside hours → leave null → processor sends at once).
+      if (options.scheduledAt || snappedFrom) row.scheduled_at = snapped;
+    }
+    await db('email_queue').insert(row);
+
+    logger.info(`Email queued: ${emailType} to ${recipientEmail}${
+      row.scheduled_at ? ` (scheduled ${row.scheduled_at.toISOString()}${
+        snappedFrom ? `, floored from ${snappedFrom.toISOString()}` : ''
+      })` : ''
+    }`);
   } catch (error) {
     logger.error('Error queueing email:', error);
     throw error;
