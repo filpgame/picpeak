@@ -62,6 +62,10 @@ const KNOWN_FLAGS = [
   // upload). Seeded block bodies are EXAMPLES ONLY; admins must have a
   // lawyer review before sending. See docs/crm-disclaimers.md.
   'contracts',
+  // Accounting (migration 122). Top-level Accounting area — inbound
+  // supplier invoices, expenses + re-bill, and the tax report (which
+  // relocates here from CRM when this is on). Strictly opt-in.
+  'accounting',
 ];
 
 // Spec defaults for any flag missing from the DB (e.g. a row added by a
@@ -84,6 +88,7 @@ const DEFAULT_FLAGS = {
   taxReport: false,
   hoursLogging: false,
   contracts: false,
+  accounting: false,
 };
 
 async function readAllFlags() {
