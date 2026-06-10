@@ -99,7 +99,13 @@ export const ClientsLayout: React.FC = () => {
     },
   ];
 
-  const enabledItems = navItems.filter((item) => flags[item.featureFlag]);
+  const enabledItems = navItems.filter((item) => {
+    if (!flags[item.featureFlag]) return false;
+    // When the Accounting area is enabled, the tax report relocates out
+    // of CRM and under Accounting — hide it here so it isn't in both.
+    if (item.key === 'tax-report' && flags.accounting) return false;
+    return true;
+  });
 
   // When the parent `clients` flag is on but no sub-feature is enabled,
   // there's nothing to render. Settings → Features is one click away

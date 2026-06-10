@@ -41,7 +41,12 @@ export type FeatureKey =
   // upload. Independent of quotes / bills — contracts can be sent on
   // their own. Seeded block bodies are examples only; admins must
   // have their lawyer review before sending. See docs/crm-disclaimers.md.
-  | 'contracts';
+  | 'contracts'
+  // Accounting (migration 122). Top-level Accounting area — inbound
+  // supplier invoices, expenses + re-bill, plus the tax report, which
+  // relocates here from the CRM sub-nav when this flag is on. Strictly
+  // opt-in; independent of the CRM flags.
+  | 'accounting';
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 

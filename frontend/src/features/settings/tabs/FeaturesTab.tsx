@@ -16,6 +16,7 @@ import {
   Briefcase,
   Wrench,
   Calculator,
+  Landmark,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../../../components/common';
@@ -276,6 +277,20 @@ export const FeaturesTab: React.FC = () => {
               'settings.features.taxReport.requiresBills',
               'Enable Bills first — the tax report reads from your invoices.',
             ) : undefined}
+          />
+
+          <FeatureCard
+            icon={Landmark}
+            title={t('settings.features.accounting.title', 'Accounting')}
+            description={t(
+              'settings.features.accounting.description',
+              'Capture incoming supplier invoices (upload or phone/tablet camera), categorize expenses and re-bill costs to clients on the relevant event. When enabled, the Tax report moves out of CRM into a dedicated Accounting section. VAT / tax treatment is provided as guidance only — verify with your Treuhänder before relying on it.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarLabel={t('settings.features.accounting.sidebar', 'Accounting')}
+            enabled={staged.accounting}
+            onToggle={(next) => setFlag('accounting', next)}
           />
 
           <FeatureCard

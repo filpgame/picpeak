@@ -196,6 +196,7 @@
     "users": "Benutzer",
     "calendar": "Kalender",
     "clients": "CRM",
+    "accounting": "Buchhaltung",
     "betaTag": "Beta"
   },
   "eventTypes": {
@@ -1634,6 +1635,11 @@
         "description": "Periodenbezogene Umsatzliste mit Netto- und MwSt-Aufschlüsselung, gruppiert nach MwSt-Satz. Exportieren Sie als PDF (Querformat, Firmenbriefkopf) oder CSV für Ihre Buchhaltung. Stornierte Rechnungen bleiben für die lückenlose Nummernfolge sichtbar, sind aber nicht in den Summen enthalten.",
         "sidebar": "Steuer",
         "requiresBills": "Bitte zuerst Rechnungen aktivieren — die Steuerliste liest aus Ihren Rechnungen."
+      },
+      "accounting": {
+        "title": "Buchhaltung",
+        "description": "Eingehende Lieferantenrechnungen erfassen (Upload oder Handy-/Tablet-Kamera), Aufwände kategorisieren und Kosten dem passenden Event des Kunden weiterverrechnen. Wenn aktiviert, wandert die Steuerliste aus dem CRM in einen eigenen Buchhaltungsbereich. MwSt-/Steuerbehandlung dient nur als Orientierung — vor dem Verlassen darauf mit Ihrem Treuhänder prüfen.",
+        "sidebar": "Buchhaltung"
       },
       "analytics": {
         "title": "Statistiken",
@@ -3373,6 +3379,18 @@
       "bills": "Rechnungen",
       "taxReport": "Steuer",
       "development": "Entwicklung"
+    }
+  },
+  "accounting": {
+    "title": "Buchhaltung",
+    "subtitle": "Eingehende Lieferantenrechnungen, Aufwände und Auswertungen.",
+    "navAriaLabel": "Buchhaltungs-Navigation",
+    "empty": {
+      "title": "Keine Buchhaltungsfunktionen aktiviert",
+      "body": "Aktiviere die Steuerliste (oder eine andere Buchhaltungs-Unterfunktion) unter Einstellungen → Funktionen, um loszulegen."
+    },
+    "subnav": {
+      "taxReport": "Steuer"
     }
   },
   "calendar": {

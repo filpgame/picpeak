@@ -64,6 +64,7 @@ import {
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
 import { AdminLayout, AdminAuthWrapper } from './components/admin';
 import { ClientsLayout } from './components/admin/ClientsLayout';
+import { AccountingLayout } from './components/admin/AccountingLayout';
 import { RequireFeature } from './components/admin/RequireFeature';
 import { PageErrorBoundary, OfflineIndicator, SkipLink, DynamicFavicon, RobotsMetaTags, CMSContentBlock, Loading } from './components/common';
 import { MaintenanceWrapper } from './components/MaintenanceWrapper';
@@ -257,6 +258,20 @@ function App() {
                               state inside ClientsLayout handles "parent on,
                               all children off". */}
                           <Route index element={<Navigate to="/admin/clients/accounts" replace />} />
+                        </Route>
+                      </Route>
+
+                      {/* Accounting section (migration 122). Parent gated by
+                          the `accounting` flag. Hosts the Tax report — which
+                          relocates here from the CRM sub-nav when accounting
+                          is on — plus the future inbound-invoice / expenses
+                          pages. Each sub-route is independently flagged. */}
+                      <Route element={<RequireFeature flag="accounting" />}>
+                        <Route path="accounting" element={<AccountingLayout />}>
+                          <Route element={<RequireFeature flag="taxReport" />}>
+                            <Route path="tax-report" element={<TaxReportPage />} />
+                          </Route>
+                          <Route index element={<Navigate to="/admin/accounting/tax-report" replace />} />
                         </Route>
                       </Route>
 

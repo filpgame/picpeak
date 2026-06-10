@@ -10,6 +10,7 @@ import {
   X,
   Users,
   Briefcase,
+  Landmark,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
@@ -95,6 +96,16 @@ const navigation: NavItem[] = [
       'customerPortal', 'crmDevelopment', 'quotes', 'bills',
       'taxReport', 'hoursLogging', 'contracts', 'calendar',
     ],
+  },
+  // Accounting section (migration 122) — inbound supplier invoices,
+  // expenses + re-bill, and the tax report (which relocates here from
+  // the CRM sub-nav when `accounting` is on). Gated by the `accounting`
+  // master flag; the sub-pages inside AccountingLayout are each
+  // independently feature-gated.
+  {
+    nameKey: 'navigation.accounting', href: '/admin/accounting', icon: Landmark,
+    permission: 'accounting.view',
+    featureFlag: 'accounting',
   },
 ];
 

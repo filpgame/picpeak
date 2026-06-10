@@ -196,6 +196,7 @@
     "users": "Users",
     "calendar": "Calendar",
     "clients": "CRM",
+    "accounting": "Accounting",
     "betaTag": "Beta"
   },
   "archives": {
@@ -1192,6 +1193,11 @@
         "description": "Period-scoped revenue list with net + VAT breakdown grouped by VAT rate. Export as PDF (landscape, company letterhead) or CSV for your accountant. Cancelled invoices stay visible for a gap-free audit trail but are excluded from totals.",
         "sidebar": "Tax",
         "requiresBills": "Enable Bills first — the tax report reads from your invoices."
+      },
+      "accounting": {
+        "title": "Accounting",
+        "description": "Capture incoming supplier invoices (upload or phone/tablet camera), categorize expenses and re-bill costs to clients on the relevant event. When enabled, the Tax report moves out of CRM into a dedicated Accounting section. VAT / tax treatment is provided as guidance only — verify with your Treuhänder before relying on it.",
+        "sidebar": "Accounting"
       },
       "analytics": {
         "title": "Analytics",
@@ -3373,6 +3379,18 @@
       "bills": "Invoices",
       "taxReport": "Tax",
       "development": "Development"
+    }
+  },
+  "accounting": {
+    "title": "Accounting",
+    "subtitle": "Inbound supplier invoices, expenses and reporting.",
+    "navAriaLabel": "Accounting navigation",
+    "empty": {
+      "title": "No accounting features enabled",
+      "body": "Enable the Tax report (or another accounting sub-feature) under Settings → Features to get started."
+    },
+    "subnav": {
+      "taxReport": "Tax"
     }
   },
   "calendar": {

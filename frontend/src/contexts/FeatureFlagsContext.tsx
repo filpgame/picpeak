@@ -45,6 +45,10 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   // Settings → Features once they've reviewed the seeded block
   // library with their lawyer.
   contracts: false,
+  // Accounting (migration 122). Top-level Accounting area (inbound
+  // supplier invoices, expenses + re-bill). When ON, the tax report
+  // moves out of the CRM sub-nav and under Accounting. Strictly opt-in.
+  accounting: false,
 };
 
 export const FEATURE_FLAGS_QUERY_KEY = ['feature-flags'] as const;
