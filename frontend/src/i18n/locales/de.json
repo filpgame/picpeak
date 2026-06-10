@@ -3400,6 +3400,7 @@
     },
     "subnav": {
       "incomingInvoices": "Eingangsrechnungen",
+      "expenses": "Aufwände",
       "taxReport": "Steuer"
     },
     "disposition": {
@@ -3449,6 +3450,36 @@
         "eventId": "Event-ID (optional)",
         "markup": "Zuschlag"
       }
+    },
+    "expenseStatus": {
+      "open": "Offen",
+      "parked": "Geparkt",
+      "billed": "Verrechnet",
+      "declined": "Abgelehnt"
+    },
+    "paymentMethod": {
+      "bank_transfer": "Überweisung",
+      "cash": "Bargeld",
+      "twint": "TWINT",
+      "paypal": "PayPal",
+      "card": "Karte",
+      "other": "Sonstiges"
+    },
+    "ledger": {
+      "allStatuses": "Alle Status",
+      "allDispositions": "Alle Zuordnungen",
+      "empty": "Noch keine Aufwände — Dokumente im Eingang kategorisieren.",
+      "untitled": "Aufwand",
+      "invoiceLink": "Rechnung",
+      "paid": "Bezahlt",
+      "markPaid": "Als bezahlt markieren",
+      "markPaidTitle": "Lieferant als bezahlt markieren",
+      "paidDate": "Zahldatum",
+      "method": "Methode",
+      "reference": "Referenz (optional)",
+      "confirmPaid": "Als bezahlt markieren",
+      "paidToast": "Als bezahlt markiert.",
+      "unpaidToast": "Als nicht bezahlt markiert."
     }
   },
   "calendar": {

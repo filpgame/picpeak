@@ -66,6 +66,7 @@ import { AdminLayout, AdminAuthWrapper } from './components/admin';
 import { ClientsLayout } from './components/admin/ClientsLayout';
 import { AccountingLayout, AccountingIndex } from './components/admin/AccountingLayout';
 import { AccountingInboxPage } from './pages/admin/accounting/AccountingInboxPage';
+import { ExpensesLedgerPage } from './pages/admin/accounting/ExpensesLedgerPage';
 import { RequireFeature } from './components/admin/RequireFeature';
 import { PageErrorBoundary, OfflineIndicator, SkipLink, DynamicFavicon, RobotsMetaTags, CMSContentBlock, Loading } from './components/common';
 import { MaintenanceWrapper } from './components/MaintenanceWrapper';
@@ -271,6 +272,7 @@ function App() {
                         <Route path="accounting" element={<AccountingLayout />}>
                           <Route element={<RequireFeature flag="incomingInvoices" />}>
                             <Route path="inbox" element={<AccountingInboxPage />} />
+                            <Route path="expenses" element={<ExpensesLedgerPage />} />
                           </Route>
                           <Route element={<RequireFeature flag="taxReport" />}>
                             <Route path="tax-report" element={<TaxReportPage />} />

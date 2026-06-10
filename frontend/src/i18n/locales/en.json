@@ -3400,6 +3400,7 @@
     },
     "subnav": {
       "incomingInvoices": "Incoming invoices",
+      "expenses": "Expenses",
       "taxReport": "Tax"
     },
     "disposition": {
@@ -3449,6 +3450,36 @@
         "eventId": "Event ID (optional)",
         "markup": "Markup"
       }
+    },
+    "expenseStatus": {
+      "open": "Open",
+      "parked": "Parked",
+      "billed": "Billed",
+      "declined": "Declined"
+    },
+    "paymentMethod": {
+      "bank_transfer": "Bank transfer",
+      "cash": "Cash",
+      "twint": "TWINT",
+      "paypal": "PayPal",
+      "card": "Card",
+      "other": "Other"
+    },
+    "ledger": {
+      "allStatuses": "All statuses",
+      "allDispositions": "All dispositions",
+      "empty": "No expenses yet — categorize documents in the inbox.",
+      "untitled": "Expense",
+      "invoiceLink": "Invoice",
+      "paid": "Paid",
+      "markPaid": "Mark paid",
+      "markPaidTitle": "Mark supplier paid",
+      "paidDate": "Payment date",
+      "method": "Method",
+      "reference": "Reference (optional)",
+      "confirmPaid": "Mark paid",
+      "paidToast": "Marked as paid.",
+      "unpaidToast": "Marked as not paid."
     }
   },
   "calendar": {

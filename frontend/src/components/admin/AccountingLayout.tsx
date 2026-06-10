@@ -9,7 +9,7 @@
 import React from 'react';
 import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Landmark, Calculator, Inbox } from 'lucide-react';
+import { Landmark, Calculator, Inbox, Wallet } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useFeatureFlags, type FeatureKey } from '../../contexts/FeatureFlagsContext';
 
@@ -34,6 +34,13 @@ export const AccountingLayout: React.FC = () => {
       to: '/admin/accounting/inbox',
       label: t('accounting.subnav.incomingInvoices', 'Incoming invoices'),
       icon: Inbox,
+      featureFlag: 'incomingInvoices',
+    },
+    {
+      key: 'expenses',
+      to: '/admin/accounting/expenses',
+      label: t('accounting.subnav.expenses', 'Expenses'),
+      icon: Wallet,
       featureFlag: 'incomingInvoices',
     },
     {
