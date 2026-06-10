@@ -533,4 +533,6 @@ module.exports = {
   TAX_TREATMENTS,
   MARKUP_TYPES,
   PAYMENT_METHODS,
+  // exposed for unit tests
+  _internal: { computeMarkupMinor, resolveMarkup, buildExpenseInsert, transformExpense, transformInbound },
 };
