@@ -70,6 +70,7 @@ export interface Paginated<T> {
 export interface CategorizePayload {
   disposition: Disposition;
   supplierName?: string | null;
+  description?: string | null;
   chfAmountMinor?: number | null;
   netAmountMinor?: number | null;
   vatAmountMinor?: number | null;
@@ -135,6 +136,12 @@ export const accountingService = {
 
   async categorizeInbound(id: number, payload: CategorizePayload): Promise<Expense> {
     const { data } = await api.post(`/admin/expenses/inbound/${id}/categorize`, payload);
+    return data.expense;
+  },
+
+  // Create a manual expense (no inbound document).
+  async createExpense(payload: CategorizePayload): Promise<Expense> {
+    const { data } = await api.post('/admin/expenses', payload);
     return data.expense;
   },
 

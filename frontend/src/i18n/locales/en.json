@@ -3483,7 +3483,12 @@
       "reference": "Reference (optional)",
       "confirmPaid": "Mark paid",
       "paidToast": "Marked as paid.",
-      "unpaidToast": "Marked as not paid."
+      "unpaidToast": "Marked as not paid.",
+      "addExpense": "Add expense",
+      "addTitle": "Add expense",
+      "description": "Description",
+      "descriptionHint": "e.g. mileage, per-diem, cash receipt",
+      "createdToast": "Expense added."
     }
   },
   "calendar": {

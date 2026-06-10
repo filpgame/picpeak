@@ -3483,7 +3483,12 @@
       "reference": "Referenz (optional)",
       "confirmPaid": "Als bezahlt markieren",
       "paidToast": "Als bezahlt markiert.",
-      "unpaidToast": "Als nicht bezahlt markiert."
+      "unpaidToast": "Als nicht bezahlt markiert.",
+      "addExpense": "Aufwand hinzufügen",
+      "addTitle": "Aufwand hinzufügen",
+      "description": "Beschreibung",
+      "descriptionHint": "z. B. Kilometer, Spesenpauschale, Barbeleg",
+      "createdToast": "Aufwand hinzugefügt."
     }
   },
   "calendar": {

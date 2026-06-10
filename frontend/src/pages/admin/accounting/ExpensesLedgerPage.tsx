@@ -11,14 +11,17 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { CheckCircle2, Circle, X, ExternalLink } from 'lucide-react';
+import { CheckCircle2, Circle, X, ExternalLink, Plus } from 'lucide-react';
 import { Button, Card, CardContent, Input, LocalizedDateInput, Loading } from '../../../components/common';
+import { DecimalInput } from '../../../components/common/DecimalInput';
+import { CustomerAccountPicker, type SelectedCustomer } from '../../../components/admin/CustomerAccountPicker';
 import { formatMoneyMinor } from '../../../utils/money';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import {
   accountingService,
   type Expense,
   type Disposition,
+  type MarkupType,
   type PaymentMethod,
 } from '../../../services/accounting.service';
 
@@ -80,6 +83,134 @@ const PayModal: React.FC<{ expense: Expense; onClose: () => void; onDone: () => 
   );
 };
 
+const MANUAL_DISPOSITIONS: Disposition[] = ['eigener_aufwand', 'durchlaufend', 'rebill'];
+
+const AddExpenseModal: React.FC<{ onClose: () => void; onDone: () => void }> = ({ onClose, onDone }) => {
+  const { t } = useTranslation();
+  const [supplier, setSupplier] = useState('');
+  const [description, setDescription] = useState('');
+  const [amountMajor, setAmountMajor] = useState<number>(NaN);
+  const [currency, setCurrency] = useState('CHF');
+  const [disposition, setDisposition] = useState<Disposition>('eigener_aufwand');
+  const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
+  const [customer, setCustomer] = useState<SelectedCustomer[]>([]);
+  const [eventId, setEventId] = useState('');
+  const [markupType, setMarkupType] = useState<MarkupType>('none');
+  const [markupValue, setMarkupValue] = useState<number>(NaN);
+
+  const { data: categories } = useQuery({ queryKey: ['expense-categories'], queryFn: () => accountingService.listCategories() });
+  const totalMinor = Number.isFinite(amountMajor) ? Math.round(amountMajor * 100) : null;
+  const selectClass = 'w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm';
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const expense = await accountingService.createExpense({
+        disposition,
+        supplierName: supplier || null,
+        description: description || null,
+        chfAmountMinor: totalMinor,
+        grossAmountMinor: totalMinor,
+        categoryId: disposition === 'eigener_aufwand' ? (categoryId ?? null) : null,
+        eventId: eventId ? Number(eventId) : null,
+        customerAccountId: disposition === 'rebill' && customer[0] ? customer[0].id : null,
+        markupType,
+        markupPercent: markupType === 'percent' && Number.isFinite(markupValue) ? markupValue : null,
+        markupFlatMinor: markupType === 'flat' && Number.isFinite(markupValue) ? Math.round(markupValue * 100) : null,
+      });
+      if (disposition === 'rebill') {
+        await accountingService.rebill(expense.id, {
+          customerAccountId: customer[0].id,
+          eventId: eventId ? Number(eventId) : null,
+          markupType,
+          markupPercent: markupType === 'percent' && Number.isFinite(markupValue) ? markupValue : null,
+          markupFlatMinor: markupType === 'flat' && Number.isFinite(markupValue) ? Math.round(markupValue * 100) : null,
+        });
+      }
+    },
+    onSuccess: () => { toast.success(t('accounting.ledger.createdToast', 'Expense added.')); onDone(); },
+    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+  });
+
+  const rebillNeedsCustomer = disposition === 'rebill' && !customer[0];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4">
+      <div className="mt-12 w-full max-w-md rounded-xl bg-white dark:bg-neutral-900 shadow-xl">
+        <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 px-5 py-3">
+          <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{t('accounting.ledger.addTitle', 'Add expense')}</h2>
+          <button onClick={onClose} aria-label={t('common.close', 'Close')} className="text-neutral-400 hover:text-neutral-600"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.supplier', 'Supplier')}</label>
+            <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.ledger.description', 'Description')}</label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('accounting.ledger.descriptionHint', 'e.g. mileage, per-diem, cash receipt')} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.total', 'Total')}</label>
+              <DecimalInput value={amountMajor} onChange={setAmountMajor} fractionDigits={2} className={selectClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.currency', 'Currency')}</label>
+              <Input value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase())} maxLength={3} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.disposition', 'Disposition')}</label>
+            <select value={disposition} onChange={(e) => setDisposition(e.target.value as Disposition)} className={selectClass}>
+              {MANUAL_DISPOSITIONS.map((d) => <option key={d} value={d}>{t(`accounting.disposition.${d}`, d)}</option>)}
+            </select>
+          </div>
+          {disposition === 'eigener_aufwand' && (
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.category', 'Category')}</label>
+              <select value={categoryId ?? ''} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)} className={selectClass}>
+                <option value="">{t('accounting.inbox.field.categoryNone', '— none —')}</option>
+                {(categories ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+          )}
+          {disposition === 'rebill' && (
+            <div className="space-y-3 rounded-lg border border-neutral-200 dark:border-neutral-700 p-3">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.customer', 'Client')} *</label>
+                <CustomerAccountPicker value={customer.slice(0, 1)} onChange={(next) => setCustomer(next.slice(-1))} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.eventId', 'Event ID (optional)')}</label>
+                  <Input value={eventId} onChange={(e) => setEventId(e.target.value.replace(/[^0-9]/g, ''))} inputMode="numeric" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.markup', 'Markup')}</label>
+                  <select value={markupType} onChange={(e) => setMarkupType(e.target.value as MarkupType)} className={selectClass}>
+                    <option value="none">{t('accounting.markup.none', 'None / from contract')}</option>
+                    <option value="percent">{t('accounting.markup.percent', 'Percent')}</option>
+                    <option value="flat">{t('accounting.markup.flat', 'Flat')}</option>
+                  </select>
+                </div>
+              </div>
+              {markupType !== 'none' && (
+                <DecimalInput value={markupValue} onChange={setMarkupValue} fractionDigits={2} className={selectClass} placeholder={markupType === 'percent' ? '%' : currency} />
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-neutral-200 dark:border-neutral-700 px-5 py-3">
+          <Button variant="outline" onClick={onClose}>{t('common.cancel', 'Cancel')}</Button>
+          <Button onClick={() => save.mutate()} disabled={save.isPending || rebillNeedsCustomer || totalMinor == null}>
+            {save.isPending ? t('common.saving', 'Saving…') : t('accounting.ledger.addExpense', 'Add expense')}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ExpensesLedgerPage: React.FC = () => {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -87,6 +218,7 @@ export const ExpensesLedgerPage: React.FC = () => {
   const [status, setStatus] = useState('');
   const [disposition, setDisposition] = useState('');
   const [payExpense, setPayExpense] = useState<Expense | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['accounting-expenses', status, disposition],
@@ -117,6 +249,9 @@ export const ExpensesLedgerPage: React.FC = () => {
           <option value="">{t('accounting.ledger.allDispositions', 'All dispositions')}</option>
           {DISPOSITIONS.map((d) => <option key={d} value={d}>{t(`accounting.disposition.${d}`, d)}</option>)}
         </select>
+        <Button className="ml-auto" onClick={() => setShowAdd(true)}>
+          <Plus className="w-4 h-4 mr-1" /> {t('accounting.ledger.addExpense', 'Add expense')}
+        </Button>
       </div>
 
       {isLoading ? (
@@ -166,6 +301,10 @@ export const ExpensesLedgerPage: React.FC = () => {
 
       {payExpense && (
         <PayModal expense={payExpense} onClose={() => setPayExpense(null)} onDone={() => { setPayExpense(null); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />
+      )}
+
+      {showAdd && (
+        <AddExpenseModal onClose={() => setShowAdd(false)} onDone={() => { setShowAdd(false); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />
       )}
     </div>
   );
