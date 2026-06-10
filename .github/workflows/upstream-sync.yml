@@ -1,0 +1,198 @@
+name: Sync upstream beta
+
+# Cherry-picks new commits from the upstream repo (the-luap/picpeak) beta
+# branch onto this fork's beta, then opens a PR. Mirrors the manual flow:
+#   fetch upstream → take code commits only (skip merges + release bumps)
+#   → cherry-pick onto a sync branch → open PR to beta.
+#
+# Why cherry-pick and not merge: this fork runs its own release-please
+# (release-please-beta.yml). A plain merge would drag upstream's
+# `chore(beta): release X` version bumps + tags into our history and fight
+# our own versioning. Cherry-picking code-only keeps releases ours.
+#
+# Conflicts still need a human. On the first conflicting commit the job
+# stops, pushes everything that applied cleanly, and opens a DRAFT PR that
+# names the offending commit + the exact local commands to finish.
+#
+# CI ON THE SYNC PR — IMPORTANT:
+# A PR opened with the default GITHUB_TOKEN does NOT trigger other
+# workflows (tests.yml), so its checks would never run. To get CI on the
+# sync PR, add a repo secret `UPSTREAM_SYNC_TOKEN` — a fine-grained PAT
+# with Contents:write + Pull requests:write on this fork. Without it the
+# workflow still works, but you must re-run checks manually on the PR.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'        # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'List pending commits only — do not branch/cherry-pick/PR'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Never let two syncs race (e.g. a manual run on top of the cron run).
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      UPSTREAM_URL: https://github.com/the-luap/picpeak.git
+      UPSTREAM_BRANCH: beta
+      BASE_BRANCH: beta
+      GH_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout beta (full history)
+        uses: actions/checkout@v4
+        with:
+          ref: beta
+          fetch-depth: 0
+          # PAT (if present) so the opened PR triggers tests.yml; falls
+          # back to GITHUB_TOKEN (PR opens, but its CI won't auto-run).
+          token: ${{ secrets.UPSTREAM_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "picpeak-sync-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream "$UPSTREAM_URL" 2>/dev/null \
+            || git remote set-url upstream "$UPSTREAM_URL"
+          git fetch --no-tags upstream "$UPSTREAM_BRANCH"
+
+      - name: Skip if a sync PR is already open
+        id: guard
+        run: |
+          # Ensure the label exists (no-op if it already does).
+          gh label create upstream-sync --color 1d76db \
+            --description "Automated upstream beta sync" 2>/dev/null || true
+          open=$(gh pr list --base "$BASE_BRANCH" --state open \
+                   --label upstream-sync --json number --jq 'length')
+          echo "open=$open" >> "$GITHUB_OUTPUT"
+          if [ "$open" != "0" ]; then
+            echo "An upstream-sync PR is already open — skipping this run." \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Compute pending commits
+        if: steps.guard.outputs.open == '0'
+        id: pending
+        run: |
+          # upstream/beta commits with NO patch-equivalent already in beta,
+          # oldest-first, no merges. --cherry-pick drops anything we already
+          # cherry-picked (even though the SHA differs), which makes this
+          # naturally idempotent — no state file to maintain.
+          mapfile -t all < <(git rev-list --reverse --no-merges \
+              --right-only --cherry-pick \
+              "$BASE_BRANCH...upstream/$UPSTREAM_BRANCH")
+
+          : > pending.txt
+          for sha in "${all[@]}"; do
+            subj=$(git log -1 --format=%s "$sha")
+            # Skip our own release-please version bumps.
+            case "$subj" in
+              "chore(beta): release"*) continue ;;
+            esac
+            echo "$sha" >> pending.txt
+          done
+
+          count=$(wc -l < pending.txt | tr -d ' ')
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Pending upstream commits: $count"
+            echo ''
+            while read -r s; do
+              echo "- \`$(git rev-parse --short "$s")\` $(git log -1 --format=%s "$s")"
+            done < pending.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cherry-pick onto sync branch
+        if: >-
+          steps.guard.outputs.open == '0' &&
+          steps.pending.outputs.count != '0' &&
+          github.event.inputs.dry_run != 'true'
+        id: pick
+        run: |
+          BRANCH="sync/upstream-beta-$(date -u +%Y%m%d)"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            BRANCH="${BRANCH}-$(date -u +%H%M%S)"   # avoid same-day collision
+          fi
+          git switch -c "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          failed=""
+          picked=0
+          : > picked.txt
+          while read -r sha; do
+            # --empty=drop tolerates commits that come out empty (content
+            # already present); a real conflict still fails the pick.
+            if git cherry-pick -x --empty=drop "$sha"; then
+              picked=$((picked + 1))
+              echo "$sha" >> picked.txt
+            else
+              git cherry-pick --abort
+              failed="$sha"
+              break
+            fi
+          done < pending.txt
+
+          echo "picked=$picked"  >> "$GITHUB_OUTPUT"
+          echo "failed=$failed"  >> "$GITHUB_OUTPUT"
+
+          if [ "$picked" = "0" ]; then
+            {
+              echo "### ⚠️ Nothing applied"
+              echo "First pending commit \`$(git rev-parse --short "$failed")\` conflicts; resolve locally."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git push origin "$BRANCH"
+
+      - name: Open PR
+        if: steps.pick.outputs.picked != '' && steps.pick.outputs.picked != '0'
+        env:
+          BRANCH: ${{ steps.pick.outputs.branch }}
+          FAILED: ${{ steps.pick.outputs.failed }}
+        run: |
+          {
+            echo "Automated cherry-pick of \`the-luap/picpeak@${UPSTREAM_BRANCH}\` onto \`${BASE_BRANCH}\`."
+            echo ''
+            echo "## Commits ($(wc -l < picked.txt | tr -d ' '))"
+            while read -r s; do
+              echo "- \`$(git rev-parse --short "$s")\` $(git log -1 --format=%s "$s")"
+            done < picked.txt
+            if [ -n "$FAILED" ]; then
+              echo ''
+              echo '## ⚠️ Stopped at a conflict'
+              echo "Commit \`$(git rev-parse --short "$FAILED")\` — $(git log -1 --format=%s "$FAILED") — did not apply cleanly."
+              echo "Remaining commits were **not** picked. Finish locally:"
+              echo ''
+              echo '```bash'
+              echo "git fetch origin upstream && git switch $BRANCH"
+              echo "git cherry-pick -x $FAILED    # resolve markers, git add, git cherry-pick --continue"
+              echo "# then cherry-pick the rest, push, mark the PR ready"
+              echo '```'
+            fi
+          } > body.md
+
+          draft=""
+          [ -n "$FAILED" ] && draft="--draft"
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base "$BASE_BRANCH" \
+            --head "$BRANCH" \
+            --title "sync: upstream beta $(date -u +%Y-%m-%d)" \
+            --body-file body.md \
+            --label upstream-sync \
+            $draft
