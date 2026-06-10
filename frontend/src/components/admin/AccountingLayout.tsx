@@ -7,9 +7,9 @@
  * expenses pages slot in as additional sub-nav entries when their UIs land.
  */
 import React from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Landmark, Calculator } from 'lucide-react';
+import { Landmark, Calculator, Inbox } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useFeatureFlags, type FeatureKey } from '../../contexts/FeatureFlagsContext';
 
@@ -30,16 +30,20 @@ export const AccountingLayout: React.FC = () => {
 
   const navItems: NavItem[] = [
     {
+      key: 'inbox',
+      to: '/admin/accounting/inbox',
+      label: t('accounting.subnav.incomingInvoices', 'Incoming invoices'),
+      icon: Inbox,
+      featureFlag: 'incomingInvoices',
+    },
+    {
       key: 'tax-report',
       to: '/admin/accounting/tax-report',
       label: t('accounting.subnav.taxReport', 'Tax'),
       icon: Calculator,
       featureFlag: 'taxReport',
     },
-    // Future Accounting sub-features (inbound inbox, expenses) slot in here
-    // once their pages land, e.g.:
-    //   { key: 'inbox', to: '/admin/accounting/inbox', featureFlag: 'accounting' }
-    //   { key: 'expenses', to: '/admin/accounting/expenses', featureFlag: 'accounting' }
+    // Future: expenses ledger, Erfolgsrechnung.
   ];
 
   const enabledItems = navItems.filter((item) => flags[item.featureFlag]);
@@ -138,4 +142,16 @@ export const AccountingLayout: React.FC = () => {
       </div>
     </div>
   );
+};
+
+/**
+ * Index redirect for /admin/accounting — send to the first enabled
+ * sub-feature (Incoming invoices preferred, then Tax export). When none
+ * are on, render nothing; AccountingLayout shows its empty state.
+ */
+export const AccountingIndex: React.FC = () => {
+  const { flags } = useFeatureFlags();
+  if (flags.incomingInvoices) return <Navigate to="/admin/accounting/inbox" replace />;
+  if (flags.taxReport) return <Navigate to="/admin/accounting/tax-report" replace />;
+  return null;
 };

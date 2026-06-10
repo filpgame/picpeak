@@ -98,6 +98,7 @@
     "error": "Fehler",
     "configureInSettings": "Standards in den Einstellungen anpassen ↗",
     "save": "Speichern",
+    "saving": "Speichern…",
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
@@ -3398,7 +3399,54 @@
       "body": "Aktiviere die Steuerliste (oder eine andere Buchhaltungs-Unterfunktion) unter Einstellungen → Funktionen, um loszulegen."
     },
     "subnav": {
+      "incomingInvoices": "Eingangsrechnungen",
       "taxReport": "Steuer"
+    },
+    "disposition": {
+      "rebill": "An Kunde weiterverrechnen",
+      "durchlaufend": "Durchlaufender Posten",
+      "eigener_aufwand": "Eigener Aufwand",
+      "duplikat": "Duplikat",
+      "abgelehnt": "Abgelehnt"
+    },
+    "markup": {
+      "none": "Keiner / aus Vertrag",
+      "percent": "Prozent",
+      "flat": "Pauschal"
+    },
+    "inbox": {
+      "captureTitle": "Lieferantenrechnung erfassen",
+      "captureBody": "Fotografiere eine Papierrechnung mit der Gerätekamera oder lade ein PDF / Bild hoch.",
+      "scanCamera": "Mit Kamera scannen",
+      "uploadFile": "Datei hochladen",
+      "capturedToast": "Dokument erfasst.",
+      "categorizedToast": "Dokument kategorisiert.",
+      "triageTitle": "Dokument kategorisieren",
+      "saveCategorize": "Speichern",
+      "categorize": "Kategorisieren",
+      "empty": "Noch keine Dokumente — oben eines erfassen.",
+      "untitled": "Unbenanntes Dokument",
+      "noAmount": "Betrag nicht erfasst",
+      "rebillHint": "Erstellt eine bearbeitbare geplante Rechnung beim Kunden. MwSt-/Steuerbehandlung ist v1 — mit Treuhänder prüfen.",
+      "status": {
+        "unsorted": "Neu",
+        "categorized": "Kategorisiert",
+        "declined": "Abgelehnt",
+        "duplicate": "Duplikat"
+      },
+      "field": {
+        "supplier": "Lieferant",
+        "total": "Total",
+        "currency": "Währung",
+        "invoiceDate": "Rechnungsdatum",
+        "disposition": "Zuordnung",
+        "category": "Kategorie",
+        "categoryNone": "— keine —",
+        "declineReason": "Grund",
+        "customer": "Kunde",
+        "eventId": "Event-ID (optional)",
+        "markup": "Zuschlag"
+      }
     }
   },
   "calendar": {

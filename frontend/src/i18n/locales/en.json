@@ -98,6 +98,7 @@
     "error": "Error",
     "configureInSettings": "Configure defaults in Settings ↗",
     "save": "Save",
+    "saving": "Saving…",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -3398,7 +3399,54 @@
       "body": "Enable the Tax report (or another accounting sub-feature) under Settings → Features to get started."
     },
     "subnav": {
+      "incomingInvoices": "Incoming invoices",
       "taxReport": "Tax"
+    },
+    "disposition": {
+      "rebill": "Re-bill to client",
+      "durchlaufend": "Pass-through",
+      "eigener_aufwand": "Company expense",
+      "duplikat": "Duplicate",
+      "abgelehnt": "Declined"
+    },
+    "markup": {
+      "none": "None / from contract",
+      "percent": "Percent",
+      "flat": "Flat"
+    },
+    "inbox": {
+      "captureTitle": "Capture a supplier invoice",
+      "captureBody": "Photograph a paper invoice with your device camera, or upload a PDF / image.",
+      "scanCamera": "Scan with camera",
+      "uploadFile": "Upload file",
+      "capturedToast": "Document captured.",
+      "categorizedToast": "Document categorized.",
+      "triageTitle": "Categorize document",
+      "saveCategorize": "Save",
+      "categorize": "Categorize",
+      "empty": "No documents yet — capture one above.",
+      "untitled": "Untitled document",
+      "noAmount": "amount not entered",
+      "rebillHint": "Creates an editable scheduled invoice on the client. VAT/tax handling is v1 — verify with your Treuhänder.",
+      "status": {
+        "unsorted": "New",
+        "categorized": "Categorized",
+        "declined": "Declined",
+        "duplicate": "Duplicate"
+      },
+      "field": {
+        "supplier": "Supplier",
+        "total": "Total",
+        "currency": "Currency",
+        "invoiceDate": "Invoice date",
+        "disposition": "Disposition",
+        "category": "Category",
+        "categoryNone": "— none —",
+        "declineReason": "Reason",
+        "customer": "Client",
+        "eventId": "Event ID (optional)",
+        "markup": "Markup"
+      }
     }
   },
   "calendar": {

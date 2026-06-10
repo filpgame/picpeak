@@ -64,7 +64,8 @@ import {
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
 import { AdminLayout, AdminAuthWrapper } from './components/admin';
 import { ClientsLayout } from './components/admin/ClientsLayout';
-import { AccountingLayout } from './components/admin/AccountingLayout';
+import { AccountingLayout, AccountingIndex } from './components/admin/AccountingLayout';
+import { AccountingInboxPage } from './pages/admin/accounting/AccountingInboxPage';
 import { RequireFeature } from './components/admin/RequireFeature';
 import { PageErrorBoundary, OfflineIndicator, SkipLink, DynamicFavicon, RobotsMetaTags, CMSContentBlock, Loading } from './components/common';
 import { MaintenanceWrapper } from './components/MaintenanceWrapper';
@@ -268,10 +269,13 @@ function App() {
                           pages. Each sub-route is independently flagged. */}
                       <Route element={<RequireFeature flag="accounting" />}>
                         <Route path="accounting" element={<AccountingLayout />}>
+                          <Route element={<RequireFeature flag="incomingInvoices" />}>
+                            <Route path="inbox" element={<AccountingInboxPage />} />
+                          </Route>
                           <Route element={<RequireFeature flag="taxReport" />}>
                             <Route path="tax-report" element={<TaxReportPage />} />
                           </Route>
-                          <Route index element={<Navigate to="/admin/accounting/tax-report" replace />} />
+                          <Route index element={<AccountingIndex />} />
                         </Route>
                       </Route>
 
