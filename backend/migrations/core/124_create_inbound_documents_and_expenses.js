@@ -59,6 +59,7 @@ exports.up = async function (knex) {
       table.string('parse_status', 16).notNullable().defaultTo('pending'); // pending|parsed|failed|manual
       table.text('parse_error');
       table.string('parse_method', 24); // qr|pdf_text|ocr|none
+      table.integer('page_count'); // PDF page count (for "jump to last page / QR")
       // Best-effort parsed fields (assist only — always editable/confirmable):
       table.string('supplier_name', 255);
       table.string('invoice_number', 128);

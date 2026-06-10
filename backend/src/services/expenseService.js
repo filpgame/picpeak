@@ -15,6 +15,7 @@
  */
 const crypto = require('crypto');
 const fsp = require('fs').promises;
+const { PDFDocument } = require('pdf-lib');
 const { db, logActivity } = require('../database/db');
 const { AppError } = require('../utils/errors');
 const { hasColumnCached } = require('../utils/schemaCache');
@@ -57,6 +58,7 @@ function transformInbound(row) {
     parseStatus: row.parse_status,
     parseMethod: row.parse_method,
     parseError: row.parse_error,
+    pageCount: row.page_count,
     supplierName: row.supplier_name,
     invoiceNumber: row.invoice_number,
     invoiceDate: toIsoDate(row.invoice_date),
@@ -119,9 +121,21 @@ function clampPage(page, pageSize) {
   return { p, ps };
 }
 
-async function sha256OfFile(filePath) {
+// Read the file once: SHA-256 (for dedup) + PDF page count (for the
+// "jump to last page / QR" preview).
+async function inspectFile(filePath, mimeType) {
   const buf = await fsp.readFile(filePath);
-  return crypto.createHash('sha256').update(buf).digest('hex');
+  const sha = crypto.createHash('sha256').update(buf).digest('hex');
+  let pageCount = null;
+  if ((mimeType || '').includes('pdf')) {
+    try {
+      const pdf = await PDFDocument.load(buf, { updateMetadata: false });
+      pageCount = pdf.getPageCount();
+    } catch (e) {
+      logger.warn?.(`expenseService: could not read PDF page count for ${filePath}: ${e.message}`);
+    }
+  }
+  return { sha, pageCount };
 }
 
 // ── Inbound documents ──────────────────────────────────────────────────────
@@ -132,8 +146,13 @@ async function sha256OfFile(filePath) {
  */
 async function recordInboundDocument({ source, filePath, originalFilename, mimeType }, adminId) {
   let fileSha256 = null;
-  try { fileSha256 = await sha256OfFile(filePath); } catch (e) {
-    logger.warn?.(`expenseService: could not hash ${filePath}: ${e.message}`);
+  let pageCount = null;
+  try {
+    const info = await inspectFile(filePath, mimeType);
+    fileSha256 = info.sha;
+    pageCount = info.pageCount;
+  } catch (e) {
+    logger.warn?.(`expenseService: could not inspect ${filePath}: ${e.message}`);
   }
 
   let duplicateOfId = null;
@@ -164,6 +183,7 @@ async function recordInboundDocument({ source, filePath, originalFilename, mimeT
     parse_status: parse.error ? 'failed' : (parse.parsed ? 'parsed' : 'pending'),
     parse_method: parse.method || 'none',
     parse_error: parse.error || null,
+    page_count: pageCount,
     supplier_name: f.supplierName || null,
     invoice_number: f.invoiceNumber || null,
     invoice_date: f.invoiceDate || null,

@@ -3428,6 +3428,8 @@
       "untitled": "Unbenanntes Dokument",
       "noAmount": "Betrag nicht erfasst",
       "rebillHint": "Erstellt eine bearbeitbare geplante Rechnung beim Kunden. MwSt-/Steuerbehandlung ist v1 — mit Treuhänder prüfen.",
+      "previewLoading": "Vorschau wird geladen…",
+      "qrHint": "An der letzten Seite geöffnet — der Schweizer QR-Einzahlschein sitzt meist unten.",
       "status": {
         "unsorted": "Neu",
         "categorized": "Kategorisiert",

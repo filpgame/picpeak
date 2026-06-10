@@ -14,6 +14,8 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const { handleAsync, validateRequest, successResponse } = require('../utils/routeHelpers');
 const { getStoragePath } = require('../config/storage');
+const { createReadStream } = require('fs');
+const { assertPathInside } = require('../utils/safePath');
 const { db } = require('../database/db');
 const expenseService = require('../services/expenseService');
 const expenseCategoriesService = require('../services/expenseCategoriesService');
@@ -114,6 +116,25 @@ router.get('/inbound/:id', requirePermission('accounting.view'),
   handleAsync(async (req, res) => {
     validateRequest(req);
     return successResponse(res, { document: await expenseService.getInbound(parseInt(req.params.id, 10)) });
+  }));
+
+// Stream the stored file for in-browser preview (PDF / image). Admin-only,
+// path-containment guarded. NOTE: this serves the raw file inline — the
+// locked design's hardened path (rasterise in a network-isolated worker, never
+// serve raw) is a follow-up; acceptable here as the admin views their own
+// uploaded documents.
+router.get('/inbound/:id/file', requirePermission('accounting.view'),
+  [param('id').isInt({ min: 1 })],
+  handleAsync(async (req, res) => {
+    validateRequest(req);
+    const row = await db('inbound_documents').where({ id: parseInt(req.params.id, 10) })
+      .first('file_path', 'mime_type');
+    if (!row || !row.file_path) return res.status(404).json({ error: 'File not found', code: 'NO_FILE' });
+    const safe = assertPathInside(row.file_path, [path.join(getStoragePath(), 'business-docs')]);
+    res.setHeader('Content-Type', row.mime_type || 'application/octet-stream');
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    createReadStream(safe).pipe(res);
   }));
 
 router.patch('/inbound/:id', requirePermission('accounting.manage'),

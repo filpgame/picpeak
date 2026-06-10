@@ -15,6 +15,7 @@ export interface InboundDocument {
   status: InboundStatus;
   parseStatus: 'pending' | 'parsed' | 'failed' | 'manual';
   parseMethod: string | null;
+  pageCount: number | null;
   supplierName: string | null;
   invoiceNumber: string | null;
   invoiceDate: string | null;
@@ -112,6 +113,11 @@ export const accountingService = {
   async getInbound(id: number): Promise<InboundDocument> {
     const { data } = await api.get(`/admin/expenses/inbound/${id}`);
     return data.document;
+  },
+
+  async getInboundFileBlob(id: number): Promise<Blob> {
+    const { data } = await api.get(`/admin/expenses/inbound/${id}/file`, { responseType: 'blob' });
+    return data;
   },
 
   async updateInbound(id: number, fields: Partial<Pick<InboundDocument,
