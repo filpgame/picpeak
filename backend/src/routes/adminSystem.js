@@ -18,10 +18,33 @@ const {
 const RELEASES_REPO = process.env.GITHUB_RELEASES_REPO || 'filpgame/picpeak';
 const { spawn } = require('child_process');
 
-// Flag never resets after successful spawn: the setup script ends with
-// `systemctl restart picpeak-backend`, killing this process. A second
-// apply call can only arrive if the first spawn failed (flag reset in catch).
+// On a successful launch the flag stays true on purpose: the setup script ends
+// with `systemctl restart picpeak-backend`, killing this process. But when the
+// launcher itself fails to start the updater (see watchUpdateLauncher) we must
+// reset it, or every later apply call gets 409 until someone restarts by hand.
 let updateInProgress = false;
+
+// Reset the in-progress guard if the launcher process never actually started
+// the update. Two failure modes matter now that the updater runs outside our
+// cgroup (so this backend survives a failed launch instead of being killed):
+//   - `error`: the launcher binary couldn't be spawned (e.g. systemd-run not on
+//     PATH). Also avoids an unhandled ChildProcess 'error' crashing the process.
+//   - non-zero `exit`: systemd-run failed to start the transient unit (Polkit
+//     denial, unsupported flag on old systemd, …). On success systemd-run exits
+//     0 after launching the detached unit; the bash fallback only reaches exit
+//     on early failure since a successful run restarts (and kills) us first.
+function watchUpdateLauncher(child, launcher) {
+  child.on('error', (err) => {
+    logger.error(`Update launcher (${launcher}) failed to spawn:`, err);
+    updateInProgress = false;
+  });
+  child.on('exit', (code) => {
+    if (code !== 0) {
+      logger.error(`Update launcher (${launcher}) exited with code ${code}; update did not start`);
+      updateInProgress = false;
+    }
+  });
+}
 
 // Launch the setup script so it survives `systemctl stop picpeak-backend`,
 // which the script runs partway through the update. A plain child spawned by
@@ -32,19 +55,23 @@ let updateInProgress = false;
 // script exits non-zero. Where systemd isn't present, fall back to a plain
 // detached spawn.
 function spawnUpdateProcess(scriptPath) {
+  let child;
+  let launcher;
   if (fsSync.existsSync('/run/systemd/system')) {
-    const child = spawn(
+    launcher = 'systemd-run';
+    child = spawn(
       'systemd-run',
       ['--collect', '--unit', `picpeak-update-${Date.now()}`, 'bash', scriptPath, '--update'],
       { detached: true, stdio: 'ignore' }
     );
-    child.unref();
-    return child;
+  } else {
+    launcher = 'bash';
+    child = spawn('bash', [scriptPath, '--update'], {
+      detached: true,
+      stdio: 'ignore',
+    });
   }
-  const child = spawn('bash', [scriptPath, '--update'], {
-    detached: true,
-    stdio: 'ignore',
-  });
+  watchUpdateLauncher(child, launcher);
   child.unref();
   return child;
 }
