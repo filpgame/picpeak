@@ -18,7 +18,15 @@ router.get('/', async (req, res) => {
               'event_default_require_password',
               'event_default_feedback_enabled',
               'gallery_show_filter_bar',
-              'event_phone_field_enabled'
+              'event_phone_field_enabled',
+              // #613 — guest upload UI needs to know the per-batch file
+              // count limit so it can render a real number in the
+              // "fileRequirements" hint (`{{limit}}` was showing literal)
+              // and short-circuit before posting too many files. The
+              // backend route also enforces it via getMaxFilesPerUpload,
+              // but a client-side guard saves a 4MB+ round-trip when the
+              // limit is small.
+              'general_max_files_per_upload'
             ]);
         })
         .select('setting_key', 'setting_value');
@@ -145,6 +153,17 @@ router.get('/', async (req, res) => {
       gallery_show_filter_bar: settingsObject.gallery_show_filter_bar !== false,
       // Upload settings (safe to expose - needed for client-side validation)
       allowed_file_types: settingsObject.general_allowed_file_types || 'jpg,jpeg,png,webp',
+      // #613 — per-batch file count limit. The guest UserPhotoUpload modal
+      // reads this both to render the "{{limit}} files per upload" hint
+      // (showed `{{limit}}` literal before this) and to refuse a batch
+      // before posting it. Backend route enforces the same value via
+      // getMaxFilesPerUpload(), so the client-side check is purely a UX
+      // optimisation. Default mirrors uploadSettings.js
+      // DEFAULT_MAX_FILES_PER_UPLOAD so the UI shows a sensible number
+      // even on installs that have never explicitly set the value.
+      general_max_files_per_upload: Number.isFinite(Number(settingsObject.general_max_files_per_upload))
+        ? Number(settingsObject.general_max_files_per_upload)
+        : 500,
       // SEO meta tag flags (safe to expose - these are intended for crawlers)
       seo_meta_noindex: settingsObject.seo_meta_noindex === true,
       seo_meta_nofollow: settingsObject.seo_meta_nofollow === true,

@@ -1627,7 +1627,7 @@ router.post('/:eventId/upload', verifyGalleryAccess, async (req, res) => {
 
     // Import multer and photo processing
     const multer = require('multer');
-    const { getAllowedMimeTypes } = require('../services/uploadSettings');
+    const { getAllowedMimeTypes, getMaxFilesPerUpload } = require('../services/uploadSettings');
     const { validateFileType } = require('../utils/fileSecurityUtils');
 
     // Resolve allowed MIME types from settings
@@ -1638,11 +1638,26 @@ router.post('/:eventId/upload', verifyGalleryAccess, async (req, res) => {
       allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     }
 
+    // #613 — per-batch file count was hardcoded to 10 here, so the admin's
+    // Settings → General → "Max Files per Upload" value silently didn't
+    // apply to guest uploads (only admin uploads honoured it via
+    // adminPhotos.js:131). Zszywany reported uploading 16 files succeeded
+    // even with the limit set to 10. Mirror the admin path: resolve from
+    // settings (cached for 60s in the service) and feed multer both
+    // `limits.files` and the `.array(...)` cap. Fall back to the service's
+    // default if the read fails.
+    let maxFilesPerUpload;
+    try {
+      maxFilesPerUpload = await getMaxFilesPerUpload();
+    } catch {
+      maxFilesPerUpload = 500;
+    }
+
     const upload = multer({
       dest: tempUploadDir,
       limits: {
-        fileSize: 50 * 1024 * 1024, // 50MB
-        files: 10 // Max 10 files at once
+        fileSize: 50 * 1024 * 1024, // 50MB per file (separate concern from #613)
+        files: maxFilesPerUpload
       },
       fileFilter: (req, file, cb) => {
         if (validateFileType(file.originalname, file.mimetype, allowedMimeTypes)) {
@@ -1651,7 +1666,7 @@ router.post('/:eventId/upload', verifyGalleryAccess, async (req, res) => {
           cb(new Error('Invalid file type'));
         }
       }
-    }).array('photos', 10);
+    }).array('photos', maxFilesPerUpload);
     
     // Handle upload
     upload(req, res, async (err) => {
