@@ -18,6 +18,14 @@ jest.mock('../../database/db', () => ({ db: jest.fn(), withRetry: jest.fn() }));
 const mockSpawn = jest.fn(() => ({ unref: jest.fn() }));
 jest.mock('child_process', () => ({ spawn: mockSpawn }));
 
+// Control systemd detection: spawnUpdateProcess branches on
+// fsSync.existsSync('/run/systemd/system').
+const mockExistsSync = jest.fn();
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  return { ...actual, existsSync: mockExistsSync };
+});
+
 jest.mock('../../services/updateCheckService', () => ({
   checkForUpdates: jest.fn().mockResolvedValue({
     current: '4.1.2-beta.0',
@@ -48,9 +56,11 @@ describe('POST /system/updates/apply', () => {
   beforeEach(() => {
     mockSpawn.mockClear();
     mockSpawn.mockReturnValue({ unref: jest.fn() });
+    // Default: no systemd → plain bash fallback
+    mockExistsSync.mockReturnValue(false);
   });
 
-  it('returns 202 and spawns setup script', async () => {
+  it('returns 202 and spawns setup script via bash when systemd absent', async () => {
     const app = buildApp();
     const res = await request(app).post('/system/updates/apply');
     expect(res.status).toBe(202);
@@ -59,6 +69,25 @@ describe('POST /system/updates/apply', () => {
     expect(mockSpawn).toHaveBeenCalledWith(
       'bash',
       [expect.stringContaining('picpeak-setup.sh'), '--update'],
+      expect.objectContaining({ detached: true, stdio: 'ignore' })
+    );
+  });
+
+  it('launches via systemd-run in its own unit when systemd present', async () => {
+    mockExistsSync.mockReturnValue(true);
+    const app = buildApp();
+    const res = await request(app).post('/system/updates/apply');
+    expect(res.status).toBe(202);
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'systemd-run',
+      expect.arrayContaining([
+        '--collect',
+        '--unit',
+        expect.stringMatching(/^picpeak-update-\d+$/),
+        'bash',
+        expect.stringContaining('picpeak-setup.sh'),
+        '--update',
+      ]),
       expect.objectContaining({ detached: true, stdio: 'ignore' })
     );
   });

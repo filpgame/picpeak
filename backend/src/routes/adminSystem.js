@@ -23,6 +23,32 @@ const { spawn } = require('child_process');
 // apply call can only arrive if the first spawn failed (flag reset in catch).
 let updateInProgress = false;
 
+// Launch the setup script so it survives `systemctl stop picpeak-backend`,
+// which the script runs partway through the update. A plain child spawned by
+// this backend stays inside the service's systemd cgroup, so stopping the
+// service SIGTERMs the updater mid-run and the service never restarts. Under
+// systemd we run it via `systemd-run` in its own transient unit — outside our
+// cgroup — so the stop can't kill it. `--collect` reaps the unit even if the
+// script exits non-zero. Where systemd isn't present, fall back to a plain
+// detached spawn.
+function spawnUpdateProcess(scriptPath) {
+  if (fsSync.existsSync('/run/systemd/system')) {
+    const child = spawn(
+      'systemd-run',
+      ['--collect', '--unit', `picpeak-update-${Date.now()}`, 'bash', scriptPath, '--update'],
+      { detached: true, stdio: 'ignore' }
+    );
+    child.unref();
+    return child;
+  }
+  const child = spawn('bash', [scriptPath, '--update'], {
+    detached: true,
+    stdio: 'ignore',
+  });
+  child.unref();
+  return child;
+}
+
 const router = express.Router();
 
 // Get system version
@@ -426,11 +452,7 @@ router.post('/updates/apply', adminAuth, requirePermission('settings.edit'), asy
     const updateInfo = await checkForUpdates();
     const scriptPath = path.resolve(__dirname, '../../../scripts/picpeak-setup.sh');
 
-    const child = spawn('bash', [scriptPath, '--update'], {
-      detached: true,
-      stdio: 'ignore',
-    });
-    child.unref();
+    spawnUpdateProcess(scriptPath);
 
     res.status(202).json({
       status: 'started',
