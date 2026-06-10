@@ -70,6 +70,10 @@ export interface PublicSettings {
   umami_share_url: string | null;
   // Upload settings
   allowed_file_types?: string;
+  // #613 — per-batch file count limit, surfaced so the guest UserPhotoUpload
+  // modal can render the real number in `upload.fileRequirements` and refuse
+  // oversized batches client-side. Backend enforces the same value too.
+  general_max_files_per_upload?: number;
   // Event field requirements
   event_require_customer_name?: boolean;
   event_require_customer_email?: boolean;
