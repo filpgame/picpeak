@@ -120,6 +120,12 @@ export const accountingService = {
     return data;
   },
 
+  // Rasterised PDF page (PNG) — the raw PDF is never sent to the browser.
+  async getInboundPageBlob(id: number, page: number): Promise<Blob> {
+    const { data } = await api.get(`/admin/expenses/inbound/${id}/page/${page}`, { responseType: 'blob' });
+    return data;
+  },
+
   async updateInbound(id: number, fields: Partial<Pick<InboundDocument,
     'supplierName' | 'invoiceNumber' | 'invoiceDate' | 'dueDate' | 'currency' |
     'netAmountMinor' | 'vatAmountMinor' | 'totalAmountMinor' | 'iban' | 'paymentReference'>>): Promise<InboundDocument> {

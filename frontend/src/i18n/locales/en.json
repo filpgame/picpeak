@@ -3430,7 +3430,11 @@
       "noAmount": "amount not entered",
       "rebillHint": "Creates an editable scheduled invoice on the client. VAT/tax handling is v1 — verify with your Treuhänder.",
       "previewLoading": "Loading preview…",
-      "qrHint": "Opened at the last page — the Swiss QR-bill usually sits at the bottom.",
+      "previewError": "Preview unavailable — enter the fields manually.",
+      "qrHint": "Showing the last page — the Swiss QR-bill usually sits at the bottom.",
+      "prevPage": "Prev",
+      "nextPage": "Next",
+      "pageOf": "Page {{n}} / {{total}}",
       "status": {
         "unsorted": "New",
         "categorized": "Categorized",

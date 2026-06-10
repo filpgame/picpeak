@@ -18,6 +18,7 @@ const { createReadStream } = require('fs');
 const { assertPathInside } = require('../utils/safePath');
 const { db } = require('../database/db');
 const expenseService = require('../services/expenseService');
+const rasterizeService = require('../services/rasterizeService');
 const expenseCategoriesService = require('../services/expenseCategoriesService');
 
 const router = express.Router();
@@ -118,11 +119,10 @@ router.get('/inbound/:id', requirePermission('accounting.view'),
     return successResponse(res, { document: await expenseService.getInbound(parseInt(req.params.id, 10)) });
   }));
 
-// Stream the stored file for in-browser preview (PDF / image). Admin-only,
-// path-containment guarded. NOTE: this serves the raw file inline — the
-// locked design's hardened path (rasterise in a network-isolated worker, never
-// serve raw) is a follow-up; acceptable here as the admin views their own
-// uploaded documents.
+// Stream the stored file. Images render inline (already flat raster); PDFs are
+// served as a DOWNLOAD only and are NEVER rendered inline in the browser —
+// inline PDF preview goes through the rasterised /page/:n images below so a
+// malicious PDF can't execute JS or phone home in the admin's session.
 router.get('/inbound/:id/file', requirePermission('accounting.view'),
   [param('id').isInt({ min: 1 })],
   handleAsync(async (req, res) => {
@@ -131,10 +131,34 @@ router.get('/inbound/:id/file', requirePermission('accounting.view'),
       .first('file_path', 'mime_type');
     if (!row || !row.file_path) return res.status(404).json({ error: 'File not found', code: 'NO_FILE' });
     const safe = assertPathInside(row.file_path, [path.join(getStoragePath(), 'business-docs')]);
+    const isPdf = (row.mime_type || '').includes('pdf');
     res.setHeader('Content-Type', row.mime_type || 'application/octet-stream');
+    res.setHeader('Content-Disposition', isPdf ? 'attachment' : 'inline');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    if (!isPdf) res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'");
+    createReadStream(safe).pipe(res);
+  }));
+
+// Rasterised PDF page (PNG) — the ONLY way a PDF is shown in-browser. The raw
+// PDF never reaches the client. CSP-locked + nosniff.
+router.get('/inbound/:id/page/:n', requirePermission('accounting.view'),
+  [param('id').isInt({ min: 1 }), param('n').isInt({ min: 1 })],
+  handleAsync(async (req, res) => {
+    validateRequest(req);
+    const id = parseInt(req.params.id, 10);
+    const row = await db('inbound_documents').where({ id }).first('file_path', 'mime_type', 'page_count');
+    if (!row || !row.file_path) return res.status(404).json({ error: 'File not found', code: 'NO_FILE' });
+    if (!(row.mime_type || '').includes('pdf')) return res.status(415).json({ error: 'Not a PDF', code: 'NOT_PDF' });
+    const maxPage = row.page_count || 1;
+    const page = Math.min(Math.max(1, parseInt(req.params.n, 10)), maxPage);
+    const srcPdf = assertPathInside(row.file_path, [path.join(getStoragePath(), 'business-docs')]);
+    const pngPath = await rasterizeService.getRenderedPagePath(id, srcPdf, page);
+    const safePng = assertPathInside(pngPath, [path.join(getStoragePath(), 'business-docs')]);
+    res.setHeader('Content-Type', 'image/png');
     res.setHeader('Content-Disposition', 'inline');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    createReadStream(safe).pipe(res);
+    res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'");
+    createReadStream(safePng).pipe(res);
   }));
 
 router.patch('/inbound/:id', requirePermission('accounting.manage'),

@@ -57,24 +57,28 @@ const TriageModal: React.FC<{
 
   const totalMinor = Number.isFinite(amountMajor) ? Math.round(amountMajor * 100) : null;
 
-  // Authenticated file preview: fetch as a blob (Bearer auth) and embed.
-  // PDFs open at the last page scrolled into the QR-bill area (no OCR — the
-  // admin reads the payment slip and types the fields).
+  // Authenticated preview. PDFs are shown as SERVER-RASTERISED page images
+  // (the raw PDF never reaches the browser); images stream directly. Start on
+  // the LAST page — the Swiss QR-bill payment part sits at its bottom (no OCR;
+  // the admin reads the slip and types the fields).
   const isPdf = (doc.mimeType || '').includes('pdf');
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const pageCount = doc.pageCount || 1;
+  const [page, setPage] = useState(pageCount);
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState(false);
   useEffect(() => {
     let url: string | null = null;
     let cancelled = false;
-    accountingService.getInboundFileBlob(doc.id)
-      .then((blob) => { if (!cancelled) { url = URL.createObjectURL(blob); setFileUrl(url); } })
-      .catch(() => { if (!cancelled) setFileUrl(null); });
+    setImgUrl(null);
+    setPreviewError(false);
+    const fetcher = isPdf
+      ? accountingService.getInboundPageBlob(doc.id, page)
+      : accountingService.getInboundFileBlob(doc.id);
+    fetcher
+      .then((blob) => { if (!cancelled) { url = URL.createObjectURL(blob); setImgUrl(url); } })
+      .catch(() => { if (!cancelled) setPreviewError(true); });
     return () => { cancelled = true; if (url) URL.revokeObjectURL(url); };
-  }, [doc.id]);
-  // #page=<last> jumps to the last page; view=FitH,300 fits the width and
-  // positions ~300pt from the bottom — the Swiss QR-bill payment part.
-  const previewSrc = fileUrl
-    ? (isPdf ? `${fileUrl}#page=${doc.pageCount || 1}&view=FitH,300` : fileUrl)
-    : null;
+  }, [doc.id, isPdf, page]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -134,20 +138,29 @@ const TriageModal: React.FC<{
         <div className="px-5 py-4 grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Document preview — PDFs open at the last page (QR-bill area). */}
           <div className="order-2 lg:order-1">
-            {previewSrc ? (
-              isPdf ? (
-                <iframe title="document preview" src={previewSrc} className="w-full h-[60vh] rounded-md border border-neutral-200 dark:border-neutral-700" />
+            <div className="overflow-auto rounded-md border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800" style={{ maxHeight: '60vh' }}>
+              {previewError ? (
+                <div className="flex h-[60vh] items-center justify-center px-3 text-center text-sm text-neutral-500">
+                  {t('accounting.inbox.previewError', 'Preview unavailable — enter the fields manually.')}
+                </div>
+              ) : imgUrl ? (
+                <img src={imgUrl} alt="document page" className="w-full h-auto" />
               ) : (
-                <img src={previewSrc} alt="document" className="w-full max-h-[60vh] object-contain rounded-md border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800" />
-              )
-            ) : (
-              <div className="flex h-[60vh] items-center justify-center rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 text-sm text-neutral-500">
-                {t('accounting.inbox.previewLoading', 'Loading preview…')}
+                <div className="flex h-[60vh] items-center justify-center text-sm text-neutral-500">
+                  {t('accounting.inbox.previewLoading', 'Loading preview…')}
+                </div>
+              )}
+            </div>
+            {isPdf && pageCount > 1 && (
+              <div className="mt-2 flex items-center justify-center gap-3 text-sm">
+                <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>{t('accounting.inbox.prevPage', 'Prev')}</Button>
+                <span className="text-neutral-600 dark:text-neutral-400">{t('accounting.inbox.pageOf', 'Page {{n}} / {{total}}', { n: page, total: pageCount })}</span>
+                <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={page >= pageCount}>{t('accounting.inbox.nextPage', 'Next')}</Button>
               </div>
             )}
             {isPdf && (
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                {t('accounting.inbox.qrHint', 'Opened at the last page — the Swiss QR-bill usually sits at the bottom.')}
+              <p className="mt-1 text-center text-xs text-neutral-500 dark:text-neutral-400">
+                {t('accounting.inbox.qrHint', 'Showing the last page — the Swiss QR-bill usually sits at the bottom.')}
               </p>
             )}
           </div>
