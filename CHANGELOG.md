@@ -5,6 +5,15 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.1-beta.0](https://github.com/filpgame/picpeak/compare/v4.4.0-beta.0...v4.4.1-beta.0) (2026-06-10)
+
+
+### Bug Fixes
+
+* **updater:** reset in-progress guard when launcher fails to start ([8dcc5eb](https://github.com/filpgame/picpeak/commit/8dcc5eb6463398905baf8b8d8e181f4d13bbbeb3))
+* **updater:** run setup script in own systemd unit so service stop doesn't kill it ([d29b61a](https://github.com/filpgame/picpeak/commit/d29b61aedf43e0e2ec9002841e2427e917ddfabf))
+* **updater:** run setup script in own systemd unit so service stop doesn't kill it ([4f8e569](https://github.com/filpgame/picpeak/commit/4f8e5696d42cb9799e74b75c71e0f314f9f07e71))
+
 ## [4.4.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.3.1-beta.0...v4.4.0-beta.0) (2026-06-09)
 
 
