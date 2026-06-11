@@ -143,7 +143,9 @@ export const TaxReportPage: React.FC = () => {
   // rates in the period. With a single rate the breakdown is just a
   // restatement of the grand totals — pure noise.
   const showPerRateBreakdown = (report?.totalsByVatRate.length || 0) > 1;
-  const exportsDisabled = isLoading || isExporting !== null || !report || report.rows.length === 0;
+  const hasCosts = (report?.costs?.rows.length || 0) > 0;
+  const hasAnyData = !!report && (report.rows.length > 0 || hasCosts);
+  const exportsDisabled = isLoading || isExporting !== null || !hasAnyData;
 
   return (
     <div className="space-y-6">
@@ -260,7 +262,7 @@ export const TaxReportPage: React.FC = () => {
             there are 2+ rates in the period (otherwise it duplicates
             the grand totals). Cancelled footnote at the bottom when
             applicable. */}
-        {report && report.rows.length > 0 && (
+        {hasAnyData && report && (
           <Card padding="md">
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between gap-3">
@@ -282,6 +284,45 @@ export const TaxReportPage: React.FC = () => {
                 </span>
               </div>
             </div>
+
+            {/* Einnahmen-Ausgaben summary (#4): income vs costs vs
+                result. Only when there is a cost side. The result line
+                is the simplified surplus a Milchbüchlein needs; VAT
+                payable is a guideline (depends on each cost's tax
+                treatment — see disclaimer below the cost table). */}
+            {hasCosts && report.summary && (
+              <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-700">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">
+                  {t('taxReport.summary.title', 'Income / costs')}
+                </h2>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-neutral-700 dark:text-neutral-300">{t('taxReport.summary.income', 'Income')}</span>
+                    <span className="tabular-nums text-emerald-700 dark:text-emerald-400">
+                      {formatMinor(report.summary.incomeGrossMinor, report.currency, intlLocale)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-neutral-700 dark:text-neutral-300">{t('taxReport.summary.costs', 'Costs')}</span>
+                    <span className="tabular-nums text-rose-700 dark:text-rose-400">
+                      −{formatMinor(report.summary.costGrossMinor, report.currency, intlLocale)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-3 pt-1.5 border-t border-neutral-200 dark:border-neutral-700">
+                    <span className="font-semibold text-neutral-900 dark:text-neutral-100">{t('taxReport.summary.result', 'Result')}</span>
+                    <span className="tabular-nums font-semibold text-neutral-900 dark:text-neutral-100">
+                      {formatMinor(report.summary.resultGrossMinor, report.currency, intlLocale)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+                    <span>{t('taxReport.summary.vatPayable', 'VAT payable (output − input)')}</span>
+                    <span className="tabular-nums">
+                      {formatMinor(report.summary.vatPayableMinor, report.currency, intlLocale)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {showPerRateBreakdown && (
               <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-700">
@@ -335,7 +376,7 @@ export const TaxReportPage: React.FC = () => {
             </div>
           </div>
         </Card>
-      ) : !report || report.rows.length === 0 ? (
+      ) : !hasAnyData ? (
         <Card padding="lg">
           <p className="text-center text-sm text-neutral-600 dark:text-neutral-400">
             {t('taxReport.empty', 'No invoices in this period.')}
@@ -343,9 +384,10 @@ export const TaxReportPage: React.FC = () => {
         </Card>
       ) : (
         <>
-          {/* Table — full width below the filter + totals row above.
+          {report && report.rows.length > 0 && (
+          /* Table — full width below the filter + totals row above.
               The totals card now lives in the top-right of the page
-              header so this section is purely the invoice list. */}
+              header so this section is purely the invoice list. */
           <Card padding="none">
             {/* Two nested wrappers: the OUTER clips the header row's
                 solid fill so the top corners stay rounded (matches
@@ -436,6 +478,98 @@ export const TaxReportPage: React.FC = () => {
               </div>
             </div>
           </Card>
+          )}
+
+          {/* Cost side (#4) — incoming invoices + expenses, company or
+              event-booked. Shown as its own table beneath the revenue
+              list so the Einnahmen-Ausgaben picture is complete on one
+              page. */}
+          {hasCosts && report && (
+            <Card padding="none">
+              <div className="px-3 pt-3 pb-1">
+                <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                  {t('taxReport.costsTitle', 'Costs (incoming invoices + expenses)')}
+                </h2>
+              </div>
+              <div className="rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-neutral-50 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300">
+                      <tr>
+                        <th className="px-2 py-2 text-right font-medium w-10">#</th>
+                        <th className="px-2 py-2 text-left font-medium whitespace-nowrap">{t('taxReport.col.date', 'Date')}</th>
+                        <th className="px-2 py-2 text-left font-medium whitespace-nowrap">{t('taxReport.cost.source', 'Type')}</th>
+                        <th className="px-2 py-2 text-left font-medium">{t('taxReport.cost.supplier', 'Supplier / description')}</th>
+                        <th className="px-2 py-2 text-left font-medium">{t('taxReport.col.event', 'Event')}</th>
+                        <th className="px-2 py-2 text-left font-medium whitespace-nowrap">{t('taxReport.cost.taxTreatment', 'Tax treatment')}</th>
+                        <th className="px-2 py-2 text-right font-medium whitespace-nowrap">{t('taxReport.col.net', 'Net')}</th>
+                        <th className="px-2 py-2 text-right font-medium whitespace-nowrap">{t('taxReport.col.vat', 'VAT')}</th>
+                        <th className="px-2 py-2 text-right font-medium whitespace-nowrap">{t('taxReport.col.total', 'Gross')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 text-neutral-900 dark:text-neutral-100">
+                      {report.costs.rows.map((row, i) => (
+                        <tr key={`${row.source}-${row.id}`}>
+                          <td className="px-2 py-1.5 text-right tabular-nums">{i + 1}</td>
+                          <td className="px-2 py-1.5 whitespace-nowrap tabular-nums">{fmtDate(String(row.date).slice(0, 10))}</td>
+                          <td className="px-2 py-1.5 whitespace-nowrap">
+                            <span className={`inline-block px-1.5 py-0.5 text-[10px] uppercase tracking-wider rounded font-semibold ${
+                              row.source === 'incoming'
+                                ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300'
+                                : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
+                            }`}>
+                              {row.source === 'incoming'
+                                ? t('taxReport.cost.sourceIncoming', 'Incoming')
+                                : t('taxReport.cost.sourceExpense', 'Expense')}
+                            </span>
+                          </td>
+                          <td className="px-2 py-1.5 truncate max-w-[220px]" title={row.supplierLabel || row.description}>
+                            {row.supplierLabel || row.description || '—'}
+                          </td>
+                          <td className="px-2 py-1.5 truncate max-w-[160px]" title={row.eventName}>
+                            {row.eventName || <span className="text-neutral-400 dark:text-neutral-500">{t('taxReport.cost.company', 'Company')}</span>}
+                          </td>
+                          <td className="px-2 py-1.5 whitespace-nowrap text-xs text-neutral-500 dark:text-neutral-400">{row.taxTreatment}</td>
+                          <td className="px-2 py-1.5 text-right tabular-nums whitespace-nowrap">
+                            {formatMinor(row.netMinor, report.currency, intlLocale)}
+                          </td>
+                          <td className="px-2 py-1.5 text-right tabular-nums whitespace-nowrap">
+                            {formatMinor(row.vatMinor, report.currency, intlLocale)}
+                          </td>
+                          <td className="px-2 py-1.5 text-right tabular-nums whitespace-nowrap font-medium">
+                            {formatMinor(row.totalMinor, report.currency, intlLocale)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="border-t-2 border-neutral-300 dark:border-neutral-700 font-semibold text-neutral-900 dark:text-neutral-100">
+                      <tr>
+                        <td className="px-2 py-2" colSpan={6}>{t('taxReport.cost.total', 'Total costs')}</td>
+                        <td className="px-2 py-2 text-right tabular-nums whitespace-nowrap">{formatMinor(report.costs.totalNet, report.currency, intlLocale)}</td>
+                        <td className="px-2 py-2 text-right tabular-nums whitespace-nowrap">{formatMinor(report.costs.totalVat, report.currency, intlLocale)}</td>
+                        <td className="px-2 py-2 text-right tabular-nums whitespace-nowrap">{formatMinor(report.costs.totalGross, report.currency, intlLocale)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Legal disclaimer — tax figures are a guideline. Per project
+              rule: any surface touching tax/financial output must point
+              the user at a professional. */}
+          {hasCosts && (
+            <p className="flex items-start gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>
+                {t(
+                  'taxReport.costsDisclaimer',
+                  'This income/expense overview is a guideline for your records (Einnahmen-Ausgaben-Rechnung). VAT reclaimability and the result figure depend on each cost’s tax treatment — verify with your Treuhänder / tax authority before filing.',
+                )}
+              </span>
+            </p>
+          )}
         </>
       )}
     </div>

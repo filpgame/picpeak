@@ -46,6 +46,47 @@ export interface TaxReportBucket {
   totalMinor: number;
 }
 
+/** A single cost-side line (#4 — Einnahmen-Ausgaben). Either an external
+ *  incoming invoice (`source: 'incoming'`) or an internal expense
+ *  (`source: 'expense'`). Booked to an event (`eventName`) or the
+ *  company (empty `eventName`). */
+export interface TaxReportCostRow {
+  id: number;
+  source: 'incoming' | 'expense';
+  date: string;
+  supplierLabel: string;
+  description: string;
+  eventName: string;
+  disposition: string;
+  taxTreatment: string;
+  status: string;
+  netMinor: number;
+  vatMinor: number;
+  totalMinor: number;
+}
+
+export interface TaxReportCosts {
+  rows: TaxReportCostRow[];
+  totalNet: number;
+  totalVat: number;
+  totalGross: number;
+}
+
+/** Income vs cost vs result summary (minor units). `vatPayableMinor` =
+ *  output VAT − input VAT (a guideline figure; actual MWST filing
+ *  depends on each cost's tax treatment — verify with a Treuhänder). */
+export interface TaxReportSummary {
+  incomeNetMinor: number;
+  incomeVatMinor: number;
+  incomeGrossMinor: number;
+  costNetMinor: number;
+  costVatMinor: number;
+  costGrossMinor: number;
+  resultNetMinor: number;
+  resultGrossMinor: number;
+  vatPayableMinor: number;
+}
+
 export interface TaxReport {
   rows: TaxReportRow[];
   totalsByVatRate: TaxReportBucket[];
@@ -53,6 +94,11 @@ export interface TaxReport {
   grandTotalVat: number;
   grandTotal: number;
   cancelledCount: number;
+  /** Cost side (#4). Present when the accounting tables exist; empty
+   *  otherwise. */
+  costs: TaxReportCosts;
+  /** Income/cost/result summary (#4). */
+  summary: TaxReportSummary;
   currency: string;
   period: { from: string; to: string };
 }

@@ -22,19 +22,26 @@ function makeChain(initialRows) {
     },
     leftJoin: jest.fn(function () { return this; }),
     where: jest.fn(function () { return this; }),
+    whereNot: jest.fn(function () { return this; }),
     whereIn: jest.fn(function () { return this; }),
+    whereNotIn: jest.fn(function () { return this; }),
     whereBetween: jest.fn(function () { return this; }),
+    whereRaw: jest.fn(function () { return this; }),
     orderBy: jest.fn(function () { return this; }),
+    orderByRaw: jest.fn(function () { return this; }),
     select: jest.fn(function () { return Promise.resolve(this._rows); }),
   };
 }
 
 const mockDbFn = jest.fn((tableName) => {
-  callCount += 1;
   // Route by table name when supplied — the Skonto aggregate (added
-  // by migration 126) queries `invoice_payment_log`; everything else
-  // (main listing, replacements lookup) hits `invoices`.
+  // by migration 126) queries `invoice_payment_log`; the #4 cost side
+  // queries `inbound_documents` + `expenses`; everything else (main
+  // listing, replacements lookup) hits `invoices`.
   if (tableName === 'invoice_payment_log') return makeChain([]);
+  if (tableName === 'inbound_documents') return makeChain([]);
+  if (tableName === 'expenses') return makeChain([]);
+  callCount += 1;
   if (callCount === 1) return makeChain(invoiceRowsForRun);
   return makeChain(replacementsRowsForRun);
 });
@@ -42,6 +49,10 @@ const mockDbFn = jest.fn((tableName) => {
 // COALESCE (migration 123). The chain's select() ignores its
 // arguments so the raw() return value just needs to exist.
 mockDbFn.raw = jest.fn((sql) => sql);
+// #4 loadCosts schema-guards each cost table; default the PDF/CSV
+// fixtures to "no accounting tables" so these renderers exercise the
+// revenue path unchanged.
+mockDbFn.schema = { hasTable: jest.fn(async () => false) };
 
 jest.mock('../../src/database/db', () => ({
   db: mockDbFn,

@@ -3769,6 +3769,25 @@
     "grandTotalVat": "Gesamt MwSt.",
     "grandTotalGross": "Gesamt Brutto",
     "cancelledFootnote": "{{count}} stornierte Rechnung(en) — Beträge nicht in den Summen enthalten (für lückenlose Nummernfolge dargestellt).",
+    "skontoTooltip": "Mit Skonto bezahlt",
+    "costsTitle": "Kosten (Eingangsrechnungen + Spesen)",
+    "costsDisclaimer": "Diese Einnahmen-Ausgaben-Übersicht ist eine Orientierungshilfe für Ihre Aufzeichnungen (Milchbüchleinrechnung). Vorsteuerabzug und Ergebnis hängen von der steuerlichen Behandlung jeder Kostenposition ab — vor der Einreichung mit Ihrem Treuhänder / der Steuerverwaltung prüfen.",
+    "summary": {
+      "title": "Einnahmen / Ausgaben",
+      "income": "Einnahmen",
+      "costs": "Ausgaben",
+      "result": "Ergebnis",
+      "vatPayable": "MWST-Zahllast (Umsatz- − Vorsteuer)"
+    },
+    "cost": {
+      "source": "Art",
+      "sourceIncoming": "Eingang",
+      "sourceExpense": "Spese",
+      "supplier": "Lieferant / Beschreibung",
+      "taxTreatment": "Steuerliche Behandlung",
+      "company": "Unternehmen",
+      "total": "Summe Kosten"
+    },
     "col": {
       "date": "Datum",
       "invoice": "Rechnung",
@@ -3777,7 +3796,8 @@
       "vatRate": "MwSt %",
       "net": "Netto",
       "vat": "MwSt.",
-      "total": "Brutto"
+      "total": "Brutto",
+      "skonto": "Skonto"
     }
   },
   "quotes": {

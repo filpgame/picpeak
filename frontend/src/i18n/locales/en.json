@@ -3769,6 +3769,25 @@
     "grandTotalVat": "Total VAT",
     "grandTotalGross": "Total gross",
     "cancelledFootnote": "{{count}} cancelled invoice(s) — amounts excluded from totals (shown for audit-trail continuity).",
+    "skontoTooltip": "Paid with Skonto",
+    "costsTitle": "Costs (incoming invoices + expenses)",
+    "costsDisclaimer": "This income/expense overview is a guideline for your records (Einnahmen-Ausgaben-Rechnung). VAT reclaimability and the result figure depend on each cost’s tax treatment — verify with your Treuhänder / tax authority before filing.",
+    "summary": {
+      "title": "Income / costs",
+      "income": "Income",
+      "costs": "Costs",
+      "result": "Result",
+      "vatPayable": "VAT payable (output − input)"
+    },
+    "cost": {
+      "source": "Type",
+      "sourceIncoming": "Incoming",
+      "sourceExpense": "Expense",
+      "supplier": "Supplier / description",
+      "taxTreatment": "Tax treatment",
+      "company": "Company",
+      "total": "Total costs"
+    },
     "col": {
       "date": "Date",
       "invoice": "Invoice",
@@ -3777,7 +3796,8 @@
       "vatRate": "VAT %",
       "net": "Net",
       "vat": "VAT",
-      "total": "Gross"
+      "total": "Gross",
+      "skonto": "Skonto"
     }
   },
   "quotes": {
