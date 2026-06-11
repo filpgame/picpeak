@@ -56,9 +56,27 @@ export interface Expense {
   categoryId: number | null;
   hasProof: boolean;
   taxTreatment: TaxTreatment | null;
+  /** invoiced = added to a real client invoice (locks editing). */
+  invoiced: boolean;
+  billedInvoiceId: number | null;
+  billedInvoiceLineItemId: number | null;
+  customerAccountId: number | null;
+  /** paid = supplier settled (manual toggle). */
+  paid: boolean;
+  paidAt: string | null;
+  paymentMethod: PaymentMethod | null;
   status: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Payload to add an expense onto a client invoice (re-bill). */
+export interface InvoiceExpensePayload {
+  customerAccountId: number;
+  contractId?: number | null;
+  markupType?: MarkupType;
+  markupPercent?: number | null;
+  markupFlatMinor?: number | null;
 }
 
 export interface ExpenseCategory { id: number; name: string; color: string | null; is_seed: boolean; display_order: number; }
@@ -142,6 +160,14 @@ export const accountingService = {
     return data.expense;
   },
   async getExpenseProofBlob(id: number): Promise<Blob> { const { data } = await api.get(`/admin/expenses/${id}/proof`, { responseType: 'blob' }); return data; },
+  /** Add the expense onto a client invoice (re-bill). Locks editing. */
+  async invoiceExpense(id: number, payload: InvoiceExpensePayload): Promise<{ expense: Expense; invoiceId: number }> {
+    const { data } = await api.post(`/admin/expenses/${id}/invoice`, payload); return data;
+  },
+  /** Toggle the manual supplier-paid state. */
+  async markExpensePaid(id: number, payload: { paid: boolean; paidAt?: string; paymentMethod?: PaymentMethod; paymentReference?: string }): Promise<Expense> {
+    const { data } = await api.post(`/admin/expenses/${id}/paid`, payload); return data.expense;
+  },
 
   // ── categories + settings ──
   async listCategories(): Promise<ExpenseCategory[]> { const { data } = await api.get('/admin/expenses/categories'); return data.items; },

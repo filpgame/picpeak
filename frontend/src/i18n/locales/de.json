@@ -3474,6 +3474,7 @@
       "triageTitle": "Dokument kategorisieren",
       "saveCategorize": "Speichern",
       "categorize": "Kategorisieren",
+      "view": "Ansehen",
       "empty": "Noch keine Dokumente — oben eines erfassen.",
       "untitled": "Unbenanntes Dokument",
       "noAmount": "Betrag nicht erfasst",
@@ -3485,6 +3486,7 @@
       "nextPage": "Weiter",
       "pageOf": "Seite {{n}} / {{total}}",
       "status": {
+        "label": "Status",
         "unsorted": "Neu",
         "categorized": "Kategorisiert",
         "declined": "Abgelehnt",
@@ -3545,6 +3547,7 @@
       "whoHint": "z. B. Mitarbeitername oder Geschäft",
       "proof": "Beleg",
       "proofRequired": "Ein Beleg ist erforderlich.",
+      "proofExisting": "Es ist bereits ein Beleg angehängt — neuen hochladen, um ihn zu ersetzen.",
       "viewProof": "Beleg"
     },
     "expenseKind": {
@@ -3582,6 +3585,16 @@
       "unpaidToast": "Als nicht bezahlt markiert.",
       "addExpense": "Aufwand hinzufügen",
       "addTitle": "Aufwand hinzufügen",
+      "editTitle": "Aufwand bearbeiten",
+      "updatedToast": "Aufwand aktualisiert.",
+      "payTitle": "Aufwand als bezahlt markieren",
+      "invoiced": "Verrechnet",
+      "invoicedToast": "Zu einer Kundenrechnung hinzugefügt.",
+      "invoiceTitle": "Zur Kundenrechnung hinzufügen",
+      "invoiceHint": "Erstellt eine verrechenbare Position auf der nächsten geplanten Rechnung des Kunden und sperrt den Aufwand für weitere Änderungen.",
+      "addToInvoice": "Zur Rechnung hinzufügen",
+      "locked": "Gesperrt",
+      "lockedHint": "Gesperrt — dieser Aufwand ist auf einer Kundenrechnung.",
       "description": "Beschreibung",
       "descriptionHint": "z. B. Kilometer, Spesenpauschale, Barbeleg",
       "createdToast": "Aufwand hinzugefügt."

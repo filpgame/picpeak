@@ -3474,6 +3474,7 @@
       "triageTitle": "Categorize document",
       "saveCategorize": "Save",
       "categorize": "Categorize",
+      "view": "View",
       "empty": "No documents yet — capture one above.",
       "untitled": "Untitled document",
       "noAmount": "amount not entered",
@@ -3485,6 +3486,7 @@
       "nextPage": "Next",
       "pageOf": "Page {{n}} / {{total}}",
       "status": {
+        "label": "Status",
         "unsorted": "New",
         "categorized": "Categorized",
         "declined": "Declined",
@@ -3545,6 +3547,7 @@
       "whoHint": "e.g. coworker name or shop",
       "proof": "Proof",
       "proofRequired": "A proof file is required.",
+      "proofExisting": "A proof file is already attached — upload a new one to replace it.",
       "viewProof": "Proof"
     },
     "expenseKind": {
@@ -3582,6 +3585,16 @@
       "unpaidToast": "Marked as not paid.",
       "addExpense": "Add expense",
       "addTitle": "Add expense",
+      "editTitle": "Edit expense",
+      "updatedToast": "Expense updated.",
+      "payTitle": "Mark expense paid",
+      "invoiced": "Invoiced",
+      "invoicedToast": "Added to a client invoice.",
+      "invoiceTitle": "Add to client invoice",
+      "invoiceHint": "This creates a billable line on the client’s next scheduled invoice and locks the expense from further edits.",
+      "addToInvoice": "Add to invoice",
+      "locked": "Locked",
+      "lockedHint": "Locked — this expense is on a client invoice.",
       "description": "Description",
       "descriptionHint": "e.g. mileage, per-diem, cash receipt",
       "createdToast": "Expense added."
