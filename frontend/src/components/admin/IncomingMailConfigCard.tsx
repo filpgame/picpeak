@@ -1,25 +1,34 @@
 /**
  * Incoming mail (IMAP) configuration — a second block under the outgoing SMTP
- * settings. Same field shape as SMTP. Self-contained: loads + saves its own
- * config. Shown only when the `incomingMail` feature flag is on.
+ * settings, styled to match the SMTP card (icon inputs, password eye toggle,
+ * full-width Save). Shown only when the `incomingMail` feature flag is on.
+ *
+ * The Folder field auto-detects: "Detect folders" lists the mailboxes on the
+ * server and offers them as a dropdown (auto-selecting the inbox), instead of
+ * making the admin type a path.
  */
 import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { Save } from 'lucide-react';
+import { Save, Server, User, Lock, Eye, EyeOff, FolderSearch } from 'lucide-react';
 import { Button, Card, Input, Loading } from '../common';
-import { emailService, type IncomingMailConfig } from '../../services/email.service';
+import { emailService, type IncomingMailConfig, type ImapFolder } from '../../services/email.service';
 
 const labelCls = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1';
+const selectCls = 'w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-accent-dark';
 
 export const IncomingMailConfigCard: React.FC = () => {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['incoming-mail-config'], queryFn: () => emailService.getIncomingConfig() });
   const [cfg, setCfg] = useState<IncomingMailConfig>({ imap_host: '', imap_port: 993, imap_secure: true, imap_user: '', imap_pass: '', imap_folder: 'INBOX' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [folders, setFolders] = useState<ImapFolder[] | null>(null);
 
   useEffect(() => { if (data) setCfg(data); }, [data]);
+
+  const set = (k: keyof IncomingMailConfig, v: any) => setCfg((c) => ({ ...c, [k]: v }));
 
   const save = useMutation({
     mutationFn: () => emailService.updateIncomingConfig(cfg),
@@ -27,33 +36,117 @@ export const IncomingMailConfigCard: React.FC = () => {
     onError: (e: any) => toast.error(e?.response?.data?.error || e?.response?.data?.errors?.[0]?.msg || e.message || 'Failed'),
   });
 
-  const set = (k: keyof IncomingMailConfig, v: any) => setCfg((c) => ({ ...c, [k]: v }));
+  const detect = useMutation({
+    mutationFn: () => emailService.listIncomingFolders(cfg),
+    onSuccess: (list) => {
+      setFolders(list);
+      if (list.length) {
+        // Auto-select the inbox (special-use '\Inbox', else a path named INBOX)
+        // when the current folder isn't one of the detected ones.
+        const has = list.some((f) => f.path === cfg.imap_folder);
+        if (!has) {
+          const inbox = list.find((f) => (f.specialUse || '').toLowerCase().includes('inbox'))
+            || list.find((f) => f.path.toUpperCase() === 'INBOX') || list[0];
+          if (inbox) set('imap_folder', inbox.path);
+        }
+        toast.success(t('email.incoming.foldersDetected', '{{count}} folders found.', { count: list.length }));
+      } else {
+        toast.info(t('email.incoming.noFolders', 'No folders returned by the server.'));
+      }
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || t('email.incoming.detectFailed', 'Could not detect folders.')),
+  });
+
   if (isLoading) return <Loading />;
 
   return (
-    <Card className="p-6 mt-6">
+    <Card padding="md" className="mt-6">
       <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1">{t('email.incoming.title', 'Incoming mail (IMAP)')}</h2>
       <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">{t('email.incoming.subtitle', 'A dedicated mailbox polled every minute; attachments land in Accounting → Incoming invoices.')}</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="sm:col-span-2"><label className={labelCls}>{t('email.incoming.host', 'IMAP host')}</label>
-          <Input value={cfg.imap_host} onChange={(e) => set('imap_host', e.target.value)} placeholder="imap.example.com" /></div>
-        <div><label className={labelCls}>{t('email.incoming.port', 'Port')}</label>
-          <Input type="number" value={cfg.imap_port} onChange={(e) => set('imap_port', parseInt(e.target.value, 10) || 0)} /></div>
-        <div><label className={labelCls}>{t('email.incoming.security', 'Security')}</label>
-          <select className="w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-            value={cfg.imap_secure ? 'ssl' : 'plain'} onChange={(e) => set('imap_secure', e.target.value === 'ssl')}>
-            <option value="ssl">{t('email.incoming.ssl', 'SSL/TLS (993)')}</option>
-            <option value="plain">{t('email.incoming.plain', 'None / STARTTLS (143)')}</option>
-          </select></div>
-        <div><label className={labelCls}>{t('email.incoming.user', 'Username')}</label>
-          <Input value={cfg.imap_user} onChange={(e) => set('imap_user', e.target.value)} autoComplete="off" /></div>
-        <div><label className={labelCls}>{t('email.incoming.pass', 'Password')}</label>
-          <Input type="password" value={cfg.imap_pass} onChange={(e) => set('imap_pass', e.target.value)} autoComplete="new-password" /></div>
-        <div className="sm:col-span-2"><label className={labelCls}>{t('email.incoming.folder', 'Folder')}</label>
-          <Input value={cfg.imap_folder} onChange={(e) => set('imap_folder', e.target.value)} placeholder="INBOX" /></div>
-      </div>
-      <div className="mt-4">
-        <Button onClick={() => save.mutate()} disabled={save.isPending}><Save className="w-4 h-4 mr-2" /> {save.isPending ? t('common.saving', 'Saving…') : t('common.save', 'Save')}</Button>
+
+      <div className="space-y-4">
+        <div>
+          <label className={labelCls}>{t('email.incoming.host', 'IMAP Host')}</label>
+          <Input
+            type="text"
+            value={cfg.imap_host}
+            onChange={(e) => set('imap_host', e.target.value)}
+            placeholder="imap.example.com"
+            leftIcon={<Server className="w-5 h-5 text-neutral-400" />}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls}>{t('email.incoming.port', 'Port')}</label>
+            <Input type="number" value={cfg.imap_port} onChange={(e) => set('imap_port', parseInt(e.target.value, 10) || 0)} placeholder="993" />
+          </div>
+          <div>
+            <label className={labelCls}>{t('email.incoming.security', 'Security')}</label>
+            <select className={selectCls} value={cfg.imap_secure ? 'ssl' : 'plain'} onChange={(e) => set('imap_secure', e.target.value === 'ssl')}>
+              <option value="ssl">{t('email.incoming.ssl', 'SSL/TLS (993)')}</option>
+              <option value="plain">{t('email.incoming.plain', 'None / STARTTLS (143)')}</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className={labelCls}>{t('email.incoming.user', 'Username')}</label>
+          <Input
+            type="text"
+            value={cfg.imap_user}
+            onChange={(e) => set('imap_user', e.target.value)}
+            autoComplete="off"
+            placeholder="rechnungen@yourdomain.com"
+            leftIcon={<User className="w-5 h-5 text-neutral-400" />}
+          />
+        </div>
+
+        <div>
+          <label className={labelCls}>{t('email.incoming.pass', 'Password')}</label>
+          <div className="relative">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              value={cfg.imap_pass}
+              onChange={(e) => set('imap_pass', e.target.value)}
+              autoComplete="new-password"
+              placeholder={t('email.enterPassword', 'Enter password')}
+              leftIcon={<Lock className="w-5 h-5 text-neutral-400" />}
+            />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600">
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className={labelCls}>{t('email.incoming.folder', 'Folder')}</label>
+          <div className="flex gap-2">
+            {folders && folders.length > 0 ? (
+              <select className={selectCls} value={cfg.imap_folder} onChange={(e) => set('imap_folder', e.target.value)}>
+                {folders.some((f) => f.path === cfg.imap_folder) ? null : <option value={cfg.imap_folder}>{cfg.imap_folder}</option>}
+                {folders.map((f) => <option key={f.path} value={f.path}>{f.path}</option>)}
+              </select>
+            ) : (
+              <Input type="text" value={cfg.imap_folder} onChange={(e) => set('imap_folder', e.target.value)} placeholder="INBOX" />
+            )}
+            <Button
+              variant="outline"
+              onClick={() => detect.mutate()}
+              isLoading={detect.isPending}
+              disabled={!cfg.imap_host || !cfg.imap_user}
+              leftIcon={<FolderSearch className="w-4 h-4" />}
+              className="whitespace-nowrap"
+            >
+              {t('email.incoming.detectFolders', 'Detect')}
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{t('email.incoming.folderHint', 'Enter host, username and password, then Detect to list the mailbox folders.')}</p>
+        </div>
+
+        <Button variant="primary" onClick={() => save.mutate()} isLoading={save.isPending} leftIcon={<Save className="w-5 h-5" />} className="w-full">
+          {t('email.incoming.save', 'Save Incoming Mail Settings')}
+        </Button>
       </div>
     </Card>
   );

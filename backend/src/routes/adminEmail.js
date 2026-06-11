@@ -171,6 +171,29 @@ router.post('/incoming-config', [
 });
 
 // Received-emails log (the IMAP poller's audit trail) — "Received emails" tab.
+// List IMAP folders so the UI can offer a dropdown (auto-detect) instead of a
+// free-text path. Accepts optional creds in the body to detect before saving;
+// falls back to the stored config (and stored password when masked).
+router.post('/incoming-config/folders', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const { imap_host, imap_port, imap_secure, imap_user, imap_pass } = req.body || {};
+    if (imap_host) {
+      const { isPrivateIP } = require('../utils/networkValidation');
+      if (isPrivateIP(imap_host)) {
+        return res.status(400).json({ error: 'IMAP host cannot point to a private or internal network address' });
+      }
+    }
+    const emailIntakeService = require('../services/emailIntakeService');
+    const folders = await emailIntakeService.listFolders(
+      imap_host ? { host: imap_host, port: imap_port, secure: imap_secure, user: imap_user, pass: imap_pass } : undefined
+    );
+    res.json({ folders });
+  } catch (error) {
+    console.error('IMAP folder detection error:', error);
+    res.status(502).json({ error: 'Could not connect to the mailbox. Check host, port and credentials.' });
+  }
+});
+
 router.get('/received', adminAuth, requirePermission('email.view'), async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);

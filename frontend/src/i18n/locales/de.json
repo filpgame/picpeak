@@ -2486,6 +2486,12 @@
       "user": "Benutzername",
       "pass": "Passwort",
       "folder": "Ordner",
+      "save": "Eingangs-E-Mail-Einstellungen speichern",
+      "detectFolders": "Erkennen",
+      "folderHint": "Host, Benutzername und Passwort eingeben, dann „Erkennen“, um die Postfach-Ordner aufzulisten.",
+      "foldersDetected": "{{count}} Ordner gefunden.",
+      "noFolders": "Der Server hat keine Ordner zurückgegeben.",
+      "detectFailed": "Ordner konnten nicht erkannt werden.",
       "savedToast": "Einstellungen für eingehende E-Mails gespeichert."
     },
     "received": {

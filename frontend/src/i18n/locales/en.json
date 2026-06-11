@@ -2059,6 +2059,12 @@
       "user": "Username",
       "pass": "Password",
       "folder": "Folder",
+      "save": "Save Incoming Mail Settings",
+      "detectFolders": "Detect",
+      "folderHint": "Enter host, username and password, then Detect to list the mailbox folders.",
+      "foldersDetected": "{{count}} folders found.",
+      "noFolders": "No folders returned by the server.",
+      "detectFailed": "Could not detect folders.",
       "savedToast": "Incoming mail settings saved."
     },
     "received": {

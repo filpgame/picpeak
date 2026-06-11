@@ -88,6 +88,13 @@ export interface IncomingMailConfig {
   imap_folder: string;
 }
 
+export interface ImapFolder {
+  path: string;
+  name: string;
+  /** IMAP special-use flag, e.g. '\\Inbox', '\\Sent' — used to auto-select. */
+  specialUse: string | null;
+}
+
 export interface ReceivedEmail {
   id: number;
   message_id: string | null;
@@ -124,6 +131,12 @@ export const emailService = {
   },
   async updateIncomingConfig(config: IncomingMailConfig): Promise<void> {
     await api.post('/admin/email/incoming-config', config);
+  },
+  // Auto-detect mailbox folders. Sends the current form values so detection
+  // works before the config is saved (masked password falls back server-side).
+  async listIncomingFolders(config?: Partial<IncomingMailConfig>): Promise<ImapFolder[]> {
+    const response = await api.post<{ folders: ImapFolder[] }>('/admin/email/incoming-config/folders', config || {});
+    return response.data.folders;
   },
   async listReceived(params: { page?: number; pageSize?: number } = {}): Promise<ReceivedEmailsResponse> {
     const response = await api.get<ReceivedEmailsResponse>('/admin/email/received', { params });
