@@ -79,6 +79,32 @@ export interface EmailPreview {
   body_text: string;
 }
 
+export interface IncomingMailConfig {
+  imap_host: string;
+  imap_port: number;
+  imap_secure: boolean;
+  imap_user: string;
+  imap_pass: string;
+  imap_folder: string;
+}
+
+export interface ReceivedEmail {
+  id: number;
+  message_id: string | null;
+  from_address: string | null;
+  subject: string | null;
+  received_at: string | null;
+  attachment_count: number;
+  status: string;
+  inbound_document_id: number | null;
+  error: string | null;
+}
+
+export interface ReceivedEmailsResponse {
+  items: ReceivedEmail[];
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
 export const emailService = {
   // Get email configuration
   async getConfig(): Promise<EmailConfig> {
@@ -89,6 +115,19 @@ export const emailService = {
   // Update email configuration
   async updateConfig(config: EmailConfig): Promise<void> {
     await api.post('/admin/email/config', config);
+  },
+
+  // Incoming mail (IMAP) configuration
+  async getIncomingConfig(): Promise<IncomingMailConfig> {
+    const response = await api.get<IncomingMailConfig>('/admin/email/incoming-config');
+    return response.data;
+  },
+  async updateIncomingConfig(config: IncomingMailConfig): Promise<void> {
+    await api.post('/admin/email/incoming-config', config);
+  },
+  async listReceived(params: { page?: number; pageSize?: number } = {}): Promise<ReceivedEmailsResponse> {
+    const response = await api.get<ReceivedEmailsResponse>('/admin/email/received', { params });
+    return response.data;
   },
 
   // Test email configuration

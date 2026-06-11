@@ -1161,6 +1161,10 @@
         "description": "The core PicPeak surface. Always available.",
         "locked": "Galleries are the foundation of PicPeak and can't be turned off."
       },
+      "incomingMail": {
+        "title": "Incoming mail",
+        "description": "Poll a dedicated mailbox (IMAP) every minute and drop invoice attachments into Accounting → Incoming invoices. Configure the mailbox under Settings → Email."
+      },
       "reminderEmails": {
         "title": "Reminder Emails",
         "description": "Automatic pre-event nudge to customers N days before their event date. Per-category templates (concert, corporate, wedding, …) editable in Settings → Reminder templates; per-event override on the event detail page."
@@ -2043,6 +2047,34 @@
       "button": "Send queued emails now",
       "success": "Email queue flushed — {{sent}} sent, {{failed}} failed",
       "empty": "No pending emails to send"
+    },
+    "incoming": {
+      "title": "Incoming mail (IMAP)",
+      "subtitle": "A dedicated mailbox polled every minute; attachments land in Accounting → Incoming invoices.",
+      "host": "IMAP host",
+      "port": "Port",
+      "security": "Security",
+      "ssl": "SSL/TLS (993)",
+      "plain": "None / STARTTLS (143)",
+      "user": "Username",
+      "pass": "Password",
+      "folder": "Folder",
+      "savedToast": "Incoming mail settings saved."
+    },
+    "received": {
+      "tab": "Received emails",
+      "from": "From",
+      "subject": "Subject",
+      "received": "Received",
+      "status": "Status",
+      "empty": "No received emails yet. Enable incoming mail and configure the mailbox.",
+      "inbox": "inbox",
+      "statusValue": {
+        "ingested": "Ingested",
+        "no_attachment": "No attachment",
+        "duplicate": "Duplicate",
+        "error": "Error"
+      }
     },
     "sentEmails": {
       "tab": "Sent emails",

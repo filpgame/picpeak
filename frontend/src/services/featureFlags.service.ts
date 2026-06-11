@@ -8,6 +8,9 @@ export type FeatureKey =
   | 'quotes'
   | 'bills'
   | 'messaging'
+  // Incoming mail (migration 128) — IMAP polling into the incoming-invoices
+  // inbox. Standalone toggle.
+  | 'incomingMail'
   | 'analytics'
   | 'userManagement'
   // Top-level "Clients" section (#354 follow-up). Parent flag that

@@ -1603,6 +1603,10 @@
         "description": "Der Kern von PicPeak. Immer verfügbar.",
         "locked": "Galerien sind die Grundlage von PicPeak und können nicht deaktiviert werden."
       },
+      "incomingMail": {
+        "title": "Eingehende E-Mails",
+        "description": "Ruft ein dediziertes Postfach (IMAP) jede Minute ab und legt Rechnungsanhänge in Buchhaltung → Eingangsrechnungen ab. Postfach unter Einstellungen → E-Mail konfigurieren."
+      },
       "reminderEmails": {
         "title": "Erinnerungs-E-Mails",
         "description": "Automatische Vor-Event-Erinnerung an Kunden N Tage vor dem Eventdatum. Vorlagen pro Kategorie (Konzert, Firma, Hochzeit, …) unter Einstellungen → Erinnerungsvorlagen; Übersteuerung pro Event auf der Event-Detailseite."
@@ -2470,6 +2474,34 @@
       "button": "Wartende E-Mails jetzt senden",
       "success": "Warteschlange geleert – {{sent}} gesendet, {{failed}} fehlgeschlagen",
       "empty": "Keine ausstehenden E-Mails zum Senden"
+    },
+    "incoming": {
+      "title": "Eingehende E-Mails (IMAP)",
+      "subtitle": "Ein dediziertes Postfach, jede Minute abgerufen; Anhänge landen in Buchhaltung → Eingangsrechnungen.",
+      "host": "IMAP-Host",
+      "port": "Port",
+      "security": "Sicherheit",
+      "ssl": "SSL/TLS (993)",
+      "plain": "Keine / STARTTLS (143)",
+      "user": "Benutzername",
+      "pass": "Passwort",
+      "folder": "Ordner",
+      "savedToast": "Einstellungen für eingehende E-Mails gespeichert."
+    },
+    "received": {
+      "tab": "Empfangene E-Mails",
+      "from": "Von",
+      "subject": "Betreff",
+      "received": "Empfangen",
+      "status": "Status",
+      "empty": "Noch keine empfangenen E-Mails. Eingehende E-Mails aktivieren und Postfach konfigurieren.",
+      "inbox": "Eingang",
+      "statusValue": {
+        "ingested": "Erfasst",
+        "no_attachment": "Kein Anhang",
+        "duplicate": "Duplikat",
+        "error": "Fehler"
+      }
     },
     "sentEmails": {
       "tab": "Gesendete E-Mails",

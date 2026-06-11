@@ -21,6 +21,8 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   quotes: false,
   bills: false,
   messaging: false,
+  // Incoming mail (migration 128) — IMAP intake. Standalone, default off.
+  incomingMail: false,
   analytics: true,
   userManagement: true,
   // Top-level Clients section (#354 follow-up). Migration 097 mirrors

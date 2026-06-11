@@ -6,6 +6,7 @@ import {
   Images,
   BellRing,
   MessageSquare,
+  Mailbox,
   CalendarDays,
   FileSignature,
   ScrollText,
@@ -160,6 +161,21 @@ export const FeaturesTab: React.FC = () => {
             sidebarHiddenLabel={sidebarHiddenLabel}
             enabled={staged.reminderEmails}
             onToggle={(next) => setFlag('reminderEmails', next)}
+          />
+
+          <FeatureCard
+            icon={Mailbox}
+            title={t('settings.features.incomingMail.title', 'Incoming mail')}
+            description={t(
+              'settings.features.incomingMail.description',
+              'Poll a dedicated mailbox (IMAP) every minute and drop invoice attachments into Accounting → Incoming invoices. Configure the mailbox under Settings → Email.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarHidden
+            sidebarHiddenLabel={sidebarHiddenLabel}
+            enabled={staged.incomingMail}
+            onToggle={(next) => setFlag('incomingMail', next)}
           />
 
           <FeatureCard
