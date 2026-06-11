@@ -1263,6 +1263,17 @@
     },
     "crm": {
       "title": "CRM behaviour"
+    },
+    "accounting": {
+      "title": "Accounting",
+      "subtitle": "Default rates for internal expenses and the proof requirement.",
+      "kmRate": "Mileage rate (CHF / km)",
+      "kmRateHint": "Default applied to mileage expenses; overridable per entry.",
+      "perDiemRate": "Per-diem rate (CHF / day)",
+      "perDiemRateHint": "Default applied to per-diem expenses; overridable per entry.",
+      "requireProof": "Require a proof file on every expense",
+      "disclaimer": "Rates and VAT/tax treatment are guidance only — verify with your Treuhänder.",
+      "savedToast": "Accounting settings saved."
     }
   },
   "analytics": {

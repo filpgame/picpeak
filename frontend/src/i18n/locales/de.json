@@ -1705,6 +1705,17 @@
     },
     "crm": {
       "title": "CRM-Verhalten"
+    },
+    "accounting": {
+      "title": "Buchhaltung",
+      "subtitle": "Standardsätze für interne Aufwände und die Belegpflicht.",
+      "kmRate": "Kilometersatz (CHF / km)",
+      "kmRateHint": "Standard für Kilometer-Aufwände; pro Eintrag überschreibbar.",
+      "perDiemRate": "Spesenpauschale (CHF / Tag)",
+      "perDiemRateHint": "Standard für Pauschal-Aufwände; pro Eintrag überschreibbar.",
+      "requireProof": "Beleg für jeden Aufwand verlangen",
+      "disclaimer": "Sätze und MwSt-/Steuerbehandlung dienen nur als Orientierung — mit Ihrem Treuhänder prüfen.",
+      "savedToast": "Buchhaltungseinstellungen gespeichert."
     }
   },
   "branding": {
