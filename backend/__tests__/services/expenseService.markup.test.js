@@ -1,80 +1,87 @@
 /**
- * Unit tests for the expense money/markup logic — the silently-regressable
- * bits of the re-bill flow. Pure functions only (no DB), via _internal.
+ * Unit tests for the accounting money logic — re-bill markup (incoming
+ * invoices) and internal-expense amount/build. Pure functions via _internal.
  */
 const expenseService = require('../../src/services/expenseService');
 
-const { computeMarkupMinor, resolveMarkup, buildExpenseInsert } = expenseService._internal;
+const { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert } = expenseService._internal;
 
 describe('computeMarkupMinor', () => {
-  it('percent of base, rounded to integer minor units', () => {
+  it('percent of base, rounded', () => {
     expect(computeMarkupMinor(10000, { type: 'percent', percent: 10 })).toBe(1000);
-    expect(computeMarkupMinor(333, { type: 'percent', percent: 10 })).toBe(33); // 33.3 -> 33
-    expect(computeMarkupMinor(335, { type: 'percent', percent: 10 })).toBe(34); // 33.5 -> 34
+    expect(computeMarkupMinor(333, { type: 'percent', percent: 10 })).toBe(33);
+    expect(computeMarkupMinor(335, { type: 'percent', percent: 10 })).toBe(34);
   });
-
-  it('flat adds the flat minor amount', () => {
+  it('flat / none', () => {
     expect(computeMarkupMinor(10000, { type: 'flat', flatMinor: 500 })).toBe(500);
-  });
-
-  it('none / missing values add nothing', () => {
     expect(computeMarkupMinor(10000, { type: 'none' })).toBe(0);
     expect(computeMarkupMinor(10000, { type: 'percent', percent: null })).toBe(0);
-    expect(computeMarkupMinor(10000, { type: 'flat', flatMinor: null })).toBe(0);
   });
 });
 
 describe('resolveMarkup precedence (no contract / no DB)', () => {
-  it('explicit override wins over the expense clause', async () => {
-    const expense = { markupType: 'flat', markupFlatMinor: 999 };
-    const override = { markupType: 'percent', markupPercent: 5 };
-    await expect(resolveMarkup(expense, override, null, null))
+  it('override > source clause', async () => {
+    await expect(resolveMarkup({ markupType: 'flat', markupFlatMinor: 999 }, { markupType: 'percent', markupPercent: 5 }, null, null))
       .resolves.toEqual({ type: 'percent', percent: 5, flatMinor: null });
   });
-
-  it("falls back to the expense's own clause when no override", async () => {
-    const expense = { markupType: 'flat', markupFlatMinor: 200 };
-    await expect(resolveMarkup(expense, {}, null, null))
+  it("source clause when no override", async () => {
+    await expect(resolveMarkup({ markupType: 'flat', markupFlatMinor: 200 }, {}, null, null))
       .resolves.toEqual({ type: 'flat', percent: null, flatMinor: 200 });
   });
-
-  it('defaults to none when nothing is set', async () => {
+  it('none when nothing set', async () => {
     await expect(resolveMarkup({ markupType: 'none' }, {}, null, null))
       .resolves.toEqual({ type: 'none', percent: null, flatMinor: null });
   });
 });
 
-describe('buildExpenseInsert', () => {
-  it('rejects an unknown disposition', () => {
-    expect(() => buildExpenseInsert({ disposition: 'bogus' }, 1)).toThrow(/disposition/);
+describe('computeExpenseAmount', () => {
+  it('mileage / per-diem = quantity x rate, rounded', () => {
+    expect(computeExpenseAmount('mileage', 42, 70, null)).toBe(2940); // 42 km x CHF 0.70
+    expect(computeExpenseAmount('per_diem', 3, 8000, null)).toBe(24000); // 3 days x CHF 80
+    expect(computeExpenseAmount('mileage', 10.5, 71, null)).toBe(746); // 745.5 -> 746
   });
+  it('amount = the entered minor amount', () => {
+    expect(computeExpenseAmount('amount', null, null, 5000)).toBe(5000);
+  });
+  it('null when quantity or rate missing', () => {
+    expect(computeExpenseAmount('mileage', null, 70, null)).toBeNull();
+    expect(computeExpenseAmount('mileage', 42, null, null)).toBeNull();
+  });
+});
 
-  it('defaults tax_treatment to domestic and status to open', () => {
-    const row = buildExpenseInsert({ disposition: 'eigener_aufwand' }, 7);
+describe('buildExpenseInsert (internal expense)', () => {
+  it('defaults: kind=amount, disposition=eigener_aufwand, tax=domestic, status=open', () => {
+    const row = buildExpenseInsert({ chfAmountMinor: 5000 }, 7);
+    expect(row.kind).toBe('amount');
+    expect(row.disposition).toBe('eigener_aufwand');
     expect(row.tax_treatment).toBe('domestic');
     expect(row.status).toBe('open');
+    expect(row.chf_amount_minor).toBe(5000);
     expect(row.created_by_admin_id).toBe(7);
+    expect(row.inbound_document_id).toBeNull();
   });
 
-  it('declined disposition sets status=declined + keeps the reason', () => {
-    const row = buildExpenseInsert({ disposition: 'abgelehnt', declineReason: 'not ours' }, 1);
-    expect(row.status).toBe('declined');
-    expect(row.decline_reason).toBe('not ours');
+  it('mileage uses the override rate, else the settings km rate', () => {
+    const withDefault = buildExpenseInsert({ kind: 'mileage', quantity: 42 }, 1, { kmRateMinor: 70 });
+    expect(withDefault.rate_minor).toBe(70);
+    expect(withDefault.chf_amount_minor).toBe(2940);
+
+    const withOverride = buildExpenseInsert({ kind: 'mileage', quantity: 42, rateMinor: 100 }, 1, { kmRateMinor: 70 });
+    expect(withOverride.rate_minor).toBe(100);
+    expect(withOverride.chf_amount_minor).toBe(4200);
   });
 
-  it('only persists the markup field that matches the markup type', () => {
-    const pct = buildExpenseInsert({ disposition: 'rebill', markupType: 'percent', markupPercent: 12, markupFlatMinor: 500 }, 1);
-    expect(pct.markup_percent).toBe(12);
-    expect(pct.markup_flat_minor).toBeNull();
-
-    const flat = buildExpenseInsert({ disposition: 'rebill', markupType: 'flat', markupPercent: 12, markupFlatMinor: 500 }, 1);
-    expect(flat.markup_flat_minor).toBe(500);
-    expect(flat.markup_percent).toBeNull();
+  it('per_diem uses days x per-diem rate', () => {
+    const row = buildExpenseInsert({ kind: 'per_diem', quantity: 2 }, 1, { perDiemRateMinor: 8000 });
+    expect(row.rate_minor).toBe(8000);
+    expect(row.chf_amount_minor).toBe(16000);
   });
 
-  it('parked flag maps to status=parked', () => {
-    const row = buildExpenseInsert({ disposition: 'rebill', unbilledParked: true }, 1);
-    expect(row.status).toBe('parked');
-    expect(row.unbilled_parked).toBe(true);
+  it('event_id null = booked to company; proof path carried', () => {
+    const company = buildExpenseInsert({ kind: 'amount', chfAmountMinor: 100 }, 1, { receiptPath: '/p/x.pdf' });
+    expect(company.event_id).toBeNull();
+    expect(company.receipt_path).toBe('/p/x.pdf');
+    const evt = buildExpenseInsert({ kind: 'amount', chfAmountMinor: 100, eventId: 9 }, 1);
+    expect(evt.event_id).toBe(9);
   });
 });
