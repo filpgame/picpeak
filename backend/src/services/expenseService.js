@@ -337,6 +337,14 @@ function transformExpense(row) {
     receiptPath: row.receipt_path,
     hasProof: !!row.receipt_path,
     taxTreatment: row.tax_treatment,
+    // invoiced = added to a real client invoice (locks editing); paid = settled.
+    billedInvoiceId: row.billed_invoice_id,
+    billedInvoiceLineItemId: row.billed_invoice_line_item_id,
+    invoiced: !!row.billed_invoice_id,
+    customerAccountId: row.customer_account_id,
+    paid: !!row.supplier_paid,
+    paidAt: row.supplier_paid_at,
+    paymentMethod: row.payment_method,
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -422,7 +430,10 @@ const EXPENSE_EDITABLE = {
 };
 
 async function updateExpense(id, payload, adminId, { receiptPath } = {}) {
-  await getExpense(id);
+  const existing = await getExpense(id);
+  if (existing.invoiced) {
+    throw new AppError('Expense is invoiced — editing is locked', 409, 'EXPENSE_LOCKED');
+  }
   const patch = { updated_at: new Date() };
   for (const [camel, snake] of Object.entries(EXPENSE_EDITABLE)) {
     if (payload[camel] !== undefined) patch[snake] = payload[camel] === '' ? null : payload[camel];
@@ -433,8 +444,70 @@ async function updateExpense(id, payload, adminId, { receiptPath } = {}) {
   return getExpense(id);
 }
 
+/** Add an internal expense onto a client invoice (mints a line). Marks it
+ *  invoiced (locks editing) + links the invoice. base = chf amount + markup. */
+async function rebillExpense(id, payload, adminId, trx0) {
+  const run = async (trx) => {
+    const row = await trx('expenses').where({ id }).first();
+    if (!row) throw new AppError('Expense not found', 404, 'EXPENSE_NOT_FOUND');
+    const exp = transformExpense(row);
+    if (exp.invoiced) throw new AppError('Expense already invoiced', 409, 'ALREADY_INVOICED');
+    if (!payload.customerAccountId) throw new AppError('customerAccountId is required', 400, 'CUSTOMER_REQUIRED');
+    const base = exp.chfAmountMinor;
+    if (base == null) throw new AppError('Expense has no amount to invoice', 400, 'AMOUNT_REQUIRED');
+    const markup = await resolveMarkup(
+      { markupType: row.markup_type, markupPercent: row.markup_percent, markupFlatMinor: row.markup_flat_minor },
+      payload, payload.contractId, trx,
+    );
+    const lineTotal = base + computeMarkupMinor(base, markup);
+    const label = exp.description || exp.supplierName || 'Aufwand';
+    const { invoiceIds } = await invoiceService.createInvoice({
+      customerAccountId: payload.customerAccountId,
+      eventId: payload.eventId || exp.eventId || null,
+      lineItems: [{ description: `${label} (Weiterverrechnung)`, quantity: 1, unit_price_minor: lineTotal, discount_percent: 0, line_total_minor: lineTotal }],
+    }, adminId, trx);
+    const invoiceId = Array.isArray(invoiceIds) ? invoiceIds[0] : null;
+    if (!invoiceId) throw new AppError('Failed to create invoice', 500, 'INVOICE_FAILED');
+    const line = await trx('invoice_line_items').where({ invoice_id: invoiceId }).orderBy('id', 'desc').first('id');
+    await trx('expenses').where({ id }).update({
+      billed_invoice_id: invoiceId,
+      billed_invoice_line_item_id: line ? line.id : null,
+      billed_at: new Date(),
+      customer_account_id: payload.customerAccountId,
+      markup_type: markup.type,
+      markup_percent: markup.type === 'percent' ? markup.percent : null,
+      markup_flat_minor: markup.type === 'flat' ? markup.flatMinor : null,
+      status: 'invoiced',
+      updated_at: new Date(),
+    });
+    await logActivity('expense_invoiced', { expenseId: id, invoiceId }, adminId);
+    return invoiceId;
+  };
+  const invoiceId = trx0 ? await run(trx0) : await db.transaction(run);
+  return { expense: await getExpense(id), invoiceId };
+}
+
+/** Mark an expense paid/settled (manual). */
+async function markExpensePaid(id, { paid, paidAt, paymentMethod, paymentReference }, adminId) {
+  await getExpense(id);
+  if (paymentMethod && !PAYMENT_METHODS.includes(paymentMethod)) {
+    throw new AppError(`paymentMethod must be one of ${PAYMENT_METHODS.join(', ')}`, 400, 'BAD_PAYMENT_METHOD');
+  }
+  await db('expenses').where({ id }).update({
+    supplier_paid: !!paid,
+    supplier_paid_at: paid ? (paidAt ? new Date(paidAt) : new Date()) : null,
+    payment_method: paid ? (paymentMethod || null) : null,
+    payment_reference: paid ? (paymentReference || null) : null,
+    updated_at: new Date(),
+  });
+  await logActivity('expense_paid', { expenseId: id, paid: !!paid }, adminId);
+  return getExpense(id);
+}
+
 module.exports = {
   getAccountingSettings,
+  rebillExpense,
+  markExpensePaid,
   // incoming invoices
   recordInboundDocument,
   getInbound,

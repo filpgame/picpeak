@@ -220,4 +220,23 @@ router.patch('/:id', requireExpenses, requirePermission('accounting.manage'),
     return successResponse(res, { expense });
   }));
 
+// Add an expense onto a client invoice -> marks it invoiced (locks editing).
+router.post('/:id/invoice', requireExpenses, requirePermission('accounting.manage'),
+  [param('id').isInt({ min: 1 }), body('customerAccountId').isInt({ min: 1 }),
+    body('eventId').optional({ nullable: true }).isInt({ min: 1 }), body('contractId').optional({ nullable: true }).isInt({ min: 1 }),
+    body('markupType').optional().isIn(expenseService.MARKUP_TYPES)],
+  handleAsync(async (req, res) => {
+    validateRequest(req);
+    return successResponse(res, await expenseService.rebillExpense(toInt(req.params.id), req.body, req.admin.id), 201, 'Expense invoiced');
+  }));
+
+// Mark an expense paid / settled (manual).
+router.post('/:id/paid', requireExpenses, requirePermission('accounting.manage'),
+  [param('id').isInt({ min: 1 }), body('paid').isBoolean(), body('paymentMethod').optional({ nullable: true }).isIn(expenseService.PAYMENT_METHODS)],
+  handleAsync(async (req, res) => {
+    validateRequest(req);
+    const expense = await expenseService.markExpensePaid(toInt(req.params.id), req.body, req.admin.id);
+    return successResponse(res, { expense });
+  }));
+
 module.exports = router;
