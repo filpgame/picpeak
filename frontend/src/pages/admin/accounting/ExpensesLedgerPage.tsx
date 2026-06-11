@@ -1,210 +1,129 @@
 /**
- * Accounting → Expenses ledger.
+ * Accounting → Expenses (internal own costs).
  *
- * Lists the expenses booked from triaged inbound documents (and manual ones).
- * Shows disposition + status, the linked client invoice for re-billed items,
- * and a supplier-payment toggle ("Zu zahlen / Bezahlt") with method capture —
- * decoupled from categorisation, per the locked design.
+ * Mileage (km) / per-diem (days) / plain amount, booked to an event or the
+ * company, with an optional proof file (required when the accounting setting
+ * says so). Rates default from the Accounting settings tab, overridable per
+ * entry. No supplier payment here — that lives on incoming invoices.
  */
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { CheckCircle2, Circle, X, ExternalLink, Plus } from 'lucide-react';
-import { Button, Card, CardContent, Input, LocalizedDateInput, Loading } from '../../../components/common';
+import { X, Plus, Paperclip, Car, CalendarDays, Coins } from 'lucide-react';
+import { Button, Card, CardContent, Input, Loading } from '../../../components/common';
 import { DecimalInput } from '../../../components/common/DecimalInput';
-import { CustomerAccountPicker, type SelectedCustomer } from '../../../components/admin/CustomerAccountPicker';
 import { formatMoneyMinor } from '../../../utils/money';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import {
-  accountingService,
-  type Expense,
-  type Disposition,
-  type MarkupType,
-  type PaymentMethod,
+  accountingService, categoryLabel,
+  type Expense, type ExpenseKind, type ExpenseCategory,
 } from '../../../services/accounting.service';
 
-const DISPOSITIONS: Disposition[] = ['rebill', 'durchlaufend', 'eigener_aufwand', 'duplikat', 'abgelehnt'];
-const STATUSES = ['open', 'parked', 'billed', 'declined'];
-const PAYMENT_METHODS: PaymentMethod[] = ['bank_transfer', 'cash', 'twint', 'paypal', 'card', 'other'];
-
-const statusClasses: Record<string, string> = {
-  open: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  parked: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-  billed: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-  declined: 'bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300',
+const KINDS: ExpenseKind[] = ['amount', 'mileage', 'per_diem'];
+const labelCls = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1';
+const selectCls = 'w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm';
+const kindIcon: Record<ExpenseKind, React.ReactNode> = {
+  amount: <Coins className="w-3.5 h-3.5" />, mileage: <Car className="w-3.5 h-3.5" />, per_diem: <CalendarDays className="w-3.5 h-3.5" />,
 };
 
-const PayModal: React.FC<{ expense: Expense; onClose: () => void; onDone: () => void }> = ({ expense, onClose, onDone }) => {
+const AddExpenseModal: React.FC<{ categories: ExpenseCategory[]; onClose: () => void; onDone: () => void }> = ({ categories, onClose, onDone }) => {
   const { t } = useTranslation();
-  const [paidAt, setPaidAt] = useState('');
-  const [method, setMethod] = useState<PaymentMethod>('bank_transfer');
-  const [reference, setReference] = useState('');
-
-  const save = useMutation({
-    mutationFn: () => accountingService.setSupplierPayment(expense.id, {
-      paid: true, paidAt: paidAt || undefined, paymentMethod: method, paymentReference: reference || undefined,
-    }),
-    onSuccess: () => { toast.success(t('accounting.ledger.paidToast', 'Marked as paid.')); onDone(); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
-  });
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4">
-      <div className="mt-16 w-full max-w-sm rounded-xl bg-white dark:bg-neutral-900 shadow-xl">
-        <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 px-5 py-3">
-          <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{t('accounting.ledger.markPaidTitle', 'Mark supplier paid')}</h2>
-          <button onClick={onClose} aria-label={t('common.close', 'Close')} className="text-neutral-400 hover:text-neutral-600"><X className="w-5 h-5" /></button>
-        </div>
-        <div className="px-5 py-4 space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.ledger.paidDate', 'Payment date')}</label>
-            <LocalizedDateInput value={paidAt} onChange={setPaidAt} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.ledger.method', 'Method')}</label>
-            <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-              className="w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
-              {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{t(`accounting.paymentMethod.${m}`, m)}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.ledger.reference', 'Reference (optional)')}</label>
-            <Input value={reference} onChange={(e) => setReference(e.target.value)} />
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-neutral-200 dark:border-neutral-700 px-5 py-3">
-          <Button variant="outline" onClick={onClose}>{t('common.cancel', 'Cancel')}</Button>
-          <Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? t('common.saving', 'Saving…') : t('accounting.ledger.confirmPaid', 'Mark paid')}</Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const MANUAL_DISPOSITIONS: Disposition[] = ['eigener_aufwand', 'durchlaufend', 'rebill'];
-
-const AddExpenseModal: React.FC<{ onClose: () => void; onDone: () => void }> = ({ onClose, onDone }) => {
-  const { t } = useTranslation();
+  const { data: settings } = useQuery({ queryKey: ['accounting-settings'], queryFn: () => accountingService.getSettings() });
+  const [kind, setKind] = useState<ExpenseKind>('amount');
   const [supplier, setSupplier] = useState('');
   const [description, setDescription] = useState('');
   const [amountMajor, setAmountMajor] = useState<number>(NaN);
-  const [currency, setCurrency] = useState('CHF');
-  const [disposition, setDisposition] = useState<Disposition>('eigener_aufwand');
+  const [quantity, setQuantity] = useState<number>(NaN);
+  const [rateMajor, setRateMajor] = useState<number>(NaN); // per-entry override (major units)
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
-  const [customer, setCustomer] = useState<SelectedCustomer[]>([]);
-  const [eventId, setEventId] = useState('');
-  const [markupType, setMarkupType] = useState<MarkupType>('none');
-  const [markupValue, setMarkupValue] = useState<number>(NaN);
+  const [eventId, setEventId] = useState<number | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
-  const { data: categories } = useQuery({ queryKey: ['expense-categories'], queryFn: () => accountingService.listCategories() });
-  const totalMinor = Number.isFinite(amountMajor) ? Math.round(amountMajor * 100) : null;
-  const selectClass = 'w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm';
+  const defaultRateMinor = kind === 'mileage' ? (settings?.accounting_km_rate_minor ?? 0)
+    : kind === 'per_diem' ? (settings?.accounting_per_diem_rate_minor ?? 0) : 0;
+  const effRateMinor = Number.isFinite(rateMajor) ? Math.round(rateMajor * 100) : defaultRateMinor;
+  const computedMinor = useMemo(() => {
+    if (kind === 'amount') return Number.isFinite(amountMajor) ? Math.round(amountMajor * 100) : null;
+    return Number.isFinite(quantity) ? Math.round(quantity * effRateMinor) : null;
+  }, [kind, amountMajor, quantity, effRateMinor]);
+  const requireProof = !!settings?.accounting_require_proof;
 
   const save = useMutation({
-    mutationFn: async () => {
-      const expense = await accountingService.createExpense({
-        disposition,
-        supplierName: supplier || null,
-        description: description || null,
-        chfAmountMinor: totalMinor,
-        grossAmountMinor: totalMinor,
-        categoryId: disposition === 'eigener_aufwand' ? (categoryId ?? null) : null,
-        eventId: eventId ? Number(eventId) : null,
-        customerAccountId: disposition === 'rebill' && customer[0] ? customer[0].id : null,
-        markupType,
-        markupPercent: markupType === 'percent' && Number.isFinite(markupValue) ? markupValue : null,
-        markupFlatMinor: markupType === 'flat' && Number.isFinite(markupValue) ? Math.round(markupValue * 100) : null,
-      });
-      if (disposition === 'rebill') {
-        await accountingService.rebill(expense.id, {
-          customerAccountId: customer[0].id,
-          eventId: eventId ? Number(eventId) : null,
-          markupType,
-          markupPercent: markupType === 'percent' && Number.isFinite(markupValue) ? markupValue : null,
-          markupFlatMinor: markupType === 'flat' && Number.isFinite(markupValue) ? Math.round(markupValue * 100) : null,
-        });
-      }
-    },
+    mutationFn: () => accountingService.createExpense({
+      kind,
+      quantity: kind === 'amount' ? undefined : (Number.isFinite(quantity) ? quantity : undefined),
+      rateMinor: kind === 'amount' ? undefined : (Number.isFinite(rateMajor) ? Math.round(rateMajor * 100) : undefined),
+      chfAmountMinor: kind === 'amount' && Number.isFinite(amountMajor) ? Math.round(amountMajor * 100) : undefined,
+      eventId,
+      categoryId: categoryId ?? null,
+      supplierName: supplier || null,
+      description: description || null,
+    }, file),
     onSuccess: () => { toast.success(t('accounting.ledger.createdToast', 'Expense added.')); onDone(); },
     onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
   });
 
-  const rebillNeedsCustomer = disposition === 'rebill' && !customer[0];
+  const qtyLabel = kind === 'mileage' ? t('accounting.expense.km', 'Kilometres') : t('accounting.expense.days', 'Days');
+  const incomplete = (kind === 'amount' && !Number.isFinite(amountMajor)) || (kind !== 'amount' && !Number.isFinite(quantity)) || (requireProof && !file);
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4">
       <div className="mt-12 w-full max-w-md rounded-xl bg-white dark:bg-neutral-900 shadow-xl">
         <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 px-5 py-3">
           <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{t('accounting.ledger.addTitle', 'Add expense')}</h2>
-          <button onClick={onClose} aria-label={t('common.close', 'Close')} className="text-neutral-400 hover:text-neutral-600"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X className="w-5 h-5" /></button>
         </div>
         <div className="px-5 py-4 space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.supplier', 'Supplier')}</label>
-            <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.ledger.description', 'Description')}</label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('accounting.ledger.descriptionHint', 'e.g. mileage, per-diem, cash receipt')} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.total', 'Total')}</label>
-              <DecimalInput value={amountMajor} onChange={setAmountMajor} fractionDigits={2} className={selectClass} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.currency', 'Currency')}</label>
-              <Input value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase())} maxLength={3} />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.disposition', 'Disposition')}</label>
-            <select value={disposition} onChange={(e) => setDisposition(e.target.value as Disposition)} className={selectClass}>
-              {MANUAL_DISPOSITIONS.map((d) => <option key={d} value={d}>{t(`accounting.disposition.${d}`, d)}</option>)}
+          <div><label className={labelCls}>{t('accounting.expense.kind', 'Type')}</label>
+            <select value={kind} onChange={(e) => setKind(e.target.value as ExpenseKind)} className={selectCls}>
+              {KINDS.map((k) => <option key={k} value={k}>{t(`accounting.expenseKind.${k}`, k)}</option>)}
             </select>
           </div>
-          {disposition === 'eigener_aufwand' && (
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.category', 'Category')}</label>
-              <select value={categoryId ?? ''} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)} className={selectClass}>
-                <option value="">{t('accounting.inbox.field.categoryNone', '— none —')}</option>
-                {(categories ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+
+          {kind === 'amount' ? (
+            <div><label className={labelCls}>{t('accounting.inbox.field.total', 'Total')}</label><DecimalInput value={amountMajor} onChange={setAmountMajor} fractionDigits={2} className={selectCls} /></div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className={labelCls}>{qtyLabel}</label><DecimalInput value={quantity} onChange={setQuantity} fractionDigits={2} className={selectCls} /></div>
+              <div><label className={labelCls}>{t('accounting.expense.rate', 'Rate')}</label>
+                <DecimalInput value={rateMajor} onChange={setRateMajor} fractionDigits={2} className={selectCls} placeholder={(defaultRateMinor / 100).toFixed(2)} />
+                <p className="mt-1 text-xs text-neutral-500">{t('accounting.expense.rateDefault', 'Default {{rate}} — leave blank to use it', { rate: (defaultRateMinor / 100).toFixed(2) })}</p>
+              </div>
+            </div>
+          )}
+
+          {computedMinor != null && <p className="text-sm text-neutral-700 dark:text-neutral-300">{t('accounting.expense.computed', 'Amount')}: <span className="font-semibold">{formatMoneyMinor(computedMinor, 'CHF')}</span></p>}
+
+          <div><label className={labelCls}>{t('accounting.expense.who', 'Paid by / vendor')}</label><Input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder={t('accounting.expense.whoHint', 'e.g. coworker name or shop')} /></div>
+          <div><label className={labelCls}>{t('accounting.ledger.description', 'Description')}</label><Input value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+
+          <div><label className={labelCls}>{t('accounting.inbox.field.category', 'Category')}</label>
+            <select value={categoryId ?? ''} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)} className={selectCls}>
+              <option value="">{t('accounting.inbox.field.categoryNone', '— none —')}</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{categoryLabel(c, t)}</option>)}
+            </select>
+          </div>
+
+          <div><label className={labelCls}>{t('accounting.booking.label', 'Book to')}</label>
+            <div className="flex gap-2">
+              <select className={selectCls} style={{ maxWidth: 160 }} value={eventId != null ? 'event' : 'company'} onChange={(e) => setEventId(e.target.value === 'event' ? (eventId ?? 0) : null)}>
+                <option value="company">{t('accounting.booking.company', 'Company')}</option>
+                <option value="event">{t('accounting.booking.event', 'Event')}</option>
               </select>
+              {eventId != null && <Input placeholder={t('accounting.booking.eventId', 'Event ID')} inputMode="numeric" value={eventId ? String(eventId) : ''} onChange={(e) => setEventId(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)} />}
             </div>
-          )}
-          {disposition === 'rebill' && (
-            <div className="space-y-3 rounded-lg border border-neutral-200 dark:border-neutral-700 p-3">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.customer', 'Client')} *</label>
-                <CustomerAccountPicker value={customer.slice(0, 1)} onChange={(next) => setCustomer(next.slice(-1))} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.eventId', 'Event ID (optional)')}</label>
-                  <Input value={eventId} onChange={(e) => setEventId(e.target.value.replace(/[^0-9]/g, ''))} inputMode="numeric" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('accounting.inbox.field.markup', 'Markup')}</label>
-                  <select value={markupType} onChange={(e) => setMarkupType(e.target.value as MarkupType)} className={selectClass}>
-                    <option value="none">{t('accounting.markup.none', 'None / from contract')}</option>
-                    <option value="percent">{t('accounting.markup.percent', 'Percent')}</option>
-                    <option value="flat">{t('accounting.markup.flat', 'Flat')}</option>
-                  </select>
-                </div>
-              </div>
-              {markupType !== 'none' && (
-                <DecimalInput value={markupValue} onChange={setMarkupValue} fractionDigits={2} className={selectClass} placeholder={markupType === 'percent' ? '%' : currency} />
-              )}
-            </div>
-          )}
+          </div>
+
+          <div>
+            <label className={labelCls}>{t('accounting.expense.proof', 'Proof')}{requireProof ? ' *' : ''}</label>
+            <input type="file" accept="image/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className="text-sm" />
+            {requireProof && !file && <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">{t('accounting.expense.proofRequired', 'A proof file is required.')}</p>}
+          </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-neutral-200 dark:border-neutral-700 px-5 py-3">
           <Button variant="outline" onClick={onClose}>{t('common.cancel', 'Cancel')}</Button>
-          <Button onClick={() => save.mutate()} disabled={save.isPending || rebillNeedsCustomer || totalMinor == null}>
-            {save.isPending ? t('common.saving', 'Saving…') : t('accounting.ledger.addExpense', 'Add expense')}
-          </Button>
+          <Button onClick={() => save.mutate()} disabled={save.isPending || incomplete}>{save.isPending ? t('common.saving', 'Saving…') : t('accounting.ledger.addExpense', 'Add expense')}</Button>
         </div>
       </div>
     </div>
@@ -215,97 +134,59 @@ export const ExpensesLedgerPage: React.FC = () => {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { format } = useLocalizedDate();
-  const [status, setStatus] = useState('');
-  const [disposition, setDisposition] = useState('');
-  const [payExpense, setPayExpense] = useState<Expense | null>(null);
+  const [kind, setKind] = useState('');
   const [showAdd, setShowAdd] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['accounting-expenses', status, disposition],
-    queryFn: () => accountingService.listExpenses({
-      status: status || undefined,
-      disposition: (disposition || undefined) as Disposition | undefined,
-      pageSize: 100,
-    }),
+    queryKey: ['accounting-expenses', kind],
+    queryFn: () => accountingService.listExpenses({ kind: (kind || undefined) as ExpenseKind | undefined, pageSize: 100 }),
   });
+  const { data: categories } = useQuery({ queryKey: ['expense-categories'], queryFn: () => accountingService.listCategories() });
+  const catById = useMemo(() => new Map((categories ?? []).map((c) => [c.id, c])), [categories]);
 
-  const unpay = useMutation({
-    mutationFn: (id: number) => accountingService.setSupplierPayment(id, { paid: false }),
-    onSuccess: () => { toast.success(t('accounting.ledger.unpaidToast', 'Marked as not paid.')); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
-  });
+  const openProof = async (id: number) => {
+    try { const blob = await accountingService.getExpenseProofBlob(id); window.open(URL.createObjectURL(blob), '_blank'); }
+    catch (e: any) { toast.error(e?.response?.data?.error || e.message || 'Failed'); }
+  };
 
-  const selectClass = 'rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm';
   const items = data?.items ?? [];
 
   return (
     <div>
       <div className="mb-4 flex flex-wrap gap-3">
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
-          <option value="">{t('accounting.ledger.allStatuses', 'All statuses')}</option>
-          {STATUSES.map((s) => <option key={s} value={s}>{t(`accounting.expenseStatus.${s}`, s)}</option>)}
+        <select value={kind} onChange={(e) => setKind(e.target.value)} className={selectCls} style={{ maxWidth: 200 }}>
+          <option value="">{t('accounting.ledger.allKinds', 'All types')}</option>
+          {KINDS.map((k) => <option key={k} value={k}>{t(`accounting.expenseKind.${k}`, k)}</option>)}
         </select>
-        <select value={disposition} onChange={(e) => setDisposition(e.target.value)} className={selectClass}>
-          <option value="">{t('accounting.ledger.allDispositions', 'All dispositions')}</option>
-          {DISPOSITIONS.map((d) => <option key={d} value={d}>{t(`accounting.disposition.${d}`, d)}</option>)}
-        </select>
-        <Button className="ml-auto" onClick={() => setShowAdd(true)}>
-          <Plus className="w-4 h-4 mr-1" /> {t('accounting.ledger.addExpense', 'Add expense')}
-        </Button>
+        <Button className="ml-auto" onClick={() => setShowAdd(true)}><Plus className="w-4 h-4 mr-1" /> {t('accounting.ledger.addExpense', 'Add expense')}</Button>
       </div>
 
-      {isLoading ? (
-        <Loading />
-      ) : items.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-sm text-neutral-600 dark:text-neutral-400">{t('accounting.ledger.empty', 'No expenses yet — categorize documents in the inbox.')}</CardContent></Card>
+      {isLoading ? <Loading /> : items.length === 0 ? (
+        <Card><CardContent className="p-8 text-center text-sm text-neutral-600 dark:text-neutral-400">{t('accounting.ledger.empty', 'No expenses yet — add one above.')}</CardContent></Card>
       ) : (
         <div className="space-y-2">
-          {items.map((ex) => (
-            <div key={ex.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-3">
-              <div className="flex-1 min-w-[12rem]">
-                <div className="flex items-center gap-2">
-                  <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${statusClasses[ex.status] || ''}`}>{t(`accounting.expenseStatus.${ex.status}`, ex.status)}</span>
-                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">{ex.supplierName || ex.description || t('accounting.ledger.untitled', 'Expense')}</span>
+          {items.map((ex: Expense) => {
+            const cat = ex.categoryId ? catById.get(ex.categoryId) : null;
+            return (
+              <div key={ex.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-3">
+                <span className="inline-flex items-center gap-1 rounded bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-xs font-medium text-neutral-700 dark:text-neutral-300">{kindIcon[ex.kind]} {t(`accounting.expenseKind.${ex.kind}`, ex.kind)}</span>
+                <div className="flex-1 min-w-[10rem]">
+                  <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">{ex.description || ex.supplierName || t('accounting.ledger.untitled', 'Expense')}</div>
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {ex.eventId != null ? `${t('accounting.booking.event', 'Event')} #${ex.eventId}` : t('accounting.booking.company', 'Company')}
+                    {cat && <>{' · '}{categoryLabel(cat, t)}</>}
+                    {' · '}{format(ex.createdAt)}
+                  </div>
                 </div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                  {t(`accounting.disposition.${ex.disposition}`, ex.disposition)}
-                  {' · '}
-                  {format(ex.createdAt)}
-                  {ex.billedInvoiceId ? (
-                    <>{' · '}<Link to={`/admin/clients/bills/${ex.billedInvoiceId}`} className="inline-flex items-center gap-0.5 text-primary-600 hover:underline">{t('accounting.ledger.invoiceLink', 'Invoice')}<ExternalLink className="w-3 h-3" /></Link></>
-                  ) : null}
-                </div>
+                {ex.hasProof && <button onClick={() => openProof(ex.id)} className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline"><Paperclip className="w-3.5 h-3.5" /> {t('accounting.expense.viewProof', 'Proof')}</button>}
+                <div className="text-sm font-medium tabular-nums text-neutral-900 dark:text-neutral-100">{ex.chfAmountMinor != null ? formatMoneyMinor(ex.chfAmountMinor, 'CHF') : '—'}</div>
               </div>
-
-              <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100 tabular-nums">
-                {ex.chfAmountMinor != null ? formatMoneyMinor(ex.chfAmountMinor, 'CHF') : '—'}
-              </div>
-
-              {/* Supplier-payment toggle (skip for declined/duplicate). */}
-              {ex.disposition !== 'abgelehnt' && ex.disposition !== 'duplikat' && (
-                ex.supplierPaid ? (
-                  <button onClick={() => unpay.mutate(ex.id)} disabled={unpay.isPending}
-                    className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30">
-                    <CheckCircle2 className="w-4 h-4" /> {t('accounting.ledger.paid', 'Paid')}
-                  </button>
-                ) : (
-                  <Button size="sm" variant="outline" onClick={() => setPayExpense(ex)}>
-                    <Circle className="w-3.5 h-3.5 mr-1" /> {t('accounting.ledger.markPaid', 'Mark paid')}
-                  </Button>
-                )
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {payExpense && (
-        <PayModal expense={payExpense} onClose={() => setPayExpense(null)} onDone={() => { setPayExpense(null); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />
-      )}
-
-      {showAdd && (
-        <AddExpenseModal onClose={() => setShowAdd(false)} onDone={() => { setShowAdd(false); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />
-      )}
+      {showAdd && <AddExpenseModal categories={categories ?? []} onClose={() => setShowAdd(false)} onDone={() => { setShowAdd(false); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />}
     </div>
   );
 };

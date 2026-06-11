@@ -3475,10 +3475,57 @@
       "card": "Card",
       "other": "Other"
     },
+    "booking": {
+      "label": "Book to",
+      "company": "Company",
+      "event": "Event",
+      "eventId": "Event ID"
+    },
+    "incoming": {
+      "triageTitle": "Categorize incoming invoice",
+      "payTitle": "Mark supplier paid",
+      "outstanding": "Outstanding",
+      "markPaid": "Mark paid",
+      "confirmPaid": "Mark paid",
+      "paid": "Paid",
+      "paidToast": "Marked as paid.",
+      "categorizedToast": "Categorized."
+    },
+    "expense": {
+      "kind": "Type",
+      "km": "Kilometres",
+      "days": "Days",
+      "rate": "Rate",
+      "rateDefault": "Default {{rate}} — leave blank to use it",
+      "computed": "Amount",
+      "who": "Paid by / vendor",
+      "whoHint": "e.g. coworker name or shop",
+      "proof": "Proof",
+      "proofRequired": "A proof file is required.",
+      "viewProof": "Proof"
+    },
+    "expenseKind": {
+      "amount": "Amount",
+      "mileage": "Mileage (km)",
+      "per_diem": "Per-diem"
+    },
+    "category": {
+      "infrastructure": "Infrastructure & rent",
+      "equipment": "Equipment & hardware",
+      "software": "Software & licenses",
+      "material": "Materials & supplies",
+      "travel": "Travel & expenses",
+      "marketing": "Advertising & marketing",
+      "services": "Services / subcontracting",
+      "insurance": "Insurance & fees",
+      "training": "Training",
+      "other": "Other"
+    },
     "ledger": {
       "allStatuses": "All statuses",
       "allDispositions": "All dispositions",
-      "empty": "No expenses yet — categorize documents in the inbox.",
+      "allKinds": "All types",
+      "empty": "No expenses yet — add one above.",
       "untitled": "Expense",
       "invoiceLink": "Invoice",
       "paid": "Paid",

@@ -3475,10 +3475,57 @@
       "card": "Karte",
       "other": "Sonstiges"
     },
+    "booking": {
+      "label": "Buchen auf",
+      "company": "Firma",
+      "event": "Event",
+      "eventId": "Event-ID"
+    },
+    "incoming": {
+      "triageTitle": "Eingangsrechnung kategorisieren",
+      "payTitle": "Lieferant als bezahlt markieren",
+      "outstanding": "Offen",
+      "markPaid": "Als bezahlt markieren",
+      "confirmPaid": "Als bezahlt markieren",
+      "paid": "Bezahlt",
+      "paidToast": "Als bezahlt markiert.",
+      "categorizedToast": "Kategorisiert."
+    },
+    "expense": {
+      "kind": "Art",
+      "km": "Kilometer",
+      "days": "Tage",
+      "rate": "Satz",
+      "rateDefault": "Standard {{rate}} — leer lassen, um ihn zu verwenden",
+      "computed": "Betrag",
+      "who": "Bezahlt von / Lieferant",
+      "whoHint": "z. B. Mitarbeitername oder Geschäft",
+      "proof": "Beleg",
+      "proofRequired": "Ein Beleg ist erforderlich.",
+      "viewProof": "Beleg"
+    },
+    "expenseKind": {
+      "amount": "Betrag",
+      "mileage": "Kilometer (km)",
+      "per_diem": "Spesenpauschale"
+    },
+    "category": {
+      "infrastructure": "Infrastruktur & Miete",
+      "equipment": "Equipment & Hardware",
+      "software": "Software & Lizenzen",
+      "material": "Material & Verbrauch",
+      "travel": "Reise & Spesen",
+      "marketing": "Werbung & Marketing",
+      "services": "Dienstleistungen/Fremdleistungen",
+      "insurance": "Versicherungen & Gebühren",
+      "training": "Weiterbildung",
+      "other": "Sonstiges"
+    },
     "ledger": {
       "allStatuses": "Alle Status",
       "allDispositions": "Alle Zuordnungen",
-      "empty": "Noch keine Aufwände — Dokumente im Eingang kategorisieren.",
+      "allKinds": "Alle Arten",
+      "empty": "Noch keine Aufwände — oben einen hinzufügen.",
       "untitled": "Aufwand",
       "invoiceLink": "Rechnung",
       "paid": "Bezahlt",
