@@ -13,6 +13,7 @@ import { Camera, Upload, Inbox, X, CheckCircle2, Circle } from 'lucide-react';
 import { Button, Card, CardContent, Input, LocalizedDateInput, Loading } from '../../../components/common';
 import { DecimalInput } from '../../../components/common/DecimalInput';
 import { CustomerAccountPicker, type SelectedCustomer } from '../../../components/admin/CustomerAccountPicker';
+import { EventBookingSelect } from '../../../components/admin/EventBookingSelect';
 import { formatMoneyMinor } from '../../../utils/money';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import {
@@ -33,27 +34,6 @@ const statusClasses: Record<string, string> = {
 
 const labelCls = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1';
 const selectCls = 'w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm';
-
-const BookingField: React.FC<{ eventId: number | null; onChange: (id: number | null) => void }> = ({ eventId, onChange }) => {
-  const { t } = useTranslation();
-  const isEvent = eventId != null;
-  return (
-    <div>
-      <label className={labelCls}>{t('accounting.booking.label', 'Book to')}</label>
-      <div className="flex gap-2">
-        <select className={selectCls} style={{ maxWidth: 160 }} value={isEvent ? 'event' : 'company'}
-          onChange={(e) => onChange(e.target.value === 'event' ? (eventId ?? 0) : null)}>
-          <option value="company">{t('accounting.booking.company', 'Company')}</option>
-          <option value="event">{t('accounting.booking.event', 'Event')}</option>
-        </select>
-        {isEvent && (
-          <Input placeholder={t('accounting.booking.eventId', 'Event ID')} inputMode="numeric"
-            value={eventId ? String(eventId) : ''} onChange={(e) => onChange(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)} />
-        )}
-      </div>
-    </div>
-  );
-};
 
 const PayModal: React.FC<{ doc: InboundDocument; onClose: () => void; onDone: () => void }> = ({ doc, onClose, onDone }) => {
   const { t } = useTranslation();
@@ -184,7 +164,12 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
               </select>
             </div>
 
-            {BOOKING_DISPOSITIONS.includes(disposition) && <BookingField eventId={eventId} onChange={setEventId} />}
+            {BOOKING_DISPOSITIONS.includes(disposition) && (
+              <div>
+                <label className={labelCls}>{t('accounting.booking.label', 'Book to')}</label>
+                <EventBookingSelect value={eventId} onChange={setEventId} className={selectCls} />
+              </div>
+            )}
 
             {disposition === 'eigener_aufwand' && (
               <div><label className={labelCls}>{t('accounting.inbox.field.category', 'Category')}</label>

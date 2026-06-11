@@ -13,6 +13,7 @@ import { toast } from 'react-toastify';
 import { X, Plus, Paperclip, Car, CalendarDays, Coins } from 'lucide-react';
 import { Button, Card, CardContent, Input, Loading } from '../../../components/common';
 import { DecimalInput } from '../../../components/common/DecimalInput';
+import { EventBookingSelect } from '../../../components/admin/EventBookingSelect';
 import { formatMoneyMinor } from '../../../utils/money';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import {
@@ -106,13 +107,7 @@ const AddExpenseModal: React.FC<{ categories: ExpenseCategory[]; onClose: () => 
           </div>
 
           <div><label className={labelCls}>{t('accounting.booking.label', 'Book to')}</label>
-            <div className="flex gap-2">
-              <select className={selectCls} style={{ maxWidth: 160 }} value={eventId != null ? 'event' : 'company'} onChange={(e) => setEventId(e.target.value === 'event' ? (eventId ?? 0) : null)}>
-                <option value="company">{t('accounting.booking.company', 'Company')}</option>
-                <option value="event">{t('accounting.booking.event', 'Event')}</option>
-              </select>
-              {eventId != null && <Input placeholder={t('accounting.booking.eventId', 'Event ID')} inputMode="numeric" value={eventId ? String(eventId) : ''} onChange={(e) => setEventId(Number(e.target.value.replace(/[^0-9]/g, '')) || 0)} />}
-            </div>
+            <EventBookingSelect value={eventId} onChange={setEventId} className={selectCls} />
           </div>
 
           <div>
