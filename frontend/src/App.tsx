@@ -67,6 +67,8 @@ import { ClientsLayout } from './components/admin/ClientsLayout';
 import { AccountingLayout, AccountingIndex } from './components/admin/AccountingLayout';
 import { AccountingInboxPage } from './pages/admin/accounting/AccountingInboxPage';
 import { ExpensesLedgerPage } from './pages/admin/accounting/ExpensesLedgerPage';
+import { ChartOfAccountsPage } from './pages/admin/accounting/ChartOfAccountsPage';
+import { LedgerExportPage } from './pages/admin/accounting/LedgerExportPage';
 import { RequireFeature } from './components/admin/RequireFeature';
 import { PageErrorBoundary, OfflineIndicator, SkipLink, DynamicFavicon, RobotsMetaTags, CMSContentBlock, Loading } from './components/common';
 import { MaintenanceWrapper } from './components/MaintenanceWrapper';
@@ -278,7 +280,11 @@ function App() {
                           </Route>
                           <Route element={<RequireFeature flag="taxReport" />}>
                             <Route path="tax-report" element={<TaxReportPage />} />
+                            <Route path="export" element={<LedgerExportPage />} />
                           </Route>
+                          {/* Chart of accounts + VAT codes (Layer A) — gated by
+                              the accounting master flag alongside the section. */}
+                          <Route path="ledger" element={<ChartOfAccountsPage />} />
                           <Route index element={<AccountingIndex />} />
                         </Route>
                       </Route>

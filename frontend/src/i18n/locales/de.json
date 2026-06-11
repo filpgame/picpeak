@@ -3450,7 +3450,15 @@
     "subnav": {
       "incomingInvoices": "Eingangsrechnungen",
       "expenses": "Aufwände",
-      "taxReport": "Steuer"
+      "taxReport": "Steuer",
+      "export": "Treuhänder-Export",
+      "chartOfAccounts": "Kontenplan"
+    },
+    "taxTreatment": {
+      "domestic": "Inland (mit MWST)",
+      "reverse_charge_service": "Bezugsteuer (Dienstleistungen)",
+      "foreign_vat_non_reclaimable": "Ausländische MWST (nicht abziehbar)",
+      "import_goods": "Wareneinfuhr"
     },
     "disposition": {
       "rebill": "An Kunde weiterverrechnen",
@@ -3755,6 +3763,56 @@
           "description": "Vor-Event-Erinnerung für Events mit event_type=other."
         }
       }
+    }
+  },
+  "ledger": {
+    "intro": "Dient nur dem Treuhänder-Export — picpeak führt keine doppelte Buchhaltung. Der vorbelegte Kontenplan + die MWST-Codes folgen dem Schweizer/LI KMU-Kontenrahmen; passe sie an das Setup deines Treuhänders an.",
+    "settingsSaved": "Zuordnungen gespeichert.",
+    "saveDefaults": "Zuordnungen speichern",
+    "accountType": {
+      "asset": "Aktiven", "liability": "Passiven", "equity": "Eigenkapital", "revenue": "Ertrag", "expense": "Aufwand"
+    },
+    "vatDirection": {
+      "input": "Vorsteuer", "output": "Umsatzsteuer"
+    },
+    "defaults": {
+      "title": "Standard- & Systemkonten",
+      "none": "— keines —",
+      "ledger_account_debitoren": "Forderungen (Debitoren)",
+      "ledger_account_kreditoren": "Verbindlichkeiten (Kreditoren)",
+      "ledger_account_bank": "Bank",
+      "ledger_account_cash": "Kasse",
+      "ledger_account_default_revenue": "Standard-Ertragskonto",
+      "ledger_account_default_expense": "Standard-Aufwandkonto",
+      "ledger_account_mileage": "Kilometer-Konto",
+      "ledger_account_per_diem": "Spesenpauschalen-Konto",
+      "ledger_account_rebilled_revenue": "Weiterverrechnete Spesen (Ertrag)"
+    },
+    "vatMap": { "title": "MWST-Code nach steuerlicher Behandlung (Kosten)" },
+    "outputVatMap": { "title": "MWST-Code nach Umsatzsatz" },
+    "categoryMap": { "title": "Aufwandkategorie → Konto" },
+    "accounts": { "title": "Kontenplan" },
+    "vatCodes": { "title": "MWST-Codes" },
+    "account": {
+      "addTitle": "Konto hinzufügen", "editTitle": "Konto bearbeiten",
+      "number": "Kontonummer", "name": "Name", "type": "Art",
+      "confirmDelete": "Dieses Konto löschen?"
+    },
+    "vat": {
+      "addTitle": "MWST-Code hinzufügen", "editTitle": "MWST-Code bearbeiten",
+      "code": "Code", "name": "Name", "rate": "Satz %", "direction": "Richtung",
+      "account": "MWST-Konto", "noAccount": "— keines —", "confirmDelete": "Diesen MWST-Code löschen?"
+    },
+    "export": {
+      "title": "Treuhänder-Export",
+      "intro": "Lade das Sammeljournal (Erträge + Kosten als periodengerechte Buchungssätze mit Konto- und MWST-Codes) zum Import in die Buchhaltungssoftware deines Treuhänders herunter.",
+      "format": "Zielsoftware",
+      "format_generic": "Generisch (alle Spalten)",
+      "format_banana": "Banana Buchhaltung",
+      "format_bexio": "bexio",
+      "download": "CSV herunterladen",
+      "failed": "Export fehlgeschlagen.",
+      "disclaimer": "Nur periodengerecht (Belegdaten) — Zahlungen/Bankbewegungen sind nicht enthalten. Konto- + MWST-Codes folgen deiner Kontenplan-Zuordnung. Den Import vor der Einreichung immer mit dem Treuhänder prüfen."
     }
   },
   "taxReport": {

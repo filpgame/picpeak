@@ -3450,7 +3450,15 @@
     "subnav": {
       "incomingInvoices": "Incoming invoices",
       "expenses": "Expenses",
-      "taxReport": "Tax"
+      "taxReport": "Tax",
+      "export": "Treuhänder export",
+      "chartOfAccounts": "Chart of accounts"
+    },
+    "taxTreatment": {
+      "domestic": "Domestic (with VAT)",
+      "reverse_charge_service": "Reverse charge (services)",
+      "foreign_vat_non_reclaimable": "Foreign VAT (non-reclaimable)",
+      "import_goods": "Import of goods"
     },
     "disposition": {
       "rebill": "Re-bill to client",
@@ -3755,6 +3763,56 @@
           "description": "Pre-event nudge for events with event_type=other."
         }
       }
+    }
+  },
+  "ledger": {
+    "intro": "Used only to produce the Treuhänder export — picpeak does not keep double-entry books. The seeded chart + VAT codes follow the Swiss/LI KMU-Kontenrahmen; adjust them to match your Treuhänder’s setup.",
+    "settingsSaved": "Mappings saved.",
+    "saveDefaults": "Save mappings",
+    "accountType": {
+      "asset": "Asset", "liability": "Liability", "equity": "Equity", "revenue": "Revenue", "expense": "Expense"
+    },
+    "vatDirection": {
+      "input": "Input (Vorsteuer)", "output": "Output (Umsatzsteuer)"
+    },
+    "defaults": {
+      "title": "Default & system accounts",
+      "none": "— none —",
+      "ledger_account_debitoren": "Accounts receivable (Debitoren)",
+      "ledger_account_kreditoren": "Accounts payable (Kreditoren)",
+      "ledger_account_bank": "Bank",
+      "ledger_account_cash": "Cash",
+      "ledger_account_default_revenue": "Default revenue account",
+      "ledger_account_default_expense": "Default expense account",
+      "ledger_account_mileage": "Mileage account",
+      "ledger_account_per_diem": "Per-diem account",
+      "ledger_account_rebilled_revenue": "Re-billed expenses (revenue)"
+    },
+    "vatMap": { "title": "VAT code by tax treatment (costs)" },
+    "outputVatMap": { "title": "VAT code by revenue rate" },
+    "categoryMap": { "title": "Expense category → account" },
+    "accounts": { "title": "Chart of accounts" },
+    "vatCodes": { "title": "VAT codes" },
+    "account": {
+      "addTitle": "Add account", "editTitle": "Edit account",
+      "number": "Account number", "name": "Name", "type": "Type",
+      "confirmDelete": "Delete this account?"
+    },
+    "vat": {
+      "addTitle": "Add VAT code", "editTitle": "Edit VAT code",
+      "code": "Code", "name": "Name", "rate": "Rate %", "direction": "Direction",
+      "account": "VAT account", "noAccount": "— none —", "confirmDelete": "Delete this VAT code?"
+    },
+    "export": {
+      "title": "Treuhänder export",
+      "intro": "Download the collective journal (revenue + costs as accrual postings with account and VAT codes) for import into your Treuhänder’s accounting software.",
+      "format": "Target tool",
+      "format_generic": "Generic (all columns)",
+      "format_banana": "Banana Accounting",
+      "format_bexio": "bexio",
+      "download": "Download CSV",
+      "failed": "Export failed.",
+      "disclaimer": "Accrual basis only (document dates) — payments/bank movements are not included. Account + VAT codes follow your Chart-of-accounts mapping. Always review the import with your Treuhänder before filing."
     }
   },
   "taxReport": {

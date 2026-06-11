@@ -9,7 +9,7 @@
 import React from 'react';
 import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Landmark, Calculator, Inbox, Wallet } from 'lucide-react';
+import { Landmark, Calculator, Inbox, Wallet, BookOpen, FileSpreadsheet } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useFeatureFlags, type FeatureKey } from '../../contexts/FeatureFlagsContext';
 
@@ -50,7 +50,21 @@ export const AccountingLayout: React.FC = () => {
       icon: Calculator,
       featureFlag: 'taxReport',
     },
-    // Future: expenses ledger, Erfolgsrechnung.
+    {
+      key: 'export',
+      to: '/admin/accounting/export',
+      label: t('accounting.subnav.export', 'Treuhänder export'),
+      icon: FileSpreadsheet,
+      featureFlag: 'taxReport',
+    },
+    {
+      key: 'ledger',
+      to: '/admin/accounting/ledger',
+      label: t('accounting.subnav.chartOfAccounts', 'Chart of accounts'),
+      icon: BookOpen,
+      featureFlag: 'accounting',
+    },
+    // Future: Erfolgsrechnung (Layer B).
   ];
 
   const enabledItems = navItems.filter((item) => flags[item.featureFlag]);
