@@ -29,13 +29,14 @@ exports.up = async function (knex) {
       // eslint-disable-next-line no-await-in-loop
       const row = await knex('app_settings').where({ setting_key: s.key }).first();
       if (!row) {
+        // NB: match the canonical app_settings seed pattern (migration 103) —
+        // setting_key/value/type only, NO created_at/updated_at (the table's
+        // migration schema has no such columns; including them errors).
         // eslint-disable-next-line no-await-in-loop
         await knex('app_settings').insert({
           setting_key: s.key,
           setting_value: JSON.stringify(s.value),
           setting_type: 'accounting',
-          created_at: new Date(),
-          updated_at: new Date(),
         });
       }
     }
