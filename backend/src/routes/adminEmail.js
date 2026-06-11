@@ -118,6 +118,74 @@ router.post('/config', [
   }
 });
 
+// ── Incoming mail (IMAP) config — a second block alongside outgoing SMTP ──
+router.get('/incoming-config', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const c = await db('email_configs').first();
+    res.json({
+      imap_host: c?.imap_host || '',
+      imap_port: c?.imap_port || 993,
+      imap_secure: c?.imap_secure !== false,
+      imap_user: c?.imap_user || '',
+      imap_pass: c?.imap_pass ? '********' : '', // never send the real password
+      imap_folder: c?.imap_folder || 'INBOX',
+    });
+  } catch (error) {
+    console.error('Incoming mail config fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch incoming mail configuration' });
+  }
+});
+
+router.post('/incoming-config', [
+  adminAuth,
+  requirePermission('email.edit'),
+  body('imap_host').notEmpty().withMessage('IMAP host is required'),
+  body('imap_port').isInt({ min: 1, max: 65535 }).withMessage('Invalid port number'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const { imap_host, imap_port, imap_secure, imap_user, imap_pass, imap_folder } = req.body;
+    const { isPrivateIP } = require('../utils/networkValidation');
+    if (isPrivateIP(imap_host)) {
+      return res.status(400).json({ error: 'IMAP host cannot point to a private or internal network address' });
+    }
+    const existing = await db('email_configs').first();
+    const data = {
+      imap_host,
+      imap_port: parseInt(imap_port),
+      imap_secure: imap_secure || false,
+      imap_user: imap_user || '',
+      imap_folder: imap_folder || 'INBOX',
+      updated_at: new Date(),
+    };
+    if (imap_pass && imap_pass !== '********') data.imap_pass = imap_pass;
+    if (existing) await db('email_configs').where('id', existing.id).update(data);
+    else await db('email_configs').insert(data);
+    await logActivity('incoming_mail_config_updated', { imap_host }, null, { type: 'admin', id: req.admin.id, name: req.admin.username });
+    res.json({ message: 'Incoming mail configuration updated successfully' });
+  } catch (error) {
+    console.error('Incoming mail config update error:', error);
+    res.status(500).json({ error: 'Failed to update incoming mail configuration' });
+  }
+});
+
+// Received-emails log (the IMAP poller's audit trail) — "Received emails" tab.
+router.get('/received', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 25));
+    const base = db('received_emails');
+    const countRow = await base.clone().count({ c: '*' }).first();
+    const total = parseInt(countRow?.c || 0, 10);
+    const items = await base.clone().orderBy('received_at', 'desc').limit(pageSize).offset((page - 1) * pageSize);
+    res.json({ items, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
+  } catch (error) {
+    console.error('Received emails fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch received emails' });
+  }
+});
+
 // Test email configuration
 router.post('/test', adminAuth, requirePermission('email.send'), async (req, res) => {
   try {

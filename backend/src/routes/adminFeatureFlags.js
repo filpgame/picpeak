@@ -25,6 +25,9 @@ const logger = require('../utils/logger');
 const KNOWN_FLAGS = [
   'galleries',
   'reminderEmails',
+  // Incoming mail (migration 128) — IMAP polling of a dedicated mailbox into
+  // the incoming-invoices inbox. Standalone toggle.
+  'incomingMail',
   'calendar',
   'calendarBooking',
   'quotes',
@@ -79,6 +82,7 @@ const KNOWN_FLAGS = [
 // new release that hasn't run its migration yet on this instance).
 const DEFAULT_FLAGS = {
   galleries: true,
+  incomingMail: false,
   // F.3 — reminderEmails is a placeholder card in the Features tab
   // (lockedReason: NOT_YET_AVAILABLE). Default FALSE so it matches
   // the locked-but-off visual state of messaging / calendarBooking

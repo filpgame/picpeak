@@ -836,7 +836,16 @@ async function startServer() {
       logger.warn('Email template self-heal failed at boot:', err.message);
     }
     startEmailQueueProcessor();
-    
+
+    // Start incoming-mail (IMAP) poller — no-ops each minute unless the
+    // `incomingMail` flag is on and a mailbox is configured (migration 128).
+    try {
+      const { startIncomingMailPoller } = require('./src/services/emailIntakeService');
+      startIncomingMailPoller();
+    } catch (err) {
+      logger.warn('Incoming-mail poller failed to start:', err.message);
+    }
+
     // Start webhook delivery worker (#327)
     const { startWebhookDeliveryWorker } = require('./src/services/webhookDeliveryWorker');
     startWebhookDeliveryWorker();
