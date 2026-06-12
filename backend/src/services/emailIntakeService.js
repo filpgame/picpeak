@@ -138,8 +138,12 @@ async function roundTripTest({ timeoutMs = 30000, intervalMs = 3000 } = {}) {
   if (!c.imap_host || !c.imap_user) return { ok: false, sent: false, reason: 'imap_unconfigured' };
 
   // Recipient = the mailbox we poll. imap_user is the mailbox address in the
-  // typical setup (e.g. rechnungen@…).
+  // typical setup (e.g. rechnungen@…). NOT hardcoded — but some hosts use a
+  // non-email IMAP login, in which case we can't auto-address the test.
   const recipient = c.imap_user;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient || '')) {
+    return { ok: false, sent: false, reason: 'recipient_not_email', recipient };
+  }
   const token = `ppk-rt-${Date.now()}-${crypto.randomBytes(5).toString('hex')}`;
   const subject = `picpeak round-trip test ${token}`;
 

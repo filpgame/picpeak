@@ -232,6 +232,7 @@ router.post('/incoming-config/roundtrip', adminAuth, requirePermission('email.se
     const map = {
       smtp_unconfigured: 'Configure and save the outgoing SMTP settings first.',
       imap_unconfigured: 'Configure and save the incoming IMAP settings first.',
+      recipient_not_email: `The IMAP username (“${result.recipient || ''}”) isn’t an email address, so the round-trip test can’t auto-address itself. Use a mailbox whose username is its email, or send a test email there manually and use “Test connection”.`,
       send_failed: `Could not send the test email${result.error ? `: ${result.error}` : ''}.`,
       not_received: 'The email was sent but did not arrive within 30s — possible delivery delay/greylisting. Check the Received emails tab in a moment.',
     };
