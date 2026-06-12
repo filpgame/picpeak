@@ -162,12 +162,13 @@ const ViewModal: React.FC<{ doc: InboundDocument; onClose: () => void }> = ({ do
   );
 };
 
-const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[]; onClose: () => void; onDone: () => void }> = ({ doc, categories, onClose, onDone }) => {
+const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[]; onClose: () => void; onDone: (pay?: boolean) => void }> = ({ doc, categories, onClose, onDone }) => {
   const { t } = useTranslation();
   const [supplier, setSupplier] = useState(doc.supplierName || '');
   const [amountMajor, setAmountMajor] = useState<number>(doc.totalAmountMinor != null ? doc.totalAmountMinor / 100 : NaN);
   const [currency, setCurrency] = useState(doc.currency || 'CHF');
   const [invoiceDate, setInvoiceDate] = useState(doc.invoiceDate || '');
+  const [reference, setReference] = useState(doc.paymentReference || '');
   const [disposition, setDisposition] = useState<Disposition>('eigener_aufwand');
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [eventId, setEventId] = useState<number | null>(null);
@@ -183,9 +184,11 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
     markupFlatMinor: markupType === 'flat' && Number.isFinite(markupValue) ? Math.round(markupValue * 100) : null,
   });
 
+  // `pay` is threaded through as the mutation variable so onSuccess can decide
+  // whether to continue into the mark-paid step (#5).
   const save = useMutation({
-    mutationFn: async () => {
-      await accountingService.updateInbound(doc.id, { supplierName: supplier || null, totalAmountMinor: totalMinor, currency: currency || null, invoiceDate: invoiceDate || null });
+    mutationFn: async (_pay: boolean) => {
+      await accountingService.updateInbound(doc.id, { supplierName: supplier || null, totalAmountMinor: totalMinor, currency: currency || null, invoiceDate: invoiceDate || null, paymentReference: reference || null });
       await accountingService.categorizeInbound(doc.id, {
         disposition,
         eventId: BOOKING_DISPOSITIONS.includes(disposition) ? eventId : null,
@@ -194,7 +197,7 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
         ...markupPayload(),
       });
     },
-    onSuccess: () => { toast.success(t('accounting.incoming.categorizedToast', 'Categorized.')); onDone(); },
+    onSuccess: (_data, pay) => { toast.success(t('accounting.incoming.categorizedToast', 'Categorized.')); onDone(pay); },
     onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
   });
 
@@ -216,6 +219,7 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
               <div><label className={labelCls}>{t('accounting.inbox.field.total', 'Total')}</label><DecimalInput value={amountMajor} onChange={setAmountMajor} fractionDigits={2} className={selectCls} /></div>
               <div><label className={labelCls}>{t('accounting.inbox.field.currency', 'Currency')}</label><Input value={currency} maxLength={3} onChange={(e) => setCurrency(e.target.value.toUpperCase())} /></div>
               <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.invoiceDate', 'Invoice date')}</label><LocalizedDateInput value={invoiceDate} onChange={setInvoiceDate} /></div>
+              <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.reference', 'Payment reference')}</label><Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t('accounting.inbox.field.referenceHint', 'QR / ESR reference or message') as string} /></div>
             </div>
 
             <div><label className={labelCls}>{t('accounting.inbox.field.disposition', 'Disposition')}</label>
@@ -256,9 +260,11 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
             )}
           </div>
         </div>
-        <div className="flex justify-end gap-2 border-t border-neutral-200 dark:border-neutral-700 px-5 py-3">
+        <div className="flex flex-wrap justify-end gap-2 border-t border-neutral-200 dark:border-neutral-700 px-5 py-3">
           <Button variant="outline" onClick={onClose}>{t('common.cancel', 'Cancel')}</Button>
-          <Button onClick={() => save.mutate()} disabled={save.isPending || rebillNeedsCustomer}>{save.isPending ? t('common.saving', 'Saving…') : t('accounting.inbox.saveCategorize', 'Save')}</Button>
+          {/* #5: categorize-only OR categorize then continue to mark paid. */}
+          <Button variant="outline" onClick={() => save.mutate(true)} disabled={save.isPending || rebillNeedsCustomer}>{t('accounting.inbox.saveCategorizePay', 'Save & mark paid')}</Button>
+          <Button onClick={() => save.mutate(false)} disabled={save.isPending || rebillNeedsCustomer}>{save.isPending ? t('common.saving', 'Saving…') : t('accounting.inbox.saveCategorize', 'Save')}</Button>
         </div>
       </div>
     </div>
@@ -295,6 +301,18 @@ export const AccountingInboxPage: React.FC = () => {
     const file = e.target.files?.[0]; if (file) upload.mutate({ file, source }); e.target.value = '';
   };
   const refresh = () => qc.invalidateQueries({ queryKey: ['accounting-inbound'] });
+
+  // #5: after categorizing, optionally continue straight into the mark-paid
+  // dialog (re-fetch so the reference just entered prefills the pay form).
+  const handleTriageDone = async (pay?: boolean) => {
+    const id = triageDoc?.id;
+    setTriageDoc(null);
+    refresh();
+    if (pay && id != null) {
+      try { setPayDoc(await accountingService.getInbound(id)); } catch (_e) { /* leave it categorized */ }
+    }
+  };
+
   const items = data?.items ?? [];
 
   return (
@@ -320,10 +338,14 @@ export const AccountingInboxPage: React.FC = () => {
         <div className="space-y-2">
           {items.map((doc) => (
             <div key={doc.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-3">
-              {/* Click anywhere on the summary to re-view the document — #1. */}
-              <button type="button" onClick={() => setViewDoc(doc)} className="flex-1 min-w-[12rem] text-left">
+              {/* Click a new invoice → categorize; an already-sorted one → view. */}
+              <button type="button" onClick={() => (doc.status === 'unsorted' ? setTriageDoc(doc) : setViewDoc(doc))} className="flex-1 min-w-[12rem] text-left">
                 <div className="flex items-center gap-2">
-                  <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${statusClasses[doc.status] || ''}`}>{t(`accounting.inbox.status.${doc.status}`, doc.status)}</span>
+                  {/* #1: once paid, the front status reads "Paid" — not the
+                      stale "categorized". */}
+                  {doc.supplierPaid
+                    ? <span className="inline-block rounded px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">{t('accounting.incoming.paid', 'Paid')}</span>
+                    : <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${statusClasses[doc.status] || ''}`}>{t(`accounting.inbox.status.${doc.status}`, doc.status)}</span>}
                   <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate hover:underline">{doc.supplierName || doc.originalFilename || t('accounting.inbox.untitled', 'Untitled document')}</span>
                   {doc.source === 'camera' && <Camera className="w-3.5 h-3.5 text-neutral-400" />}
                 </div>
@@ -345,7 +367,7 @@ export const AccountingInboxPage: React.FC = () => {
         </div>
       )}
 
-      {triageDoc && <TriageModal doc={triageDoc} categories={categories ?? []} onClose={() => setTriageDoc(null)} onDone={() => { setTriageDoc(null); refresh(); }} />}
+      {triageDoc && <TriageModal doc={triageDoc} categories={categories ?? []} onClose={() => setTriageDoc(null)} onDone={handleTriageDone} />}
       {payDoc && <PayModal doc={payDoc} onClose={() => setPayDoc(null)} onDone={() => { setPayDoc(null); refresh(); }} />}
       {viewDoc && <ViewModal doc={viewDoc} onClose={() => setViewDoc(null)} />}
     </div>

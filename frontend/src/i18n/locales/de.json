@@ -3502,6 +3502,7 @@
       "categorizedToast": "Dokument kategorisiert.",
       "triageTitle": "Dokument kategorisieren",
       "saveCategorize": "Speichern",
+      "saveCategorizePay": "Speichern & als bezahlt markieren",
       "categorize": "Kategorisieren",
       "view": "Ansehen",
       "empty": "Noch keine Dokumente — oben eines erfassen.",
@@ -3532,7 +3533,9 @@
         "declineReason": "Grund",
         "customer": "Kunde",
         "eventId": "Event-ID (optional)",
-        "markup": "Zuschlag"
+        "markup": "Zuschlag",
+        "reference": "Zahlungsreferenz",
+        "referenceHint": "QR-/ESR-Referenz oder Mitteilung"
       }
     },
     "expenseStatus": {

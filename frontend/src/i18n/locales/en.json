@@ -3502,6 +3502,7 @@
       "categorizedToast": "Document categorized.",
       "triageTitle": "Categorize document",
       "saveCategorize": "Save",
+      "saveCategorizePay": "Save & mark paid",
       "categorize": "Categorize",
       "view": "View",
       "empty": "No documents yet — capture one above.",
@@ -3532,7 +3533,9 @@
         "declineReason": "Reason",
         "customer": "Client",
         "eventId": "Event ID (optional)",
-        "markup": "Markup"
+        "markup": "Markup",
+        "reference": "Payment reference",
+        "referenceHint": "QR / ESR reference or message"
       }
     },
     "expenseStatus": {
