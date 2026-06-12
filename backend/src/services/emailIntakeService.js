@@ -237,39 +237,61 @@ async function pollOnce() {
     try {
       // eslint-disable-next-line no-restricted-syntax
       for await (const msg of client.fetch({ seen: false }, { source: true, uid: true })) {
+        let messageId = `uid-${cfg.folder}-${msg.uid}`;
         try {
           const parsed = await simpleParser(msg.source);
-          const messageId = parsed.messageId || `uid-${cfg.folder}-${msg.uid}`;
+          messageId = parsed.messageId || messageId;
           const seen = await db('received_emails').where({ message_id: messageId }).first();
           if (seen) { await client.messageFlagsAdd(msg.uid, ['\\Seen'], { uid: true }); continue; }
 
+          // Ingest attachments. Isolate each so one bad file can't prevent the
+          // audit row (the symptom: doc lands in Incoming invoices but the
+          // email never shows under Received).
           const atts = (parsed.attachments || []).filter((a) => ALLOWED_MIME.includes(a.contentType));
           let inboundId = null;
           let count = 0;
+          const attErrors = [];
           for (const att of atts) {
-            // eslint-disable-next-line no-await-in-loop
-            const filePath = await saveAttachment(att);
-            // eslint-disable-next-line no-await-in-loop
-            const doc = await expenseService.recordInboundDocument({ source: 'email', filePath, originalFilename: att.filename || 'attachment', mimeType: att.contentType }, null);
-            inboundId = doc.id; count += 1;
+            try {
+              // eslint-disable-next-line no-await-in-loop
+              const filePath = await saveAttachment(att);
+              // eslint-disable-next-line no-await-in-loop
+              const doc = await expenseService.recordInboundDocument({ source: 'email', filePath, originalFilename: att.filename || 'attachment', mimeType: att.contentType }, null);
+              inboundId = doc.id; count += 1;
+            } catch (ae) {
+              attErrors.push(ae.message);
+              logger.error?.(`emailIntake: attachment "${att.filename}" failed: ${ae.message}`);
+            }
           }
+
+          // A malformed Date: header yields an Invalid Date, which throws on a
+          // Postgres timestamp insert — coerce to now.
+          const receivedAt = (parsed.date instanceof Date && !Number.isNaN(parsed.date.getTime())) ? parsed.date : new Date();
+          const status = count > 0 ? 'ingested' : (attErrors.length ? 'error' : 'no_attachment');
+          // Audit EVERY processed message, even attachment-less ones, so the
+          // Received tab is a complete log.
           await db('received_emails').insert({
             message_id: messageId,
-            from_address: (parsed.from && parsed.from.text) || null,
+            from_address: ((parsed.from && parsed.from.text) || '').slice(0, 512) || null,
             subject: parsed.subject || null,
-            received_at: parsed.date || new Date(),
+            received_at: receivedAt,
             attachment_count: count,
-            status: count > 0 ? 'ingested' : 'no_attachment',
+            status,
             inbound_document_id: inboundId,
+            error: attErrors.length ? attErrors.join('; ').slice(0, 2000) : null,
             created_at: new Date(),
           });
           await client.messageFlagsAdd(msg.uid, ['\\Seen'], { uid: true });
           processed += 1;
         } catch (e) {
-          logger.error?.(`emailIntake: message uid ${msg.uid} failed: ${e.message}`);
+          // Loud: this is exactly where a silent failure would hide a missing
+          // Received row.
+          logger.error?.(`emailIntake: message uid ${msg.uid} (${messageId}) failed: ${e.message}`);
           try {
             await db('received_emails').insert({ message_id: `err-${msg.uid}-${Date.now()}`, status: 'error', error: e.message, attachment_count: 0, received_at: new Date(), created_at: new Date() });
-          } catch (_e) { /* ignore */ }
+          } catch (ie) {
+            logger.error?.(`emailIntake: could not even write the error row (received_emails insert failing): ${ie.message}`);
+          }
         }
       }
     } finally {
