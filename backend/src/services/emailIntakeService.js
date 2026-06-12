@@ -24,6 +24,10 @@ let polling = false;
 // SMTP port). Without these, ImapFlow waits indefinitely and the HTTP request
 // dies at the proxy as a 502 with no useful message.
 const IMAP_TIMEOUTS = { connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 30000 };
+// Look back this far so the Received log captures mail already read in another
+// client (the unseen-only fetch missed those). Dedup by message-id keeps each
+// poll cheap — only un-logged messages are downloaded + processed.
+const LOOKBACK_DAYS = 90;
 
 function makeImapClient(cfg) {
   return new ImapFlow({ host: cfg.host, port: cfg.port, secure: cfg.secure, auth: cfg.auth, logger: false, ...IMAP_TIMEOUTS });
@@ -234,15 +238,45 @@ async function pollOnce() {
   try {
     await connectWithTimeout(client);
     const lock = await client.getMailboxLock(cfg.folder);
+    /* eslint-disable no-await-in-loop */
     try {
-      // eslint-disable-next-line no-restricted-syntax
-      for await (const msg of client.fetch({ seen: false }, { source: true, uid: true })) {
-        let messageId = `uid-${cfg.folder}-${msg.uid}`;
+      // 1) Candidate UIDs within the lookback window — regardless of \Seen, so
+      //    mail already read elsewhere is still logged. Fall back to unseen-only
+      //    if the server rejects a SINCE search.
+      const since = new Date(Date.now() - LOOKBACK_DAYS * 86400000);
+      let uids = [];
+      try { uids = (await client.search({ since }, { uid: true })) || []; } catch (_) { uids = []; }
+      if (!uids.length) { try { uids = (await client.search({ seen: false }, { uid: true })) || []; } catch (_) { uids = []; } }
+
+      // 2) Cheap envelope-only pass → uid + message-id (no source download).
+      const candidates = [];
+      if (uids.length) {
+        // eslint-disable-next-line no-restricted-syntax
+        for await (const m of client.fetch(uids, { uid: true, envelope: true }, { uid: true })) {
+          candidates.push({ uid: m.uid, messageId: (m.envelope && m.envelope.messageId) || `uid-${cfg.folder}-${m.uid}` });
+        }
+      }
+
+      // 3) Drop ones we've already logged (so each poll only does new work).
+      const logged = new Set();
+      for (let i = 0; i < candidates.length; i += 500) {
+        const chunk = candidates.slice(i, i + 500).map((c) => c.messageId);
+        const rows = await db('received_emails').whereIn('message_id', chunk).select('message_id');
+        rows.forEach((r) => logged.add(r.message_id));
+      }
+      const fresh = candidates.filter((c) => !logged.has(c.messageId));
+
+      // 4) Download + process each fresh message.
+      for (const cand of fresh) {
+        let messageId = cand.messageId;
         try {
-          const parsed = await simpleParser(msg.source);
-          messageId = parsed.messageId || messageId;
-          const seen = await db('received_emails').where({ message_id: messageId }).first();
-          if (seen) { await client.messageFlagsAdd(msg.uid, ['\\Seen'], { uid: true }); continue; }
+          const one = await client.fetchOne(String(cand.uid), { source: true }, { uid: true });
+          if (!one || !one.source) continue;
+          const parsed = await simpleParser(one.source);
+          messageId = parsed.messageId || cand.messageId;
+          // Re-check with the parsed id (can differ from the envelope's).
+          const dup = await db('received_emails').where({ message_id: messageId }).first();
+          if (dup) { await client.messageFlagsAdd(cand.uid, ['\\Seen'], { uid: true }); continue; }
 
           // Ingest attachments. Isolate each so one bad file can't prevent the
           // audit row (the symptom: doc lands in Incoming invoices but the
@@ -253,9 +287,7 @@ async function pollOnce() {
           const attErrors = [];
           for (const att of atts) {
             try {
-              // eslint-disable-next-line no-await-in-loop
               const filePath = await saveAttachment(att);
-              // eslint-disable-next-line no-await-in-loop
               const doc = await expenseService.recordInboundDocument({ source: 'email', filePath, originalFilename: att.filename || 'attachment', mimeType: att.contentType }, null);
               inboundId = doc.id; count += 1;
             } catch (ae) {
@@ -281,14 +313,14 @@ async function pollOnce() {
             error: attErrors.length ? attErrors.join('; ').slice(0, 2000) : null,
             created_at: new Date(),
           });
-          await client.messageFlagsAdd(msg.uid, ['\\Seen'], { uid: true });
+          await client.messageFlagsAdd(cand.uid, ['\\Seen'], { uid: true });
           processed += 1;
         } catch (e) {
           // Loud: this is exactly where a silent failure would hide a missing
           // Received row.
-          logger.error?.(`emailIntake: message uid ${msg.uid} (${messageId}) failed: ${e.message}`);
+          logger.error?.(`emailIntake: message uid ${cand.uid} (${messageId}) failed: ${e.message}`);
           try {
-            await db('received_emails').insert({ message_id: `err-${msg.uid}-${Date.now()}`, status: 'error', error: e.message, attachment_count: 0, received_at: new Date(), created_at: new Date() });
+            await db('received_emails').insert({ message_id: `err-${cand.uid}-${Date.now()}`, status: 'error', error: e.message, attachment_count: 0, received_at: new Date(), created_at: new Date() });
           } catch (ie) {
             logger.error?.(`emailIntake: could not even write the error row (received_emails insert failing): ${ie.message}`);
           }
@@ -297,6 +329,7 @@ async function pollOnce() {
     } finally {
       lock.release();
     }
+    /* eslint-enable no-await-in-loop */
     await client.logout();
   } catch (e) {
     logger.error?.(`emailIntake: poll failed: ${e.message}`);
