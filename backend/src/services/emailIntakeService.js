@@ -120,6 +120,78 @@ async function testConnection(override) {
   }
 }
 
+/**
+ * End-to-end round-trip test: send a uniquely-tagged email through the saved
+ * SMTP (outgoing) config TO the IMAP mailbox, then poll IMAP until it arrives.
+ * Proves the whole pipeline (outgoing delivery → incoming reception) in one
+ * click. Uses SAVED config for both sides (real passwords needed to send +
+ * read). Cleans up: the test message is deleted once found, so it never
+ * reaches the accounting inbox.
+ *
+ * Returns { ok, seconds, recipient } on success, or { ok:false, sent, reason }.
+ */
+async function roundTripTest({ timeoutMs = 30000, intervalMs = 3000 } = {}) {
+  const nodemailer = require('nodemailer');
+  const crypto = require('crypto');
+  const c = await db('email_configs').first();
+  if (!c || !c.smtp_host || !c.smtp_port) return { ok: false, sent: false, reason: 'smtp_unconfigured' };
+  if (!c.imap_host || !c.imap_user) return { ok: false, sent: false, reason: 'imap_unconfigured' };
+
+  // Recipient = the mailbox we poll. imap_user is the mailbox address in the
+  // typical setup (e.g. rechnungen@…).
+  const recipient = c.imap_user;
+  const token = `ppk-rt-${Date.now()}-${crypto.randomBytes(5).toString('hex')}`;
+  const subject = `picpeak round-trip test ${token}`;
+
+  // 1) Send via the saved SMTP config (mirror the /test route's transport).
+  const transporter = nodemailer.createTransport({
+    host: c.smtp_host,
+    port: parseInt(c.smtp_port, 10),
+    secure: c.smtp_secure === true || c.smtp_secure === 1,
+    auth: c.smtp_user && c.smtp_pass ? { user: c.smtp_user, pass: c.smtp_pass } : undefined,
+    tls: { rejectUnauthorized: c.tls_reject_unauthorized !== false },
+  });
+  try {
+    await transporter.sendMail({
+      from: `${c.from_name || 'picpeak'} <${c.from_email || c.smtp_user}>`,
+      to: recipient,
+      subject,
+      text: `This is an automated picpeak round-trip test. Token: ${token}. Safe to ignore — it is deleted automatically.`,
+    });
+  } catch (err) {
+    return { ok: false, sent: false, reason: 'send_failed', error: err.message };
+  }
+
+  // 2) Poll IMAP for the tagged message until timeout.
+  const cfg = await getImapConfig();
+  const folder = cfg?.folder || 'INBOX';
+  const client = new ImapFlow({ host: cfg.host, port: cfg.port, secure: cfg.secure, auth: cfg.auth, logger: false });
+  await client.connect();
+  const started = Date.now();
+  try {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const lock = await client.getMailboxLock(folder);
+      try {
+        const uids = await client.search({ subject: token }, { uid: true });
+        if (uids && uids.length) {
+          await client.messageDelete(uids, { uid: true }).catch(() => {});
+          return { ok: true, seconds: Math.round((Date.now() - started) / 1000), recipient };
+        }
+      } finally {
+        lock.release();
+      }
+      if (Date.now() - started > timeoutMs) {
+        return { ok: false, sent: true, reason: 'not_received', recipient };
+      }
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((r) => setTimeout(r, intervalMs));
+    }
+  } finally {
+    await client.logout().catch(() => {});
+  }
+}
+
 /** Poll the mailbox once. Safe to call repeatedly; self-skips when busy/off. */
 async function pollOnce() {
   if (polling) return { skipped: 'busy' };
@@ -192,4 +264,4 @@ function startIncomingMailPoller() {
   logger.info?.('Incoming-mail poller started (every 60s when enabled)');
 }
 
-module.exports = { pollOnce, startIncomingMailPoller, listFolders, testConnection, _internal: { getImapConfig, isEnabled, saveAttachment } };
+module.exports = { pollOnce, startIncomingMailPoller, listFolders, testConnection, roundTripTest, _internal: { getImapConfig, isEnabled, saveAttachment } };

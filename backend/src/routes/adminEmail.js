@@ -222,6 +222,27 @@ router.post('/incoming-config/test', adminAuth, requirePermission('email.view'),
   }
 });
 
+// End-to-end round-trip: send via SMTP to the IMAP mailbox, then confirm it
+// arrives. Uses saved config for both sides (real passwords needed).
+router.post('/incoming-config/roundtrip', adminAuth, requirePermission('email.send'), async (req, res) => {
+  try {
+    const emailIntakeService = require('../services/emailIntakeService');
+    const result = await emailIntakeService.roundTripTest();
+    if (result.ok) return res.json(result);
+    const map = {
+      smtp_unconfigured: 'Configure and save the outgoing SMTP settings first.',
+      imap_unconfigured: 'Configure and save the incoming IMAP settings first.',
+      send_failed: `Could not send the test email${result.error ? `: ${result.error}` : ''}.`,
+      not_received: 'The email was sent but did not arrive within 30s — possible delivery delay/greylisting. Check the Received emails tab in a moment.',
+    };
+    return res.status(result.reason === 'not_received' ? 504 : 400)
+      .json({ error: map[result.reason] || 'Round-trip test failed.', sent: !!result.sent, recipient: result.recipient });
+  } catch (error) {
+    console.error('Round-trip test error:', error);
+    res.status(502).json({ error: 'Round-trip test failed — check both SMTP and IMAP settings.' });
+  }
+});
+
 router.get('/received', adminAuth, requirePermission('email.view'), async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);

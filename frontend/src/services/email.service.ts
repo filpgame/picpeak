@@ -102,6 +102,12 @@ export interface ImapTestResult {
   unseen: number;
 }
 
+export interface ImapRoundTripResult {
+  ok: boolean;
+  seconds?: number;
+  recipient?: string;
+}
+
 export interface ReceivedEmail {
   id: number;
   message_id: string | null;
@@ -148,6 +154,12 @@ export const emailService = {
   // Test the IMAP connection: opens the configured folder, reports counts.
   async testIncoming(config?: Partial<IncomingMailConfig>): Promise<ImapTestResult> {
     const response = await api.post<ImapTestResult>('/admin/email/incoming-config/test', config || {});
+    return response.data;
+  },
+  // End-to-end: send via SMTP to the IMAP mailbox and confirm it arrives.
+  // Uses saved config for both sides — no body. May take up to ~30s.
+  async roundTripIncoming(): Promise<ImapRoundTripResult> {
+    const response = await api.post<ImapRoundTripResult>('/admin/email/incoming-config/roundtrip', {});
     return response.data;
   },
   async listReceived(params: { page?: number; pageSize?: number } = {}): Promise<ReceivedEmailsResponse> {

@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { Save, Server, User, Lock, Eye, EyeOff, FolderSearch, PlugZap } from 'lucide-react';
+import { Save, Server, User, Lock, Eye, EyeOff, FolderSearch, PlugZap, Mailbox } from 'lucide-react';
 import { Button, Card, Input, Loading } from '../common';
 import { emailService, type IncomingMailConfig, type ImapFolder } from '../../services/email.service';
 
@@ -48,6 +48,12 @@ export const IncomingMailConfigCard: React.FC = () => {
     mutationFn: () => emailService.testIncoming(cfg),
     onSuccess: (r) => toast.success(t('email.incoming.testOk', 'Connected to {{folder}} — {{messages}} messages, {{unseen}} unread.', { folder: r.folder, messages: r.messages, unseen: r.unseen })),
     onError: (e: any) => toast.error(e?.response?.data?.error || e.message || t('email.incoming.testFailed', 'Connection failed.')),
+  });
+
+  const roundTrip = useMutation({
+    mutationFn: () => emailService.roundTripIncoming(),
+    onSuccess: (r) => toast.success(t('email.incoming.roundTripOk', 'Round-trip OK — delivered to {{recipient}} in {{seconds}}s.', { recipient: r.recipient, seconds: r.seconds })),
+    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || t('email.incoming.roundTripFailed', 'Round-trip test failed.')),
   });
 
   const detect = useMutation({
@@ -158,7 +164,7 @@ export const IncomingMailConfigCard: React.FC = () => {
           <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{t('email.incoming.folderHint', 'Enter host, username and password, then Detect to list the mailbox folders.')}</p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             onClick={() => test.mutate()}
@@ -169,7 +175,18 @@ export const IncomingMailConfigCard: React.FC = () => {
           >
             {t('email.incoming.test', 'Test connection')}
           </Button>
-          <Button variant="primary" onClick={() => save.mutate()} isLoading={save.isPending} leftIcon={<Save className="w-5 h-5" />} className="flex-1">
+          <Button
+            variant="outline"
+            onClick={() => roundTrip.mutate()}
+            isLoading={roundTrip.isPending}
+            disabled={!cfg.imap_host || !cfg.imap_user}
+            leftIcon={<Mailbox className="w-5 h-5" />}
+            className="whitespace-nowrap"
+            title={t('email.incoming.roundTripHint', 'Sends a test email via your SMTP settings to this mailbox and confirms it arrives. Save both first.') as string}
+          >
+            {t('email.incoming.roundTrip', 'Round-trip test')}
+          </Button>
+          <Button variant="primary" onClick={() => save.mutate()} isLoading={save.isPending} leftIcon={<Save className="w-5 h-5" />} className="flex-1 min-w-[12rem]">
             {t('email.incoming.save', 'Save Incoming Mail Settings')}
           </Button>
         </div>
