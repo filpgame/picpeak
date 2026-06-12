@@ -23,7 +23,9 @@ import {
 
 const DISPOSITIONS: Disposition[] = ['rebill', 'durchlaufend', 'eigener_aufwand', 'duplikat', 'abgelehnt'];
 const PAYMENT_METHODS: PaymentMethod[] = ['bank_transfer', 'cash', 'twint', 'paypal', 'card', 'other'];
-const BOOKING_DISPOSITIONS: Disposition[] = ['rebill', 'durchlaufend', 'eigener_aufwand'];
+// Only client-facing dispositions book to an event. A "Company expense"
+// (eigener_aufwand) always books to the company — no event picker.
+const BOOKING_DISPOSITIONS: Disposition[] = ['rebill', 'durchlaufend'];
 
 const statusClasses: Record<string, string> = {
   unsorted: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
@@ -42,11 +44,13 @@ const selectCls = 'w-full rounded-md border border-neutral-300 dark:border-neutr
  * the triage, view, and mark-paid modals so the admin can always re-read
  * the slip — #1.
  */
-const DocumentPreview: React.FC<{ doc: InboundDocument; maxHeight?: string }> = ({ doc, maxHeight = '60vh' }) => {
+const DocumentPreview: React.FC<{ doc: InboundDocument; maxHeight?: string; initialPage?: 'first' | 'last' }> = ({ doc, maxHeight = '60vh', initialPage = 'first' }) => {
   const { t } = useTranslation();
   const isPdf = (doc.mimeType || '').includes('pdf');
   const pageCount = doc.pageCount || 1;
-  const [page, setPage] = useState(pageCount);
+  // Categorisation reads the invoice header (supplier/amount/date) → first page;
+  // payment needs the Swiss QR-bill → last page.
+  const [page, setPage] = useState(initialPage === 'last' ? pageCount : 1);
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState(false);
   useEffect(() => {
@@ -71,7 +75,7 @@ const DocumentPreview: React.FC<{ doc: InboundDocument; maxHeight?: string }> = 
           <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={page >= pageCount}>{t('accounting.inbox.nextPage', 'Next')}</Button>
         </div>
       )}
-      {isPdf && <p className="mt-1 text-center text-xs text-neutral-500 dark:text-neutral-400">{t('accounting.inbox.qrHint', 'Showing the last page — the Swiss QR-bill usually sits at the bottom.')}</p>}
+      {isPdf && initialPage === 'last' && <p className="mt-1 text-center text-xs text-neutral-500 dark:text-neutral-400">{t('accounting.inbox.qrHint', 'Showing the last page — the Swiss QR-bill usually sits at the bottom.')}</p>}
     </div>
   );
 };
@@ -96,7 +100,7 @@ const PayModal: React.FC<{ doc: InboundDocument; onClose: () => void; onDone: ()
           <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X className="w-5 h-5" /></button>
         </div>
         <div className="px-5 py-4 grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="order-2 lg:order-1"><DocumentPreview doc={doc} maxHeight="50vh" /></div>
+          <div className="order-2 lg:order-1"><DocumentPreview doc={doc} maxHeight="50vh" initialPage="last" /></div>
           <div className="order-1 lg:order-2 space-y-3">
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
               {t('accounting.incoming.outstanding', 'Outstanding')}: <span className="font-semibold text-neutral-900 dark:text-neutral-100">{doc.totalAmountMinor != null ? formatMoneyMinor(doc.totalAmountMinor, doc.currency || 'CHF') : '—'}</span>
@@ -271,7 +275,9 @@ export const AccountingInboxPage: React.FC = () => {
   const [payDoc, setPayDoc] = useState<InboundDocument | null>(null);
   const [viewDoc, setViewDoc] = useState<InboundDocument | null>(null);
 
-  const { data, isLoading } = useQuery({ queryKey: ['accounting-inbound'], queryFn: () => accountingService.listInbound({ pageSize: 100 }) });
+  // Auto-refresh so emails the IMAP poller ingests in the background appear
+  // without a manual reload (the poller runs server-side every 60s).
+  const { data, isLoading } = useQuery({ queryKey: ['accounting-inbound'], queryFn: () => accountingService.listInbound({ pageSize: 100 }), refetchInterval: 30000, refetchOnWindowFocus: true });
   const { data: categories } = useQuery({ queryKey: ['expense-categories'], queryFn: () => accountingService.listCategories() });
 
   const upload = useMutation({

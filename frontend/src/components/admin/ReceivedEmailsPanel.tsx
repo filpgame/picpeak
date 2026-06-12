@@ -21,7 +21,7 @@ export const ReceivedEmailsPanel: React.FC = () => {
   const { t } = useTranslation();
   const { formatDateTime: fmtDateTime } = useLocalizedDate();
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useQuery({ queryKey: ['received-emails', page], queryFn: () => emailService.listReceived({ page, pageSize: 25 }) });
+  const { data, isLoading } = useQuery({ queryKey: ['received-emails', page], queryFn: () => emailService.listReceived({ page, pageSize: 25 }), refetchInterval: 30000, refetchOnWindowFocus: true });
 
   if (isLoading) return <Loading />;
   const items = data?.items ?? [];
