@@ -213,10 +213,21 @@ async function loadCosts({ from, to, cur }) {
   if (await db.schema.hasTable('inbound_documents')) {
     const inbound = await db('inbound_documents')
       .leftJoin('events', 'inbound_documents.event_id', 'events.id')
-      .whereRaw('COALESCE(inbound_documents.invoice_date, inbound_documents.created_at) >= ? AND COALESCE(inbound_documents.invoice_date, inbound_documents.created_at) <= ?', [from, toEnd])
-      .where('inbound_documents.currency', cur)
+      // Date in range: invoice_date (a DATE) when set, else created_at (a
+      // TIMESTAMP). Split instead of COALESCE so we never compare mixed
+      // date/timestamp types (a Postgres error the mocked tests can't see).
+      .where((qb) => {
+        qb.whereBetween('inbound_documents.invoice_date', [from, to])
+          .orWhere((q2) => q2.whereNull('inbound_documents.invoice_date')
+            .andWhere('inbound_documents.created_at', '>=', from)
+            .andWhere('inbound_documents.created_at', '<=', toEnd));
+      })
+      // Currency match, but INCLUDE rows with no currency set — captured
+      // invoices (email/upload) often have a null currency; treat them as the
+      // report currency rather than silently dropping them from the cost side.
+      .where((qb) => { qb.where('inbound_documents.currency', cur).orWhereNull('inbound_documents.currency'); })
       .whereNotIn('inbound_documents.status', ['declined', 'duplicate'])
-      .orderByRaw('COALESCE(inbound_documents.invoice_date, inbound_documents.created_at) asc')
+      .orderBy('inbound_documents.created_at', 'asc')
       .select(
         'inbound_documents.id',
         'inbound_documents.invoice_date',

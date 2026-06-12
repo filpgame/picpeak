@@ -3567,7 +3567,8 @@
       "confirmPaid": "Mark paid",
       "paid": "Paid",
       "paidToast": "Marked as paid.",
-      "categorizedToast": "Categorized."
+      "categorizedToast": "Categorized.",
+      "categorizedPaidToast": "Categorized and marked paid."
     },
     "expense": {
       "kind": "Type",

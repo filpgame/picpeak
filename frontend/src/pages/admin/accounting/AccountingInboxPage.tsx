@@ -164,7 +164,7 @@ const ViewModal: React.FC<{ doc: InboundDocument; onClose: () => void }> = ({ do
   );
 };
 
-const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[]; onClose: () => void; onDone: (pay?: boolean) => void }> = ({ doc, categories, onClose, onDone }) => {
+const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[]; onClose: () => void; onDone: () => void }> = ({ doc, categories, onClose, onDone }) => {
   const { t } = useTranslation();
   const [supplier, setSupplier] = useState(doc.supplierName || '');
   const [amountMajor, setAmountMajor] = useState<number>(doc.totalAmountMinor != null ? doc.totalAmountMinor / 100 : NaN);
@@ -186,10 +186,11 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
     markupFlatMinor: markupType === 'flat' && Number.isFinite(markupValue) ? Math.round(markupValue * 100) : null,
   });
 
-  // `pay` is threaded through as the mutation variable so onSuccess can decide
-  // whether to continue into the mark-paid step (#5).
+  // `pay` decides whether to also mark the supplier invoice paid in the same
+  // step (#5/#1). When true we mark it paid directly (using the reference
+  // entered) — no second dialog — so "Save & mark paid" actually pays.
   const save = useMutation({
-    mutationFn: async (_pay: boolean) => {
+    mutationFn: async (pay: boolean) => {
       await accountingService.updateInbound(doc.id, { supplierName: supplier || null, totalAmountMinor: totalMinor, currency: currency || null, invoiceDate: invoiceDate || null, paymentReference: reference || null });
       await accountingService.categorizeInbound(doc.id, {
         disposition,
@@ -198,8 +199,14 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
         customerAccountId: disposition === 'rebill' && customer[0] ? customer[0].id : null,
         ...markupPayload(),
       });
+      if (pay) {
+        await accountingService.markInboundPaid(doc.id, { paid: true, paymentReference: reference || undefined });
+      }
     },
-    onSuccess: (_data, pay) => { toast.success(t('accounting.incoming.categorizedToast', 'Categorized.')); onDone(pay); },
+    onSuccess: (_data, pay) => {
+      toast.success(pay ? t('accounting.incoming.categorizedPaidToast', 'Categorized and marked paid.') : t('accounting.incoming.categorizedToast', 'Categorized.'));
+      onDone();
+    },
     onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
   });
 
@@ -304,16 +311,7 @@ export const AccountingInboxPage: React.FC = () => {
   };
   const refresh = () => qc.invalidateQueries({ queryKey: ['accounting-inbound'] });
 
-  // #5: after categorizing, optionally continue straight into the mark-paid
-  // dialog (re-fetch so the reference just entered prefills the pay form).
-  const handleTriageDone = async (pay?: boolean) => {
-    const id = triageDoc?.id;
-    setTriageDoc(null);
-    refresh();
-    if (pay && id != null) {
-      try { setPayDoc(await accountingService.getInbound(id)); } catch (_e) { /* leave it categorized */ }
-    }
-  };
+  const handleTriageDone = () => { setTriageDoc(null); refresh(); };
 
   const items = data?.items ?? [];
 

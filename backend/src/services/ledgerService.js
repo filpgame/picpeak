@@ -297,10 +297,15 @@ async function buildPostings({ from, to, currency } = {}) {
         .modify((q) => {
           if (hasCatCol) q.leftJoin('expense_categories', 'inbound_documents.category_id', 'expense_categories.id');
         })
-        .whereRaw('COALESCE(inbound_documents.invoice_date, inbound_documents.created_at) >= ? AND COALESCE(inbound_documents.invoice_date, inbound_documents.created_at) <= ?', [from, toEnd])
-        .where('inbound_documents.currency', cur)
+        .where((qb) => {
+          qb.whereBetween('inbound_documents.invoice_date', [from, to])
+            .orWhere((q2) => q2.whereNull('inbound_documents.invoice_date')
+              .andWhere('inbound_documents.created_at', '>=', from)
+              .andWhere('inbound_documents.created_at', '<=', toEnd));
+        })
+        .where((qb) => { qb.where('inbound_documents.currency', cur).orWhereNull('inbound_documents.currency'); })
         .whereNotIn('inbound_documents.status', ['declined', 'duplicate'])
-        .orderByRaw('COALESCE(inbound_documents.invoice_date, inbound_documents.created_at) asc')
+        .orderBy('inbound_documents.created_at', 'asc')
         .select(
           'inbound_documents.id', 'inbound_documents.invoice_number', 'inbound_documents.invoice_date',
           'inbound_documents.created_at', 'inbound_documents.supplier_name', 'inbound_documents.tax_treatment',

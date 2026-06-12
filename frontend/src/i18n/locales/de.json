@@ -3567,7 +3567,8 @@
       "confirmPaid": "Als bezahlt markieren",
       "paid": "Bezahlt",
       "paidToast": "Als bezahlt markiert.",
-      "categorizedToast": "Kategorisiert."
+      "categorizedToast": "Kategorisiert.",
+      "categorizedPaidToast": "Kategorisiert und als bezahlt markiert."
     },
     "expense": {
       "kind": "Art",
