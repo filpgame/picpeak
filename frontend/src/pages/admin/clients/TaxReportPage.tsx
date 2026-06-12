@@ -285,12 +285,11 @@ export const TaxReportPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Einnahmen-Ausgaben summary (#4): income vs costs vs
-                result. Only when there is a cost side. The result line
-                is the simplified surplus a Milchbüchlein needs; VAT
-                payable is a guideline (depends on each cost's tax
-                treatment — see disclaimer below the cost table). */}
-            {hasCosts && report.summary && (
+            {/* Einnahmen-Ausgaben summary (#4): income vs costs vs result.
+                Always shown when the cost side loaded (even with zero costs)
+                so the result/income is visible, not just revenue. Hidden only
+                if the cost side errored (a banner explains that separately). */}
+            {report.summary && !report.costsError && (
               <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-700">
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">
                   {t('taxReport.summary.title', 'Income / costs')}
