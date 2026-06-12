@@ -197,6 +197,31 @@ router.post('/incoming-config/folders', adminAuth, requirePermission('email.view
   }
 });
 
+// Test the incoming-mail connection: log in + open the configured folder and
+// report message/unread counts. Accepts current form creds (test before save).
+router.post('/incoming-config/test', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const { imap_host, imap_port, imap_secure, imap_user, imap_pass, imap_folder } = req.body || {};
+    if (imap_host) {
+      const { isPrivateIP } = require('../utils/networkValidation');
+      if (isPrivateIP(imap_host)) {
+        return res.status(400).json({ error: 'IMAP host cannot point to a private or internal network address' });
+      }
+    }
+    const emailIntakeService = require('../services/emailIntakeService');
+    const result = await emailIntakeService.testConnection(
+      imap_host ? { host: imap_host, port: imap_port, secure: imap_secure, user: imap_user, pass: imap_pass, folder: imap_folder } : undefined
+    );
+    if (result && result.ok === false) {
+      return res.status(400).json({ error: 'Incoming mail is not configured yet — enter host, username and password first.' });
+    }
+    res.json(result);
+  } catch (error) {
+    console.error('IMAP connection test error:', error);
+    res.status(502).json({ error: 'Could not connect to the mailbox. Check host, port, credentials and folder.' });
+  }
+});
+
 router.get('/received', adminAuth, requirePermission('email.view'), async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);

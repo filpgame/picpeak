@@ -95,6 +95,13 @@ export interface ImapFolder {
   specialUse: string | null;
 }
 
+export interface ImapTestResult {
+  ok: boolean;
+  folder: string;
+  messages: number;
+  unseen: number;
+}
+
 export interface ReceivedEmail {
   id: number;
   message_id: string | null;
@@ -137,6 +144,11 @@ export const emailService = {
   async listIncomingFolders(config?: Partial<IncomingMailConfig>): Promise<ImapFolder[]> {
     const response = await api.post<{ folders: ImapFolder[] }>('/admin/email/incoming-config/folders', config || {});
     return response.data.folders;
+  },
+  // Test the IMAP connection: opens the configured folder, reports counts.
+  async testIncoming(config?: Partial<IncomingMailConfig>): Promise<ImapTestResult> {
+    const response = await api.post<ImapTestResult>('/admin/email/incoming-config/test', config || {});
+    return response.data;
   },
   async listReceived(params: { page?: number; pageSize?: number } = {}): Promise<ReceivedEmailsResponse> {
     const response = await api.get<ReceivedEmailsResponse>('/admin/email/received', { params });

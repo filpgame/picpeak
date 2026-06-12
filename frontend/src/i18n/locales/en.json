@@ -2051,7 +2051,10 @@
     "incoming": {
       "title": "Incoming mail (IMAP)",
       "subtitle": "A dedicated mailbox polled every minute; attachments land in Accounting → Incoming invoices.",
-      "host": "IMAP host",
+      "host": "IMAP Host",
+      "test": "Test connection",
+      "testOk": "Connected to {{folder}} — {{messages}} messages, {{unseen}} unread.",
+      "testFailed": "Connection failed.",
       "port": "Port",
       "security": "Security",
       "ssl": "SSL/TLS",

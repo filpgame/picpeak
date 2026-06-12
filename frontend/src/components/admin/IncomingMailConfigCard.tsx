@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { Save, Server, User, Lock, Eye, EyeOff, FolderSearch } from 'lucide-react';
+import { Save, Server, User, Lock, Eye, EyeOff, FolderSearch, PlugZap } from 'lucide-react';
 import { Button, Card, Input, Loading } from '../common';
 import { emailService, type IncomingMailConfig, type ImapFolder } from '../../services/email.service';
 
@@ -42,6 +42,12 @@ export const IncomingMailConfigCard: React.FC = () => {
     },
     onSuccess: () => { toast.success(t('email.incoming.savedToast', 'Incoming mail settings saved.')); qc.invalidateQueries({ queryKey: ['incoming-mail-config'] }); },
     onError: (e: any) => toast.error(e?.response?.data?.error || e?.response?.data?.errors?.[0]?.msg || e.message || 'Failed'),
+  });
+
+  const test = useMutation({
+    mutationFn: () => emailService.testIncoming(cfg),
+    onSuccess: (r) => toast.success(t('email.incoming.testOk', 'Connected to {{folder}} — {{messages}} messages, {{unseen}} unread.', { folder: r.folder, messages: r.messages, unseen: r.unseen })),
+    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || t('email.incoming.testFailed', 'Connection failed.')),
   });
 
   const detect = useMutation({
@@ -152,9 +158,21 @@ export const IncomingMailConfigCard: React.FC = () => {
           <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{t('email.incoming.folderHint', 'Enter host, username and password, then Detect to list the mailbox folders.')}</p>
         </div>
 
-        <Button variant="primary" onClick={() => save.mutate()} isLoading={save.isPending} leftIcon={<Save className="w-5 h-5" />} className="w-full">
-          {t('email.incoming.save', 'Save Incoming Mail Settings')}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => test.mutate()}
+            isLoading={test.isPending}
+            disabled={!cfg.imap_host || !cfg.imap_user}
+            leftIcon={<PlugZap className="w-5 h-5" />}
+            className="whitespace-nowrap"
+          >
+            {t('email.incoming.test', 'Test connection')}
+          </Button>
+          <Button variant="primary" onClick={() => save.mutate()} isLoading={save.isPending} leftIcon={<Save className="w-5 h-5" />} className="flex-1">
+            {t('email.incoming.save', 'Save Incoming Mail Settings')}
+          </Button>
+        </div>
       </div>
     </Card>
   );

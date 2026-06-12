@@ -83,6 +83,43 @@ async function listFolders(override) {
   }
 }
 
+/**
+ * Test the IMAP connection: log in, open the configured folder, and report
+ * the message + unread counts. Non-destructive (marks nothing seen, ingests
+ * nothing) — proves host/port/user/pass AND that the chosen folder opens.
+ * Accepts an `override` ({ host, port, secure, user, pass, folder }) so the
+ * admin can test before saving; a masked/blank password falls back to stored.
+ */
+async function testConnection(override) {
+  let cfg; let folder;
+  if (override && override.host && override.user) {
+    cfg = {
+      host: override.host,
+      port: override.port || 993,
+      secure: override.secure !== false && override.secure !== 0,
+      auth: { user: override.user, pass: override.pass || '' },
+    };
+    folder = override.folder || 'INBOX';
+    if (!cfg.auth.pass || cfg.auth.pass === '********') {
+      const stored = await getImapConfig();
+      cfg.auth.pass = stored?.auth?.pass || '';
+    }
+  } else {
+    const c = await getImapConfig();
+    if (!c) return { ok: false, error: 'unconfigured' };
+    cfg = { host: c.host, port: c.port, secure: c.secure, auth: c.auth };
+    folder = c.folder;
+  }
+  const client = new ImapFlow({ host: cfg.host, port: cfg.port, secure: cfg.secure, auth: cfg.auth, logger: false });
+  await client.connect();
+  try {
+    const status = await client.status(folder, { messages: true, unseen: true });
+    return { ok: true, folder, messages: status.messages || 0, unseen: status.unseen || 0 };
+  } finally {
+    await client.logout().catch(() => {});
+  }
+}
+
 /** Poll the mailbox once. Safe to call repeatedly; self-skips when busy/off. */
 async function pollOnce() {
   if (polling) return { skipped: 'busy' };
@@ -155,4 +192,4 @@ function startIncomingMailPoller() {
   logger.info?.('Incoming-mail poller started (every 60s when enabled)');
 }
 
-module.exports = { pollOnce, startIncomingMailPoller, listFolders, _internal: { getImapConfig, isEnabled, saveAttachment } };
+module.exports = { pollOnce, startIncomingMailPoller, listFolders, testConnection, _internal: { getImapConfig, isEnabled, saveAttachment } };
