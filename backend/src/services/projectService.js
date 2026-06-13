@@ -233,46 +233,44 @@ async function assignEvent(projectId, eventId) {
 async function linkDealToProject(dealUuid, projectId, conn = db) {
   if (!dealUuid || !projectId) return;
 
-  // Collect the deal's customer (first non-null across quote/contract/invoice
-  // lineage) AND every event it converted into — BEFORE mutating anything, so
-  // a cross-customer link is rejected before we re-point data across tenants.
+  // Collect ALL the deal's customers across its quote/contract/invoice lineage
+  // AND every event it converted into — BEFORE mutating anything, so a link
+  // with no matching customer is rejected before we re-point data across tenants.
   const eventIds = new Set();
-  let dealCustomerId = null;
+  const dealCustomerIds = new Set();
   const quotesHaveDeal = await hasColumnCached('quotes', 'deal_uuid');
   if (quotesHaveDeal) {
     for (const q of await conn('quotes').where({ deal_uuid: dealUuid }).select('converted_event_id', 'customer_account_id')) {
       if (q.converted_event_id) eventIds.add(q.converted_event_id);
-      if (q.customer_account_id && !dealCustomerId) dealCustomerId = q.customer_account_id;
+      if (q.customer_account_id != null) dealCustomerIds.add(Number(q.customer_account_id));
     }
   }
   const contractsHaveDeal = await hasColumnCached('contracts', 'deal_uuid');
   if (contractsHaveDeal && await hasColumnCached('contracts', 'converted_event_id')) {
     for (const c of await conn('contracts').where({ deal_uuid: dealUuid }).select('converted_event_id', 'customer_account_id')) {
       if (c.converted_event_id) eventIds.add(c.converted_event_id);
-      if (c.customer_account_id && !dealCustomerId) dealCustomerId = c.customer_account_id;
+      if (c.customer_account_id != null) dealCustomerIds.add(Number(c.customer_account_id));
     }
   }
   if (await hasColumnCached('invoices', 'deal_uuid')) {
     for (const inv of await conn('invoices').where({ deal_uuid: dealUuid }).select('event_id', 'customer_account_id')) {
       if (inv.event_id) eventIds.add(inv.event_id);
-      if (inv.customer_account_id && !dealCustomerId) dealCustomerId = inv.customer_account_id;
+      if (inv.customer_account_id != null) dealCustomerIds.add(Number(inv.customer_account_id));
     }
   }
 
-  // Same-customer guard (mirror of customerHoursService PROJECT_CUSTOMER_MISMATCH).
-  // A project belongs to at most one customer; never re-point one customer's
-  // deal (events/invoices/quotes) into another customer's project, and never
-  // adopt an arbitrary customer onto an already-assigned one. An *unassigned*
-  // project (customer_account_id null) still ADOPTS the deal's customer below —
-  // that's the deliberate "drop the first deal on an empty project" workflow.
+  // Single-customer projects, "one customer matches" rule: a customer-assigned
+  // project rejects the deal only when NONE of the deal's customers is the
+  // project's customer. An *unassigned* project (customer_account_id null)
+  // ADOPTS the deal's customer below — "drop the first deal on an empty project".
   const project = await conn('projects').where({ id: projectId }).select('customer_account_id').first();
   if (!project) throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
   if (
     project.customer_account_id != null &&
-    dealCustomerId != null &&
-    project.customer_account_id !== dealCustomerId
+    dealCustomerIds.size &&
+    !dealCustomerIds.has(Number(project.customer_account_id))
   ) {
-    throw new AppError('That project belongs to a different customer', 422, 'PROJECT_CUSTOMER_MISMATCH');
+    throw new AppError('That belongs to a different customer than this project', 422, 'PROJECT_CUSTOMER_MISMATCH');
   }
 
   // Cleared to write: link the deal's quotes/contracts, re-point its events so
@@ -288,8 +286,9 @@ async function linkDealToProject(dealUuid, projectId, conn = db) {
   }
 
   // Adopt the deal's customer onto a still-unassigned project (first deal wins).
-  if (dealCustomerId && project.customer_account_id == null) {
-    await conn('projects').where({ id: projectId }).update({ customer_account_id: dealCustomerId, updated_at: new Date() });
+  if (dealCustomerIds.size && project.customer_account_id == null) {
+    const adopt = [...dealCustomerIds][0];
+    await conn('projects').where({ id: projectId }).update({ customer_account_id: adopt, updated_at: new Date() });
   }
 }
 
@@ -306,17 +305,17 @@ async function assignDocument(table, projectId, documentId) {
   }
   const doc = await db(table).where({ id: documentId }).first();
   if (!doc) throw new AppError('Document not found', 404);
-  // Same-customer guard (mirror of customerHoursService): never attach one
-  // customer's document to another customer's project. linkDealToProject
-  // re-checks against the full deal lineage; this is the boundary check that
-  // also covers the (unassigned-project) detach and standalone-doc cases.
+  // Single-customer guard: a document carries exactly one customer, so it may
+  // only attach to a project that shares it. linkDealToProject re-checks the
+  // wider deal lineage ("one customer matches"); this is the boundary check
+  // that also covers the (unassigned-project) detach and standalone-doc cases.
   if (
     project &&
     project.customer_account_id != null &&
     doc.customer_account_id != null &&
     project.customer_account_id !== doc.customer_account_id
   ) {
-    throw new AppError('That project belongs to a different customer', 422, 'PROJECT_CUSTOMER_MISMATCH');
+    throw new AppError('That belongs to a different customer than this project', 422, 'PROJECT_CUSTOMER_MISMATCH');
   }
   await db(table).where({ id: documentId }).update({ project_id: projectId || null });
   if (projectId && doc.deal_uuid) {
