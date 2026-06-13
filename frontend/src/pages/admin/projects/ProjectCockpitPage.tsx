@@ -162,7 +162,13 @@ export const ProjectCockpitPage: React.FC = () => {
       setEventSearch('');
       toast.success(t('projects.events.attached', 'Event attached') as string);
     },
-    onError: (err: any) => toast.error(err?.response?.data?.error || (t('projects.events.attachFailed', 'Could not attach event') as string)),
+    onError: (err: any) => {
+      if (err?.response?.data?.code === 'PROJECT_CUSTOMER_MISMATCH') {
+        toast.error(t('projects.error.customerMismatch', 'That belongs to a different customer than this project.') as string);
+        return;
+      }
+      toast.error(err?.response?.data?.error || (t('projects.events.attachFailed', 'Could not attach event') as string));
+    },
   });
 
   const openPreview = async (emailId: number) => {

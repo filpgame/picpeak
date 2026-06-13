@@ -141,23 +141,83 @@ async function createProject({ name, customerAccountId = null }, adminId) {
   return getProjectById(id);
 }
 
+/** Distinct customer_account_ids referenced by a project's linked content
+ *  (its events, quotes and contracts). Used to keep a project single-customer:
+ *  re-labelling it to a customer that conflicts with existing content is
+ *  rejected. */
+async function projectLinkedCustomerIds(id, conn = db) {
+  const ids = new Set();
+  if (await hasColumnCached('events', 'project_id') && await conn.schema.hasTable('event_customer_assignments')) {
+    const rows = await conn('event_customer_assignments as eca')
+      .join('events as e', 'e.id', 'eca.event_id')
+      .where('e.project_id', id)
+      .distinct('eca.customer_account_id as cid');
+    for (const r of rows) if (r.cid != null) ids.add(Number(r.cid));
+  }
+  for (const tbl of ['quotes', 'contracts']) {
+    if (await hasColumnCached(tbl, 'project_id') && await hasColumnCached(tbl, 'customer_account_id')) {
+      for (const r of await conn(tbl).where({ project_id: id }).whereNotNull('customer_account_id').distinct('customer_account_id as cid')) {
+        if (r.cid != null) ids.add(Number(r.cid));
+      }
+    }
+  }
+  return ids;
+}
+
 async function updateProject(id, { name, customerAccountId, status }) {
   const existing = await db('projects').where({ id }).first();
   if (!existing) throw new AppError('Project not found', 404);
   const patch = { updated_at: new Date() };
   if (name !== undefined) patch.name = String(name).trim();
-  if (customerAccountId !== undefined) patch.customer_account_id = customerAccountId || null;
+  if (customerAccountId !== undefined) {
+    const next = customerAccountId || null;
+    // Single-customer invariant: don't re-label a project to a customer that
+    // conflicts with documents/events it already holds. Clearing (null) is fine.
+    if (next != null) {
+      const linked = await projectLinkedCustomerIds(id);
+      for (const cid of linked) {
+        if (cid !== Number(next)) {
+          throw new AppError('This project already contains another customer’s content — clear or move it before reassigning the customer', 422, 'PROJECT_CUSTOMER_MISMATCH');
+        }
+      }
+    }
+    patch.customer_account_id = next;
+  }
   if (status !== undefined) patch.status = status;
   await db('projects').where({ id }).update(patch);
   return getProjectById(id);
 }
 
-/** Attach an event to a project (re-points events.project_id). */
+/** Distinct customer_account_ids an event is assigned to (event_customer_assignments
+ *  is many-to-many, but a gallery normally belongs to exactly one account). */
+async function eventCustomerIds(eventId, conn = db) {
+  if (!(await conn.schema.hasTable('event_customer_assignments'))) return [];
+  const rows = await conn('event_customer_assignments')
+    .where({ event_id: eventId })
+    .distinct('customer_account_id');
+  return rows.map((r) => r.customer_account_id).filter((x) => x != null).map(Number);
+}
+
+/** Attach an event to a project (re-points events.project_id).
+ *  Projects are single-customer: an event may only join a project that shares
+ *  its customer. When the project has no customer yet it ADOPTS the event's
+ *  (single) customer — keeping the whole project tied to one customer. */
 async function assignEvent(projectId, eventId) {
   const project = await db('projects').where({ id: projectId }).first();
   if (!project) throw new AppError('Project not found', 404);
   const event = await db('events').where({ id: eventId }).first();
   if (!event) throw new AppError('Event not found', 404);
+
+  const evCustomers = await eventCustomerIds(eventId);
+  if (project.customer_account_id != null) {
+    if (evCustomers.length && !evCustomers.includes(Number(project.customer_account_id))) {
+      throw new AppError('That event belongs to a different customer than this project', 422, 'PROJECT_CUSTOMER_MISMATCH');
+    }
+  } else if (evCustomers.length === 1) {
+    // Empty project adopts the event's single customer (first content wins).
+    await db('projects').where({ id: projectId }).update({ customer_account_id: evCustomers[0], updated_at: new Date() });
+  }
+
   await db('events').where({ id: eventId }).update({ project_id: projectId });
   return { projectId, eventId };
 }

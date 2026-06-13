@@ -3453,7 +3453,7 @@
       "previewFailed": "Could not load preview"
     },
     "error": {
-      "customerMismatch": "That project belongs to a different customer than this entry."
+      "customerMismatch": "That belongs to a different customer than this project."
     }
   },
   "calendar": {
