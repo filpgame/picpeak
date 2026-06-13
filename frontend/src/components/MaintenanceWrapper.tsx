@@ -19,6 +19,12 @@ export const MaintenanceWrapper: React.FC<MaintenanceWrapperProps> = ({ children
   const [hasAdminSession, setHasAdminSession] = useState(false);
 
   const isAdminRoute = location.pathname.startsWith('/admin');
+  // The admin login page must ALWAYS render during maintenance — it's how an
+  // admin gets a session to bypass it. Without this exemption a logged-out
+  // admin sees the maintenance screen over the login form (catch-22: needs a
+  // session to get past maintenance, but the login page that grants one is
+  // hidden).
+  const isAdminLoginRoute = location.pathname.startsWith('/admin/login');
 
   useEffect(() => {
     let isMounted = true;
@@ -54,7 +60,7 @@ export const MaintenanceWrapper: React.FC<MaintenanceWrapperProps> = ({ children
     });
   }, [setMaintenanceMode]);
 
-  if (isMaintenanceMode && (!isAdminRoute || !hasAdminSession)) {
+  if (isMaintenanceMode && !isAdminLoginRoute && (!isAdminRoute || !hasAdminSession)) {
     return <MaintenanceMode />;
   }
 
