@@ -18,7 +18,10 @@ import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import { formatMoneyMinor } from '../../../utils/money';
 
 /** Render a project's rolled-up value (newest stage per deal, cumulative),
- *  one entry per currency. Empty → em dash. */
+ *  one entry per currency. Convention (deliberately differs from the Events
+ *  column): a zero *count* is a real number → "0"; a zero *value* means "nothing
+ *  billed/quoted yet" → em dash, since "CHF 0.00" would wrongly imply a real
+ *  zero-value deal. */
 function formatValuation(p: ProjectSummary): string {
   const buckets = p.valuation?.byCurrency?.filter((b) => b.totalMinor !== 0) || [];
   if (buckets.length === 0) return '—';

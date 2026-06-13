@@ -140,6 +140,11 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
           'No hourly rate set for this customer. Enter a rate override, set a rate on the customer, or configure an install-wide default in Settings.'));
         return;
       }
+      if (err?.response?.data?.code === 'PROJECT_CUSTOMER_MISMATCH') {
+        toast.error(t('projects.error.customerMismatch',
+          "That project belongs to a different customer than this entry."));
+        return;
+      }
       const msg = err?.response?.data?.error || err?.message
         || t('customers.hours.error.createFailed', 'Failed to log entry');
       toast.error(msg);

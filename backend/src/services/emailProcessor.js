@@ -798,9 +798,13 @@ async function renderQueuedEmail(templateKey, variables = {}, to = '') {
 //   limit           max emails per pass. The flush raises this to drain the
 //                   whole queue in a single pass (no re-query, so a failing
 //                   email isn't retried in a tight loop within one flush).
+//   onlyId          when set, process EXACTLY this one queue row. Used by the
+//                   cockpit "send now" so a forced send never sweeps up OTHER
+//                   dead-lettered emails (those past the retry cap) just
+//                   because ignoreSchedule also bypasses that cap.
 //
 // Returns { processed, sent, failed }.
-async function processEmailQueue({ ignoreSchedule = false, limit = 10 } = {}) {
+async function processEmailQueue({ ignoreSchedule = false, limit = 10, onlyId = null } = {}) {
   logger.info('Email queue processor: Checking for pending emails...');
   const result = { processed: 0, sent: 0, failed: 0 };
 
@@ -823,6 +827,9 @@ async function processEmailQueue({ ignoreSchedule = false, limit = 10 } = {}) {
       const now = new Date();
       const query = db('email_queue')
         .where('status', 'pending');
+      // Targeted single-email flush (cockpit "send now"): scope to that row
+      // only, so we never force-retry other dead-lettered emails.
+      if (onlyId != null) query.where('id', onlyId);
       if (!ignoreSchedule) {
         // Automatic runs: respect the retry cap (don't hammer a failing
         // address) AND the schedule (business-hours floor / future send).
@@ -868,7 +875,6 @@ async function processEmailQueue({ ignoreSchedule = false, limit = 10 } = {}) {
         // 119 just skip it).
         const sentUpdate = { status: 'sent', sent_at: new Date() };
         try {
-          const { hasColumnCached } = require('../utils/schemaCache');
           if (sendResult && sendResult.html && await hasColumnCached('email_queue', 'rendered_html')) {
             sentUpdate.rendered_html = sendResult.html;
           }

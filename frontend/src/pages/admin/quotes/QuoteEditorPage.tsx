@@ -396,6 +396,9 @@ export const QuoteEditorPage: React.FC = () => {
       if (err?.response?.data?.code === 'CUSTOMER_FEATURE_DISABLED') {
         toast.error(t('quotes.errors.customerFeatureDisabled',
           'This customer has Quotes disabled. Enable "Quotes" on the customer detail page first.'));
+      } else if (err?.response?.data?.code === 'PROJECT_CUSTOMER_MISMATCH') {
+        toast.error(t('projects.error.customerMismatch',
+          'That project belongs to a different customer than this entry.'));
       } else if (err?.response?.data?.code === 'VALIDATION_ERROR' && Array.isArray(err?.response?.data?.details)) {
         // Show the first field that failed validation so the admin
         // knows what to fix instead of just seeing "Validation failed".

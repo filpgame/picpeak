@@ -13,7 +13,7 @@
  *     no single customer set.
  */
 
-const { db } = require('../database/db');
+const { db, logActivity } = require('../database/db');
 const { AppError } = require('../utils/errors');
 const { hasColumnCached } = require('../utils/schemaCache');
 
@@ -80,6 +80,28 @@ async function attachValuations(projects, perms = {}) {
     quotes = await db('quotes')
       .whereIn('project_id', projectIds)
       .select('project_id', 'id', 'deal_uuid', 'total_amount_minor', 'currency', 'issue_date');
+  } else if (perms.quotes !== false && await hasColumnCached('quotes', 'customer_account_id')) {
+    // Pre-121 fallback: no quotes.project_id column yet. Scope quotes by the
+    // project's customer (mirrors the detail page) so the list isn't all-zero
+    // during the upgrade window. Imprecise when one customer owns several
+    // projects — each then shows the customer's full quote total — but never
+    // zero. Goes away the moment migration 121 lands.
+    const custToProjects = new Map();
+    for (const p of projects) {
+      if (p.customerAccountId == null) continue;
+      const list = custToProjects.get(p.customerAccountId) || [];
+      list.push(p.id); custToProjects.set(p.customerAccountId, list);
+    }
+    if (custToProjects.size) {
+      const rows = await db('quotes')
+        .whereIn('customer_account_id', Array.from(custToProjects.keys()))
+        .select('customer_account_id', 'id', 'deal_uuid', 'total_amount_minor', 'currency', 'issue_date');
+      for (const r of rows) {
+        for (const pid of (custToProjects.get(r.customer_account_id) || [])) {
+          quotes.push({ ...r, project_id: pid });
+        }
+      }
+    }
   }
 
   const invByProject = new Map();
@@ -151,24 +173,20 @@ async function assignEvent(projectId, eventId) {
 async function linkDealToProject(dealUuid, projectId, conn = db) {
   if (!dealUuid || !projectId) return;
 
-  if (await hasColumnCached('quotes', 'project_id') && await hasColumnCached('quotes', 'deal_uuid')) {
-    await conn('quotes').where({ deal_uuid: dealUuid }).update({ project_id: projectId });
-  }
-  if (await hasColumnCached('contracts', 'project_id') && await hasColumnCached('contracts', 'deal_uuid')) {
-    await conn('contracts').where({ deal_uuid: dealUuid }).update({ project_id: projectId });
-  }
-
-  // Collect every event the deal converted into: quote/contract converted_event_id
-  // + any invoice's event_id. Re-point them so invoices/emails/gallery roll up.
+  // Collect the deal's customer (first non-null across quote/contract/invoice
+  // lineage) AND every event it converted into — BEFORE mutating anything, so
+  // a cross-customer link is rejected before we re-point data across tenants.
   const eventIds = new Set();
   let dealCustomerId = null;
-  if (await hasColumnCached('quotes', 'deal_uuid')) {
+  const quotesHaveDeal = await hasColumnCached('quotes', 'deal_uuid');
+  if (quotesHaveDeal) {
     for (const q of await conn('quotes').where({ deal_uuid: dealUuid }).select('converted_event_id', 'customer_account_id')) {
       if (q.converted_event_id) eventIds.add(q.converted_event_id);
       if (q.customer_account_id && !dealCustomerId) dealCustomerId = q.customer_account_id;
     }
   }
-  if (await hasColumnCached('contracts', 'deal_uuid') && await hasColumnCached('contracts', 'converted_event_id')) {
+  const contractsHaveDeal = await hasColumnCached('contracts', 'deal_uuid');
+  if (contractsHaveDeal && await hasColumnCached('contracts', 'converted_event_id')) {
     for (const c of await conn('contracts').where({ deal_uuid: dealUuid }).select('converted_event_id', 'customer_account_id')) {
       if (c.converted_event_id) eventIds.add(c.converted_event_id);
       if (c.customer_account_id && !dealCustomerId) dealCustomerId = c.customer_account_id;
@@ -180,16 +198,38 @@ async function linkDealToProject(dealUuid, projectId, conn = db) {
       if (inv.customer_account_id && !dealCustomerId) dealCustomerId = inv.customer_account_id;
     }
   }
+
+  // Same-customer guard (mirror of customerHoursService PROJECT_CUSTOMER_MISMATCH).
+  // A project belongs to at most one customer; never re-point one customer's
+  // deal (events/invoices/quotes) into another customer's project, and never
+  // adopt an arbitrary customer onto an already-assigned one. An *unassigned*
+  // project (customer_account_id null) still ADOPTS the deal's customer below —
+  // that's the deliberate "drop the first deal on an empty project" workflow.
+  const project = await conn('projects').where({ id: projectId }).select('customer_account_id').first();
+  if (!project) throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+  if (
+    project.customer_account_id != null &&
+    dealCustomerId != null &&
+    project.customer_account_id !== dealCustomerId
+  ) {
+    throw new AppError('That project belongs to a different customer', 422, 'PROJECT_CUSTOMER_MISMATCH');
+  }
+
+  // Cleared to write: link the deal's quotes/contracts, re-point its events so
+  // invoices/emails/gallery roll up automatically.
+  if (quotesHaveDeal && await hasColumnCached('quotes', 'project_id')) {
+    await conn('quotes').where({ deal_uuid: dealUuid }).update({ project_id: projectId });
+  }
+  if (contractsHaveDeal && await hasColumnCached('contracts', 'project_id')) {
+    await conn('contracts').where({ deal_uuid: dealUuid }).update({ project_id: projectId });
+  }
   if (eventIds.size && await hasColumnCached('events', 'project_id')) {
     await conn('events').whereIn('id', Array.from(eventIds)).update({ project_id: projectId });
   }
 
-  // Adopt the deal's customer onto a still-unassigned project.
-  if (dealCustomerId) {
-    const project = await conn('projects').where({ id: projectId }).select('customer_account_id').first();
-    if (project && project.customer_account_id == null) {
-      await conn('projects').where({ id: projectId }).update({ customer_account_id: dealCustomerId, updated_at: new Date() });
-    }
+  // Adopt the deal's customer onto a still-unassigned project (first deal wins).
+  if (dealCustomerId && project.customer_account_id == null) {
+    await conn('projects').where({ id: projectId }).update({ customer_account_id: dealCustomerId, updated_at: new Date() });
   }
 }
 
@@ -199,12 +239,25 @@ async function assignDocument(table, projectId, documentId) {
   if (!(await hasColumnCached(table, 'project_id'))) {
     throw new AppError('This instance has no project_id column yet — run migrations', 409);
   }
+  let project = null;
   if (projectId != null) {
-    const project = await db('projects').where({ id: projectId }).first();
+    project = await db('projects').where({ id: projectId }).first();
     if (!project) throw new AppError('Project not found', 404);
   }
   const doc = await db(table).where({ id: documentId }).first();
   if (!doc) throw new AppError('Document not found', 404);
+  // Same-customer guard (mirror of customerHoursService): never attach one
+  // customer's document to another customer's project. linkDealToProject
+  // re-checks against the full deal lineage; this is the boundary check that
+  // also covers the (unassigned-project) detach and standalone-doc cases.
+  if (
+    project &&
+    project.customer_account_id != null &&
+    doc.customer_account_id != null &&
+    project.customer_account_id !== doc.customer_account_id
+  ) {
+    throw new AppError('That project belongs to a different customer', 422, 'PROJECT_CUSTOMER_MISMATCH');
+  }
   await db(table).where({ id: documentId }).update({ project_id: projectId || null });
   if (projectId && doc.deal_uuid) {
     await linkDealToProject(doc.deal_uuid, projectId);
@@ -286,45 +339,6 @@ async function getProjectOverview(id, perms = {}) {
 
   const out = { project, events, emails: [], quotes: [], contracts: [], invoices: [], hours: { entries: [], totalMinutes: 0 } };
 
-  // Emails — newest first. rendered_html presence flagged, body fetched
-  // lazily by the preview endpoint. Gallery/event mails carry event_id; CRM
-  // document mails (quote_/contract_/invoice_/storno_) are queued with
-  // event_id=null, so we ALSO match the project customer's address — but
-  // ONLY for those CRM document types. Without that type filter, system /
-  // admin alerts (backup_failed, restore_failed, …) sent to the same inbox
-  // (the customer address often doubles as the admin notification target)
-  // would wrongly surface under the project.
-  const customerEmail = project.customerEmail || null;
-  if (eventIds.length || customerEmail) {
-    const emails = await db('email_queue')
-      .where(function () {
-        if (eventIds.length) this.whereIn('event_id', eventIds);
-        if (customerEmail) {
-          this.orWhere(function () {
-            this.where('recipient_email', customerEmail).andWhere(function () {
-              // LIKE '_' is a single-char wildcard that matches the literal
-              // underscore in every CRM type; no escape clause needed and no
-              // real type collides with the trailing '%'.
-              for (const prefix of ['quote_%', 'contract_%', 'invoice_%', 'storno_%']) {
-                this.orWhere('email_type', 'like', prefix);
-              }
-            });
-          });
-        }
-      })
-      .select('id', 'recipient_email', 'email_type', 'status', 'created_at', 'sent_at', 'error_message', 'event_id',
-        // Exact stored preview available? (CASE is cross-DB: SQLite→0/1, PG→int)
-        db.raw('CASE WHEN rendered_html IS NOT NULL THEN 1 ELSE 0 END as has_rendered'))
-      .orderBy('created_at', 'desc')
-      .limit(200);
-    out.emails = emails.map((e) => ({
-      id: e.id, recipient: e.recipient_email, type: e.email_type, status: e.status,
-      queuedAt: e.created_at, sentAt: e.sent_at, error: e.error_message, eventId: e.event_id,
-      // false → the cockpit preview will re-render from the current template.
-      stored: !!Number(e.has_rendered),
-    }));
-  }
-
   // Invoices (by event) incl. storno.
   if (eventIds.length && perms.bills !== false) {
     out.invoices = await db('invoices')
@@ -358,6 +372,72 @@ async function getProjectOverview(id, perms = {}) {
     out.contracts = await q;
   }
 
+  // Emails — newest first. rendered_html presence flagged; body fetched lazily
+  // by the preview endpoint. Two precisely-scoped sources, never the recipient
+  // string alone (a shared family inbox must NOT leak another customer's mail):
+  //   1. Gallery/event mails — carry event_id, and the events belong to this
+  //      project, so whereIn(eventIds) is already exact.
+  //   2. CRM document mails (quote_/contract_/invoice_/storno_) — queued with
+  //      event_id=null + recipient=customer email. We use the recipient only as
+  //      a cheap candidate filter, then KEEP a row only when its email_data
+  //      document number matches one of THIS project's loaded documents. That
+  //      both scopes to the right customer and excludes system/admin alerts
+  //      (backup_failed, …) sent to the same inbox.
+  const selectCols = ['id', 'recipient_email', 'email_type', 'status', 'created_at', 'sent_at', 'error_message', 'event_id',
+    // Exact stored preview available? (CASE is cross-DB: SQLite→0/1, PG→int)
+    db.raw('CASE WHEN rendered_html IS NOT NULL THEN 1 ELSE 0 END as has_rendered')];
+  const mapEmail = (e) => ({
+    id: e.id, recipient: e.recipient_email, type: e.email_type, status: e.status,
+    queuedAt: e.created_at, sentAt: e.sent_at, error: e.error_message, eventId: e.event_id,
+    // false → the cockpit preview will re-render from the current template.
+    stored: !!Number(e.has_rendered),
+  });
+
+  const emailRows = [];
+  if (eventIds.length) {
+    const eventEmails = await db('email_queue')
+      .whereIn('event_id', eventIds)
+      .select(selectCols)
+      .orderBy('created_at', 'desc')
+      .limit(200);
+    emailRows.push(...eventEmails);
+  }
+  const customerEmail = project.customerEmail || null;
+  // The set of document numbers that belong to this project (across the doc
+  // types the admin may see). CRM emails carry their number in email_data.
+  const docNumbers = new Set();
+  for (const q of out.quotes) if (q.quote_number != null) docNumbers.add(String(q.quote_number));
+  for (const c of out.contracts) if (c.contract_number != null) docNumbers.add(String(c.contract_number));
+  for (const inv of out.invoices) if (inv.invoice_number != null) docNumbers.add(String(inv.invoice_number));
+  if (customerEmail && docNumbers.size) {
+    const crmCandidates = await db('email_queue')
+      .where('recipient_email', customerEmail)
+      .whereNull('event_id')
+      .andWhere(function () {
+        // LIKE '_' is a single-char wildcard matching the literal underscore in
+        // every CRM type; no escape needed and no real type collides with '%'.
+        for (const prefix of ['quote_%', 'contract_%', 'invoice_%', 'storno_%']) {
+          this.orWhere('email_type', 'like', prefix);
+        }
+      })
+      .select([...selectCols, 'email_data'])
+      .orderBy('created_at', 'desc')
+      .limit(200);
+    for (const r of crmCandidates) {
+      let data = r.email_data;
+      if (typeof data === 'string') { try { data = JSON.parse(data); } catch (_) { data = {}; } }
+      data = data || {};
+      // Match on any document-number key a CRM template carries (storno mails
+      // use storno_number / original_invoice_number, not invoice_number).
+      const candidates = [data.quote_number, data.contract_number, data.invoice_number,
+        data.storno_number, data.original_invoice_number];
+      if (candidates.some((n) => n != null && docNumbers.has(String(n)))) emailRows.push(r);
+    }
+  }
+  // Merge both sources, newest first, capped.
+  emailRows.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  out.emails = emailRows.slice(0, 200).map(mapEmail);
+
   // Hours (by project_id) — individual entries + total.
   const hours = await db('customer_hour_entries')
     .where({ project_id: id })
@@ -370,13 +450,13 @@ async function getProjectOverview(id, perms = {}) {
 
   // Timeline milestones (latest of each kind that exists), each dated.
   const milestones = [];
-  const firstQuote = out.quotes[out.quotes.length - 1];
+  const firstQuote = out.quotes.at(-1);
   if (firstQuote) milestones.push({ kind: 'quote', id: firstQuote.id, label: firstQuote.quote_number, date: firstQuote.issue_date });
-  const firstContract = out.contracts[out.contracts.length - 1];
+  const firstContract = out.contracts.at(-1);
   if (firstContract) milestones.push({ kind: 'contract', id: firstContract.id, label: firstContract.contract_number, date: firstContract.issue_date });
   const pubEvent = events.find((e) => e.is_active && !e.is_draft);
   if (pubEvent) milestones.push({ kind: 'gallery', id: pubEvent.id, label: pubEvent.event_name, date: pubEvent.event_date });
-  const firstInvoice = out.invoices[out.invoices.length - 1];
+  const firstInvoice = out.invoices.at(-1);
   if (firstInvoice) milestones.push({ kind: 'invoice', id: firstInvoice.id, label: firstInvoice.invoice_number, date: firstInvoice.issue_date });
   out.milestones = milestones;
 
@@ -428,44 +508,71 @@ async function getEmailPreview(emailId) {
 
 // ── Email actions (from the cockpit feed) ───────────────────────────────
 
-async function resendEmail(emailId) {
+/** Audit every admin email action uniformly (mark-paid / cancel / reissue in
+ *  the CRM services all log; these were the gap). Best-effort — never blocks. */
+async function logEmailAction(activityType, emailId, row, adminId) {
+  try {
+    await logActivity(
+      activityType,
+      { queueId: emailId, emailType: row && row.email_type, recipient: row && row.recipient_email },
+      (row && row.event_id) || null,
+      adminId ? { type: 'admin', id: adminId } : null,
+    );
+  } catch (_) { /* audit is best-effort */ }
+}
+
+async function resendEmail(emailId, adminId = null) {
   const row = await db('email_queue').where({ id: emailId }).first();
   if (!row) throw new AppError('Email not found', 404);
+  // Normalise email_data to match the canonical enqueue (emailProcessor.js
+  // stores JSON.stringify(...) in the json column). PG returns jsonb as a
+  // parsed object, SQLite as a string — re-stringify the object form so the
+  // resent row is never double-encoded.
+  let emailData = row.email_data;
+  if (emailData != null && typeof emailData !== 'string') emailData = JSON.stringify(emailData);
   const insert = await db('email_queue').insert({
     recipient_email: row.recipient_email,
     email_type: row.email_type,
-    email_data: row.email_data,
+    email_data: emailData,
     event_id: row.event_id,
     status: 'pending',
     retry_count: 0,
     created_at: new Date(),
   }).returning('id');
   const id = (insert[0] && typeof insert[0] === 'object') ? insert[0].id : insert[0];
+  await logEmailAction('project_email_resent', id, row, adminId);
   return { id, status: 'pending' };
 }
 
-async function cancelEmail(emailId) {
+async function cancelEmail(emailId, adminId = null) {
   const row = await db('email_queue').where({ id: emailId }).first();
   if (!row) throw new AppError('Email not found', 404);
   if (row.status !== 'pending') throw new AppError('Only pending emails can be cancelled', 409);
   await db('email_queue').where({ id: emailId }).update({ status: 'cancelled' });
+  await logEmailAction('project_email_cancelled', emailId, row, adminId);
   return { id: emailId, status: 'cancelled' };
 }
 
-async function retryEmail(emailId) {
+async function retryEmail(emailId, adminId = null) {
   const row = await db('email_queue').where({ id: emailId }).first();
   if (!row) throw new AppError('Email not found', 404);
   await db('email_queue').where({ id: emailId })
     .update({ status: 'pending', retry_count: 0, error_message: null, scheduled_at: null });
+  await logEmailAction('project_email_retried', emailId, row, adminId);
   return { id: emailId, status: 'pending' };
 }
 
-async function sendEmailNow(emailId) {
+async function sendEmailNow(emailId, adminId = null) {
   const row = await db('email_queue').where({ id: emailId }).first();
   if (!row) throw new AppError('Email not found', 404);
   await db('email_queue').where({ id: emailId }).update({ status: 'pending', scheduled_at: null });
+  // Flush ONLY this email — passing onlyId scopes processEmailQueue to a single
+  // row so a forced "send now" never force-retries OTHER dead-lettered emails
+  // (those that already exceeded the retry cap) just because we bypass it here.
   const { processEmailQueue } = require('./emailProcessor');
-  return processEmailQueue({ ignoreSchedule: true, limit: 50 });
+  const result = await processEmailQueue({ ignoreSchedule: true, onlyId: emailId });
+  await logEmailAction('project_email_sent_now', emailId, row, adminId);
+  return result;
 }
 
 module.exports = {

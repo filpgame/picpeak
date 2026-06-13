@@ -206,6 +206,10 @@ export const ContractEditorPage: React.FC = () => {
       navigate(`/admin/clients/contracts/${created.id}`);
     },
     onError: (err: any) => {
+      if (err?.response?.data?.code === 'PROJECT_CUSTOMER_MISMATCH') {
+        toast.error(t('projects.error.customerMismatch', 'That project belongs to a different customer than this entry.') as string);
+        return;
+      }
       toast.error(err?.response?.data?.error || err?.message || t('contracts.editor.saveError', 'Save failed') as string);
     },
   });
@@ -235,6 +239,10 @@ export const ContractEditorPage: React.FC = () => {
       navigate(`/admin/clients/contracts/${numericId}`);
     },
     onError: (err: any) => {
+      if (err?.response?.data?.code === 'PROJECT_CUSTOMER_MISMATCH') {
+        toast.error(t('projects.error.customerMismatch', 'That project belongs to a different customer than this entry.') as string);
+        return;
+      }
       toast.error(err?.response?.data?.error || err?.message || t('contracts.editor.saveError', 'Save failed') as string);
     },
   });

@@ -47,29 +47,34 @@ exports.up = async function (knex) {
     });
   }
 
-  // 3. Backfill one auto-project per still-unassigned event.
+  // 3. Backfill one auto-project per still-unassigned event. Wrapped in a
+  //    single transaction so a heavy install (10k+ events) can't be left
+  //    half-assigned if the loop dies mid-way — it's all-or-nothing, and a
+  //    re-run still no-ops (gated on whereNull('project_id')).
   if ((await knex.schema.hasTable('events')) && (await knex.schema.hasColumn('events', 'project_id'))) {
-    const events = await knex('events').whereNull('project_id').select('id', 'event_name');
     const hasAssignments = await knex.schema.hasTable('event_customer_assignments');
-    for (const ev of events) {
-      let customerId = null;
-      if (hasAssignments) {
-        const rows = await knex('event_customer_assignments')
-          .where({ event_id: ev.id })
-          .select('customer_account_id');
-        if (rows.length === 1) customerId = rows[0].customer_account_id;
+    await knex.transaction(async (trx) => {
+      const events = await trx('events').whereNull('project_id').select('id', 'event_name');
+      for (const ev of events) {
+        let customerId = null;
+        if (hasAssignments) {
+          const rows = await trx('event_customer_assignments')
+            .where({ event_id: ev.id })
+            .select('customer_account_id');
+          if (rows.length === 1) customerId = rows[0].customer_account_id;
+        }
+        const name = (ev.event_name && String(ev.event_name).trim()) || `Event ${ev.id}`;
+        const inserted = await trx('projects').insert({
+          name,
+          customer_account_id: customerId,
+          status: 'active',
+          created_at: knex.fn.now(),
+          updated_at: knex.fn.now(),
+        }).returning('id');
+        const projectId = (inserted[0] && typeof inserted[0] === 'object') ? inserted[0].id : inserted[0];
+        await trx('events').where({ id: ev.id }).update({ project_id: projectId });
       }
-      const name = (ev.event_name && String(ev.event_name).trim()) || `Event ${ev.id}`;
-      const inserted = await knex('projects').insert({
-        name,
-        customer_account_id: customerId,
-        status: 'active',
-        created_at: knex.fn.now(),
-        updated_at: knex.fn.now(),
-      }).returning('id');
-      const projectId = (inserted[0] && typeof inserted[0] === 'object') ? inserted[0].id : inserted[0];
-      await knex('events').where({ id: ev.id }).update({ project_id: projectId });
-    }
+    });
   }
 };
 

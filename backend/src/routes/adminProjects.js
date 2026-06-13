@@ -34,7 +34,10 @@ router.use(requireProjectsFlag);
 // List
 router.get('/', requirePermission('events.view'), handleAsync(async (req, res) => {
   // Value rollup mirrors the cockpit's per-doc gating so the list never
-  // shows figures the admin lacks permission to see.
+  // shows figures the admin lacks permission to see. Only invoices + quotes
+  // carry monetary totals; contracts contribute none, so (unlike the detail
+  // route, which gates the contracts *section*) the list needs no contracts
+  // permission.
   const perms = {
     bills: await userHasAnyPermission(req.admin.id, ['bills.view']),
     quotes: await userHasAnyPermission(req.admin.id, ['quotes.view']),
@@ -75,7 +78,8 @@ router.put('/:id',
   [
     param('id').isInt({ min: 1 }),
     body('name').optional().isString().trim().isLength({ min: 1, max: 255 }),
-    body('customerAccountId').optional({ values: 'null' }).isInt({ min: 1 }),
+    // nullable:true → accept JSON `null` (clear the customer); isInt otherwise.
+    body('customerAccountId').optional({ nullable: true }).isInt({ min: 1 }),
     body('status').optional().isString().isLength({ max: 24 }),
   ],
   handleAsync(async (req, res) => {
@@ -145,7 +149,7 @@ router.get('/email/:emailId/preview', requirePermission('events.view'), [param('
 // Cancel (pending→cancelled), Retry (failed→pending), Send now (flush this one).
 const emailAction = (fn) => handleAsync(async (req, res) => {
   validateRequest(req);
-  const result = await projectService[fn](parseInt(req.params.emailId, 10));
+  const result = await projectService[fn](parseInt(req.params.emailId, 10), req.admin.id);
   return successResponse(res, result);
 });
 router.post('/email/:emailId/resend',   requirePermission('email.send'), [param('emailId').isInt({ min: 1 })], emailAction('resendEmail'));
