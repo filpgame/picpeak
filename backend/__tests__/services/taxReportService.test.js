@@ -367,7 +367,7 @@ describe('getTaxReport', () => {
     const out = await taxReportService.getTaxReport({
       from: '2026-01-01', to: '2026-03-31', currency: 'CHF',
     });
-    expect(out.costs).toEqual({ rows: [], totalNet: 0, totalVat: 0, totalGross: 0 });
+    expect(out.costs).toEqual({ rows: [], totalNet: 0, totalVat: 0, totalGross: 0, reclaimableVat: 0 });
     expect(out.summary).toMatchObject({
       incomeNetMinor: 10000, incomeVatMinor: 770, incomeGrossMinor: 10770,
       costNetMinor: 0, costVatMinor: 0, costGrossMinor: 0,

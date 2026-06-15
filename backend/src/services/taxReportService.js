@@ -196,6 +196,10 @@ async function loadCosts({ from, to, cur }) {
   let totalNet = 0;
   let totalVat = 0;
   let totalGross = 0;
+  // Input VAT is only reclaimable for domestic-style treatments; foreign
+  // non-reclaimable VAT is a cost, not a deduction. Feeds the report's
+  // VAT-payable (output − reclaimable input).
+  let reclaimableVat = 0;
   // Inclusive upper bound covering the whole `to` day. Plain range comparison
   // (no SQL date() function) so it's valid on both Postgres and SQLite — the
   // mocked unit tests can't catch a PG-only function error. invoice_date is a
@@ -207,6 +211,7 @@ async function loadCosts({ from, to, cur }) {
     totalNet += r.netMinor;
     totalVat += r.vatMinor;
     totalGross += r.totalMinor;
+    if (r.taxTreatment !== 'foreign_vat_non_reclaimable') reclaimableVat += r.vatMinor;
   };
 
   // 1) Incoming invoices (external supplier payables).
@@ -329,7 +334,20 @@ async function loadCosts({ from, to, cur }) {
   // Stable chronological order across both sources.
   rows.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
 
-  return { rows, totalNet, totalVat, totalGross };
+  return { rows, totalNet, totalVat, totalGross, reclaimableVat };
+}
+
+// Is the business VAT-registered? (Settings → Accounting). Returns null when the
+// setting was never set, so the caller can fall back to a behaviour-preserving
+// heuristic (charged output VAT this period ⇒ treat as registered).
+async function getVatRegisteredSetting() {
+  try {
+    const v = await getAppSetting('accounting_vat_registered');
+    if (v === undefined || v === null) return null;
+    return v === true || v === 1 || v === '1' || v === 'true';
+  } catch (_) {
+    return null;
+  }
 }
 
 /**
@@ -468,7 +486,7 @@ async function getTaxReport({ from, to, currency, includeCosts = true } = {}) {
     // SUPPLEMENTARY — if it fails (e.g. an accounting table/column missing
     // on an older install) it must NOT take down the core revenue report.
     // Degrade to empty costs + log the real error for diagnosis.
-    let costs = { rows: [], totalNet: 0, totalVat: 0, totalGross: 0 };
+    let costs = { rows: [], totalNet: 0, totalVat: 0, totalGross: 0, reclaimableVat: 0 };
     let costsError = null;
     if (includeCosts) {
       try {
@@ -479,10 +497,18 @@ async function getTaxReport({ from, to, currency, includeCosts = true } = {}) {
       }
     }
 
+    // VAT-payable honours the accounting settings: when NOT VAT-registered the
+    // business doesn't file VAT (payable = 0); when registered it's output VAT
+    // minus the RECLAIMABLE input VAT only (foreign non-reclaimable cost VAT is
+    // not deducted). Guideline figure — verify with your Treuhänder.
+    let vatRegistered = await getVatRegisteredSetting();
+    // Unset → preserve prior behaviour: if the business charged output VAT this
+    // period it's effectively registered; otherwise treat as small-business.
+    if (vatRegistered === null) vatRegistered = grandTotalVat > 0;
+    const reclaimableInputVat = costs.reclaimableVat != null ? costs.reclaimableVat : costs.totalVat;
+
     // Summary: income vs cost vs result. Result = a simplified
-    // Einnahmen-Ausgaben surplus (net basis); vatPayable = output VAT
-    // minus input VAT (a guideline figure — actual MWST filing depends
-    // on tax_treatment per cost; verify with your Treuhänder).
+    // Einnahmen-Ausgaben surplus (net basis).
     const summary = {
       incomeNetMinor: grandTotalNet,
       incomeVatMinor: grandTotalVat,
@@ -492,7 +518,8 @@ async function getTaxReport({ from, to, currency, includeCosts = true } = {}) {
       costGrossMinor: costs.totalGross,
       resultNetMinor: grandTotalNet - costs.totalNet,
       resultGrossMinor: grandTotal - costs.totalGross,
-      vatPayableMinor: grandTotalVat - costs.totalVat,
+      vatRegistered,
+      vatPayableMinor: vatRegistered ? (grandTotalVat - reclaimableInputVat) : 0,
     };
 
     // Unified ledger (#5 — one typed, signed, sortable list). Outgoing
