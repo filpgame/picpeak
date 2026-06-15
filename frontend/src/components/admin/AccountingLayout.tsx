@@ -9,7 +9,7 @@
 import React from 'react';
 import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Landmark, Calculator, Inbox, Wallet, BookOpen } from 'lucide-react';
+import { Landmark, Calculator, Inbox, Wallet } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useFeatureFlags, type FeatureKey } from '../../contexts/FeatureFlagsContext';
 
@@ -52,13 +52,8 @@ export const AccountingLayout: React.FC = () => {
       icon: Calculator,
       featureFlag: 'taxReport',
     },
-    {
-      key: 'ledger',
-      to: '/admin/accounting/ledger',
-      label: t('accounting.subnav.chartOfAccounts', 'Chart of accounts'),
-      icon: BookOpen,
-      featureFlag: 'accounting',
-    },
+    // Chart of accounts moved to Settings → Accounting (all accounting config
+    // lives there now); this section keeps only the operational pages.
     // Future: Erfolgsrechnung (Layer B).
   ];
 

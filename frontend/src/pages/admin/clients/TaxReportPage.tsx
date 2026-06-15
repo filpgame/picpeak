@@ -346,7 +346,7 @@ export const TaxReportPage: React.FC = () => {
                     </div>
                     <div className="text-[11px] text-neutral-400 dark:text-neutral-500">
                       {t('taxReport.ledgerExportHint', 'Double-entry postings for your accountant, mapped via your Chart of accounts.')}{' '}
-                      <Link to="/admin/accounting/ledger" className="underline hover:text-neutral-600 dark:hover:text-neutral-300">
+                      <Link to="/admin/settings?tab=accounting" className="underline hover:text-neutral-600 dark:hover:text-neutral-300">
                         {t('taxReport.ledgerExportConfigure', 'Configure →')}
                       </Link>
                     </div>

@@ -1,23 +1,27 @@
 /**
- * Accounting → Chart of accounts (Layer A).
+ * Chart of accounts manager (Layer A) — embedded in Settings → Accounting.
  *
  * Full CRUD for the Swiss/LI KMU-Kontenrahmen accounts, plus the mappings the
  * Treuhänder export relies on: which account each expense category books to and
- * the default/system accounts. VAT codes + their rate/treatment maps live in
- * Settings → Accounting (VatCodesManager), so all VAT config sits in one place.
+ * the default/system accounts. Sits alongside VatCodesManager so all accounting
+ * configuration lives in one place.
  *
  * This data drives the export only — picpeak is not a double-entry ledger.
+ *
+ * NOTE: ledgerService.updateSettings is a PARTIAL merge, so this component saves
+ * ONLY the account keys (SETTING_ACCOUNT_KEYS); the VAT maps are owned by
+ * VatCodesManager. Scoping each patch keeps the two from reverting each other.
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { X, Plus, Pencil, Trash2, AlertCircle } from 'lucide-react';
-import { Button, Card, CardContent, Input, Loading } from '../../../components/common';
+import { Button, Card, CardContent, Input, Loading } from '../common';
 import {
   ledgerService, type LedgerAccount, type AccountType, type LedgerSettings,
-} from '../../../services/ledger.service';
-import { categoryLabel } from '../../../services/accounting.service';
+} from '../../services/ledger.service';
+import { categoryLabel } from '../../services/accounting.service';
 
 const ACCOUNT_TYPES: AccountType[] = ['asset', 'liability', 'equity', 'revenue', 'expense'];
 const labelCls = 'block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1';
@@ -65,7 +69,7 @@ const AccountModal: React.FC<{ account?: LedgerAccount; onClose: () => void; onD
   );
 };
 
-export const ChartOfAccountsPage: React.FC = () => {
+export const ChartOfAccountsManager: React.FC = () => {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [accountModal, setAccountModal] = useState<{ account?: LedgerAccount } | null>(null);
@@ -73,7 +77,7 @@ export const ChartOfAccountsPage: React.FC = () => {
   const { data: accounts, isLoading: la } = useQuery({ queryKey: ['ledger-accounts'], queryFn: () => ledgerService.listAccounts() });
   const { data: mappings, isLoading: lm } = useQuery({ queryKey: ['ledger-mappings'], queryFn: () => ledgerService.getMappings() });
 
-  // Local editable copy of the settings (default accounts + VAT maps).
+  // Local editable copy of the settings (default/system accounts only).
   const [settings, setSettings] = useState<LedgerSettings>({});
   useEffect(() => { if (mappings?.settings) setSettings(mappings.settings); }, [mappings?.settings]);
 
@@ -91,9 +95,9 @@ export const ChartOfAccountsPage: React.FC = () => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['ledger-mappings'] }); },
     onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
   });
-  // Save ONLY the account keys — the VAT maps now live in Settings → Accounting
-  // (VatCodesManager) and updateSettings is a partial merge, so scoping the
-  // patch here prevents a stale full-settings save from reverting the maps.
+  // Save ONLY the account keys — the VAT maps are owned by VatCodesManager and
+  // updateSettings is a partial merge, so scoping the patch here prevents a
+  // stale full-settings save from reverting the maps.
   const saveSettings = useMutation({
     mutationFn: () => {
       const patch: Partial<LedgerSettings> = {};
@@ -197,4 +201,4 @@ export const ChartOfAccountsPage: React.FC = () => {
   );
 };
 
-export default ChartOfAccountsPage;
+export default ChartOfAccountsManager;

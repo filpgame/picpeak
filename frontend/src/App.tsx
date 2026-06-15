@@ -69,7 +69,6 @@ import { ClientsLayout } from './components/admin/ClientsLayout';
 import { AccountingLayout, AccountingIndex } from './components/admin/AccountingLayout';
 import { AccountingInboxPage } from './pages/admin/accounting/AccountingInboxPage';
 import { ExpensesLedgerPage } from './pages/admin/accounting/ExpensesLedgerPage';
-import { ChartOfAccountsPage } from './pages/admin/accounting/ChartOfAccountsPage';
 import { RequireFeature } from './components/admin/RequireFeature';
 import { PageErrorBoundary, OfflineIndicator, SkipLink, DynamicFavicon, RobotsMetaTags, CMSContentBlock, Loading } from './components/common';
 import { MaintenanceWrapper } from './components/MaintenanceWrapper';
@@ -291,9 +290,9 @@ function App() {
                                 the old path working for bookmarks. */}
                             <Route path="export" element={<Navigate to="/admin/accounting/tax-report" replace />} />
                           </Route>
-                          {/* Chart of accounts + VAT codes (Layer A) — gated by
-                              the accounting master flag alongside the section. */}
-                          <Route path="ledger" element={<ChartOfAccountsPage />} />
+                          {/* Chart of accounts (Layer A) moved into Settings →
+                              Accounting; keep the old path working for bookmarks. */}
+                          <Route path="ledger" element={<Navigate to="/admin/settings?tab=accounting" replace />} />
                           <Route index element={<AccountingIndex />} />
                         </Route>
                       </Route>

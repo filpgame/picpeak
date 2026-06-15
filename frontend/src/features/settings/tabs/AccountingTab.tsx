@@ -13,6 +13,7 @@ import { DecimalInput } from '../../../components/common/DecimalInput';
 import { accountingService } from '../../../services/accounting.service';
 import { sortedCountryOptions } from '../../../constants/countries';
 import { VatCodesManager } from '../../../components/admin/VatCodesManager';
+import { ChartOfAccountsManager } from '../../../components/admin/ChartOfAccountsManager';
 
 const labelCls = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1';
 const inputCls = 'w-full max-w-xs rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm';
@@ -121,6 +122,16 @@ export const AccountingTab: React.FC = () => {
       {/* VAT codes + rate→code / treatment→code maps — relocated here from the
           Chart-of-accounts page so all VAT config lives in one place. */}
       <VatCodesManager />
+
+      {/* Chart of accounts (accounts + category/default-account mappings) —
+          moved off the /admin/accounting section so all accounting config is
+          here; the section keeps only the operational pages. */}
+      <div className="pt-2">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
+          {t('ledger.accounts.title', 'Chart of accounts')}
+        </h3>
+        <ChartOfAccountsManager />
+      </div>
     </div>
   );
 };
