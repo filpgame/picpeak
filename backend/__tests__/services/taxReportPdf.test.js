@@ -193,8 +193,11 @@ describe('renderTaxReportCsv', () => {
     expect(contentType).toMatch(/text\/csv/);
     expect(filename).toBe('tax_report_2026-01-01_to_2026-03-31_CHF.csv');
     const lines = content.split('\r\n');
-    expect(lines[0]).toContain('Rechnung'); // de header for tax_col_invoice
-    expect(lines[0]).toContain('Kunde');
+    // Unified ledger CSV: Typ / Referenz / Kunde-Lieferant columns replace the
+    // old Rechnung/Kunde split.
+    expect(lines[0]).toContain('Typ');       // de header for tax_col_type
+    expect(lines[0]).toContain('Referenz');  // de header for tax_col_reference
+    expect(lines[0]).toContain('Kunde');     // "Kunde / Lieferant"
     expect(lines[0]).toContain('Netto');
   });
 
@@ -234,19 +237,17 @@ describe('renderTaxReportCsv', () => {
     expect(content).toMatch(/"161\.55"/);
   });
 
-  it('marks cancelled rows with a 1 in the cancelled column', async () => {
+  it('flags a cancelled row with a "(Cancelled)" suffix on its Reference cell', async () => {
     invoiceRowsForRun = [
       SAMPLE_ROW({ status: 'cancelled' }),
     ];
     const { content } = await taxReportService.renderTaxReportCsv({
       from: '2026-01-01', to: '2026-03-31', currency: 'CHF', locale: 'en',
     });
-    // Migration 126 added a trailing Skonto column. The cancelled
-    // marker is now second-to-last; the Skonto cell is empty for
-    // non-Skonto rows. Asserting on a regex keeps the test stable
-    // against future trailing-column additions.
+    // Unified ledger CSV has no separate cancelled column — a cancelled row is
+    // flagged by appending the localised "(Cancelled)" tag to its Reference.
     const dataRow = content.split('\r\n')[1];
-    expect(/"1","[^"]*"$/.test(dataRow)).toBe(true);
+    expect(dataRow).toContain('R-2026-0001 (Cancelled)');
   });
 
   it('uses CRLF line endings (RFC 4180) and BOM-free body', async () => {
