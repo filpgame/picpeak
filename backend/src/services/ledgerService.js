@@ -254,6 +254,8 @@ async function buildPostings({ from, to, currency } = {}) {
     const postings = [];
 
     // 1) Revenue invoices → Dr Debitoren / Cr Ertrag (gross, output VAT code).
+    // Migration 130 — prefer the snapshotted vat_code; guard for pre-130 DBs.
+    const hasInvVatCode = await db.schema.hasColumn('invoices', 'vat_code');
     const invoices = await db('invoices')
       .leftJoin('customer_accounts', 'invoices.customer_account_id', 'customer_accounts.id')
       .leftJoin('events', 'invoices.event_id', 'events.id')
@@ -263,6 +265,7 @@ async function buildPostings({ from, to, currency } = {}) {
       .orderBy('invoices.issue_date', 'asc')
       .select(
         'invoices.id', 'invoices.invoice_number', 'invoices.issue_date', 'invoices.vat_rate',
+        ...(hasInvVatCode ? ['invoices.vat_code'] : []),
         'invoices.net_amount_minor', 'invoices.vat_amount_minor', 'invoices.total_amount_minor',
         'customer_accounts.company_name as customer_company_name',
         'customer_accounts.first_name as customer_first_name',
@@ -273,7 +276,9 @@ async function buildPostings({ from, to, currency } = {}) {
       );
     for (const inv of invoices) {
       const revAcct = cfg.settings.defaultRevenue;
-      const vatCode = cfg.outputVatMap[rateKey(inv.vat_rate)] || '';
+      // Prefer the snapshot taken at issue time; legacy rows fall back to the
+      // (mutable) rate→code map.
+      const vatCode = inv.vat_code || cfg.outputVatMap[rateKey(inv.vat_rate)] || '';
       const label = buildCustomerLabel(inv);
       postings.push({
         date: inv.issue_date,
