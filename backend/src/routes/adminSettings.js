@@ -219,7 +219,10 @@ router.put('/customer-surface', adminAuth, requirePermission('settings.edit'), a
           updated_at: new Date(),
         });
       } else {
-        await db('app_settings').insert({ ...u, created_at: new Date(), updated_at: new Date() });
+        // app_settings has no created_at column (see src/database/db.js: only
+        // setting_key/value/type + updated_at). Inserting created_at errors —
+        // which broke first-time keys like the VAT-registration toggle.
+        await db('app_settings').insert({ ...u, updated_at: new Date() });
       }
     }
 
@@ -285,7 +288,10 @@ router.put('/accounting', adminAuth, requirePermission('settings.edit'), async (
           setting_value: u.setting_value, setting_type: u.setting_type, updated_at: new Date(),
         });
       } else {
-        await db('app_settings').insert({ ...u, created_at: new Date(), updated_at: new Date() });
+        // app_settings has no created_at column (see src/database/db.js: only
+        // setting_key/value/type + updated_at). Inserting created_at errors —
+        // which broke first-time keys like the VAT-registration toggle.
+        await db('app_settings').insert({ ...u, updated_at: new Date() });
       }
     }
     res.json({ message: 'Accounting settings updated', updated: updates.map((u) => u.setting_key) });
