@@ -86,6 +86,12 @@ export interface AccountingSettings {
   accounting_km_rate_minor: number;
   accounting_per_diem_rate_minor: number;
   accounting_require_proof: boolean;
+  /** VAT-registered: charge output VAT + reclaim input VAT. Off = small
+   *  business / under threshold (no VAT). */
+  accounting_vat_registered: boolean;
+  /** ISO-2 countries whose input VAT can be reclaimed (drives cost
+   *  tax-treatment + the report's VAT-payable). */
+  accounting_vat_reclaim_countries: string[];
 }
 
 export interface CategorizePayload {
@@ -177,6 +183,9 @@ export const accountingService = {
       accounting_km_rate_minor: Number(data.accounting_km_rate_minor) || 0,
       accounting_per_diem_rate_minor: Number(data.accounting_per_diem_rate_minor) || 0,
       accounting_require_proof: data.accounting_require_proof === true,
+      accounting_vat_registered: data.accounting_vat_registered === true,
+      accounting_vat_reclaim_countries: Array.isArray(data.accounting_vat_reclaim_countries)
+        ? data.accounting_vat_reclaim_countries : [],
     };
   },
   async updateSettings(payload: Partial<AccountingSettings>): Promise<{ updated: string[] }> {

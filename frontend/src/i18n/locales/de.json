@@ -1723,6 +1723,13 @@
       "perDiemRate": "Spesenpauschale (CHF / Tag)",
       "perDiemRateHint": "Standard für Pauschal-Aufwände; pro Eintrag überschreibbar.",
       "requireProof": "Beleg für jeden Aufwand verlangen",
+      "vat": {
+        "title": "MwSt-Registrierung & Vorsteuerabzug",
+        "registered": "MwSt-pflichtig (Umsatzsteuer berechnen + Vorsteuer abziehen)",
+        "registeredHint": "Aus = Kleinunternehmen / unter der Schwelle: keine MwSt berechnet, Vorsteuer ist Aufwand (nicht abziehbar).",
+        "reclaimCountries": "Länder mit abziehbarer Vorsteuer",
+        "reclaimCountriesHint": "Üblicherweise Ihr Inland (CH / LI). Kosten aus anderen Ländern gelten als nicht abziehbare ausländische MwSt. Cmd/Ctrl-Klick für Mehrfachauswahl."
+      },
       "disclaimer": "Sätze und MwSt-/Steuerbehandlung dienen nur als Orientierung — mit Ihrem Treuhänder prüfen.",
       "savedToast": "Buchhaltungseinstellungen gespeichert."
     }

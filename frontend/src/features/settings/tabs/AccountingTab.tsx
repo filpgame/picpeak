@@ -11,32 +11,41 @@ import { Save } from 'lucide-react';
 import { Button, Card, CardContent, Loading } from '../../../components/common';
 import { DecimalInput } from '../../../components/common/DecimalInput';
 import { accountingService } from '../../../services/accounting.service';
+import { sortedCountryOptions } from '../../../constants/countries';
 
 const labelCls = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1';
 const inputCls = 'w-full max-w-xs rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm';
 
 export const AccountingTab: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['accounting-settings'], queryFn: () => accountingService.getSettings() });
 
   const [kmMajor, setKmMajor] = useState<number>(NaN);
   const [perDiemMajor, setPerDiemMajor] = useState<number>(NaN);
   const [requireProof, setRequireProof] = useState(false);
+  const [vatRegistered, setVatRegistered] = useState(false);
+  const [reclaimCountries, setReclaimCountries] = useState<string[]>([]);
 
   useEffect(() => {
     if (data) {
       setKmMajor(data.accounting_km_rate_minor / 100);
       setPerDiemMajor(data.accounting_per_diem_rate_minor / 100);
       setRequireProof(data.accounting_require_proof);
+      setVatRegistered(data.accounting_vat_registered);
+      setReclaimCountries(data.accounting_vat_reclaim_countries || []);
     }
   }, [data]);
+
+  const countries = sortedCountryOptions(i18n.language);
 
   const save = useMutation({
     mutationFn: () => accountingService.updateSettings({
       accounting_km_rate_minor: Number.isFinite(kmMajor) ? Math.round(kmMajor * 100) : 0,
       accounting_per_diem_rate_minor: Number.isFinite(perDiemMajor) ? Math.round(perDiemMajor * 100) : 0,
       accounting_require_proof: requireProof,
+      accounting_vat_registered: vatRegistered,
+      accounting_vat_reclaim_countries: reclaimCountries,
     }),
     onSuccess: () => { toast.success(t('settings.accounting.savedToast', 'Accounting settings saved.')); qc.invalidateQueries({ queryKey: ['accounting-settings'] }); },
     onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
@@ -67,6 +76,41 @@ export const AccountingTab: React.FC = () => {
           {t('settings.accounting.requireProof', 'Require a proof file on every expense')}
         </label>
         <p className="text-xs text-amber-600 dark:text-amber-400">{t('settings.accounting.disclaimer', 'Rates and VAT/tax treatment are guidance only — verify with your Treuhaender.')}</p>
+      </CardContent></Card>
+
+      {/* VAT registration & reclaim — drives whether output/input VAT applies
+          and which countries' input VAT is deductible (cost tax-treatment +
+          the tax report's VAT-payable). */}
+      <Card><CardContent className="p-5 space-y-4">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+          {t('settings.accounting.vat.title', 'VAT registration & reclaim')}
+        </h3>
+        <label className="flex items-start gap-2 text-sm text-neutral-800 dark:text-neutral-200">
+          <input type="checkbox" checked={vatRegistered} onChange={(e) => setVatRegistered(e.target.checked)} className="mt-0.5 rounded border-neutral-300" />
+          <span>
+            {t('settings.accounting.vat.registered', 'VAT-registered (charge output VAT + reclaim input VAT)')}
+            <span className="block text-xs text-neutral-500 dark:text-neutral-400">
+              {t('settings.accounting.vat.registeredHint', 'Off = small business / under threshold: no VAT charged, input VAT is a cost (not reclaimable).')}
+            </span>
+          </span>
+        </label>
+        <div className={vatRegistered ? '' : 'opacity-50 pointer-events-none'}>
+          <label className={labelCls}>{t('settings.accounting.vat.reclaimCountries', 'Countries where input VAT is reclaimable')}</label>
+          <select
+            multiple
+            size={6}
+            value={reclaimCountries}
+            onChange={(e) => setReclaimCountries(Array.from(e.target.selectedOptions, (o) => o.value))}
+            className="w-full max-w-xs rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
+          >
+            {countries.map((c) => (
+              <option key={c.code} value={c.code}>{c.label}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            {t('settings.accounting.vat.reclaimCountriesHint', 'Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select.')}
+          </p>
+        </div>
       </CardContent></Card>
 
       <div>

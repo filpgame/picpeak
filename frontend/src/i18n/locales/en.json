@@ -1281,6 +1281,13 @@
       "perDiemRate": "Per-diem rate (CHF / day)",
       "perDiemRateHint": "Default applied to per-diem expenses; overridable per entry.",
       "requireProof": "Require a proof file on every expense",
+      "vat": {
+        "title": "VAT registration & reclaim",
+        "registered": "VAT-registered (charge output VAT + reclaim input VAT)",
+        "registeredHint": "Off = small business / under threshold: no VAT charged, input VAT is a cost (not reclaimable).",
+        "reclaimCountries": "Countries where input VAT is reclaimable",
+        "reclaimCountriesHint": "Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select."
+      },
       "disclaimer": "Rates and VAT/tax treatment are guidance only — verify with your Treuhänder.",
       "savedToast": "Accounting settings saved."
     }
