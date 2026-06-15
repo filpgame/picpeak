@@ -12,6 +12,7 @@ import { Button, Card, CardContent, Loading } from '../../../components/common';
 import { DecimalInput } from '../../../components/common/DecimalInput';
 import { accountingService } from '../../../services/accounting.service';
 import { sortedCountryOptions } from '../../../constants/countries';
+import { VatCodesManager } from '../../../components/admin/VatCodesManager';
 
 const labelCls = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1';
 const inputCls = 'w-full max-w-xs rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm';
@@ -116,6 +117,10 @@ export const AccountingTab: React.FC = () => {
       <div>
         <Button onClick={() => save.mutate()} disabled={save.isPending}><Save className="w-4 h-4 mr-2" /> {save.isPending ? t('common.saving', 'Saving…') : t('common.save', 'Save')}</Button>
       </div>
+
+      {/* VAT codes + rate→code / treatment→code maps — relocated here from the
+          Chart-of-accounts page so all VAT config lives in one place. */}
+      <VatCodesManager />
     </div>
   );
 };
