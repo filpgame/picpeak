@@ -121,7 +121,13 @@ router.get('/export', requirePermission('bills.view'),
     });
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    return res.send(content);
+    // UTF-8 BOM (EF BB BF) so Banana / Excel detect the encoding — without it
+    // the file is read as the local charset and "·" / umlauts become mojibake
+    // ("Â·"). Mirrors the tax-report CSV route.
+    const bom = Buffer.from([0xEF, 0xBB, 0xBF]);
+    const body = Buffer.concat([bom, Buffer.from(content, 'utf8')]);
+    res.setHeader('Content-Length', String(body.length));
+    return res.end(body);
   }));
 
 module.exports = router;
