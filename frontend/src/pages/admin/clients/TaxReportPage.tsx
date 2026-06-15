@@ -17,7 +17,8 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { Calculator, Download, FileDown, AlertCircle } from 'lucide-react';
+import { Calculator, Download, FileDown, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button, Card, Loading, LocalizedDateInput } from '../../../components/common';
 
 // Lightweight native select styled to match Input — the common barrel
@@ -26,8 +27,11 @@ import { Button, Card, Loading, LocalizedDateInput } from '../../../components/c
 const selectClassName =
   'w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500';
 import { taxReportService, type TaxReportParams } from '../../../services/taxReport.service';
+import { ledgerService, type ExportFormat } from '../../../services/ledger.service';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import { toast } from 'react-toastify';
+
+const LEDGER_FORMATS: ExportFormat[] = ['generic', 'banana', 'bexio'];
 
 type PeriodPreset = 'thisYear' | 'lastYear' | 'thisQuarter' | 'lastQuarter' | 'custom';
 
@@ -95,7 +99,10 @@ export const TaxReportPage: React.FC = () => {
   const [from, setFrom] = useState(initialPeriod.from);
   const [to,   setTo]   = useState(initialPeriod.to);
   const [currency, setCurrency] = useState<string>('CHF');
-  const [isExporting, setIsExporting] = useState<'pdf' | 'csv' | null>(null);
+  const [isExporting, setIsExporting] = useState<'pdf' | 'csv' | 'ledger' | null>(null);
+  // Treuhänder (collective-journal) export — same period/currency as the
+  // report; target tool picks the import format (generic / Banana / bexio).
+  const [ledgerFormat, setLedgerFormat] = useState<ExportFormat>('generic');
   // Unified-ledger sort (#5). Defaults to date ascending — matches the
   // server-side order so the first paint is stable.
   const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' }>({ key: 'date', dir: 'asc' });
@@ -129,6 +136,22 @@ export const TaxReportPage: React.FC = () => {
       triggerBrowserDownload(url, filename);
     } catch (err) {
       toast.error(t('taxReport.exportFailed', 'Export failed. Please try again.'));
+      // eslint-disable-next-line no-console
+      console.error(err);
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  // Treuhänder collective-journal export (double-entry postings with account +
+  // VAT codes) — reuses the page's period/currency, adds the target-tool format.
+  const handleLedgerExport = async () => {
+    setIsExporting('ledger');
+    try {
+      const { url, filename } = await ledgerService.downloadExportUrl({ from, to, currency, format: ledgerFormat });
+      triggerBrowserDownload(url, filename);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || t('taxReport.exportFailed', 'Export failed. Please try again.'));
       // eslint-disable-next-line no-console
       console.error(err);
     } finally {
@@ -271,25 +294,58 @@ export const TaxReportPage: React.FC = () => {
               </select>
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
-              <Button
-                variant="outline"
-                onClick={() => handleExport('csv')}
-                disabled={exportsDisabled}
-                isLoading={isExporting === 'csv'}
-                leftIcon={<FileDown className="w-4 h-4" />}
-              >
-                {t('taxReport.exportCsv', 'Export CSV')}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => handleExport('pdf')}
-                disabled={exportsDisabled}
-                isLoading={isExporting === 'pdf'}
-                leftIcon={<Download className="w-4 h-4" />}
-              >
-                {t('taxReport.exportPdf', 'Export PDF')}
-              </Button>
+            <div className="space-y-2 pt-1">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleExport('csv')}
+                  disabled={exportsDisabled}
+                  isLoading={isExporting === 'csv'}
+                  leftIcon={<FileDown className="w-4 h-4" />}
+                >
+                  {t('taxReport.exportCsv', 'Export CSV')}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => handleExport('pdf')}
+                  disabled={exportsDisabled}
+                  isLoading={isExporting === 'pdf'}
+                  leftIcon={<Download className="w-4 h-4" />}
+                >
+                  {t('taxReport.exportPdf', 'Export PDF')}
+                </Button>
+              </div>
+
+              {/* Treuhänder collective-journal export — moved here from its own
+                  tab; reuses the same period/currency. Format = target tool. */}
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <select
+                  value={ledgerFormat}
+                  onChange={(e) => setLedgerFormat(e.target.value as ExportFormat)}
+                  disabled={exportsDisabled}
+                  aria-label={t('ledger.export.format', 'Target tool') as string}
+                  className={`${selectClassName} w-auto`}
+                >
+                  {LEDGER_FORMATS.map((f) => (
+                    <option key={f} value={f}>{t(`ledger.export.format_${f}`, f)}</option>
+                  ))}
+                </select>
+                <Button
+                  variant="outline"
+                  onClick={handleLedgerExport}
+                  disabled={exportsDisabled}
+                  isLoading={isExporting === 'ledger'}
+                  leftIcon={<FileSpreadsheet className="w-4 h-4" />}
+                >
+                  {t('taxReport.ledgerExport', 'Treuhänder export')}
+                </Button>
+              </div>
+              <p className="text-[11px] text-neutral-400 dark:text-neutral-500 text-right">
+                {t('taxReport.ledgerExportHint', 'Double-entry journal for your accountant, mapped via your Chart of accounts.')}{' '}
+                <Link to="/admin/accounting/ledger" className="underline hover:text-neutral-600 dark:hover:text-neutral-300">
+                  {t('taxReport.ledgerExportConfigure', 'Configure →')}
+                </Link>
+              </p>
             </div>
           </div>
         </Card>

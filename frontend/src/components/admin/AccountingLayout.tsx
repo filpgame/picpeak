@@ -9,7 +9,7 @@
 import React from 'react';
 import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Landmark, Calculator, Inbox, Wallet, BookOpen, FileSpreadsheet } from 'lucide-react';
+import { Landmark, Calculator, Inbox, Wallet, BookOpen } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useFeatureFlags, type FeatureKey } from '../../contexts/FeatureFlagsContext';
 
@@ -45,16 +45,11 @@ export const AccountingLayout: React.FC = () => {
     },
     {
       key: 'tax-report',
+      // The Treuhänder export now lives ON the Tax page (same period/currency
+      // filters, same data) instead of a separate sub-tab — see TaxReportPage.
       to: '/admin/accounting/tax-report',
       label: t('accounting.subnav.taxReport', 'Tax'),
       icon: Calculator,
-      featureFlag: 'taxReport',
-    },
-    {
-      key: 'export',
-      to: '/admin/accounting/export',
-      label: t('accounting.subnav.export', 'Treuhänder export'),
-      icon: FileSpreadsheet,
       featureFlag: 'taxReport',
     },
     {
