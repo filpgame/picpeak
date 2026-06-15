@@ -314,6 +314,7 @@ export const TaxReportPage: React.FC = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
+                    className="min-w-[150px]"
                     variant="outline"
                     onClick={() => handleExport('csv')}
                     disabled={exportsDisabled}
@@ -323,6 +324,7 @@ export const TaxReportPage: React.FC = () => {
                     {t('taxReport.exportCsv', 'Export CSV')}
                   </Button>
                   <Button
+                    className="min-w-[150px]"
                     variant="primary"
                     onClick={() => handleExport('pdf')}
                     disabled={exportsDisabled}
@@ -334,9 +336,10 @@ export const TaxReportPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Group 2 — Accounting journal (for your accountant) */}
+              {/* Group 2 — Accounting journal (for your accountant). Solid
+                  divider above to separate it from the Report group. */}
               {flags.accounting && (
-                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-3 border-t border-dashed border-neutral-200 dark:border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-3 border-t border-neutral-200 dark:border-neutral-700">
                   <div className="min-w-0">
                     <div className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                       {t('taxReport.export.journalTitle', 'Accounting journal')}
@@ -354,13 +357,14 @@ export const TaxReportPage: React.FC = () => {
                       onChange={(e) => setLedgerFormat(e.target.value as ExportFormat)}
                       disabled={exportsDisabled}
                       aria-label={t('ledger.export.format', 'Target tool') as string}
-                      className={`${selectClassName} w-auto`}
+                      className={`${selectClassName} min-w-[150px] w-auto`}
                     >
                       {LEDGER_FORMATS.map((f) => (
                         <option key={f} value={f}>{t(`ledger.export.format_${f}`, f)}</option>
                       ))}
                     </select>
                     <Button
+                      className="min-w-[150px]"
                       variant="outline"
                       onClick={handleLedgerExport}
                       disabled={exportsDisabled}
