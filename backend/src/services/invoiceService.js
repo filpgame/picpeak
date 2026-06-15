@@ -1780,6 +1780,8 @@ async function buildInvoiceRenderContext(invoice, lineItems) {
     totals: {
       netAmountMinor: invoice.net_amount_minor,
       vatRate: invoice.vat_rate,
+      // Migration 130 — VAT-code snapshot (so re-editing preserves it).
+      vatCode: invoice.vat_code ?? null,
       vatAmountMinor: invoice.vat_amount_minor,
       shippingAmountMinor: invoice.shipping_amount_minor,
       totalAmountMinor: invoice.total_amount_minor,

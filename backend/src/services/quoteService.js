@@ -1562,6 +1562,8 @@ async function duplicateQuote(id, adminId) {
     expectedDurationHours: quote.expected_duration_hours,
     paymentTermTemplateId: quote.payment_term_template_id,
     vatRate: quote.vat_rate,
+    // Migration 130 — VAT-code snapshot (so re-editing preserves it).
+    vatCode: quote.vat_code ?? null,
     shippingAmountMinor: quote.shipping_amount_minor,
     introText: quote.intro_text,
     outroText: quote.outro_text,
