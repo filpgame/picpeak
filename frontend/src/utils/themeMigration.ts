@@ -26,19 +26,39 @@ const LIGHT_SURFACE_DEFAULTS = {
 };
 
 /**
+ * Standard typography + style applied when an instance-wide force color mode
+ * lock is active. A force lock means "use the clean standard look" — the
+ * per-theme colour mode, surface/text palette, AND typography/style are
+ * overridden so the customizer's now-hidden colour/typography/style controls
+ * genuinely don't do anything while the lock is on (limits confusion). Accent
+ * brand colours and the structural choices that live in their own cards
+ * (header style, controls style, gallery layout, hero divider) are preserved.
+ *
+ * Override-only: the SAVED theme keeps the admin's custom values — turning the
+ * lock off makes them apply again. `undefined` lets applyTheme() fall back to
+ * its built-in default (e.g. the system/Inter font) rather than a stale value.
+ */
+const FORCED_STANDARD_TYPOGRAPHY_STYLE: Partial<ThemeConfig> = {
+  fontFamily: undefined,
+  headingFontFamily: undefined,
+  fontSize: 'normal',
+  borderRadius: 'md',
+  shadowStyle: 'subtle',
+  backgroundPattern: undefined,
+};
+
+/**
  * Apply an instance-wide force color mode lock to a theme config.
  *
- * If the theme already matches the locked mode (or no lock is set), only
- * the colorMode flag is pinned. If the theme is locked to a mode it
- * doesn't natively support (e.g. an admin set Force Dark but is opening
- * a light gallery preset), the surface/text tokens are replaced with the
- * matching mode's defaults — the user's accent/accentDark colours are
- * preserved so brand identity survives the flip.
+ * No lock → returned unchanged. With a lock, pin colorMode, swap the
+ * surface/text palette to the locked mode's defaults (only when the theme
+ * doesn't already match the mode), and reset typography/style to the standard
+ * look. The user's accent/accentDark colours are always preserved so brand
+ * identity survives the flip.
  *
- * Centralised here so GlobalThemeProvider, GalleryPage and GalleryView
- * stay in sync (#397 follow-up: galleries did not visibly flip when
- * Force Dark/Light was toggled because only colorMode was overridden,
- * leaving the original light/dark surface colours in place).
+ * Centralised here so every consumer stays in sync (#397 follow-up: galleries
+ * did not visibly flip when Force Dark/Light was toggled because only
+ * colorMode was overridden, leaving the original surface colours in place).
  */
 export function applyForceColorMode(
   theme: ThemeConfig,
@@ -53,14 +73,16 @@ export function applyForceColorMode(
           : 'light')
     : (theme.colorMode || 'light');
 
-  if (themeMode === forced) {
-    return { ...theme, colorMode: forced };
-  }
+  // Swap the surface palette only when the theme doesn't natively match the
+  // locked mode; the standard typography/style reset applies either way.
+  const surfaces = themeMode === forced
+    ? {}
+    : (forced === 'dark' ? DARK_SURFACE_DEFAULTS : LIGHT_SURFACE_DEFAULTS);
 
-  const surfaces = forced === 'dark' ? DARK_SURFACE_DEFAULTS : LIGHT_SURFACE_DEFAULTS;
   return {
     ...theme,
     ...surfaces,
+    ...FORCED_STANDARD_TYPOGRAPHY_STYLE,
     colorMode: forced,
   };
 }
