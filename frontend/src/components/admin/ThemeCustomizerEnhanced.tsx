@@ -184,12 +184,15 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
   slotBeforeCustomCss
 }) => {
   const { t } = useTranslation();
-  // A forced color mode locks the instance to the standard look — the per-theme
-  // Color Mode, surface/text palette, and Typography & Style are overridden at
-  // render (applyForceColorMode). Hide those now-dead controls to avoid
-  // configuring settings that don't apply; accent colours + the structural
-  // cards (header/controls/layout) stay editable.
+  // A force lock (instance-wide light/dark) overrides the per-theme color
+  // mode. On the Branding page (where the Force control lives —
+  // onForceColorModeChange is provided) we hide only the now-redundant
+  // per-theme Color Mode picker. In per-event gallery editors (no Force
+  // control) we ALSO hide the colour pickers, since a gallery can't override
+  // the site-wide lock. Presets, fonts and style always stay.
   const forcedColorActive = (forceColorMode ?? null) !== null;
+  const isBrandingContext = !!onForceColorModeChange;
+  const hideGalleryColors = forcedColorActive && !isBrandingContext;
   const [localTheme, setLocalTheme] = useState<ThemeConfig>(value);
   const [selectedPreset, setSelectedPreset] = useState(presetName);
   const [customCss, setCustomCss] = useState(value.customCss || '');
@@ -311,7 +314,6 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
 
   return (
     <div className="space-y-6">
-      {!forcedColorActive && (<>
       {/* Preset Themes */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
@@ -896,7 +898,6 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
           )}
         </Card>
       )}
-      </>)}
 
       {/* Color Customization */}
       <Card className="p-6">
@@ -924,8 +925,10 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
         {/* Color Mode Selector */}
         <div className="mb-6">
           {forcedColorActive && (
-            <div className="mb-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
-              {t('branding.forcedStandardLookNote', 'A forced color mode is active — the gallery uses the standard light/dark look, so the theme customization is hidden (it doesn’t apply while the lock is on). Your accent brand colors still apply. Set Force to “No force” to customize the gallery theme again.')}
+            <div className="mb-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+              {isBrandingContext
+                ? t('branding.forcedModeBrandingHint', 'Light/dark is locked site-wide by the Force control below — the per-theme mode picker is hidden because it would have no effect.')
+                : t('branding.forcedModeGalleryNote', 'A site-wide color lock is active, so this gallery follows the locked light/dark mode. Color and light/dark options are hidden here and can’t be overridden per gallery.')}
             </div>
           )}
           {!forcedColorActive && (<>
@@ -1047,8 +1050,8 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
          * same height so the four Surfaces and the two Accent rows align
          * cleanly side-by-side.
          */}
+        {!hideGalleryColors && (
         <div className="space-y-6">
-          {!forcedColorActive && (<>
           {/* Surfaces */}
           <div>
             <h4 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide mb-3 flex items-center gap-1.5">
@@ -1194,12 +1197,11 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
             {/* primaryColor is kept in sync with accentDarkColor inside
                 handleChange() — no dedicated picker. */}
           </div>
-          </>)}
         </div>
+        )}
       </Card>
 
-      {/* Typography & Style — hidden while a forced color mode is active */}
-      {!forcedColorActive && (
+      {/* Typography & Style */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
           <Type className="w-5 h-5" />
@@ -1330,9 +1332,7 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
           </div>
         </div>
       </Card>
-      )}
 
-      {!forcedColorActive && (<>
       {/* CSS Template Selector - only show if templates are provided */}
       {cssTemplates && cssTemplates.length > 0 && onCssTemplateChange && (
         <Card className="p-6">
@@ -1509,7 +1509,6 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
           {t('branding.customCSSHelp')}
         </p>
       </Card>
-      </>)}
 
       {/* Actions */}
       {!hideActions && (

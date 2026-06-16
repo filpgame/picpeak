@@ -122,41 +122,13 @@ describe('applyForceColorMode', () => {
     expect(applyForceColorMode(lightTheme, undefined)).toEqual(lightTheme);
   });
 
-  it('keeps the custom surface palette when the theme already matches the forced mode', () => {
+  it('only pins colorMode when the theme already matches the forced mode', () => {
     const result = applyForceColorMode(customDark, 'dark');
     expect(result.colorMode).toBe('dark');
-    // Custom surfaces preserved (mode already matches → no palette swap).
+    // Custom surfaces preserved.
     expect(result.backgroundColor).toBe('#0D0D0D');
     expect(result.surfaceColor).toBe('#111414');
     expect(result.accentColor).toBe('#017C7C');
-  });
-
-  it('resets typography & style to the standard look while preserving accent', () => {
-    const themed: ThemeConfig = {
-      ...customDark,
-      fontFamily: 'Playfair Display, serif',
-      headingFontFamily: 'Playfair Display, serif',
-      fontSize: 'large',
-      borderRadius: 'lg',
-      shadowStyle: 'dramatic',
-    };
-    // Force-light differs from the theme's dark mode → full standard look.
-    const result = applyForceColorMode(themed, 'light');
-    expect(result.colorMode).toBe('light');
-    // Typography/style fall back to the standard look.
-    expect(result.fontFamily).toBeUndefined();
-    expect(result.headingFontFamily).toBeUndefined();
-    expect(result.fontSize).toBe('normal');
-    expect(result.borderRadius).toBe('md');
-    expect(result.shadowStyle).toBe('subtle');
-    // Accent brand colours survive.
-    expect(result.accentColor).toBe('#017C7C');
-    expect(result.accentDarkColor).toBe('#014E4E');
-    // Same standard reset even when the theme already matches the forced mode.
-    const matching = applyForceColorMode(themed, 'dark');
-    expect(matching.fontFamily).toBeUndefined();
-    expect(matching.borderRadius).toBe('md');
-    expect(matching.accentColor).toBe('#017C7C');
   });
 
   it('swaps surface tokens when forcing a light theme to dark', () => {
