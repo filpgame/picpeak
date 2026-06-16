@@ -42,7 +42,13 @@ exports.up = async function (knex) {
       table.integer('inbound_document_id').unsigned();
       table.text('error');
       table.timestamp('created_at').defaultTo(knex.fn.now());
-      table.index(['message_id']);
+      // UNIQUE (not just INDEX): message_id is the dedup/claim key for the IMAP
+      // poller. The in-process `polling` lock serialises within one backend, but a
+      // second replica / rolling-deploy overlap would otherwise let two workers
+      // both pass the check-then-insert and double-ingest the same mail. NULLs stay
+      // distinct (Postgres + SQLite) so no-Message-ID rows aren't blocked. The
+      // intake claims this row BEFORE ingesting.
+      table.unique(['message_id']);
       table.index(['status']);
     });
   }

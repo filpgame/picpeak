@@ -49,6 +49,7 @@ const REPORTABLE_STATUSES = ['sent', 'paid', 'overdue', 'pending_delivery', 'can
 
 // D.2 — `ensureInt` consolidated into utils/numericHelpers.
 const { ensureInt } = require('../utils/numericHelpers');
+const { neutralizeSpreadsheetFormula } = require('../utils/spreadsheetSafe');
 const logger = require('../utils/logger');
 
 function ensureRate(v) {
@@ -997,9 +998,10 @@ async function renderTaxReportCsv({ from, to, currency, locale } = {}) {
   const useLocale = locale || 'en';
 
   const escape = (cell) => {
-    const s = cell === null || cell === undefined ? '' : String(cell);
-    // RFC 4180: wrap in quotes when the value contains comma, quote,
-    // or newline. We always wrap, simpler + bulletproof for Excel.
+    // Formula-injection defence (Excel/Numbers) THEN RFC-4180 quote-wrap. The
+    // quote wrap alone does NOT stop formula evaluation — only the leading
+    // single-quote prefix does.
+    const s = neutralizeSpreadsheetFormula(cell === null || cell === undefined ? '' : String(cell));
     return `"${s.replace(/"/g, '""')}"`;
   };
 

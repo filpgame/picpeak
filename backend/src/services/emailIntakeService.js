@@ -16,6 +16,7 @@ const { db } = require('../database/db');
 const logger = require('../utils/logger');
 const { getStoragePath } = require('../config/storage');
 const expenseService = require('./expenseService');
+const { isUniqueViolation } = require('../utils/dbErrors');
 
 const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png'];
 let polling = false;
@@ -269,14 +270,46 @@ async function pollOnce() {
       // 4) Download + process each fresh message.
       for (const cand of fresh) {
         let messageId = cand.messageId;
+        let claimKey = null;
+        let claimed = false;
         try {
           const one = await client.fetchOne(String(cand.uid), { source: true }, { uid: true });
           if (!one || !one.source) continue;
           const parsed = await simpleParser(one.source);
           messageId = parsed.messageId || cand.messageId;
-          // Re-check with the parsed id (can differ from the envelope's).
-          const dup = await db('received_emails').where({ message_id: messageId }).first();
-          if (dup) { await client.messageFlagsAdd(cand.uid, ['\\Seen'], { uid: true }); continue; }
+          // Claim key: a no-Message-ID mail still needs a non-null, per-message
+          // key so two pollers converge — fall back to the mailbox uid.
+          claimKey = messageId || `nomsgid-${cand.uid}`;
+
+          // Fast-path: already processed. Recover a row left 'processing' by a
+          // worker that crashed mid-ingest (>10 min) so the attachment isn't
+          // orphaned — otherwise skip + mark seen.
+          const existing = await db('received_emails').where({ message_id: claimKey }).first();
+          if (existing) {
+            const staleProcessing = existing.status === 'processing'
+              && existing.created_at
+              && (Date.now() - new Date(existing.created_at).getTime() > 10 * 60 * 1000);
+            if (!staleProcessing) { await client.messageFlagsAdd(cand.uid, ['\\Seen'], { uid: true }); continue; }
+            await db('received_emails').where({ id: existing.id }).del();
+          }
+
+          // CLAIM the message atomically BEFORE any ingest. The message_id UNIQUE
+          // index (migration 128) makes this the real guard: if a second poller
+          // (multi-replica / rolling deploy) already claimed it, the insert hits
+          // the unique constraint and we skip cleanly — no double-ingest.
+          try {
+            await db('received_emails').insert({
+              message_id: claimKey,
+              status: 'processing',
+              attachment_count: 0,
+              received_at: new Date(),
+              created_at: new Date(),
+            });
+            claimed = true;
+          } catch (ce) {
+            if (isUniqueViolation(ce)) { await client.messageFlagsAdd(cand.uid, ['\\Seen'], { uid: true }); continue; }
+            throw ce;
+          }
 
           // Ingest attachments. Isolate each so one bad file can't prevent the
           // audit row (the symptom: doc lands in Incoming invoices but the
@@ -300,10 +333,9 @@ async function pollOnce() {
           // Postgres timestamp insert — coerce to now.
           const receivedAt = (parsed.date instanceof Date && !Number.isNaN(parsed.date.getTime())) ? parsed.date : new Date();
           const status = count > 0 ? 'ingested' : (attErrors.length ? 'error' : 'no_attachment');
-          // Audit EVERY processed message, even attachment-less ones, so the
-          // Received tab is a complete log.
-          await db('received_emails').insert({
-            message_id: messageId,
+          // Finalise the claimed row — every processed message ends up in the
+          // Received tab, even attachment-less ones.
+          await db('received_emails').where({ message_id: claimKey }).update({
             from_address: ((parsed.from && parsed.from.text) || '').slice(0, 512) || null,
             subject: parsed.subject || null,
             received_at: receivedAt,
@@ -311,7 +343,6 @@ async function pollOnce() {
             status,
             inbound_document_id: inboundId,
             error: attErrors.length ? attErrors.join('; ').slice(0, 2000) : null,
-            created_at: new Date(),
           });
           await client.messageFlagsAdd(cand.uid, ['\\Seen'], { uid: true });
           processed += 1;
@@ -320,7 +351,13 @@ async function pollOnce() {
           // Received row.
           logger.error?.(`emailIntake: message uid ${cand.uid} (${messageId}) failed: ${e.message}`);
           try {
-            await db('received_emails').insert({ message_id: `err-${cand.uid}-${Date.now()}`, status: 'error', error: e.message, attachment_count: 0, received_at: new Date(), created_at: new Date() });
+            if (claimed && claimKey) {
+              // We already claimed the row — mark it errored rather than orphan it.
+              await db('received_emails').where({ message_id: claimKey })
+                .update({ status: 'error', error: String(e.message).slice(0, 2000) });
+            } else {
+              await db('received_emails').insert({ message_id: `err-${cand.uid}-${Date.now()}`, status: 'error', error: e.message, attachment_count: 0, received_at: new Date(), created_at: new Date() });
+            }
           } catch (ie) {
             logger.error?.(`emailIntake: could not even write the error row (received_emails insert failing): ${ie.message}`);
           }

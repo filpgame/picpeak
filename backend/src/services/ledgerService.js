@@ -21,6 +21,7 @@ const { db, withRetry } = require('../database/db');
 const { getAppSetting } = require('../utils/appSettings');
 const { buildCustomerLabel } = require('./taxReportService')._internal;
 const { ensureInt } = require('../utils/numericHelpers');
+const { neutralizeSpreadsheetFormula } = require('../utils/spreadsheetSafe');
 
 const ACCOUNT_TYPES = ['asset', 'liability', 'equity', 'revenue', 'expense'];
 const VAT_DIRECTIONS = ['output', 'input'];
@@ -391,7 +392,8 @@ async function buildPostings({ from, to, currency } = {}) {
 
 // ── export formatters ────────────────────────────────────────────────
 function csvEscape(cell) {
-  const s = cell === null || cell === undefined ? '' : String(cell);
+  // Formula-injection defence (Excel/Numbers/Banana) THEN RFC-4180 quote-wrap.
+  const s = neutralizeSpreadsheetFormula(cell === null || cell === undefined ? '' : String(cell));
   return `"${s.replace(/"/g, '""')}"`;
 }
 function minorToDecimal(m) { return ((Number(m) || 0) / 100).toFixed(2); }
@@ -473,7 +475,7 @@ async function exportPostings({ from, to, currency, format = 'generic' } = {}) {
   // Tab layout: strip any tab/newline from a cell so it can't split the row;
   // CSV cells go through the RFC-4180 quoter instead.
   const fmtCell = isTab
-    ? (v) => String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ')
+    ? (v) => neutralizeSpreadsheetFormula(String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' '))
     : csvEscape;
   const lines = [headers.map(fmtCell).join(sep)];
   for (const p of postings) lines.push(rowOf(p).map(fmtCell).join(sep));
@@ -501,5 +503,5 @@ module.exports = {
   listVatCodes, createVatCode, updateVatCode, deleteVatCode,
   getMappings, setCategoryAccount, updateSettings,
   getConfig, buildPostings, exportPostings,
-  _internal: { rateKey, csvEscape, minorToDecimal },
+  _internal: { rateKey, csvEscape, neutralizeSpreadsheetFormula, minorToDecimal },
 };
