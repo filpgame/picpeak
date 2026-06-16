@@ -1121,5 +1121,5 @@ module.exports = {
   renderTaxReportPdf,
   renderTaxReportCsv,
   // Exposed for unit tests.
-  _internal: { grossUpLateFee, computeReportedAmounts, buildCustomerLabel, formatVatRate, loadCosts },
+  _internal: { grossUpLateFee, computeReportedAmounts, buildCustomerLabel, formatVatRate, loadCosts, scopeLedger, normalizeScope },
 };

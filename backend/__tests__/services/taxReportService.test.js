@@ -451,3 +451,81 @@ describe('getTaxReport', () => {
     expect(out.summary.costGrossMinor).toBe(0);
   });
 });
+
+// ----- export scope (income/cost split) --------------------------------
+describe('export scope helpers', () => {
+  const { scopeLedger, normalizeScope } = taxReportService._internal;
+  const ledger = [
+    { type: 'outgoing', reference: 'R-1' },
+    { type: 'incoming', reference: 'IN-1' },
+    { type: 'expense', reference: 'EXP-1' },
+  ];
+
+  it('normalizeScope defaults unknown/empty to "all"', () => {
+    expect(normalizeScope('all')).toBe('all');
+    expect(normalizeScope('income')).toBe('income');
+    expect(normalizeScope('cost')).toBe('cost');
+    expect(normalizeScope('bogus')).toBe('all');
+    expect(normalizeScope(undefined)).toBe('all');
+  });
+
+  it('scopeLedger income keeps only outgoing rows', () => {
+    expect(scopeLedger(ledger, 'income').map((r) => r.type)).toEqual(['outgoing']);
+  });
+
+  it('scopeLedger cost keeps incoming + expense rows', () => {
+    expect(scopeLedger(ledger, 'cost').map((r) => r.type)).toEqual(['incoming', 'expense']);
+  });
+
+  it('scopeLedger all keeps everything; null-safe', () => {
+    expect(scopeLedger(ledger, 'all')).toHaveLength(3);
+    expect(scopeLedger(null, 'income')).toEqual([]);
+  });
+});
+
+describe('renderTaxReportCsv scope', () => {
+  beforeEach(() => {
+    costTablesPresent = true;
+    invoiceRowsForRun = [{
+      id: 1, invoice_number: 'R-2026-0001', issue_date: '2026-01-15',
+      currency: 'CHF', status: 'paid', vat_rate: 8.1,
+      net_amount_minor: 100000, vat_amount_minor: 8100, total_amount_minor: 108100,
+      late_fee_amount_minor: 0, replaces_invoice_id: null,
+      customer_company_name: 'ACME', event_name: 'Wedding A',
+    }];
+    inboundRowsForRun = [{
+      id: 5, invoice_date: '2026-01-20', created_at: '2026-01-21 09:00:00',
+      supplier_name: 'Lab AG', description: 'Prints', disposition: 'eigener_aufwand',
+      tax_treatment: 'domestic', status: 'categorized', event_id: 7,
+      net_amount_minor: 20000, vat_amount_minor: 1620, total_amount_minor: 21620,
+      event_name: 'Wedding A',
+    }];
+  });
+
+  it('income scope keeps the invoice row, drops the supplier cost row', async () => {
+    const { content, filename } = await taxReportService.renderTaxReportCsv({
+      from: '2026-01-01', to: '2026-03-31', currency: 'CHF', scope: 'income',
+    });
+    expect(content).toContain('R-2026-0001');
+    expect(content).not.toContain('Lab AG');
+    expect(filename).toContain('income_');
+  });
+
+  it('cost scope keeps the supplier row, drops the invoice row', async () => {
+    const { content, filename } = await taxReportService.renderTaxReportCsv({
+      from: '2026-01-01', to: '2026-03-31', currency: 'CHF', scope: 'cost',
+    });
+    expect(content).toContain('Lab AG');
+    expect(content).not.toContain('R-2026-0001');
+    expect(filename).toContain('cost_');
+  });
+
+  it('all scope (default) keeps both', async () => {
+    const { content, filename } = await taxReportService.renderTaxReportCsv({
+      from: '2026-01-01', to: '2026-03-31', currency: 'CHF',
+    });
+    expect(content).toContain('R-2026-0001');
+    expect(content).toContain('Lab AG');
+    expect(filename).not.toMatch(/income_|cost_/);
+  });
+});
