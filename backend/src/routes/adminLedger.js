@@ -21,17 +21,9 @@ const ledgerService = require('../services/ledgerService');
 const router = express.Router();
 const toInt = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : undefined; };
 
-function requireFlag(key, code) {
-  return async (req, res, next) => {
-    try {
-      const row = await db('feature_flags').where({ key }).first();
-      const enabled = row && (row.value === true || row.value === 1 || row.value === '1');
-      if (!enabled) return res.status(403).json({ error: `${key} feature is disabled`, code });
-      return next();
-    } catch (err) { return next(err); }
-  };
-}
-const requireAccounting = requireFlag('accounting', 'ACCOUNTING_DISABLED');
+// Shared cached feature gate (PR #622 nit 2) — replaces the former local copy.
+const { requireFeatureFlag } = require('../middleware/requireFeatureFlag');
+const requireAccounting = requireFeatureFlag('accounting', 'ACCOUNTING_DISABLED');
 
 router.use(adminAuth);
 router.use(requireAccounting);

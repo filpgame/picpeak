@@ -202,6 +202,9 @@ async function roundTripTest({ timeoutMs = 30000, intervalMs = 3000 } = {}) {
   const client = makeImapClient(cfg);
   await connectWithTimeout(client);
   const started = Date.now();
+  // Backoff (PR #622 nit 4): some IMAP servers throttle frequent SELECT/SEARCH.
+  // Grow the gap ×1.5 (cap 8s) so a 30s test does ~5 polls, not ~10.
+  let delay = intervalMs;
   try {
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -219,7 +222,8 @@ async function roundTripTest({ timeoutMs = 30000, intervalMs = 3000 } = {}) {
         return { ok: false, sent: true, reason: 'not_received', recipient };
       }
       // eslint-disable-next-line no-await-in-loop
-      await new Promise((r) => setTimeout(r, intervalMs));
+      await new Promise((r) => setTimeout(r, delay));
+      delay = Math.min(Math.round(delay * 1.5), 8000);
     }
   } finally {
     await client.logout().catch(() => {});
