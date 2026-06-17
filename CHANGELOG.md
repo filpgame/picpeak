@@ -5,6 +5,20 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.63.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.62.0-beta.0...v3.63.0-beta.0) (2026-06-17)
+
+
+### Features
+
+* **events:** duplicate-gallery action ([#626](https://github.com/the-luap/picpeak/issues/626)) ([e985d25](https://github.com/the-luap/picpeak/commit/e985d25207671cbfefcdda9775a96eadf2fe0698))
+
+
+### Bug Fixes
+
+* **events:** publish-from-draft email carries the real password ([#627](https://github.com/the-luap/picpeak/issues/627)) ([83b568e](https://github.com/the-luap/picpeak/commit/83b568ee2ddc007b7d981fd4b46b69810f0165c3))
+* **gallery:** admin edits to welcome_message land for returning guests ([#625](https://github.com/the-luap/picpeak/issues/625)) ([ea6245c](https://github.com/the-luap/picpeak/commit/ea6245cfdea67bd4668e2100f295433a3d29f7f1))
+* **upload:** auto-throttle on low-memory hosts + correct documented RAM minimum ([#628](https://github.com/the-luap/picpeak/issues/628)) ([714a9f6](https://github.com/the-luap/picpeak/commit/714a9f6fb1f48ba1316cc240054d5128749581d8))
+
 ## [3.62.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.61.0-beta.0...v3.62.0-beta.0) (2026-06-17)
 
 
