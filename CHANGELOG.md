@@ -5,6 +5,51 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.62.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.61.0-beta.0...v3.62.0-beta.0) (2026-06-17)
+
+
+### Features
+
+* **accounting:** add a Banana "Income & Expense" (cash-book) export format ([445d6d7](https://github.com/the-luap/picpeak/commit/445d6d7b6d6b0692d5b7c0a3dd0ca8b71dfad6ef))
+* **accounting:** bill editor VAT dropdown + GET returns vat_code snapshot ([2479d87](https://github.com/the-luap/picpeak/commit/2479d87afc5b094a5323bca0b67e6404ce05a4e2))
+* **accounting:** clearer tax-export window + gate journal export on accounting flag ([3edd832](https://github.com/the-luap/picpeak/commit/3edd8321035c48d6b3e8b157d4b94075657fc7a0))
+* **accounting:** data-driven revenue-rate VAT map (multi-country) ([873be91](https://github.com/the-luap/picpeak/commit/873be910a5e88a6d942f116c2bcfecfef9161024))
+* **accounting:** move Chart of accounts into Settings → Accounting ([97795f6](https://github.com/the-luap/picpeak/commit/97795f6d1ed25d23396a76b63c225b110ddc315e))
+* **accounting:** move Treuhänder export onto the Tax page ([b1f73c1](https://github.com/the-luap/picpeak/commit/b1f73c1df9408ddae821760eb8ed57c726d2e056))
+* **accounting:** relocate VAT codes + rate maps into Settings → Accounting ([4ff5b84](https://github.com/the-luap/picpeak/commit/4ff5b84cb66e40be960c2be7a67334cf0cc98be2))
+* **accounting:** scope the tax-report export to income-only or cost-only ([9f3b286](https://github.com/the-luap/picpeak/commit/9f3b28684ff36b131420cd975df634a29d660323))
+* **accounting:** snapshot the chosen VAT code on quote/invoice create + storno ([5b52969](https://github.com/the-luap/picpeak/commit/5b52969e36a41bbc08a98e0bca1ce0e937d77f56))
+* **accounting:** snapshot vat_code on quotes/invoices + export prefers it (foundation) ([0a7dc1c](https://github.com/the-luap/picpeak/commit/0a7dc1cf5da17a5bef204f6680844c8ab2b44269))
+* **accounting:** tax report VAT-payable honours registration + reclaim ([d7107aa](https://github.com/the-luap/picpeak/commit/d7107aaf0adf5e03f08085c7691b6530b15ed702))
+* **accounting:** unify tax report into one signed, typed, sortable ledger ([fd1dd81](https://github.com/the-luap/picpeak/commit/fd1dd81e8dfc790d960a7e6d888beba895a23461))
+* **accounting:** VAT registration + reclaim-country settings in the Accounting tab ([4d87684](https://github.com/the-luap/picpeak/commit/4d876848823bce2c79e629308c92206c64d9893d))
+* **accounting:** VAT registration/reclaim settings + un-gated VAT-codes read ([fbbbb8a](https://github.com/the-luap/picpeak/commit/fbbbb8ab7335f07ecf48e217632c7011bd7c88cd))
+* **accounting:** VAT-code dropdown in the quote editor (+ reusable VatRateSelect) ([6e1924b](https://github.com/the-luap/picpeak/commit/6e1924bae8b50dbb8460e151c1d9a79553fddb19))
+* **branding:** force color mode = standard look; hide overridden theme controls ([4749e22](https://github.com/the-luap/picpeak/commit/4749e222dc41695a2494a3b740952745bb854d4e))
+
+
+### Bug Fixes
+
+* **accounting:** Banana export is now a tab-separated .txt (actually importable) ([a195067](https://github.com/the-luap/picpeak/commit/a19506749a449ec0a628da776af5a5bea8a2e46e))
+* **accounting:** Banana I&E export uses the 'Category' column (not 'ContraAccount') ([53a16f9](https://github.com/the-luap/picpeak/commit/53a16f9f6f9b11c224b3ff5f337f8a7fe4dbfc38))
+* **accounting:** emit ISO dates in exports (Postgres returns Date objects) ([0c0fb29](https://github.com/the-luap/picpeak/commit/0c0fb29770d7559b8b35a1b2a0aae1315485d875))
+* **accounting:** label the outgoing-invoice totals block in the tax summary ([f3e77e7](https://github.com/the-luap/picpeak/commit/f3e77e78079c6869a3a5de062a90f1a04fecde3c))
+* **accounting:** PR [#622](https://github.com/the-luap/picpeak/issues/622) blockers — CSV formula injection + IMAP double-ingest race ([cd6d578](https://github.com/the-luap/picpeak/commit/cd6d57839b4753b2848620c5960332cc945580ce))
+* **accounting:** PR [#622](https://github.com/the-luap/picpeak/issues/622) concerns — flag-cache, customer master gate, VAT-unconfigured, helpers, page cap ([a93b6dc](https://github.com/the-luap/picpeak/commit/a93b6dc232375e1362e091c8868a409b1335dcae))
+* **accounting:** tax report cost side queried a non-existent column ([ab65a47](https://github.com/the-luap/picpeak/commit/ab65a470a009d33558a7167dd2c3c649f785e686))
+* **accounting:** tidy the tax-export scope selector styling ([8deb7e0](https://github.com/the-luap/picpeak/commit/8deb7e0741a5bf559cb9f9b78350821dc84bdb53))
+* **accounting:** UTF-8 BOM on the ledger export so Banana reads it correctly ([74144da](https://github.com/the-luap/picpeak/commit/74144da45fc0a7a2c2e88d17a23b584ba77e9262))
+* **branding:** force lock = light/dark only; Branding stays the full preset, galleries hide color+mode ([a7c1913](https://github.com/the-luap/picpeak/commit/a7c19135bb9645a7f95d5fe76581098db305394f))
+* **branding:** when a force lock is active, collapse the theme customizer to just the Force control ([1ac653a](https://github.com/the-luap/picpeak/commit/1ac653ad1b9f47af8cb24cb53ffa60a1e95192fc))
+* **crm:** admin surfaces follow the admin light/dark toggle, not the gallery theme ([#620](https://github.com/the-luap/picpeak/issues/620)) ([d3266a0](https://github.com/the-luap/picpeak/commit/d3266a0d1c458e8ae9c57ccd2f650e699544d2d6))
+* **flags:** close CRM/accounting feature-gating gaps from the audit ([03fa3d8](https://github.com/the-luap/picpeak/commit/03fa3d82962d6d6f3cd9630e01258013d567865e))
+* **settings:** don't insert non-existent created_at into app_settings ([8621338](https://github.com/the-luap/picpeak/commit/8621338c489cbd5194da6ac22d1fe1bd9d730cb0))
+
+
+### Documentation
+
+* **readme:** add CRM + accounting to features, tax disclaimer, update contributor ([116743b](https://github.com/the-luap/picpeak/commit/116743ba438505a52b021f80f678c5a0094d20d4))
+
 ## [3.61.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.6-beta.0...v3.61.0-beta.0) (2026-06-13)
 
 
