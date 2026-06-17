@@ -64,6 +64,11 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
       format,
       options: {
         filename_format: 'original',
+        // TXT is labelled "for Lightroom search" — Lightroom's filename
+        // search field takes one comma-separated line, and the gallery
+        // JPEGs may correspond to RAW files in the catalog so the search
+        // has to match on the stem only (issue #623).
+        ...(format === 'txt' ? { separator: 'comma' as const, include_extension: false } : {}),
         include_rating: true,
         include_label: true,
         include_description: true,
