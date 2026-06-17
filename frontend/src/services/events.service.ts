@@ -219,9 +219,16 @@ export const eventsService = {
     return response.data;
   },
 
-  // Publish a draft event
-  async publishEvent(eventId: number): Promise<{ message: string; is_draft: boolean }> {
-    const response = await api.post(`/admin/events/${eventId}/publish`);
+  // Publish a draft event. `password` is optional; when the event is
+  // password-protected, supplying the password here makes the gallery_created
+  // email carry the actual plaintext instead of the "set at creation" sentinel
+  // (#627) — the backend also re-hashes it so the stored hash matches.
+  async publishEvent(
+    eventId: number,
+    options?: { password?: string },
+  ): Promise<{ message: string; is_draft: boolean }> {
+    const body = options?.password ? { password: options.password } : undefined;
+    const response = await api.post(`/admin/events/${eventId}/publish`, body);
     return response.data;
   },
 

@@ -565,6 +565,15 @@
     "publishAndNotify": "Publish & Notify Client",
     "publishConfirm": "This will make the gallery accessible and send the notification email to the client. Continue?",
     "publishSuccess": "Gallery published and client notified!",
+    "publishDialog": {
+      "title": "Publish gallery",
+      "descriptionWithEmail": "Publishing \"{{eventName}}\" makes the gallery accessible and sends the notification email to {{customerEmail}}.",
+      "descriptionNoEmail": "Publishing \"{{eventName}}\" makes the gallery accessible. No customer email is set, so no notification will be sent.",
+      "passwordLabel": "Gallery password",
+      "passwordPlaceholder": "Enter the gallery password",
+      "passwordHelp": "Re-type the password set at creation (or pick a new one). The email includes this exact text; the backend re-hashes it so the gallery login still works.",
+      "errorMinLength": "Password must be at least 6 characters long."
+    },
     "draftBanner": "This gallery is in draft mode. Upload your photos, then publish when ready.",
     "subtitle": "Manage your photo galleries and events",
     "failedToLoadEvents": "Failed to load events",

@@ -59,7 +59,7 @@ import { toast } from 'react-toastify';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 import { Button, Input, Card, Loading, MarkdownContent, LocalizedDateInput } from '../../components/common';
-import { EventCategoryManager, AdminPhotoGrid, AdminPhotoViewer, PhotoFilters, PasswordResetModal, ThemeCustomizerEnhanced, ThemeDisplay, HeroPhotoSelector, FocalPointPicker, PhotoUploadModal, FeedbackSettings, FeedbackModerationPanel, EventRenameDialog, PhotoFilterPanel, PhotoExportMenu, AdminGuestsList } from '../../components/admin';
+import { EventCategoryManager, AdminPhotoGrid, AdminPhotoViewer, PhotoFilters, PasswordResetModal, PublishGalleryDialog, ThemeCustomizerEnhanced, ThemeDisplay, HeroPhotoSelector, FocalPointPicker, PhotoUploadModal, FeedbackSettings, FeedbackModerationPanel, EventRenameDialog, PhotoFilterPanel, PhotoExportMenu, AdminGuestsList } from '../../components/admin';
 import { CustomerAccountPicker } from '../../components/admin/CustomerAccountPicker';
 import { EventReminderOverrideCard } from '../../components/admin/EventReminderOverrideCard';
 import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
@@ -373,6 +373,7 @@ export const EventDetailsPage: React.FC = () => {
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<ThemeConfig | null>(null);
   const [currentPresetName, setCurrentPresetName] = useState<string>('default');
@@ -533,13 +534,16 @@ export const EventDetailsPage: React.FC = () => {
     },
   });
 
-  // Publish mutation (Draft mode)
+  // Publish mutation (Draft mode). Accepts the admin-typed password so the
+  // gallery_created email can carry the real plaintext (#627).
   const publishMutation = useMutation({
-    mutationFn: () => eventsService.publishEvent(parseInt(id!)),
+    mutationFn: (password?: string) =>
+      eventsService.publishEvent(parseInt(id!), password ? { password } : undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-event', id] });
       queryClient.invalidateQueries({ queryKey: ['admin-events'] });
       toast.success(t('events.publishSuccess'));
+      setShowPublishDialog(false);
     },
     onError: () => {
       toast.error(t('errors.somethingWentWrong'));
@@ -1040,11 +1044,7 @@ export const EventDetailsPage: React.FC = () => {
               variant="primary"
               size="sm"
               leftIcon={<Send className="w-4 h-4" />}
-              onClick={() => {
-                if (confirm(t('events.publishConfirm'))) {
-                  publishMutation.mutate();
-                }
-              }}
+              onClick={() => setShowPublishDialog(true)}
               isLoading={publishMutation.isPending}
             >
               {t('events.publishAndNotify')}
@@ -2161,11 +2161,7 @@ export const EventDetailsPage: React.FC = () => {
                     <Button
                       variant="primary"
                       leftIcon={<Send className="w-4 h-4" />}
-                      onClick={() => {
-                        if (confirm(t('events.publishConfirm'))) {
-                          publishMutation.mutate();
-                        }
-                      }}
+                      onClick={() => setShowPublishDialog(true)}
                       isLoading={publishMutation.isPending}
                       className="w-full justify-center"
                     >
@@ -2603,6 +2599,21 @@ export const EventDetailsPage: React.FC = () => {
         }}
         onValidate={(newName) => eventsService.validateRename(event.id, newName)}
       />
+
+      {/* Publish Gallery Dialog (#627) — prompts for the password so the
+          gallery_created email carries the real plaintext, not the sentinel. */}
+      {showPublishDialog && (
+        <PublishGalleryDialog
+          eventName={event.event_name}
+          requirePassword={isGalleryPublic(event) ? false : true}
+          customerEmail={event.customer_email}
+          isPublishing={publishMutation.isPending}
+          onConfirm={(password) => publishMutation.mutate(password)}
+          onClose={() => {
+            if (!publishMutation.isPending) setShowPublishDialog(false);
+          }}
+        />
+      )}
 
     </div>
   );

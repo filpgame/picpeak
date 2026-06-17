@@ -1062,9 +1062,25 @@ router.get('/:id', adminAuth, requirePermission('events.view'), async (req, res)
 });
 
 // Publish a draft event (set is_draft=false and queue creation email)
-router.post('/:id/publish', adminAuth, requirePermission('events.edit'), requireEventOwnership, async (req, res) => {
+router.post('/:id/publish', adminAuth, requirePermission('events.edit'), requireEventOwnership, [
+  // Optional password the admin re-types in the publish dialog so the
+  // gallery_created email can carry the actual plaintext (#627). When the
+  // event is password-protected and the body carries a password, picpeak
+  // re-hashes + writes `password_hash` (the admin may have mistyped at
+  // creation; this guarantees the email content matches the live login
+  // password). When omitted, behaviour is the legacy sentinel for backward
+  // compat with API-only consumers.
+  body('password').optional().isString().isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { id } = req.params;
+    const { password } = req.body;
     const event = await db('events').where('id', id).first();
 
     if (!event) {
@@ -1075,8 +1091,15 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
       return res.status(400).json({ error: 'Event is already published' });
     }
 
-    // Set is_draft to false
-    await db('events').where('id', id).update({ is_draft: formatBoolean(false) });
+    const requirePassword = parseBooleanInput(event.require_password, true);
+    const publishUpdates = { is_draft: formatBoolean(false) };
+    if (requirePassword && password) {
+      // Re-hash so the stored hash matches what the email carries — even if
+      // the admin mistypes vs. what was set at draft creation, the gallery
+      // password the customer receives is the one that actually works.
+      publishUpdates.password_hash = await bcrypt.hash(password, getBcryptRounds());
+    }
+    await db('events').where('id', id).update(publishUpdates);
 
     // Queue creation email
     const customerEmail = event.customer_email || event.host_email;
@@ -1085,6 +1108,18 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
       const frontendBase = await getFrontendBaseUrl();
       const { shareUrl } = await buildShareLinkVariants({ slug: event.slug, shareToken: event.share_token });
 
+      let galleryPasswordForEmail;
+      if (!requirePassword) {
+        galleryPasswordForEmail = 'No password required';
+      } else if (password) {
+        // Admin re-typed the password in the publish dialog — put it straight
+        // into the email so the customer can actually log in (#627).
+        galleryPasswordForEmail = password;
+      } else {
+        // Legacy fallback for API-only publishes that don't carry the password.
+        galleryPasswordForEmail = '(set at creation)';
+      }
+
       const emailData = {
         customer_name: customerName,
         customer_email: customerEmail,
@@ -1092,7 +1127,7 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
         event_name: event.event_name,
         event_date: event.event_date,
         gallery_link: shareUrl || `${frontendBase}/gallery/${event.slug}`,
-        gallery_password: parseBooleanInput(event.require_password, true) ? '(set at creation)' : 'No password required',
+        gallery_password: galleryPasswordForEmail,
         expiry_date: event.expires_at ? new Date(event.expires_at).toISOString() : null,
         welcome_message: event.welcome_message || ''
       };
