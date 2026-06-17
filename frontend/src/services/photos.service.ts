@@ -345,6 +345,7 @@ export interface ExportOptions {
   options?: {
     filename_format?: 'original' | 'picpeak';
     separator?: 'newline' | 'comma' | 'semicolon';
+    include_extension?: boolean;
     include_rating?: boolean;
     include_label?: boolean;
     include_description?: boolean;
