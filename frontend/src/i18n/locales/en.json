@@ -2989,7 +2989,18 @@
     "exportFiltered": "Export filtered photos",
     "hint": "Select photos or apply filters to export",
     "exportSelected_one": "Export {{count}} selected",
-    "exportSelected_other": "Export {{count}} selected"
+    "exportSelected_other": "Export {{count}} selected",
+    "preview": {
+      "titleTxt": "Lightroom filename list",
+      "titleCsv": "CSV export",
+      "helpTxt": "Paste into Lightroom's filename search. The list is comma-separated with no extension so it matches a catalog that holds RAW files.",
+      "helpCsv": "Paste into a spreadsheet (Google Sheets, Excel, Numbers) — the first row is the column header.",
+      "copyButton": "Copy to clipboard",
+      "copiedShort": "Copied",
+      "copied": "Copied to clipboard.",
+      "copyFailed": "Clipboard write blocked. Select the text and copy manually.",
+      "download": "Download as file"
+    }
   },
   "photoSort": {
     "defaultSort": "Default Photo Sort",

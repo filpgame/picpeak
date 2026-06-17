@@ -4,6 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { photosService, ExportOptions, FeedbackFilters } from '../../services/photos.service';
+import { ExportPreviewModal } from './ExportPreviewModal';
+
+// TXT + CSV render through the preview modal (with copy-to-clipboard and a
+// fallback download button). XMP is a ZIP archive — no textarea preview makes
+// sense. JSON stays a direct download because operators consuming it want a
+// file for tooling. See #631.
+const PREVIEW_FORMATS: ReadonlyArray<'txt' | 'csv'> = ['txt', 'csv'];
 
 interface PhotoExportMenuProps {
   eventId: number;
@@ -47,6 +54,11 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [preview, setPreview] = useState<{
+    format: 'txt' | 'csv';
+    content: string;
+    filename: string;
+  } | null>(null);
 
   const exportMutation = useMutation({
     mutationFn: (options: ExportOptions) => photosService.exportPhotos(eventId, options),
@@ -57,6 +69,21 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
     onError: (error: Error) => {
       toast.error(t('export.error', 'Export failed: ') + error.message);
     }
+  });
+
+  const previewMutation = useMutation({
+    mutationFn: ({ options, format }: { options: ExportOptions; format: 'txt' | 'csv' }) =>
+      photosService.exportPhotosAsText(eventId, options).then((result) => ({
+        ...result,
+        format,
+      })),
+    onSuccess: (result) => {
+      setPreview(result);
+      setIsOpen(false);
+    },
+    onError: (error: Error) => {
+      toast.error(t('export.error', 'Export failed: ') + error.message);
+    },
   });
 
   const handleExport = (format: 'txt' | 'csv' | 'xmp' | 'json') => {
@@ -96,7 +123,11 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
       };
     }
 
-    exportMutation.mutate(options);
+    if ((PREVIEW_FORMATS as readonly string[]).includes(format)) {
+      previewMutation.mutate({ options, format: format as 'txt' | 'csv' });
+    } else {
+      exportMutation.mutate(options);
+    }
   };
 
   const hasSelection = selectedPhotoIds.length > 0;
@@ -108,13 +139,14 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
   );
 
   const isDisabled = disabled || (!hasSelection && !hasFilters);
+  const isWorking = exportMutation.isPending || previewMutation.isPending;
 
   return (
     <div className="relative">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        disabled={isDisabled || exportMutation.isPending}
+        disabled={isDisabled || isWorking}
         className={`
           inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-medium text-sm
           transition-colors
@@ -124,7 +156,7 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
           }
         `}
       >
-        {exportMutation.isPending ? (
+        {isWorking ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <Download className="w-4 h-4" />
@@ -162,7 +194,7 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
                   <button
                     key={format.value}
                     onClick={() => handleExport(format.value as 'txt' | 'csv' | 'xmp' | 'json')}
-                    disabled={exportMutation.isPending}
+                    disabled={isWorking}
                     className="w-full flex items-start gap-3 px-3 py-2 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 text-left transition-colors"
                   >
                     <Icon className="w-5 h-5 text-neutral-500 dark:text-neutral-400 mt-0.5" />
@@ -186,6 +218,15 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
         <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
           {t('export.hint', 'Select photos or apply filters to export')}
         </p>
+      )}
+
+      {preview && (
+        <ExportPreviewModal
+          format={preview.format}
+          content={preview.content}
+          filename={preview.filename}
+          onClose={() => setPreview(null)}
+        />
       )}
     </div>
   );
