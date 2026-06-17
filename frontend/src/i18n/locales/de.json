@@ -98,6 +98,7 @@
     "error": "Fehler",
     "configureInSettings": "Standards in den Einstellungen anpassen ↗",
     "save": "Speichern",
+    "saving": "Speichern…",
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
@@ -196,6 +197,7 @@
     "users": "Benutzer",
     "calendar": "Kalender",
     "clients": "CRM",
+    "accounting": "Buchhaltung",
     "betaTag": "Beta"
   },
   "eventTypes": {
@@ -1584,6 +1586,7 @@
         "communication": "Kommunikation",
         "scheduling": "Terminplanung",
         "sales": "Vertrieb",
+        "accounting": "Buchhaltung",
         "insights": "Auswertungen & Zugriff",
         "customers": "Kunden",
         "clients": "CRM"
@@ -1599,6 +1602,10 @@
         "title": "Galerien",
         "description": "Der Kern von PicPeak. Immer verfügbar.",
         "locked": "Galerien sind die Grundlage von PicPeak und können nicht deaktiviert werden."
+      },
+      "incomingMail": {
+        "title": "Eingehende E-Mails",
+        "description": "Ruft ein dediziertes Postfach (IMAP) jede Minute ab und legt Rechnungsanhänge in Buchhaltung → Eingangsrechnungen ab. Postfach unter Einstellungen → E-Mail konfigurieren."
       },
       "reminderEmails": {
         "title": "Erinnerungs-E-Mails",
@@ -1630,10 +1637,28 @@
         "sidebar": "Rechnungen"
       },
       "taxReport": {
-        "title": "Steuerliste",
+        "title": "Steuerexport",
         "description": "Periodenbezogene Umsatzliste mit Netto- und MwSt-Aufschlüsselung, gruppiert nach MwSt-Satz. Exportieren Sie als PDF (Querformat, Firmenbriefkopf) oder CSV für Ihre Buchhaltung. Stornierte Rechnungen bleiben für die lückenlose Nummernfolge sichtbar, sind aber nicht in den Summen enthalten.",
         "sidebar": "Steuer",
-        "requiresBills": "Bitte zuerst Rechnungen aktivieren — die Steuerliste liest aus Ihren Rechnungen."
+        "requiresBills": "Bitte zuerst Rechnungen aktivieren — die Steuerliste liest aus Ihren Rechnungen.",
+        "requiresAccounting": "Bitte zuerst Buchhaltung aktivieren — der Steuerexport liegt im Buchhaltungsbereich."
+      },
+      "accounting": {
+        "title": "Buchhaltung",
+        "description": "Ein eigener Buchhaltungsbereich, getrennt vom CRM. Hier aktivieren und dann die Unterfunktionen unten einschalten (Steuerexport, Eingangsrechnungen). MwSt-/Steuerbehandlung dient nur als Orientierung — vor dem Verlassen darauf mit Ihrem Treuhänder prüfen.",
+        "sidebar": "Buchhaltung"
+      },
+      "incomingInvoices": {
+        "title": "Eingangsrechnungen",
+        "description": "Eingehende Lieferantenrechnungen erfassen (Upload oder Handy-/Tablet-Kamera), Aufwände kategorisieren und Kosten dem passenden Event des Kunden mit vertraglich hinterlegtem Zuschlag weiterverrechnen.",
+        "sidebar": "Eingang",
+        "requiresAccounting": "Bitte zuerst Buchhaltung aktivieren — Eingangsrechnungen liegen im Buchhaltungsbereich."
+      },
+      "expenses": {
+        "title": "Aufwände",
+        "description": "Interne Aufwände (Kilometer, Spesenpauschale, Barbelege), gebucht auf ein Event oder die Firma, mit optionalem Beleg. Getrennt von Eingangsrechnungen.",
+        "sidebar": "Aufwände",
+        "requiresAccounting": "Bitte zuerst Buchhaltung aktivieren — Aufwände liegen im Buchhaltungsbereich."
       },
       "analytics": {
         "title": "Statistiken",
@@ -1689,6 +1714,24 @@
     },
     "crm": {
       "title": "CRM-Verhalten"
+    },
+    "accounting": {
+      "title": "Buchhaltung",
+      "subtitle": "Standardsätze für interne Aufwände und die Belegpflicht.",
+      "kmRate": "Kilometersatz (CHF / km)",
+      "kmRateHint": "Standard für Kilometer-Aufwände; pro Eintrag überschreibbar.",
+      "perDiemRate": "Spesenpauschale (CHF / Tag)",
+      "perDiemRateHint": "Standard für Pauschal-Aufwände; pro Eintrag überschreibbar.",
+      "requireProof": "Beleg für jeden Aufwand verlangen",
+      "vat": {
+        "title": "MwSt-Registrierung & Vorsteuerabzug",
+        "registered": "MwSt-pflichtig (Umsatzsteuer berechnen + Vorsteuer abziehen)",
+        "registeredHint": "Aus = Kleinunternehmen / unter der Schwelle: keine MwSt berechnet, Vorsteuer ist Aufwand (nicht abziehbar).",
+        "reclaimCountries": "Länder mit abziehbarer Vorsteuer",
+        "reclaimCountriesHint": "Üblicherweise Ihr Inland (CH / LI). Kosten aus anderen Ländern gelten als nicht abziehbare ausländische MwSt. Cmd/Ctrl-Klick für Mehrfachauswahl."
+      },
+      "disclaimer": "Sätze und MwSt-/Steuerbehandlung dienen nur als Orientierung — mit Ihrem Treuhänder prüfen.",
+      "savedToast": "Buchhaltungseinstellungen gespeichert."
     }
   },
   "branding": {
@@ -1913,6 +1956,8 @@
     "forceColorModeNone": "Kein Zwang (Benutzerauswahl)",
     "forceColorModeDark": "Dunkelmodus erzwingen",
     "forceColorModeLight": "Hellmodus erzwingen",
+    "forcedModeBrandingHint": "Hell/Dunkel wird site-weit über die Erzwingen-Steuerung unten festgelegt — die themenspezifische Modusauswahl ist ausgeblendet, da sie keine Wirkung hätte.",
+    "forcedModeGalleryNote": "Eine site-weite Farbsperre ist aktiv, daher folgt diese Galerie dem gesperrten Hell-/Dunkel-Modus. Farb- und Hell/Dunkel-Optionen sind hier ausgeblendet und können nicht pro Galerie überschrieben werden.",
     "colorGroupSurfaces": "Oberflächen",
     "colorGroupSurfacesHelp": "Die neutralen Ebenen hinter Ihrem Inhalt. Hintergrund liegt am weitesten zurück; Oberfläche und Erhöht stapeln sich darüber.",
     "backgroundColorHelp": "Die Seite selbst — Hintergrundfarbe jeder Galerie, Admin-Seite und CMS-Seite.",
@@ -2443,6 +2488,55 @@
       "button": "Wartende E-Mails jetzt senden",
       "success": "Warteschlange geleert – {{sent}} gesendet, {{failed}} fehlgeschlagen",
       "empty": "Keine ausstehenden E-Mails zum Senden"
+    },
+    "incoming": {
+      "title": "Eingehende E-Mails (IMAP)",
+      "subtitle": "Ein dediziertes Postfach, jede Minute abgerufen; Anhänge landen in Buchhaltung → Eingangsrechnungen.",
+      "host": "IMAP-Host",
+      "test": "Verbindung testen",
+      "testOk": "Verbunden mit {{folder}} — {{messages}} Nachrichten, {{unseen}} ungelesen.",
+      "testFailed": "Verbindung fehlgeschlagen.",
+      "roundTrip": "Rundlauf-Test",
+      "roundTripHint": "Sendet über die SMTP-Einstellungen eine Test-E-Mail an dieses Postfach und prüft, ob sie ankommt. Beide vorher speichern.",
+      "roundTripOk": "Rundlauf OK — an {{recipient}} zugestellt in {{seconds}}s.",
+      "roundTripFailed": "Rundlauf-Test fehlgeschlagen.",
+      "poll": "Jetzt prüfen",
+      "pollHint": "Postfach sofort prüfen, statt auf den 60-Sekunden-Abruf zu warten. Ungelesene Anhänge werden in Eingangsrechnungen übernommen.",
+      "pollOk": "Postfach geprüft — {{count}} neue E-Mail(s) übernommen.",
+      "pollDisabled": "Eingehende E-Mails sind deaktiviert — unter Einstellungen → Funktionen aktivieren.",
+      "pollUnconfigured": "Zuerst die Einstellungen für eingehende E-Mails speichern.",
+      "pollBusy": "Ein Abruf läuft bereits — bitte gleich erneut versuchen.",
+      "pollFailed": "Postfach-Abruf fehlgeschlagen.",
+      "port": "Port",
+      "security": "Sicherheit",
+      "ssl": "SSL/TLS",
+      "plain": "Keine / STARTTLS",
+      "user": "Benutzername",
+      "pass": "Passwort",
+      "folder": "Ordner",
+      "save": "Eingangs-E-Mail-Einstellungen speichern",
+      "detectFolders": "Erkennen",
+      "folderHint": "Host, Benutzername und Passwort eingeben, dann „Erkennen“, um die Postfach-Ordner aufzulisten.",
+      "foldersDetected": "{{count}} Ordner gefunden.",
+      "noFolders": "Der Server hat keine Ordner zurückgegeben.",
+      "detectFailed": "Ordner konnten nicht erkannt werden.",
+      "requiredFields": "Host, Port und Benutzername sind erforderlich.",
+      "savedToast": "Einstellungen für eingehende E-Mails gespeichert."
+    },
+    "received": {
+      "tab": "Empfangene E-Mails",
+      "from": "Von",
+      "subject": "Betreff",
+      "received": "Empfangen",
+      "status": "Status",
+      "empty": "Noch keine empfangenen E-Mails. Eingehende E-Mails aktivieren und Postfach konfigurieren.",
+      "inbox": "Eingang",
+      "statusValue": {
+        "ingested": "Erfasst",
+        "no_attachment": "Kein Anhang",
+        "duplicate": "Duplikat",
+        "error": "Fehler"
+      }
     },
     "sentEmails": {
       "tab": "Gesendete E-Mails",
@@ -3382,6 +3476,180 @@
       "development": "Entwicklung"
     }
   },
+  "accounting": {
+    "title": "Buchhaltung",
+    "subtitle": "Eingehende Lieferantenrechnungen, Aufwände und Auswertungen.",
+    "navAriaLabel": "Buchhaltungs-Navigation",
+    "empty": {
+      "title": "Keine Buchhaltungsfunktionen aktiviert",
+      "body": "Aktiviere die Steuerliste (oder eine andere Buchhaltungs-Unterfunktion) unter Einstellungen → Funktionen, um loszulegen."
+    },
+    "subnav": {
+      "incomingInvoices": "Eingangsrechnungen",
+      "expenses": "Aufwände",
+      "taxReport": "Steuer",
+      "export": "Treuhänder-Export",
+      "chartOfAccounts": "Kontenplan"
+    },
+    "taxTreatment": {
+      "domestic": "Inland (mit MWST)",
+      "reverse_charge_service": "Bezugsteuer (Dienstleistungen)",
+      "foreign_vat_non_reclaimable": "Ausländische MWST (nicht abziehbar)",
+      "import_goods": "Wareneinfuhr"
+    },
+    "disposition": {
+      "rebill": "An Kunde weiterverrechnen",
+      "durchlaufend": "Durchlaufender Posten",
+      "eigener_aufwand": "Eigener Aufwand",
+      "duplikat": "Duplikat",
+      "abgelehnt": "Abgelehnt"
+    },
+    "markup": {
+      "none": "Keiner / aus Vertrag",
+      "percent": "Prozent",
+      "flat": "Pauschal"
+    },
+    "inbox": {
+      "captureTitle": "Lieferantenrechnung erfassen",
+      "captureBody": "Fotografiere eine Papierrechnung mit der Gerätekamera oder lade ein PDF / Bild hoch.",
+      "scanCamera": "Mit Kamera scannen",
+      "uploadFile": "Datei hochladen",
+      "capturedToast": "Dokument erfasst.",
+      "categorizedToast": "Dokument kategorisiert.",
+      "triageTitle": "Dokument kategorisieren",
+      "saveCategorize": "Speichern",
+      "saveCategorizePay": "Speichern & als bezahlt markieren",
+      "categorize": "Kategorisieren",
+      "view": "Ansehen",
+      "empty": "Noch keine Dokumente — oben eines erfassen.",
+      "untitled": "Unbenanntes Dokument",
+      "noAmount": "Betrag nicht erfasst",
+      "rebillHint": "Erstellt eine bearbeitbare geplante Rechnung beim Kunden. MwSt-/Steuerbehandlung ist v1 — mit Treuhänder prüfen.",
+      "previewLoading": "Vorschau wird geladen…",
+      "previewError": "Vorschau nicht verfügbar — Felder manuell erfassen.",
+      "qrHint": "Letzte Seite — der Schweizer QR-Einzahlschein sitzt meist unten.",
+      "prevPage": "Zurück",
+      "nextPage": "Weiter",
+      "pageOf": "Seite {{n}} / {{total}}",
+      "status": {
+        "label": "Status",
+        "unsorted": "Neu",
+        "categorized": "Kategorisiert",
+        "declined": "Abgelehnt",
+        "duplicate": "Duplikat"
+      },
+      "field": {
+        "supplier": "Lieferant",
+        "total": "Total",
+        "currency": "Währung",
+        "invoiceDate": "Rechnungsdatum",
+        "disposition": "Zuordnung",
+        "category": "Kategorie",
+        "categoryNone": "— keine —",
+        "declineReason": "Grund",
+        "customer": "Kunde",
+        "eventId": "Event-ID (optional)",
+        "markup": "Zuschlag",
+        "reference": "Zahlungsreferenz",
+        "referenceHint": "QR-/ESR-Referenz oder Mitteilung"
+      }
+    },
+    "expenseStatus": {
+      "open": "Offen",
+      "parked": "Geparkt",
+      "billed": "Verrechnet",
+      "declined": "Abgelehnt"
+    },
+    "paymentMethod": {
+      "bank_transfer": "Überweisung",
+      "cash": "Bargeld",
+      "twint": "TWINT",
+      "paypal": "PayPal",
+      "card": "Karte",
+      "other": "Sonstiges"
+    },
+    "booking": {
+      "label": "Buchen auf",
+      "company": "Firma",
+      "event": "Event",
+      "eventId": "Event-ID"
+    },
+    "incoming": {
+      "triageTitle": "Eingangsrechnung kategorisieren",
+      "payTitle": "Lieferant als bezahlt markieren",
+      "outstanding": "Offen",
+      "markPaid": "Als bezahlt markieren",
+      "markUnpaid": "Als unbezahlt markieren",
+      "confirmPaid": "Als bezahlt markieren",
+      "paid": "Bezahlt",
+      "paidToast": "Als bezahlt markiert.",
+      "categorizedToast": "Kategorisiert.",
+      "categorizedPaidToast": "Kategorisiert und als bezahlt markiert."
+    },
+    "expense": {
+      "kind": "Art",
+      "km": "Kilometer",
+      "days": "Tage",
+      "rate": "Satz",
+      "rateDefault": "Standard {{rate}} — leer lassen, um ihn zu verwenden",
+      "computed": "Betrag",
+      "who": "Bezahlt von / Lieferant",
+      "whoHint": "z. B. Mitarbeitername oder Geschäft",
+      "proof": "Beleg",
+      "proofRequired": "Ein Beleg ist erforderlich.",
+      "proofExisting": "Es ist bereits ein Beleg angehängt — neuen hochladen, um ihn zu ersetzen.",
+      "viewProof": "Beleg"
+    },
+    "expenseKind": {
+      "amount": "Betrag",
+      "mileage": "Kilometer (km)",
+      "per_diem": "Spesenpauschale"
+    },
+    "category": {
+      "infrastructure": "Infrastruktur & Miete",
+      "equipment": "Equipment & Hardware",
+      "software": "Software & Lizenzen",
+      "material": "Material & Verbrauch",
+      "travel": "Reise & Spesen",
+      "marketing": "Werbung & Marketing",
+      "services": "Dienstleistungen/Fremdleistungen",
+      "insurance": "Versicherungen & Gebühren",
+      "training": "Weiterbildung",
+      "other": "Sonstiges"
+    },
+    "ledger": {
+      "allStatuses": "Alle Status",
+      "allDispositions": "Alle Zuordnungen",
+      "allKinds": "Alle Arten",
+      "empty": "Noch keine Aufwände — oben einen hinzufügen.",
+      "untitled": "Aufwand",
+      "invoiceLink": "Rechnung",
+      "paid": "Bezahlt",
+      "markPaid": "Als bezahlt markieren",
+      "markPaidTitle": "Lieferant als bezahlt markieren",
+      "paidDate": "Zahldatum",
+      "method": "Methode",
+      "reference": "Referenz (optional)",
+      "confirmPaid": "Als bezahlt markieren",
+      "paidToast": "Als bezahlt markiert.",
+      "unpaidToast": "Als nicht bezahlt markiert.",
+      "addExpense": "Aufwand hinzufügen",
+      "addTitle": "Aufwand hinzufügen",
+      "editTitle": "Aufwand bearbeiten",
+      "updatedToast": "Aufwand aktualisiert.",
+      "payTitle": "Aufwand als bezahlt markieren",
+      "invoiced": "Verrechnet",
+      "invoicedToast": "Zu einer Kundenrechnung hinzugefügt.",
+      "invoiceTitle": "Zur Kundenrechnung hinzufügen",
+      "invoiceHint": "Erstellt eine verrechenbare Position auf der nächsten geplanten Rechnung des Kunden und sperrt den Aufwand für weitere Änderungen.",
+      "addToInvoice": "Zur Rechnung hinzufügen",
+      "locked": "Gesperrt",
+      "lockedHint": "Gesperrt — dieser Aufwand ist auf einer Kundenrechnung.",
+      "description": "Beschreibung",
+      "descriptionHint": "z. B. Kilometer, Spesenpauschale, Barbeleg",
+      "createdToast": "Aufwand hinzugefügt."
+    }
+  },
   "projects": {
     "title": "Projektübersicht",
     "subtitle": "Fasse Events zu Projekten zusammen und sieh jede E-Mail, jedes Dokument, jede Galerie und jede Stunde in einem Cockpit.",
@@ -3613,6 +3881,57 @@
       }
     }
   },
+  "ledger": {
+    "intro": "Dient nur dem Treuhänder-Export — picpeak führt keine doppelte Buchhaltung. Der vorbelegte Kontenplan + die MWST-Codes folgen dem Schweizer/LI KMU-Kontenrahmen; passe sie an das Setup deines Treuhänders an.",
+    "settingsSaved": "Zuordnungen gespeichert.",
+    "saveDefaults": "Zuordnungen speichern",
+    "accountType": {
+      "asset": "Aktiven", "liability": "Passiven", "equity": "Eigenkapital", "revenue": "Ertrag", "expense": "Aufwand"
+    },
+    "vatDirection": {
+      "input": "Vorsteuer", "output": "Umsatzsteuer"
+    },
+    "defaults": {
+      "title": "Standard- & Systemkonten",
+      "none": "— keines —",
+      "ledger_account_debitoren": "Forderungen (Debitoren)",
+      "ledger_account_kreditoren": "Verbindlichkeiten (Kreditoren)",
+      "ledger_account_bank": "Bank",
+      "ledger_account_cash": "Kasse",
+      "ledger_account_default_revenue": "Standard-Ertragskonto",
+      "ledger_account_default_expense": "Standard-Aufwandkonto",
+      "ledger_account_mileage": "Kilometer-Konto",
+      "ledger_account_per_diem": "Spesenpauschalen-Konto",
+      "ledger_account_rebilled_revenue": "Weiterverrechnete Spesen (Ertrag)"
+    },
+    "vatMap": { "title": "MWST-Code nach steuerlicher Behandlung (Kosten)" },
+    "outputVatMap": { "title": "MWST-Code nach Umsatzsatz", "empty": "Fügen Sie oben Ausgangs-MWST-Codes hinzu, um pro Umsatzsatz einen Code festzulegen." },
+    "categoryMap": { "title": "Aufwandkategorie → Konto" },
+    "accounts": { "title": "Kontenplan" },
+    "vatCodes": { "title": "MWST-Codes" },
+    "account": {
+      "addTitle": "Konto hinzufügen", "editTitle": "Konto bearbeiten",
+      "number": "Kontonummer", "name": "Name", "type": "Art",
+      "confirmDelete": "Dieses Konto löschen?"
+    },
+    "vat": {
+      "addTitle": "MWST-Code hinzufügen", "editTitle": "MWST-Code bearbeiten",
+      "code": "Code", "name": "Name", "rate": "Satz %", "direction": "Richtung",
+      "account": "MWST-Konto", "noAccount": "— keines —", "confirmDelete": "Diesen MWST-Code löschen?"
+    },
+    "export": {
+      "title": "Treuhänder-Export",
+      "intro": "Lade das Sammeljournal (Erträge + Kosten als periodengerechte Buchungssätze mit Konto- und MWST-Codes) zum Import in die Buchhaltungssoftware deines Treuhänders herunter.",
+      "format": "Zielsoftware",
+      "format_generic": "Generisch (alle Spalten)",
+      "format_banana": "Banana — doppelte Buchhaltung",
+      "format_banana_ie": "Banana — Einnahmen/Ausgaben",
+      "format_bexio": "bexio",
+      "download": "CSV herunterladen",
+      "failed": "Export fehlgeschlagen.",
+      "disclaimer": "Nur periodengerecht (Belegdaten) — Zahlungen/Bankbewegungen sind nicht enthalten. Konto- + MWST-Codes folgen deiner Kontenplan-Zuordnung. Den Import vor der Einreichung immer mit dem Treuhänder prüfen."
+    }
+  },
   "taxReport": {
     "title": "Steuerliste",
     "intro": "Periodenbezogene Umsatzliste mit Netto- und MwSt-Aufschlüsselung, gruppiert nach MwSt-Satz. Stornierte Rechnungen bleiben für die lückenlose Nummernfolge sichtbar, sind aber nicht in den Summen enthalten.",
@@ -3628,6 +3947,18 @@
       "currency": "Währung"
     },
     "exportPdf": "PDF exportieren",
+    "ledgerExport": "Treuhänder-Export",
+    "ledgerExportHint": "Buchungssätze für Ihren Treuhänder, abgebildet über Ihren Kontenplan.",
+    "ledgerExportConfigure": "Einrichten →",
+    "export": {
+      "reportTitle": "Bericht",
+      "reportHint": "Lesbare Liste — für Ihre Unterlagen.",
+      "scopeLabel": "Umfang",
+      "scopeAll": "Vollständig",
+      "scopeIncome": "Nur Einnahmen",
+      "scopeCost": "Nur Kosten",
+      "journalTitle": "Buchungsjournal"
+    },
     "exportCsv": "CSV exportieren",
     "exportFailed": "Export fehlgeschlagen. Bitte erneut versuchen.",
     "errorTitle": "Steuerliste konnte nicht geladen werden",
@@ -3638,6 +3969,32 @@
     "grandTotalVat": "Gesamt MwSt.",
     "grandTotalGross": "Gesamt Brutto",
     "cancelledFootnote": "{{count}} stornierte Rechnung(en) — Beträge nicht in den Summen enthalten (für lückenlose Nummernfolge dargestellt).",
+    "skontoTooltip": "Mit Skonto bezahlt",
+    "costsTitle": "Kosten (Eingangsrechnungen + Spesen)",
+    "costsDisclaimer": "Diese Einnahmen-Ausgaben-Übersicht ist eine Orientierungshilfe für Ihre Aufzeichnungen (Milchbüchleinrechnung). Vorsteuerabzug und Ergebnis hängen von der steuerlichen Behandlung jeder Kostenposition ab — vor der Einreichung mit Ihrem Treuhänder / der Steuerverwaltung prüfen.",
+    "summary": {
+      "outgoingTitle": "Ausgangsrechnungen",
+      "title": "Einnahmen / Ausgaben",
+      "income": "Einnahmen",
+      "costs": "Ausgaben",
+      "result": "Ergebnis",
+      "vatPayable": "MWST-Zahllast (Umsatz- − Vorsteuer)",
+      "vatUnconfigured": "Die MWST-Registrierung ist nicht konfiguriert, daher kann die MWST-Zahllast nicht berechnet werden. Lege sie unter Einstellungen → Buchhaltung fest."
+    },
+    "cost": {
+      "source": "Art",
+      "sourceIncoming": "Eingang",
+      "sourceExpense": "Spese",
+      "supplier": "Lieferant / Beschreibung",
+      "taxTreatment": "Steuerliche Behandlung",
+      "company": "Unternehmen",
+      "total": "Summe Kosten"
+    },
+    "type": {
+      "outgoing": "Ausgangsrechnung",
+      "incoming": "Eingangsrechnung",
+      "expense": "Aufwand"
+    },
     "col": {
       "date": "Datum",
       "invoice": "Rechnung",
@@ -3646,7 +4003,12 @@
       "vatRate": "MwSt %",
       "net": "Netto",
       "vat": "MwSt.",
-      "total": "Brutto"
+      "total": "Brutto",
+      "skonto": "Skonto",
+      "type": "Typ",
+      "reference": "Referenz",
+      "party": "Kunde / Lieferant",
+      "tax": "Steuer"
     }
   },
   "quotes": {

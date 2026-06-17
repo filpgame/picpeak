@@ -8,6 +8,9 @@ export type FeatureKey =
   | 'quotes'
   | 'bills'
   | 'messaging'
+  // Incoming mail (migration 128) — IMAP polling into the incoming-invoices
+  // inbox. Standalone toggle.
+  | 'incomingMail'
   | 'analytics'
   | 'userManagement'
   // Top-level "Clients" section (#354 follow-up). Parent flag that
@@ -42,6 +45,16 @@ export type FeatureKey =
   // their own. Seeded block bodies are examples only; admins must
   // have their lawyer review before sending. See docs/crm-disclaimers.md.
   | 'contracts'
+  // Accounting (migration 122). Top-level MASTER for the Accounting
+  // section (separate from CRM). Its sub-features (tax export, incoming
+  // invoices) require it. Strictly opt-in.
+  | 'accounting'
+  // Incoming invoices (migration 124) — external supplier-invoice capture +
+  // re-bill. Accounting sub-feature; requires `accounting`.
+  | 'incomingInvoices'
+  // Expenses (migration 127) — internal expenses (mileage / per-diem / cash).
+  // Separate Accounting sub-feature; requires `accounting`.
+  | 'expenses'
   // Projects (migration 120). Admin-only grouping layer above events with the
   // 360° Project Overview cockpit + the "book to project" hours control. Off
   // by default; gates the CRM → Overview area entirely.

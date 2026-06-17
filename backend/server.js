@@ -707,6 +707,11 @@ app.use('/api/admin/projects',   require('./src/routes/adminProjects'));
 app.use('/api/admin/calendar',   require('./src/routes/adminCalendar'));
 app.use('/api/admin/deals',      require('./src/routes/adminDeals'));
 app.use('/api/admin/tax-report', require('./src/routes/adminTaxReport'));
+app.use('/api/admin/expenses',   require('./src/routes/adminExpenses'));
+app.use('/api/admin/ledger',     require('./src/routes/adminLedger'));
+// Read-only VAT-code registry for the invoice/quote editors — un-gated by the
+// accounting flag (management stays under /ledger).
+app.use('/api/admin/vat-codes',  require('./src/routes/adminVatCodes'));
 app.use('/api/admin/system-health', require('./src/routes/adminSystemHealth'));
 app.use('/api/admin/dev',        require('./src/routes/adminDev'));
 app.use('/api/public/quotes',  require('./src/routes/publicQuotes'));
@@ -836,7 +841,16 @@ async function startServer() {
       logger.warn('Email template self-heal failed at boot:', err.message);
     }
     startEmailQueueProcessor();
-    
+
+    // Start incoming-mail (IMAP) poller — no-ops each minute unless the
+    // `incomingMail` flag is on and a mailbox is configured (migration 128).
+    try {
+      const { startIncomingMailPoller } = require('./src/services/emailIntakeService');
+      startIncomingMailPoller();
+    } catch (err) {
+      logger.warn('Incoming-mail poller failed to start:', err.message);
+    }
+
     // Start webhook delivery worker (#327)
     const { startWebhookDeliveryWorker } = require('./src/services/webhookDeliveryWorker');
     startWebhookDeliveryWorker();

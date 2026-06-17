@@ -191,6 +191,8 @@ export interface QuoteCreatePayload {
    *  the template's value as-is. */
   installments?: PaymentTermInstallment[];
   vatRate?: number;
+  /** Migration 130 — snapshot of the chosen output VAT code (null = custom rate). */
+  vatCode?: string | null;
   shippingAmountMinor?: number;
   introText?: string;
   outroText?: string;

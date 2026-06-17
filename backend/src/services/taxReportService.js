@@ -49,6 +49,8 @@ const REPORTABLE_STATUSES = ['sent', 'paid', 'overdue', 'pending_delivery', 'can
 
 // D.2 — `ensureInt` consolidated into utils/numericHelpers.
 const { ensureInt } = require('../utils/numericHelpers');
+const { neutralizeSpreadsheetFormula } = require('../utils/spreadsheetSafe');
+const logger = require('../utils/logger');
 
 function ensureRate(v) {
   if (v === null || v === undefined || v === '') return 0;
@@ -158,6 +160,198 @@ async function loadSkontoMap(invoiceIds) {
 }
 
 /**
+ * Cost side of the Milchbüchlein view (Einnahmen-Ausgaben-Rechnung).
+ *
+ * Aggregates the two cost entities the Accounting feature tracks, both
+ * keyed on an accrual date inside [from, to] and scoped to `cur`:
+ *
+ *   1. incoming invoices (`inbound_documents`) — external supplier
+ *      payables. Accrual date = invoice_date, falling back to created_at.
+ *      Excludes declined + duplicate rows (not real costs).
+ *   2. expenses (`expenses`) — internal own-costs (mileage / per-diem /
+ *      amount). Accrual date = created_at (no separate invoice date on
+ *      internal expenses). Excludes declined status + duplikat/abgelehnt
+ *      disposition.
+ *
+ * Both book to an event OR the company (event_id NULL = company); the
+ * report surfaces every cost regardless so the total is the full
+ * outflow for the period. Re-billed costs intentionally stay IN — the
+ * matching re-bill revenue is already counted on the income side, so
+ * keeping both sides nets correctly (a pure pass-through cancels out).
+ *
+ * Currency: the report is single-currency. Incoming invoices match on
+ * their own `currency`. Internal expenses are stored in CHF base
+ * (chf_amount_minor) plus an optional original-currency amount — for a
+ * CHF report we use the CHF base; for a foreign-currency report we match
+ * the expense's original_currency and use original_amount_minor.
+ *
+ * Tables are schema-guarded: a DB without the accounting migrations
+ * yields an empty cost side rather than throwing.
+ *
+ * Returns { rows, totalNet, totalVat, totalGross } in minor units.
+ */
+function normMinor(v) { return ensureInt(v); }
+
+async function loadCosts({ from, to, cur }) {
+  const rows = [];
+  let totalNet = 0;
+  let totalVat = 0;
+  let totalGross = 0;
+  // Input VAT is only reclaimable for domestic-style treatments; foreign
+  // non-reclaimable VAT is a cost, not a deduction. Feeds the report's
+  // VAT-payable (output − reclaimable input).
+  let reclaimableVat = 0;
+  // Inclusive upper bound covering the whole `to` day. Plain range comparison
+  // (no SQL date() function) so it's valid on both Postgres and SQLite — the
+  // mocked unit tests can't catch a PG-only function error. invoice_date is a
+  // DATE, created_at a TIMESTAMP; both compare correctly against ISO literals.
+  const toEnd = `${to} 23:59:59.999`;
+
+  const push = (r) => {
+    rows.push(r);
+    totalNet += r.netMinor;
+    totalVat += r.vatMinor;
+    totalGross += r.totalMinor;
+    if (r.taxTreatment !== 'foreign_vat_non_reclaimable') reclaimableVat += r.vatMinor;
+  };
+
+  // 1) Incoming invoices (external supplier payables).
+  if (await db.schema.hasTable('inbound_documents')) {
+    const inbound = await db('inbound_documents')
+      .leftJoin('events', 'inbound_documents.event_id', 'events.id')
+      // Date in range: invoice_date (a DATE) when set, else created_at (a
+      // TIMESTAMP). Split instead of COALESCE so we never compare mixed
+      // date/timestamp types (a Postgres error the mocked tests can't see).
+      .where((qb) => {
+        qb.whereBetween('inbound_documents.invoice_date', [from, to])
+          .orWhere((q2) => q2.whereNull('inbound_documents.invoice_date')
+            .andWhere('inbound_documents.created_at', '>=', from)
+            .andWhere('inbound_documents.created_at', '<=', toEnd));
+      })
+      // Currency match, but INCLUDE rows with no currency set — captured
+      // invoices (email/upload) often have a null currency; treat them as the
+      // report currency rather than silently dropping them from the cost side.
+      .where((qb) => { qb.where('inbound_documents.currency', cur).orWhereNull('inbound_documents.currency'); })
+      .whereNotIn('inbound_documents.status', ['declined', 'duplicate'])
+      .orderBy('inbound_documents.created_at', 'asc')
+      .select(
+        'inbound_documents.id',
+        'inbound_documents.invoice_date',
+        'inbound_documents.created_at',
+        'inbound_documents.supplier_name',
+        // inbound_documents has no free-text `description` column (that lives on
+        // `expenses`); use the supplier invoice number as the row descriptor so
+        // the cost side aligns with the expense rows without a phantom column.
+        'inbound_documents.invoice_number',
+        'inbound_documents.disposition',
+        'inbound_documents.tax_treatment',
+        'inbound_documents.status',
+        'inbound_documents.event_id',
+        'inbound_documents.net_amount_minor',
+        'inbound_documents.vat_amount_minor',
+        'inbound_documents.total_amount_minor',
+        'events.event_name as event_name',
+      );
+    for (const r of inbound) {
+      const vat = normMinor(r.vat_amount_minor);
+      let total = normMinor(r.total_amount_minor);
+      let net = normMinor(r.net_amount_minor);
+      if (!total && (net || vat)) total = net + vat;
+      if (!net && total) net = total - vat;
+      push({
+        id: r.id,
+        source: 'incoming',
+        date: r.invoice_date || r.created_at,
+        supplierLabel: (r.supplier_name && String(r.supplier_name).trim()) || '',
+        description: r.invoice_number || '',
+        eventName: r.event_id ? (r.event_name || '') : '',
+        disposition: r.disposition || '',
+        taxTreatment: r.tax_treatment || 'domestic',
+        status: r.status || '',
+        netMinor: net,
+        vatMinor: vat,
+        totalMinor: total,
+      });
+    }
+  }
+
+  // 2) Internal expenses (own-costs).
+  if (await db.schema.hasTable('expenses')) {
+    const isChf = cur === 'CHF';
+    const q = db('expenses')
+      .leftJoin('events', 'expenses.event_id', 'events.id')
+      .whereRaw('expenses.created_at >= ? AND expenses.created_at <= ?', [from, toEnd])
+      .whereNot('expenses.status', 'declined')
+      .whereNotIn('expenses.disposition', ['duplikat', 'abgelehnt']);
+    // CHF report includes every expense (all carry a CHF base). A
+    // foreign-currency report matches the expense's original currency.
+    if (!isChf) q.where('expenses.original_currency', cur);
+    const expenses = await q
+      .orderBy('expenses.created_at', 'asc')
+      .select(
+        'expenses.id',
+        'expenses.created_at',
+        'expenses.supplier_name',
+        'expenses.description',
+        'expenses.disposition',
+        'expenses.tax_treatment',
+        'expenses.status',
+        'expenses.event_id',
+        'expenses.original_currency',
+        'expenses.original_amount_minor',
+        'expenses.chf_amount_minor',
+        'expenses.net_amount_minor',
+        'expenses.vat_amount_minor',
+        'expenses.gross_amount_minor',
+        'events.event_name as event_name',
+      );
+    for (const r of expenses) {
+      const vat = normMinor(r.vat_amount_minor);
+      let net = normMinor(r.net_amount_minor);
+      let total = normMinor(r.gross_amount_minor);
+      // Fallback to the single stored amount when net/vat/gross are not
+      // broken out (internal mileage/per-diem expenses carry only a base
+      // amount, no VAT split).
+      const base = isChf ? normMinor(r.chf_amount_minor) : normMinor(r.original_amount_minor);
+      if (!total) total = (net || vat) ? net + vat : base;
+      if (!net) net = total - vat;
+      push({
+        id: r.id,
+        source: 'expense',
+        date: r.created_at,
+        supplierLabel: (r.supplier_name && String(r.supplier_name).trim()) || '',
+        description: r.description || '',
+        eventName: r.event_id ? (r.event_name || '') : '',
+        disposition: r.disposition || '',
+        taxTreatment: r.tax_treatment || 'domestic',
+        status: r.status || '',
+        netMinor: net,
+        vatMinor: vat,
+        totalMinor: total,
+      });
+    }
+  }
+
+  // Stable chronological order across both sources.
+  rows.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
+  return { rows, totalNet, totalVat, totalGross, reclaimableVat };
+}
+
+// Is the business VAT-registered? (Settings → Accounting). Returns null when the
+// setting was never set, so the caller can fall back to a behaviour-preserving
+// heuristic (charged output VAT this period ⇒ treat as registered).
+async function getVatRegisteredSetting() {
+  try {
+    const v = await getAppSetting('accounting_vat_registered');
+    if (v === undefined || v === null) return null;
+    return v === true || v === 1 || v === '1' || v === 'true';
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
  * The main entry point.
  *
  *   getTaxReport({ from: '2026-01-01', to: '2026-03-31', currency: 'CHF' })
@@ -166,8 +360,13 @@ async function loadSkontoMap(invoiceIds) {
  * required and must match `invoices.currency` exactly — mixing
  * currencies in one report is unsound for tax filing, so the API
  * forces a single-currency view.
+ *
+ * `includeCosts` (default true) adds the Einnahmen-Ausgaben cost side
+ * (incoming invoices + expenses) plus a `summary` block (income vs cost
+ * vs result, and VAT payable = output VAT − input VAT). Pass false to
+ * get the legacy revenue-only shape.
  */
-async function getTaxReport({ from, to, currency } = {}) {
+async function getTaxReport({ from, to, currency, includeCosts = true } = {}) {
   if (!from || !to) {
     throw new Error('getTaxReport: `from` and `to` are required (YYYY-MM-DD)');
   }
@@ -283,6 +482,104 @@ async function getTaxReport({ from, to, currency } = {}) {
 
     const totalsByVatRate = Array.from(byRate.values()).sort((a, b) => a.vatRate - b.vatRate);
 
+    // Cost side (Einnahmen-Ausgaben). Optional so legacy callers that
+    // only want the revenue listing can opt out. The cost side is
+    // SUPPLEMENTARY — if it fails (e.g. an accounting table/column missing
+    // on an older install) it must NOT take down the core revenue report.
+    // Degrade to empty costs + log the real error for diagnosis.
+    let costs = { rows: [], totalNet: 0, totalVat: 0, totalGross: 0, reclaimableVat: 0 };
+    let costsError = null;
+    if (includeCosts) {
+      try {
+        costs = await loadCosts({ from, to, cur });
+      } catch (err) {
+        costsError = err.message;
+        logger.error?.(`taxReport: cost side failed (revenue still returned): ${err.message}`);
+      }
+    }
+
+    // VAT-payable honours the accounting settings: when NOT VAT-registered the
+    // business doesn't file VAT (payable = 0); when registered it's output VAT
+    // minus the RECLAIMABLE input VAT only (foreign non-reclaimable cost VAT is
+    // not deducted). Guideline figure — verify with your Treuhänder.
+    // PR #622 concern 4: when VAT registration is UNSET we must NOT guess from
+    // `grandTotalVat > 0` — a quarter with all-exempt cross-border sales has zero
+    // output VAT and would silently flip to "not registered", hiding the reclaim.
+    // Treat null as "not configured": refuse to compute a payable, surface a
+    // warning in the UI instead.
+    const vatRegisteredSetting = await getVatRegisteredSetting();
+    const vatRegistrationConfigured = vatRegisteredSetting !== null;
+    const vatRegistered = vatRegisteredSetting === true;
+    const reclaimableInputVat = costs.reclaimableVat != null ? costs.reclaimableVat : costs.totalVat;
+
+    // Summary: income vs cost vs result. Result = a simplified
+    // Einnahmen-Ausgaben surplus (net basis).
+    const summary = {
+      incomeNetMinor: grandTotalNet,
+      incomeVatMinor: grandTotalVat,
+      incomeGrossMinor: grandTotal,
+      costNetMinor: costs.totalNet,
+      costVatMinor: costs.totalVat,
+      costGrossMinor: costs.totalGross,
+      resultNetMinor: grandTotalNet - costs.totalNet,
+      resultGrossMinor: grandTotal - costs.totalGross,
+      vatRegistered,
+      vatRegistrationConfigured,
+      // null (not 0) when registration is unconfigured — the UI renders "—" + a
+      // "configure VAT registration" warning rather than a misleading number.
+      vatPayableMinor: !vatRegistrationConfigured
+        ? null
+        : (vatRegistered ? (grandTotalVat - reclaimableInputVat) : 0),
+    };
+
+    // Unified ledger (#5 — one typed, signed, sortable list). Outgoing
+    // invoices carry POSITIVE amounts; incoming invoices + expenses are
+    // NEGATIVE so sorting by value runs income → costs and the column
+    // nets toward the Result. The legacy `rows` / `costs` shapes are
+    // kept above for back-compat; this is the new canonical surface for
+    // the on-screen table + PDF/CSV exports.
+    const ledger = [
+      ...rows.map((r) => ({
+        key: `out-${r.id}`,
+        type: 'outgoing',
+        date: r.issueDate,
+        reference: r.invoiceNumber,
+        party: r.customerLabel || '',
+        eventName: r.eventName || '',
+        vatRate: r.vatRate,
+        taxTreatment: null,
+        status: r.status,
+        isCancelled: r.isCancelled,
+        isReissue: r.isReissue,
+        kind: r.kind,
+        skontoApplied: r.skontoApplied,
+        skontoAmountMinor: r.skontoAmountMinor,
+        netMinor: r.netMinor,
+        vatMinor: r.vatMinor,
+        totalMinor: r.totalMinor,
+      })),
+      ...costs.rows.map((c) => ({
+        key: `${c.source}-${c.id}`,
+        type: c.source === 'incoming' ? 'incoming' : 'expense',
+        date: c.date,
+        reference: c.description || '',
+        party: c.supplierLabel || '',
+        eventName: c.eventName || '',
+        vatRate: null,
+        taxTreatment: c.taxTreatment || 'domestic',
+        status: c.status,
+        isCancelled: false,
+        isReissue: false,
+        kind: null,
+        skontoApplied: false,
+        skontoAmountMinor: 0,
+        netMinor: -Math.abs(c.netMinor),
+        vatMinor: -Math.abs(c.vatMinor),
+        totalMinor: -Math.abs(c.totalMinor),
+      })),
+    ];
+    ledger.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
     return {
       rows,
       totalsByVatRate,
@@ -290,6 +587,10 @@ async function getTaxReport({ from, to, currency } = {}) {
       grandTotalVat,
       grandTotal,
       cancelledCount,
+      costs,
+      costsError,
+      summary,
+      ledger,
       currency: cur,
       period: { from, to },
     };
@@ -351,21 +652,19 @@ async function loadRenderContext(locale) {
 // uncluttered with just "R-2026-0001" — easier to scan for an
 // auditor looking at the sequence.
 const TAX_TABLE_COLS = [
-  { key: 'idx',      labelKey: 'tax_col_no',       width: 26,  align: 'right' },
-  { key: 'date',     labelKey: 'tax_col_date',     width: 60,  align: 'left'  },
-  { key: 'invoice',  labelKey: 'tax_col_invoice',  width: 100, align: 'left'  },
-  { key: 'customer', labelKey: 'tax_col_customer', width: 132, align: 'left'  },
-  { key: 'event',    labelKey: 'tax_col_event',    width: 95,  align: 'left'  },
-  { key: 'vatRate',  labelKey: 'tax_col_vat_rate', width: 42,  align: 'right' },
-  { key: 'net',      labelKey: 'tax_col_net',      width: 70,  align: 'right' },
-  { key: 'vat',      labelKey: 'tax_col_vat',      width: 60,  align: 'right' },
-  { key: 'total',    labelKey: 'tax_col_total',    width: 80,  align: 'right' },
+  { key: 'idx',       labelKey: 'tax_col_no',        width: 22,  align: 'right' },
+  { key: 'type',      labelKey: 'tax_col_type',      width: 58,  align: 'left'  },
+  { key: 'date',      labelKey: 'tax_col_date',      width: 56,  align: 'left'  },
+  { key: 'reference', labelKey: 'tax_col_reference', width: 88,  align: 'left'  },
+  { key: 'party',     labelKey: 'tax_col_party',     width: 116, align: 'left'  },
+  { key: 'event',     labelKey: 'tax_col_event',     width: 86,  align: 'left'  },
+  { key: 'tax',       labelKey: 'tax_col_tax',       width: 64,  align: 'left'  },
+  { key: 'net',       labelKey: 'tax_col_net',       width: 70,  align: 'right' },
+  { key: 'vat',       labelKey: 'tax_col_vat',       width: 58,  align: 'right' },
+  { key: 'total',     labelKey: 'tax_col_total',     width: 80,  align: 'right' },
   // Skonto column (migration 126) — blank for non-Skonto rows so the
-  // column reads quietly until it has data. Shrunk neighbouring text
-  // columns slightly to make space without going over the landscape
-  // content width.
-  { key: 'skonto',   labelKey: 'tax_col_skonto',   width: 56,  align: 'right' },
-  { key: 'status',   labelKey: 'tax_col_status',   width: 58,  align: 'left'  },
+  // column reads quietly until it has data.
+  { key: 'skonto',    labelKey: 'tax_col_skonto',    width: 50,  align: 'right' },
 ];
 
 function colX(leftMargin, index) {
@@ -400,22 +699,31 @@ function formatVatRate(rate, locale) {
   return `${formatted} %`;
 }
 
-function rowCellValues(row, idx, locale, dateFormat) {
+function rowCellValues(row, idx, locale, dateFormat, currency) {
   const intlLocale = locale === 'de' ? 'de-CH' : 'en-GB';
+  const typeLabel = t(
+    locale,
+    row.type === 'outgoing' ? 'tax_type_outgoing'
+      : row.type === 'incoming' ? 'tax_type_incoming'
+        : 'tax_type_expense',
+  );
+  const reference = row.isCancelled
+    ? `${row.reference || ''} (${t(locale, 'tax_status_cancelled')})`
+    : (row.reference || '');
   return {
     idx: String(idx),
-    date: formatDate(row.issueDate, dateFormat),
-    invoice: row.invoiceNumber, // no inline "(Cancelled)" — keep the column tidy; status is its own column
-    customer: row.customerLabel || '',
+    type: typeLabel,
+    date: formatDate(row.date, dateFormat),
+    reference,
+    party: row.party || '',
     event: row.eventName || '',
-    vatRate: formatVatRate(row.vatRate, locale),
-    net: formatMinor(row.netMinor, row.currency, intlLocale),
-    vat: formatMinor(row.vatMinor, row.currency, intlLocale),
-    total: formatMinor(row.totalMinor, row.currency, intlLocale),
+    tax: row.type === 'outgoing' ? formatVatRate(row.vatRate, locale) : (row.taxTreatment || ''),
+    net: formatMinor(row.netMinor, currency, intlLocale),
+    vat: formatMinor(row.vatMinor, currency, intlLocale),
+    total: formatMinor(row.totalMinor, currency, intlLocale),
     skonto: row.skontoApplied
-      ? formatMinor(row.skontoAmountMinor, row.currency, intlLocale)
+      ? formatMinor(row.skontoAmountMinor, currency, intlLocale)
       : '',
-    status: row.isCancelled ? t(locale, 'tax_status_cancelled') : '',
   };
 }
 
@@ -427,8 +735,29 @@ function rowCellValues(row, idx, locale, dateFormat) {
  * Currency is required and used to scope the data (same contract as
  * getTaxReport). Locale defaults to the business profile's default.
  */
-async function renderTaxReportPdf({ from, to, currency, locale } = {}) {
+// Export scope (PR/Liechtenstein follow-up): the readable PDF/CSV exports can be
+// limited to the income or the cost side — handy when the Treuhänder only needs
+// one basis (e.g. income for the 20%-Gewinnungskosten flat deduction). The
+// on-screen report is unaffected; only the exports filter.
+const TAX_EXPORT_SCOPES = ['all', 'income', 'cost'];
+function normalizeScope(scope) {
+  return TAX_EXPORT_SCOPES.includes(scope) ? scope : 'all';
+}
+function scopeLedger(ledger, scope) {
+  if (scope === 'income') return (ledger || []).filter((r) => r.type === 'outgoing');
+  if (scope === 'cost') return (ledger || []).filter((r) => r.type === 'incoming' || r.type === 'expense');
+  return ledger || [];
+}
+
+async function renderTaxReportPdf({ from, to, currency, locale, scope } = {}) {
   const report = await getTaxReport({ from, to, currency });
+  const xScope = normalizeScope(scope);
+  report.ledger = scopeLedger(report.ledger, xScope);
+  // The per-rate breakdown is income-only — drop it from a cost-only export.
+  if (xScope === 'cost') report.totalsByVatRate = [];
+  const showIncome = xScope !== 'cost';
+  const showCosts = xScope !== 'income';
+  const showResult = xScope === 'all';
   const renderCtx = await loadRenderContext(locale);
   const useLocale = renderCtx.locale;
   const intlLocale = useLocale === 'de' ? 'de-CH' : 'en-GB';
@@ -484,7 +813,7 @@ async function renderTaxReportPdf({ from, to, currency, locale } = {}) {
       const tableBottomLimit = page.height - page.marginBottom - 110; // leave room for totals
       const tableWidth = TAX_TABLE_COLS.reduce((s, c) => s + c.width, 0);
 
-      if (report.rows.length === 0) {
+      if (report.ledger.length === 0) {
         doc.font(fonts.body).fontSize(10).fillColor('#555')
           .text(t(useLocale, 'tax_no_invoices'), leftMargin, y + 6, {
             width: tableWidth, align: 'center',
@@ -507,7 +836,7 @@ async function renderTaxReportPdf({ from, to, currency, locale } = {}) {
       // wrap (they're either ints or money strings whose width we
       // budget for) — only text cells (customer, event, invoice,
       // status) opt into natural wrapping.
-      const isWrappable = (col) => ['invoice', 'customer', 'event', 'status'].includes(col.key);
+      const isWrappable = (col) => ['type', 'reference', 'party', 'event', 'tax'].includes(col.key);
       const measureCellHeight = (value, col) => {
         const s = safeStr(value);
         if (!s) return 0;
@@ -520,9 +849,9 @@ async function renderTaxReportPdf({ from, to, currency, locale } = {}) {
         return doc.heightOfString(s, opts);
       };
 
-      for (let i = 0; i < report.rows.length; i += 1) {
-        const row = report.rows[i];
-        const cells = rowCellValues(row, i + 1, useLocale, renderCtx.dateFormat);
+      for (let i = 0; i < report.ledger.length; i += 1) {
+        const row = report.ledger[i];
+        const cells = rowCellValues(row, i + 1, useLocale, renderCtx.dateFormat, report.currency);
 
         // Set the font BEFORE measuring so heightOfString reads the
         // exact rendering state we'll use for doc.text below.
@@ -585,7 +914,10 @@ async function renderTaxReportPdf({ from, to, currency, locale } = {}) {
       // otherwise PDFKit auto-paginates mid-totals, creating phantom
       // pages whose footer ends up at unexpected Y positions on the
       // subsequent bufferedPageRange loop.
-      const totalsHeightEstimate = 16 + (report.totalsByVatRate.length * 13) + 8 + 39 + 12;
+      // Header (16) + one line per VAT bucket (13) + divider (8) +
+      // three income/costs/result summary rows (39) + a 12pt cushion.
+      const summaryHeight = 8 + (3 * 13);
+      const totalsHeightEstimate = 16 + (report.totalsByVatRate.length * 13) + 12 + summaryHeight;
       const footerReserve = 24; // 12 above + 12 of page-number text room
       if (y + 12 + totalsHeightEstimate + footerReserve > page.height - page.marginBottom) {
         doc.addPage({
@@ -619,22 +951,25 @@ async function renderTaxReportPdf({ from, to, currency, locale } = {}) {
           totalsX + 270, ty, { width: 90, align: 'right' });
         ty += 13;
       }
-      // Divider above grand totals.
+      // Divider above the income / costs / result summary.
       doc.moveTo(totalsX, ty + 2).lineTo(totalsX + totalsBoxWidth, ty + 2)
         .lineWidth(0.6).strokeColor('#000').stroke();
       ty += 6;
-      doc.font(fonts.bold);
-      doc.text(t(useLocale, 'tax_grand_total_net'), totalsX, ty, { width: 170, align: 'left' });
-      doc.text(formatMinor(report.grandTotalNet, report.currency, intlLocale),
-        totalsX + 175, ty, { width: 90, align: 'right' });
-      ty += 13;
-      doc.text(t(useLocale, 'tax_grand_total_vat'), totalsX, ty, { width: 170, align: 'left' });
-      doc.text(formatMinor(report.grandTotalVat, report.currency, intlLocale),
-        totalsX + 175, ty, { width: 90, align: 'right' });
-      ty += 13;
-      doc.text(t(useLocale, 'tax_grand_total_gross'), totalsX, ty, { width: 170, align: 'left' });
-      doc.text(formatMinor(report.grandTotal, report.currency, intlLocale),
-        totalsX + 270, ty, { width: 90, align: 'right' });
+      // Income / Costs / Result summary (mirrors the on-screen summary
+      // box). Costs are shown NEGATIVE so the Result reads as a plain
+      // sum of the column. Net / VAT / Gross across the three lines.
+      const s = report.summary;
+      const summaryLine = (labelKey, netMinor, vatMinor, grossMinor, bold) => {
+        doc.font(bold ? fonts.bold : fonts.body).fontSize(9).fillColor('#000');
+        doc.text(t(useLocale, labelKey), totalsX, ty, { width: 80, align: 'left' });
+        doc.text(formatMinor(netMinor, report.currency, intlLocale), totalsX + 80, ty, { width: 90, align: 'right' });
+        doc.text(formatMinor(vatMinor, report.currency, intlLocale), totalsX + 175, ty, { width: 90, align: 'right' });
+        doc.text(formatMinor(grossMinor, report.currency, intlLocale), totalsX + 270, ty, { width: 90, align: 'right' });
+        ty += 13;
+      };
+      if (showIncome) summaryLine('tax_summary_income', s.incomeNetMinor, s.incomeVatMinor, s.incomeGrossMinor, !showResult);
+      if (showCosts) summaryLine('tax_summary_costs', -Math.abs(s.costNetMinor), -Math.abs(s.costVatMinor), -Math.abs(s.costGrossMinor), !showResult);
+      if (showResult) summaryLine('tax_summary_result', s.resultNetMinor, s.vatPayableMinor, s.resultGrossMinor, true);
 
       // Cancelled footnote (bottom-left). Only when there are any.
       if (report.cancelledCount > 0) {
@@ -688,66 +1023,96 @@ async function renderTaxReportPdf({ from, to, currency, locale } = {}) {
  *   renderTaxReportCsv({ from, to, currency, locale })
  *     → Promise<{ content, filename, contentType }>
  */
-async function renderTaxReportCsv({ from, to, currency, locale } = {}) {
+async function renderTaxReportCsv({ from, to, currency, locale, scope } = {}) {
   const report = await getTaxReport({ from, to, currency });
+  const xScope = normalizeScope(scope);
+  report.ledger = scopeLedger(report.ledger, xScope);
   const useLocale = locale || 'en';
 
-  const headers = [
-    t(useLocale, 'tax_col_no'),
-    t(useLocale, 'tax_col_date'),
-    t(useLocale, 'tax_col_invoice'),
-    t(useLocale, 'tax_col_customer'),
-    t(useLocale, 'tax_col_event'),
-    t(useLocale, 'tax_col_vat_rate'),
-    `${t(useLocale, 'tax_col_net')} (${report.currency})`,
-    `${t(useLocale, 'tax_col_vat')} (${report.currency})`,
-    `${t(useLocale, 'tax_col_total')} (${report.currency})`,
-    t(useLocale, 'tax_status_cancelled'),
-    // Migration 126 — Skonto export. `tax_col_skonto` is the discount
-    // amount in major units; admin's accountant reconciles the line.
-    `${t(useLocale, 'tax_col_skonto')} (${report.currency})`,
-  ];
-
   const escape = (cell) => {
-    const s = cell === null || cell === undefined ? '' : String(cell);
-    // RFC 4180: wrap in quotes when the value contains comma, quote,
-    // or newline. We always wrap, simpler + bulletproof for Excel.
+    // Formula-injection defence (Excel/Numbers) THEN RFC-4180 quote-wrap. The
+    // quote wrap alone does NOT stop formula evaluation — only the leading
+    // single-quote prefix does.
+    const s = neutralizeSpreadsheetFormula(cell === null || cell === undefined ? '' : String(cell));
     return `"${s.replace(/"/g, '""')}"`;
   };
 
   const minorToDotDecimal = (m) => ((Number(m) || 0) / 100).toFixed(2);
 
+  // yyyy-mm-dd, robust to Postgres returning dates as JS Date objects (SQLite
+  // returns strings) — raw String(dateObj) is "Thu Jan 15", not an ISO date.
+  const isoDate = (d) => {
+    if (!d) return '';
+    if (d instanceof Date) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    return String(d).slice(0, 10);
+  };
+
+  const typeLabelKey = (type) => (
+    type === 'outgoing' ? 'tax_type_outgoing'
+      : type === 'incoming' ? 'tax_type_incoming'
+        : 'tax_type_expense'
+  );
+
+  // ONE unified ledger table. Amounts are already signed in the ledger
+  // (outgoing positive, costs negative) — emitted as-is.
+  const headers = [
+    t(useLocale, 'tax_col_no'),
+    t(useLocale, 'tax_col_type'),
+    t(useLocale, 'tax_col_date'),
+    t(useLocale, 'tax_col_reference'),
+    t(useLocale, 'tax_col_party'),
+    t(useLocale, 'tax_col_event'),
+    t(useLocale, 'tax_col_tax'),
+    `${t(useLocale, 'tax_col_net')} (${report.currency})`,
+    `${t(useLocale, 'tax_col_vat')} (${report.currency})`,
+    `${t(useLocale, 'tax_col_total')} (${report.currency})`,
+    // Migration 126 — Skonto export. `tax_col_skonto` is the discount
+    // amount in major units; admin's accountant reconciles the line.
+    `${t(useLocale, 'tax_col_skonto')} (${report.currency})`,
+  ];
+
   const lines = [headers.map(escape).join(',')];
-  report.rows.forEach((row, i) => {
+  report.ledger.forEach((row, i) => {
+    const reference = row.isCancelled
+      ? `${row.reference || ''} (${t(useLocale, 'tax_status_cancelled')})`
+      : (row.reference || '');
+    const tax = row.type === 'outgoing'
+      ? Number(row.vatRate).toFixed(2)
+      : (row.taxTreatment || '');
     lines.push([
       i + 1,
-      row.issueDate,
-      row.invoiceNumber,
-      row.customerLabel,
+      t(useLocale, typeLabelKey(row.type)),
+      isoDate(row.date),
+      reference,
+      row.party,
       row.eventName,
-      Number(row.vatRate).toFixed(2),
+      tax,
       minorToDotDecimal(row.netMinor),
       minorToDotDecimal(row.vatMinor),
       minorToDotDecimal(row.totalMinor),
-      row.isCancelled ? '1' : '0',
       row.skontoApplied ? minorToDotDecimal(row.skontoAmountMinor) : '',
     ].map(escape).join(','));
   });
-  // Trailing totals row: blank cells + grand totals at the end so
-  // the column alignment matches the data rows when opened in Excel.
-  lines.push('');
-  lines.push([
-    '', '', '',
-    t(useLocale, 'tax_grand_total_gross'),
-    '', '',
-    minorToDotDecimal(report.grandTotalNet),
-    minorToDotDecimal(report.grandTotalVat),
-    minorToDotDecimal(report.grandTotal),
-    '', '',
-  ].map(escape).join(','));
+
+  // Trailing blank line, then the income / costs / result summary block.
+  const summary = report.summary;
+  if (summary) {
+    lines.push('');
+    lines.push(escape(t(useLocale, 'tax_summary_section')));
+    const sline = (labelKey, net, vat, gross) => lines.push([
+      '', '', '', t(useLocale, labelKey), '', '',
+      minorToDotDecimal(net), minorToDotDecimal(vat), minorToDotDecimal(gross),
+    ].map(escape).join(','));
+    if (xScope !== 'cost') sline('tax_summary_income', summary.incomeNetMinor, summary.incomeVatMinor, summary.incomeGrossMinor);
+    if (xScope !== 'income') sline('tax_summary_costs', summary.costNetMinor, summary.costVatMinor, summary.costGrossMinor);
+    if (xScope === 'all') sline('tax_summary_result', summary.resultNetMinor, summary.vatPayableMinor, summary.resultGrossMinor);
+  }
 
   const content = lines.join('\r\n') + '\r\n';
-  const filename = `tax_report_${report.period.from}_to_${report.period.to}_${report.currency}.csv`;
+  const scopeTag = xScope === 'all' ? '' : `${xScope}_`;
+  const filename = `tax_report_${scopeTag}${report.period.from}_to_${report.period.to}_${report.currency}.csv`;
   return { content, filename, contentType: 'text/csv; charset=utf-8' };
 }
 
@@ -756,5 +1121,5 @@ module.exports = {
   renderTaxReportPdf,
   renderTaxReportCsv,
   // Exposed for unit tests.
-  _internal: { grossUpLateFee, computeReportedAmounts, buildCustomerLabel, formatVatRate },
+  _internal: { grossUpLateFee, computeReportedAmounts, buildCustomerLabel, formatVatRate, loadCosts, scopeLedger, normalizeScope },
 };

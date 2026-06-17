@@ -25,6 +25,7 @@ import {
 import { LineItemsTable, type EditableLineItem } from '../../../components/admin/LineItemsTable';
 import { CustomerPicker } from '../../../components/admin/CustomerPicker';
 import { ProjectSelect } from '../../../components/admin/ProjectSelect';
+import { VatRateSelect } from '../../../components/admin/VatRateSelect';
 import { InstallmentsPanel } from '../../../components/admin/InstallmentsPanel';
 import { customerAdminService } from '../../../services/customerAdmin.service';
 import { userManagementService } from '../../../services/userManagement.service';
@@ -54,6 +55,8 @@ interface FormState {
   paymentNetDaysTemplateId: number | null;
   paymentTimingTemplateId: number | null;
   vatRate: number;
+  /** Migration 130 — snapshot of the chosen output VAT code (null = custom rate). */
+  vatCode: string | null;
   shippingAmount: number;
   introText: string;
   outroText: string;
@@ -85,6 +88,7 @@ const empty: FormState = {
   paymentNetDaysTemplateId: null,
   paymentTimingTemplateId: null,
   vatRate: 0,
+  vatCode: null,
   shippingAmount: 0,
   introText: '',
   outroText: '',
@@ -121,6 +125,7 @@ function buildPayload(f: FormState): QuoteCreatePayload {
     // installments on the snapshot. Sent only when populated.
     installments: f.installments && f.installments.length > 0 ? f.installments : undefined,
     vatRate: f.vatRate,
+    vatCode: f.vatCode,
     shippingAmountMinor: toMinor(f.shippingAmount),
     introText: f.introText || undefined,
     outroText: f.outroText || undefined,
@@ -214,6 +219,7 @@ export const QuoteEditorPage: React.FC = () => {
         paymentNetDaysTemplateId: q.paymentNetDaysTemplateId,
         paymentTimingTemplateId: q.paymentTimingTemplateId,
         vatRate: Number(q.vatRate || 0),
+        vatCode: (q as { vatCode?: string | null }).vatCode ?? null,
         shippingAmount: Number(q.shippingAmountMinor || 0) / 100,
         introText: q.introText || '',
         outroText: q.outroText || '',
@@ -533,9 +539,11 @@ export const QuoteEditorPage: React.FC = () => {
           onChange={(items) => setForm((f) => ({ ...f, lineItems: items }))}
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-          <Input type="number" step="0.1" label={t('quotes.field.vatRate', 'VAT rate %') as string}
-            value={form.vatRate}
-            onChange={(e) => setForm((f) => ({ ...f, vatRate: Number(e.target.value) }))} />
+          <VatRateSelect
+            label={t('quotes.field.vatRate', 'VAT rate %') as string}
+            rate={form.vatRate}
+            code={form.vatCode}
+            onChange={(rate, code) => setForm((f) => ({ ...f, vatRate: rate, vatCode: code }))} />
           <Input type="number" step="0.01" label={t('quotes.field.shipping', 'Shipping amount') as string}
             value={form.shippingAmount}
             onChange={(e) => setForm((f) => ({ ...f, shippingAmount: Number(e.target.value) }))} />

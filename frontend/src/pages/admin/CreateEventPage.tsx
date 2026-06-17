@@ -694,6 +694,7 @@ export const CreateEventPage: React.FC = () => {
                     onChange={handleThemeChange}
                     presetName={formData.theme_preset}
                     onPresetChange={handlePresetChange}
+                    forceColorMode={publicSettings?.branding_force_color_mode ?? null}
                     showGalleryLayouts={true}
                     hideActions={true}
                     onSyncFromBranding={() => {

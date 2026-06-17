@@ -19,6 +19,7 @@ const {
   getRawPublicSiteSettings,
 } = require('../services/publicSiteService');
 const { sanitizeCss } = require('../utils/cssSanitizer');
+const { upsertAppSetting } = require('../utils/appSettings');
 const { clearShareLinkSettingsCache } = require('../services/shareLinkService');
 const { resetSecurityConfigCache } = require('../utils/authSecurity');
 const router = express.Router();
@@ -211,16 +212,7 @@ router.put('/customer-surface', adminAuth, requirePermission('settings.edit'), a
     }
 
     for (const u of updates) {
-      const existing = await db('app_settings').where('setting_key', u.setting_key).first();
-      if (existing) {
-        await db('app_settings').where('setting_key', u.setting_key).update({
-          setting_value: u.setting_value,
-          setting_type: u.setting_type,
-          updated_at: new Date(),
-        });
-      } else {
-        await db('app_settings').insert({ ...u, created_at: new Date(), updated_at: new Date() });
-      }
+      await upsertAppSetting(u.setting_key, u.setting_value, u.setting_type);
     }
 
     // Clear the public-site cache so any consumer relying on it
@@ -231,6 +223,60 @@ router.put('/customer-surface', adminAuth, requirePermission('settings.edit'), a
   } catch (error) {
     console.error('Customer surface settings save error:', error);
     res.status(500).json({ error: 'Failed to save customer surface settings' });
+  }
+});
+
+// Accounting settings (km rate, per-diem rate, require-proof). Read via the
+// generic GET /:type ('accounting'); this is the typed write. Rates are
+// integer minor units; verify legal/tax guidance with a Treuhaender.
+router.put('/accounting', adminAuth, requirePermission('settings.edit'), async (req, res) => {
+  try {
+    const updates = [];
+    const setInt = (key) => {
+      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+        const n = Math.max(0, Math.round(Number(req.body[key]) || 0));
+        updates.push({ setting_key: key, setting_value: JSON.stringify(n), setting_type: 'accounting' });
+      }
+    };
+    setInt('accounting_km_rate_minor');
+    setInt('accounting_per_diem_rate_minor');
+    if (Object.prototype.hasOwnProperty.call(req.body, 'accounting_require_proof')) {
+      updates.push({
+        setting_key: 'accounting_require_proof',
+        setting_value: JSON.stringify(!!req.body.accounting_require_proof),
+        setting_type: 'accounting',
+      });
+    }
+    // VAT registration + reclaim. `registered` drives whether output VAT applies
+    // + whether input VAT is deductible; `reclaim_countries` = the ISO-2 list of
+    // countries whose input VAT can be reclaimed (drives cost tax-treatment +
+    // the report's VAT-payable).
+    if (Object.prototype.hasOwnProperty.call(req.body, 'accounting_vat_registered')) {
+      updates.push({
+        setting_key: 'accounting_vat_registered',
+        setting_value: JSON.stringify(!!req.body.accounting_vat_registered),
+        setting_type: 'accounting',
+      });
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'accounting_vat_reclaim_countries')) {
+      const arr = Array.isArray(req.body.accounting_vat_reclaim_countries)
+        ? req.body.accounting_vat_reclaim_countries
+          .map((c) => String(c || '').toUpperCase().trim())
+          .filter((c) => /^[A-Z]{2}$/.test(c))
+        : [];
+      updates.push({
+        setting_key: 'accounting_vat_reclaim_countries',
+        setting_value: JSON.stringify(arr),
+        setting_type: 'accounting',
+      });
+    }
+    for (const u of updates) {
+      await upsertAppSetting(u.setting_key, u.setting_value, u.setting_type);
+    }
+    res.json({ message: 'Accounting settings updated', updated: updates.map((u) => u.setting_key) });
+  } catch (error) {
+    console.error('Accounting settings save error:', error);
+    res.status(500).json({ error: 'Failed to save accounting settings' });
   }
 });
 

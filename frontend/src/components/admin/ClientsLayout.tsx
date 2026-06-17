@@ -88,13 +88,8 @@ export const ClientsLayout: React.FC = () => {
       icon: Receipt,
       featureFlag: 'bills',
     },
-    {
-      key: 'tax-report',
-      to: '/admin/clients/tax-report',
-      label: t('clients.subnav.taxReport', 'Tax'),
-      icon: Calculator,
-      featureFlag: 'taxReport',
-    },
+    // Tax export moved permanently to the Accounting section (it is no
+    // longer a CRM sub-feature). See AccountingLayout.
     // Future sub-features:
     //   { key: 'messaging', ... featureFlag: 'messaging' }
     {

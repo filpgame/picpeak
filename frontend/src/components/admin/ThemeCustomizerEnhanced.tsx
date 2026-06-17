@@ -184,6 +184,15 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
   slotBeforeCustomCss
 }) => {
   const { t } = useTranslation();
+  // A force lock (instance-wide light/dark) overrides the per-theme color
+  // mode. On the Branding page (where the Force control lives —
+  // onForceColorModeChange is provided) we hide only the now-redundant
+  // per-theme Color Mode picker. In per-event gallery editors (no Force
+  // control) we ALSO hide the colour pickers, since a gallery can't override
+  // the site-wide lock. Presets, fonts and style always stay.
+  const forcedColorActive = (forceColorMode ?? null) !== null;
+  const isBrandingContext = !!onForceColorModeChange;
+  const hideGalleryColors = forcedColorActive && !isBrandingContext;
   const [localTheme, setLocalTheme] = useState<ThemeConfig>(value);
   const [selectedPreset, setSelectedPreset] = useState(presetName);
   const [customCss, setCustomCss] = useState(value.customCss || '');
@@ -915,6 +924,14 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
 
         {/* Color Mode Selector */}
         <div className="mb-6">
+          {forcedColorActive && (
+            <div className="mb-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+              {isBrandingContext
+                ? t('branding.forcedModeBrandingHint', 'Light/dark is locked site-wide by the Force control below — the per-theme mode picker is hidden because it would have no effect.')
+                : t('branding.forcedModeGalleryNote', 'A site-wide color lock is active, so this gallery follows the locked light/dark mode. Color and light/dark options are hidden here and can’t be overridden per gallery.')}
+            </div>
+          )}
+          {!forcedColorActive && (<>
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             {t('branding.colorMode', 'Color Mode')}
           </label>
@@ -969,6 +986,7 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             {t('branding.colorModeHelp', 'Auto follows the visitor\'s system preference.')}
           </p>
+          </>)}
 
           {/*
            * Force color mode (instance-wide). Lives next to the per-theme
@@ -1032,6 +1050,7 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
          * same height so the four Surfaces and the two Accent rows align
          * cleanly side-by-side.
          */}
+        {!hideGalleryColors && (
         <div className="space-y-6">
           {/* Surfaces */}
           <div>
@@ -1179,6 +1198,7 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
                 handleChange() — no dedicated picker. */}
           </div>
         </div>
+        )}
       </Card>
 
       {/* Typography & Style */}

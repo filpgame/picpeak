@@ -24,6 +24,19 @@ const { customerAuth } = require('../middleware/customerAuth');
 const { setGalleryAuthCookies } = require('../utils/tokenUtils');
 const customerAccountsService = require('../services/customerAccountsService');
 
+// Gate a customer-facing route on BOTH the global master flag AND the
+// per-customer override — getEffectiveFeaturesForCustomer combines them, so an
+// admin disabling e.g. Bills globally is honoured even when feature_bills=true
+// on the row. Sends the 403 and returns false on denial; true if allowed.
+async function customerFeatureAllowed(req, res, featureKey, label) {
+  const eff = await customerAccountsService.getEffectiveFeaturesForCustomer(req.customer.id);
+  if (!eff || !eff[featureKey]) {
+    res.status(403).json({ error: `${label} are disabled for this account`, code: 'CUSTOMER_FEATURE_DISABLED' });
+    return false;
+  }
+  return true;
+}
+
 /**
  * Customer-side password policy mirrors the one in customerAuth.js — kept
  * deliberately simple (8 chars, one uppercase, one digit) since a customer
@@ -380,11 +393,8 @@ router.post('/profile/password', [
 router.get('/quotes', customerAuth, async (req, res) => {
   try {
     const { db: dbi } = require('../database/db');
-    // Customer-feature gate. is_active is enforced by customerAuth.
-    const customer = await dbi('customer_accounts').where({ id: req.customer.id }).first();
-    if (!customer || customer.feature_quotes === false || customer.feature_quotes === 0) {
-      return res.status(403).json({ error: 'Quotes are disabled for this account', code: 'CUSTOMER_FEATURE_DISABLED' });
-    }
+    // Customer-feature gate — master flag AND per-customer override.
+    if (!(await customerFeatureAllowed(req, res, 'quotes', 'Quotes'))) return;
     const rows = await dbi('quotes')
       .where({ customer_account_id: req.customer.id })
       // Hide drafts — they're admin scratch work; nothing has been
@@ -459,10 +469,8 @@ router.get('/quotes', customerAuth, async (req, res) => {
 router.get('/invoices', customerAuth, async (req, res) => {
   try {
     const { db: dbi } = require('../database/db');
-    const customer = await dbi('customer_accounts').where({ id: req.customer.id }).first();
-    if (!customer || customer.feature_bills === false || customer.feature_bills === 0) {
-      return res.status(403).json({ error: 'Invoices are disabled for this account', code: 'CUSTOMER_FEATURE_DISABLED' });
-    }
+    // Customer-feature gate — master flag AND per-customer override.
+    if (!(await customerFeatureAllowed(req, res, 'bills', 'Invoices'))) return;
     // Visibility rules for the customer-facing list:
     //   - Hide `scheduled` always (drafts the admin is still tweaking).
     //   - Show `sent`, `overdue`, `paid` always (the customer's
@@ -550,11 +558,9 @@ router.get('/invoices', customerAuth, async (req, res) => {
  */
 router.get('/quotes/:id/pdf', customerAuth, async (req, res) => {
   try {
-    // Feature-gate identically to /quotes (list endpoint).
-    if (req.customer.feature_quotes === false || req.customer.feature_quotes === 0 || req.customer.feature_quotes === '0') {
-      return res.status(403).json({ error: 'Quotes are disabled for this account' });
-    }
     const { db: dbi } = require('../database/db');
+    // Feature-gate — master flag AND per-customer override.
+    if (!(await customerFeatureAllowed(req, res, 'quotes', 'Quotes'))) return;
     const quote = await dbi('quotes')
       .where({ id: parseInt(req.params.id, 10), customer_account_id: req.customer.id })
       .first();
@@ -584,6 +590,8 @@ router.get('/quotes/:id/pdf', customerAuth, async (req, res) => {
 router.get('/invoices/:id/pdf', customerAuth, async (req, res) => {
   try {
     const { db: dbi } = require('../database/db');
+    // Feature-gate — master flag AND per-customer override.
+    if (!(await customerFeatureAllowed(req, res, 'bills', 'Invoices'))) return;
     const invoice = await dbi('invoices')
       .where({ id: parseInt(req.params.id, 10), customer_account_id: req.customer.id })
       .first();
@@ -623,6 +631,8 @@ router.get('/contracts', customerAuth, async (req, res) => {
       // Feature not migrated on this install yet.
       return res.json({ contracts: [] });
     }
+    // Contracts gate — master flag AND per-customer override (migration 131).
+    if (!(await customerFeatureAllowed(req, res, 'contracts', 'Contracts'))) return;
     const rows = await dbi('contracts')
       .where({ customer_account_id: req.customer.id })
       .whereNotIn('status', ['draft'])
@@ -680,6 +690,8 @@ router.get('/contracts/:id/pdf', customerAuth, async (req, res) => {
     if (!(await dbi.schema.hasTable('contracts'))) {
       return res.status(404).json({ error: 'Contract not found' });
     }
+    // Contracts gate — master flag AND per-customer override.
+    if (!(await customerFeatureAllowed(req, res, 'contracts', 'Contracts'))) return;
     const contract = await dbi('contracts')
       .where({ id: parseInt(req.params.id, 10), customer_account_id: req.customer.id })
       .first();

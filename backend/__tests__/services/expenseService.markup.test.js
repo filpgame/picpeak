@@ -1,0 +1,87 @@
+/**
+ * Unit tests for the accounting money logic — re-bill markup (incoming
+ * invoices) and internal-expense amount/build. Pure functions via _internal.
+ */
+const expenseService = require('../../src/services/expenseService');
+
+const { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert } = expenseService._internal;
+
+describe('computeMarkupMinor', () => {
+  it('percent of base, rounded', () => {
+    expect(computeMarkupMinor(10000, { type: 'percent', percent: 10 })).toBe(1000);
+    expect(computeMarkupMinor(333, { type: 'percent', percent: 10 })).toBe(33);
+    expect(computeMarkupMinor(335, { type: 'percent', percent: 10 })).toBe(34);
+  });
+  it('flat / none', () => {
+    expect(computeMarkupMinor(10000, { type: 'flat', flatMinor: 500 })).toBe(500);
+    expect(computeMarkupMinor(10000, { type: 'none' })).toBe(0);
+    expect(computeMarkupMinor(10000, { type: 'percent', percent: null })).toBe(0);
+  });
+});
+
+describe('resolveMarkup precedence (no contract / no DB)', () => {
+  it('override > source clause', async () => {
+    await expect(resolveMarkup({ markupType: 'flat', markupFlatMinor: 999 }, { markupType: 'percent', markupPercent: 5 }, null, null))
+      .resolves.toEqual({ type: 'percent', percent: 5, flatMinor: null });
+  });
+  it("source clause when no override", async () => {
+    await expect(resolveMarkup({ markupType: 'flat', markupFlatMinor: 200 }, {}, null, null))
+      .resolves.toEqual({ type: 'flat', percent: null, flatMinor: 200 });
+  });
+  it('none when nothing set', async () => {
+    await expect(resolveMarkup({ markupType: 'none' }, {}, null, null))
+      .resolves.toEqual({ type: 'none', percent: null, flatMinor: null });
+  });
+});
+
+describe('computeExpenseAmount', () => {
+  it('mileage / per-diem = quantity x rate, rounded', () => {
+    expect(computeExpenseAmount('mileage', 42, 70, null)).toBe(2940); // 42 km x CHF 0.70
+    expect(computeExpenseAmount('per_diem', 3, 8000, null)).toBe(24000); // 3 days x CHF 80
+    expect(computeExpenseAmount('mileage', 10.5, 71, null)).toBe(746); // 745.5 -> 746
+  });
+  it('amount = the entered minor amount', () => {
+    expect(computeExpenseAmount('amount', null, null, 5000)).toBe(5000);
+  });
+  it('null when quantity or rate missing', () => {
+    expect(computeExpenseAmount('mileage', null, 70, null)).toBeNull();
+    expect(computeExpenseAmount('mileage', 42, null, null)).toBeNull();
+  });
+});
+
+describe('buildExpenseInsert (internal expense)', () => {
+  it('defaults: kind=amount, disposition=eigener_aufwand, tax=domestic, status=open', () => {
+    const row = buildExpenseInsert({ chfAmountMinor: 5000 }, 7);
+    expect(row.kind).toBe('amount');
+    expect(row.disposition).toBe('eigener_aufwand');
+    expect(row.tax_treatment).toBe('domestic');
+    expect(row.status).toBe('open');
+    expect(row.chf_amount_minor).toBe(5000);
+    expect(row.created_by_admin_id).toBe(7);
+    expect(row.inbound_document_id).toBeNull();
+  });
+
+  it('mileage uses the override rate, else the settings km rate', () => {
+    const withDefault = buildExpenseInsert({ kind: 'mileage', quantity: 42 }, 1, { kmRateMinor: 70 });
+    expect(withDefault.rate_minor).toBe(70);
+    expect(withDefault.chf_amount_minor).toBe(2940);
+
+    const withOverride = buildExpenseInsert({ kind: 'mileage', quantity: 42, rateMinor: 100 }, 1, { kmRateMinor: 70 });
+    expect(withOverride.rate_minor).toBe(100);
+    expect(withOverride.chf_amount_minor).toBe(4200);
+  });
+
+  it('per_diem uses days x per-diem rate', () => {
+    const row = buildExpenseInsert({ kind: 'per_diem', quantity: 2 }, 1, { perDiemRateMinor: 8000 });
+    expect(row.rate_minor).toBe(8000);
+    expect(row.chf_amount_minor).toBe(16000);
+  });
+
+  it('event_id null = booked to company; proof path carried', () => {
+    const company = buildExpenseInsert({ kind: 'amount', chfAmountMinor: 100 }, 1, { receiptPath: '/p/x.pdf' });
+    expect(company.event_id).toBeNull();
+    expect(company.receipt_path).toBe('/p/x.pdf');
+    const evt = buildExpenseInsert({ kind: 'amount', chfAmountMinor: 100, eventId: 9 }, 1);
+    expect(evt.event_id).toBe(9);
+  });
+});

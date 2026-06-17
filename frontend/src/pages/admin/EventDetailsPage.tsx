@@ -2265,6 +2265,7 @@ export const EventDetailsPage: React.FC = () => {
               <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{t('branding.themeAndStyle')}</h2>
               <ThemeCustomizerEnhanced
                 value={currentTheme || GALLERY_THEME_PRESETS.default.config}
+                forceColorMode={publicSettings?.branding_force_color_mode ?? null}
                 onChange={(theme) => {
                   setCurrentTheme(theme);
                   setEditForm(prev => ({ ...prev, color_theme: JSON.stringify(theme) }));

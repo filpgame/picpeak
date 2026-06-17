@@ -10,6 +10,7 @@ import {
   X,
   Users,
   Briefcase,
+  Landmark,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
@@ -91,10 +92,23 @@ const navigation: NavItem[] = [
     // can't disagree: any sub-feature on lights up the entry, all off
     // hides it. Future siblings (e.g. `messaging`) get appended here
     // AND in the context derivation.
+    // taxReport intentionally excluded — Tax moved to the Accounting section
+    // and is not a Clients sub-nav item, so it must not reveal Clients (would
+    // open an empty ClientsLayout). Mirrors the context's `clients` derivation.
     featureFlagsAny: [
       'customerPortal', 'crmDevelopment', 'quotes', 'bills',
-      'taxReport', 'hoursLogging', 'contracts', 'calendar',
+      'hoursLogging', 'contracts', 'calendar', 'projects',
     ],
+  },
+  // Accounting section (migration 122) — inbound supplier invoices,
+  // expenses + re-bill, and the tax report (which relocates here from
+  // the CRM sub-nav when `accounting` is on). Gated by the `accounting`
+  // master flag; the sub-pages inside AccountingLayout are each
+  // independently feature-gated.
+  {
+    nameKey: 'navigation.accounting', href: '/admin/accounting', icon: Landmark,
+    permission: 'accounting.view',
+    featureFlag: 'accounting',
   },
 ];
 

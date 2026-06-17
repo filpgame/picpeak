@@ -66,6 +66,9 @@ import {
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
 import { AdminLayout, AdminAuthWrapper } from './components/admin';
 import { ClientsLayout } from './components/admin/ClientsLayout';
+import { AccountingLayout, AccountingIndex } from './components/admin/AccountingLayout';
+import { AccountingInboxPage } from './pages/admin/accounting/AccountingInboxPage';
+import { ExpensesLedgerPage } from './pages/admin/accounting/ExpensesLedgerPage';
 import { RequireFeature } from './components/admin/RequireFeature';
 import { PageErrorBoundary, OfflineIndicator, SkipLink, DynamicFavicon, RobotsMetaTags, CMSContentBlock, Loading } from './components/common';
 import { MaintenanceWrapper } from './components/MaintenanceWrapper';
@@ -251,10 +254,10 @@ function App() {
                             />
                           </Route>
 
-                          {/* Tax / Steuer report — gated by `taxReport`. */}
-                          <Route element={<RequireFeature flag="taxReport" />}>
-                            <Route path="tax-report" element={<TaxReportPage />} />
-                          </Route>
+                          {/* Tax export moved permanently to the Accounting
+                              section. Keep this path as a redirect so old
+                              bookmarks / links don't 404. */}
+                          <Route path="tax-report" element={<Navigate to="/admin/accounting/tax-report" replace />} />
                           {/* Developer tools — gated by `crmDevelopment`. */}
                           <Route element={<RequireFeature flag="crmDevelopment" />}>
                             <Route path="development" element={<CrmDevelopmentPage />} />
@@ -265,6 +268,32 @@ function App() {
                               state inside ClientsLayout handles "parent on,
                               all children off". */}
                           <Route index element={<Navigate to="/admin/clients/accounts" replace />} />
+                        </Route>
+                      </Route>
+
+                      {/* Accounting section (migration 122). Parent gated by
+                          the `accounting` flag. Hosts the Tax report — which
+                          relocates here from the CRM sub-nav when accounting
+                          is on — plus the future inbound-invoice / expenses
+                          pages. Each sub-route is independently flagged. */}
+                      <Route element={<RequireFeature flag="accounting" />}>
+                        <Route path="accounting" element={<AccountingLayout />}>
+                          <Route element={<RequireFeature flag="incomingInvoices" />}>
+                            <Route path="inbox" element={<AccountingInboxPage />} />
+                          </Route>
+                          <Route element={<RequireFeature flag="expenses" />}>
+                            <Route path="expenses" element={<ExpensesLedgerPage />} />
+                          </Route>
+                          <Route element={<RequireFeature flag="taxReport" />}>
+                            <Route path="tax-report" element={<TaxReportPage />} />
+                            {/* Treuhänder export moved onto the Tax page; keep
+                                the old path working for bookmarks. */}
+                            <Route path="export" element={<Navigate to="/admin/accounting/tax-report" replace />} />
+                          </Route>
+                          {/* Chart of accounts (Layer A) moved into Settings →
+                              Accounting; keep the old path working for bookmarks. */}
+                          <Route path="ledger" element={<Navigate to="/admin/settings?tab=accounting" replace />} />
+                          <Route index element={<AccountingIndex />} />
                         </Route>
                       </Route>
 

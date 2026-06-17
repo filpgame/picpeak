@@ -98,6 +98,7 @@
     "error": "Error",
     "configureInSettings": "Configure defaults in Settings ↗",
     "save": "Save",
+    "saving": "Saving…",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -196,6 +197,7 @@
     "users": "Users",
     "calendar": "Calendar",
     "clients": "CRM",
+    "accounting": "Accounting",
     "betaTag": "Beta"
   },
   "archives": {
@@ -1142,6 +1144,7 @@
         "communication": "Communication",
         "scheduling": "Scheduling",
         "sales": "Sales",
+        "accounting": "Accounting",
         "insights": "Insights & Access",
         "customers": "Customers",
         "clients": "CRM"
@@ -1157,6 +1160,10 @@
         "title": "Galleries",
         "description": "The core PicPeak surface. Always available.",
         "locked": "Galleries are the foundation of PicPeak and can't be turned off."
+      },
+      "incomingMail": {
+        "title": "Incoming mail",
+        "description": "Poll a dedicated mailbox (IMAP) every minute and drop invoice attachments into Accounting → Incoming invoices. Configure the mailbox under Settings → Email."
       },
       "reminderEmails": {
         "title": "Reminder Emails",
@@ -1188,10 +1195,28 @@
         "sidebar": "Invoices"
       },
       "taxReport": {
-        "title": "Tax report",
+        "title": "Tax export",
         "description": "Period-scoped revenue list with net + VAT breakdown grouped by VAT rate. Export as PDF (landscape, company letterhead) or CSV for your accountant. Cancelled invoices stay visible for a gap-free audit trail but are excluded from totals.",
         "sidebar": "Tax",
-        "requiresBills": "Enable Bills first — the tax report reads from your invoices."
+        "requiresBills": "Enable Bills first — the tax report reads from your invoices.",
+        "requiresAccounting": "Enable Accounting first — Tax export lives in the Accounting section."
+      },
+      "accounting": {
+        "title": "Accounting",
+        "description": "A dedicated Accounting area, separate from CRM. Turn this on, then enable the sub-features below (Tax export, Incoming invoices). VAT / tax treatment is guidance only — verify with your Treuhänder before relying on it.",
+        "sidebar": "Accounting"
+      },
+      "incomingInvoices": {
+        "title": "Incoming invoices",
+        "description": "Capture received supplier invoices (upload or phone/tablet camera), categorize expenses, and re-bill costs to clients on the relevant event with a contract-driven markup.",
+        "sidebar": "Incoming",
+        "requiresAccounting": "Enable Accounting first — Incoming invoices live in the Accounting section."
+      },
+      "expenses": {
+        "title": "Expenses",
+        "description": "Internal expenses (mileage, per-diem, cash) booked to an event or the company, with optional proof. Separate from incoming supplier invoices.",
+        "sidebar": "Expenses",
+        "requiresAccounting": "Enable Accounting first — Expenses live in the Accounting section."
       },
       "analytics": {
         "title": "Analytics",
@@ -1247,6 +1272,24 @@
     },
     "crm": {
       "title": "CRM behaviour"
+    },
+    "accounting": {
+      "title": "Accounting",
+      "subtitle": "Default rates for internal expenses and the proof requirement.",
+      "kmRate": "Mileage rate (CHF / km)",
+      "kmRateHint": "Default applied to mileage expenses; overridable per entry.",
+      "perDiemRate": "Per-diem rate (CHF / day)",
+      "perDiemRateHint": "Default applied to per-diem expenses; overridable per entry.",
+      "requireProof": "Require a proof file on every expense",
+      "vat": {
+        "title": "VAT registration & reclaim",
+        "registered": "VAT-registered (charge output VAT + reclaim input VAT)",
+        "registeredHint": "Off = small business / under threshold: no VAT charged, input VAT is a cost (not reclaimable).",
+        "reclaimCountries": "Countries where input VAT is reclaimable",
+        "reclaimCountriesHint": "Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select."
+      },
+      "disclaimer": "Rates and VAT/tax treatment are guidance only — verify with your Treuhänder.",
+      "savedToast": "Accounting settings saved."
     }
   },
   "analytics": {
@@ -1502,6 +1545,8 @@
     "forceColorModeNone": "No force (user choice)",
     "forceColorModeDark": "Force dark",
     "forceColorModeLight": "Force light",
+    "forcedModeBrandingHint": "Light/dark is locked site-wide by the Force control below — the per-theme mode picker is hidden because it would have no effect.",
+    "forcedModeGalleryNote": "A site-wide color lock is active, so this gallery follows the locked light/dark mode. Color and light/dark options are hidden here and can’t be overridden per gallery.",
     "colorGroupSurfaces": "Surfaces",
     "colorGroupSurfacesHelp": "The neutral layers behind your content. Background sits furthest back; Surface and Elevated stack on top.",
     "backgroundColorHelp": "The page itself — body background of every gallery, admin page and CMS page.",
@@ -2016,6 +2061,55 @@
       "button": "Send queued emails now",
       "success": "Email queue flushed — {{sent}} sent, {{failed}} failed",
       "empty": "No pending emails to send"
+    },
+    "incoming": {
+      "title": "Incoming mail (IMAP)",
+      "subtitle": "A dedicated mailbox polled every minute; attachments land in Accounting → Incoming invoices.",
+      "host": "IMAP Host",
+      "test": "Test connection",
+      "testOk": "Connected to {{folder}} — {{messages}} messages, {{unseen}} unread.",
+      "testFailed": "Connection failed.",
+      "roundTrip": "Round-trip test",
+      "roundTripHint": "Sends a test email via your SMTP settings to this mailbox and confirms it arrives. Save both first.",
+      "roundTripOk": "Round-trip OK — delivered to {{recipient}} in {{seconds}}s.",
+      "roundTripFailed": "Round-trip test failed.",
+      "poll": "Check now",
+      "pollHint": "Check the mailbox now instead of waiting for the 60-second poll. Ingests unread attachments into Incoming invoices.",
+      "pollOk": "Checked mailbox — {{count}} new email(s) ingested.",
+      "pollDisabled": "Incoming mail is turned off — enable it under Settings → Features.",
+      "pollUnconfigured": "Save the incoming mail settings first.",
+      "pollBusy": "A poll is already running — try again in a moment.",
+      "pollFailed": "Mailbox poll failed.",
+      "port": "Port",
+      "security": "Security",
+      "ssl": "SSL/TLS",
+      "plain": "None / STARTTLS",
+      "user": "Username",
+      "pass": "Password",
+      "folder": "Folder",
+      "save": "Save Incoming Mail Settings",
+      "detectFolders": "Detect",
+      "folderHint": "Enter host, username and password, then Detect to list the mailbox folders.",
+      "foldersDetected": "{{count}} folders found.",
+      "noFolders": "No folders returned by the server.",
+      "detectFailed": "Could not detect folders.",
+      "requiredFields": "Host, port and username are required.",
+      "savedToast": "Incoming mail settings saved."
+    },
+    "received": {
+      "tab": "Received emails",
+      "from": "From",
+      "subject": "Subject",
+      "received": "Received",
+      "status": "Status",
+      "empty": "No received emails yet. Enable incoming mail and configure the mailbox.",
+      "inbox": "inbox",
+      "statusValue": {
+        "ingested": "Ingested",
+        "no_attachment": "No attachment",
+        "duplicate": "Duplicate",
+        "error": "Error"
+      }
     },
     "sentEmails": {
       "tab": "Sent emails",
@@ -3382,6 +3476,180 @@
       "development": "Development"
     }
   },
+  "accounting": {
+    "title": "Accounting",
+    "subtitle": "Inbound supplier invoices, expenses and reporting.",
+    "navAriaLabel": "Accounting navigation",
+    "empty": {
+      "title": "No accounting features enabled",
+      "body": "Enable the Tax report (or another accounting sub-feature) under Settings → Features to get started."
+    },
+    "subnav": {
+      "incomingInvoices": "Incoming invoices",
+      "expenses": "Expenses",
+      "taxReport": "Tax",
+      "export": "Treuhänder export",
+      "chartOfAccounts": "Chart of accounts"
+    },
+    "taxTreatment": {
+      "domestic": "Domestic (with VAT)",
+      "reverse_charge_service": "Reverse charge (services)",
+      "foreign_vat_non_reclaimable": "Foreign VAT (non-reclaimable)",
+      "import_goods": "Import of goods"
+    },
+    "disposition": {
+      "rebill": "Re-bill to client",
+      "durchlaufend": "Pass-through",
+      "eigener_aufwand": "Company expense",
+      "duplikat": "Duplicate",
+      "abgelehnt": "Declined"
+    },
+    "markup": {
+      "none": "None / from contract",
+      "percent": "Percent",
+      "flat": "Flat"
+    },
+    "inbox": {
+      "captureTitle": "Capture a supplier invoice",
+      "captureBody": "Photograph a paper invoice with your device camera, or upload a PDF / image.",
+      "scanCamera": "Scan with camera",
+      "uploadFile": "Upload file",
+      "capturedToast": "Document captured.",
+      "categorizedToast": "Document categorized.",
+      "triageTitle": "Categorize document",
+      "saveCategorize": "Save",
+      "saveCategorizePay": "Save & mark paid",
+      "categorize": "Categorize",
+      "view": "View",
+      "empty": "No documents yet — capture one above.",
+      "untitled": "Untitled document",
+      "noAmount": "amount not entered",
+      "rebillHint": "Creates an editable scheduled invoice on the client. VAT/tax handling is v1 — verify with your Treuhänder.",
+      "previewLoading": "Loading preview…",
+      "previewError": "Preview unavailable — enter the fields manually.",
+      "qrHint": "Showing the last page — the Swiss QR-bill usually sits at the bottom.",
+      "prevPage": "Prev",
+      "nextPage": "Next",
+      "pageOf": "Page {{n}} / {{total}}",
+      "status": {
+        "label": "Status",
+        "unsorted": "New",
+        "categorized": "Categorized",
+        "declined": "Declined",
+        "duplicate": "Duplicate"
+      },
+      "field": {
+        "supplier": "Supplier",
+        "total": "Total",
+        "currency": "Currency",
+        "invoiceDate": "Invoice date",
+        "disposition": "Disposition",
+        "category": "Category",
+        "categoryNone": "— none —",
+        "declineReason": "Reason",
+        "customer": "Client",
+        "eventId": "Event ID (optional)",
+        "markup": "Markup",
+        "reference": "Payment reference",
+        "referenceHint": "QR / ESR reference or message"
+      }
+    },
+    "expenseStatus": {
+      "open": "Open",
+      "parked": "Parked",
+      "billed": "Billed",
+      "declined": "Declined"
+    },
+    "paymentMethod": {
+      "bank_transfer": "Bank transfer",
+      "cash": "Cash",
+      "twint": "TWINT",
+      "paypal": "PayPal",
+      "card": "Card",
+      "other": "Other"
+    },
+    "booking": {
+      "label": "Book to",
+      "company": "Company",
+      "event": "Event",
+      "eventId": "Event ID"
+    },
+    "incoming": {
+      "triageTitle": "Categorize incoming invoice",
+      "payTitle": "Mark supplier paid",
+      "outstanding": "Outstanding",
+      "markPaid": "Mark paid",
+      "markUnpaid": "Mark unpaid",
+      "confirmPaid": "Mark paid",
+      "paid": "Paid",
+      "paidToast": "Marked as paid.",
+      "categorizedToast": "Categorized.",
+      "categorizedPaidToast": "Categorized and marked paid."
+    },
+    "expense": {
+      "kind": "Type",
+      "km": "Kilometres",
+      "days": "Days",
+      "rate": "Rate",
+      "rateDefault": "Default {{rate}} — leave blank to use it",
+      "computed": "Amount",
+      "who": "Paid by / vendor",
+      "whoHint": "e.g. coworker name or shop",
+      "proof": "Proof",
+      "proofRequired": "A proof file is required.",
+      "proofExisting": "A proof file is already attached — upload a new one to replace it.",
+      "viewProof": "Proof"
+    },
+    "expenseKind": {
+      "amount": "Amount",
+      "mileage": "Mileage (km)",
+      "per_diem": "Per-diem"
+    },
+    "category": {
+      "infrastructure": "Infrastructure & rent",
+      "equipment": "Equipment & hardware",
+      "software": "Software & licenses",
+      "material": "Materials & supplies",
+      "travel": "Travel & expenses",
+      "marketing": "Advertising & marketing",
+      "services": "Services / subcontracting",
+      "insurance": "Insurance & fees",
+      "training": "Training",
+      "other": "Other"
+    },
+    "ledger": {
+      "allStatuses": "All statuses",
+      "allDispositions": "All dispositions",
+      "allKinds": "All types",
+      "empty": "No expenses yet — add one above.",
+      "untitled": "Expense",
+      "invoiceLink": "Invoice",
+      "paid": "Paid",
+      "markPaid": "Mark paid",
+      "markPaidTitle": "Mark supplier paid",
+      "paidDate": "Payment date",
+      "method": "Method",
+      "reference": "Reference (optional)",
+      "confirmPaid": "Mark paid",
+      "paidToast": "Marked as paid.",
+      "unpaidToast": "Marked as not paid.",
+      "addExpense": "Add expense",
+      "addTitle": "Add expense",
+      "editTitle": "Edit expense",
+      "updatedToast": "Expense updated.",
+      "payTitle": "Mark expense paid",
+      "invoiced": "Invoiced",
+      "invoicedToast": "Added to a client invoice.",
+      "invoiceTitle": "Add to client invoice",
+      "invoiceHint": "This creates a billable line on the client’s next scheduled invoice and locks the expense from further edits.",
+      "addToInvoice": "Add to invoice",
+      "locked": "Locked",
+      "lockedHint": "Locked — this expense is on a client invoice.",
+      "description": "Description",
+      "descriptionHint": "e.g. mileage, per-diem, cash receipt",
+      "createdToast": "Expense added."
+    }
+  },
   "projects": {
     "title": "Project Overview",
     "subtitle": "Group events into projects and see every email, document, gallery and hour in one cockpit.",
@@ -3613,6 +3881,57 @@
       }
     }
   },
+  "ledger": {
+    "intro": "Used only to produce the Treuhänder export — picpeak does not keep double-entry books. The seeded chart + VAT codes follow the Swiss/LI KMU-Kontenrahmen; adjust them to match your Treuhänder’s setup.",
+    "settingsSaved": "Mappings saved.",
+    "saveDefaults": "Save mappings",
+    "accountType": {
+      "asset": "Asset", "liability": "Liability", "equity": "Equity", "revenue": "Revenue", "expense": "Expense"
+    },
+    "vatDirection": {
+      "input": "Input (Vorsteuer)", "output": "Output (Umsatzsteuer)"
+    },
+    "defaults": {
+      "title": "Default & system accounts",
+      "none": "— none —",
+      "ledger_account_debitoren": "Accounts receivable (Debitoren)",
+      "ledger_account_kreditoren": "Accounts payable (Kreditoren)",
+      "ledger_account_bank": "Bank",
+      "ledger_account_cash": "Cash",
+      "ledger_account_default_revenue": "Default revenue account",
+      "ledger_account_default_expense": "Default expense account",
+      "ledger_account_mileage": "Mileage account",
+      "ledger_account_per_diem": "Per-diem account",
+      "ledger_account_rebilled_revenue": "Re-billed expenses (revenue)"
+    },
+    "vatMap": { "title": "VAT code by tax treatment (costs)" },
+    "outputVatMap": { "title": "VAT code by revenue rate", "empty": "Add output VAT codes above to configure a code per revenue rate." },
+    "categoryMap": { "title": "Expense category → account" },
+    "accounts": { "title": "Chart of accounts" },
+    "vatCodes": { "title": "VAT codes" },
+    "account": {
+      "addTitle": "Add account", "editTitle": "Edit account",
+      "number": "Account number", "name": "Name", "type": "Type",
+      "confirmDelete": "Delete this account?"
+    },
+    "vat": {
+      "addTitle": "Add VAT code", "editTitle": "Edit VAT code",
+      "code": "Code", "name": "Name", "rate": "Rate %", "direction": "Direction",
+      "account": "VAT account", "noAccount": "— none —", "confirmDelete": "Delete this VAT code?"
+    },
+    "export": {
+      "title": "Treuhänder export",
+      "intro": "Download the collective journal (revenue + costs as accrual postings with account and VAT codes) for import into your Treuhänder’s accounting software.",
+      "format": "Target tool",
+      "format_generic": "Generic (all columns)",
+      "format_banana": "Banana — double-entry",
+      "format_banana_ie": "Banana — income & expense",
+      "format_bexio": "bexio",
+      "download": "Download CSV",
+      "failed": "Export failed.",
+      "disclaimer": "Accrual basis only (document dates) — payments/bank movements are not included. Account + VAT codes follow your Chart-of-accounts mapping. Always review the import with your Treuhänder before filing."
+    }
+  },
   "taxReport": {
     "title": "Tax report",
     "intro": "Period-scoped revenue list with net + VAT breakdown grouped by VAT rate. Cancelled invoices stay visible for audit-trail continuity but are excluded from totals.",
@@ -3628,6 +3947,18 @@
       "currency": "Currency"
     },
     "exportPdf": "Export PDF",
+    "ledgerExport": "Accountant export",
+    "ledgerExportHint": "Bookkeeping entries for your accountant, mapped via your Chart of accounts.",
+    "ledgerExportConfigure": "Configure →",
+    "export": {
+      "reportTitle": "Report",
+      "reportHint": "Readable list — for your own records.",
+      "scopeLabel": "Scope",
+      "scopeAll": "Complete",
+      "scopeIncome": "Income only",
+      "scopeCost": "Cost only",
+      "journalTitle": "Accounting journal"
+    },
     "exportCsv": "Export CSV",
     "exportFailed": "Export failed. Please try again.",
     "errorTitle": "Could not load tax report",
@@ -3638,6 +3969,32 @@
     "grandTotalVat": "Total VAT",
     "grandTotalGross": "Total gross",
     "cancelledFootnote": "{{count}} cancelled invoice(s) — amounts excluded from totals (shown for audit-trail continuity).",
+    "skontoTooltip": "Paid with Skonto",
+    "costsTitle": "Costs (incoming invoices + expenses)",
+    "costsDisclaimer": "This income/expense overview is a guideline for your records (Einnahmen-Ausgaben-Rechnung). VAT reclaimability and the result figure depend on each cost’s tax treatment — verify with your Treuhänder / tax authority before filing.",
+    "summary": {
+      "outgoingTitle": "Outgoing invoices",
+      "title": "Income / costs",
+      "income": "Income",
+      "costs": "Costs",
+      "result": "Result",
+      "vatPayable": "VAT payable (output − input)",
+      "vatUnconfigured": "VAT registration isn’t configured, so VAT payable can’t be computed. Set it under Settings → Accounting."
+    },
+    "cost": {
+      "source": "Type",
+      "sourceIncoming": "Incoming",
+      "sourceExpense": "Expense",
+      "supplier": "Supplier / description",
+      "taxTreatment": "Tax treatment",
+      "company": "Company",
+      "total": "Total costs"
+    },
+    "type": {
+      "outgoing": "Outgoing invoice",
+      "incoming": "Incoming invoice",
+      "expense": "Expense"
+    },
     "col": {
       "date": "Date",
       "invoice": "Invoice",
@@ -3646,7 +4003,12 @@
       "vatRate": "VAT %",
       "net": "Net",
       "vat": "VAT",
-      "total": "Gross"
+      "total": "Gross",
+      "skonto": "Skonto",
+      "type": "Type",
+      "reference": "Reference",
+      "party": "Customer / supplier",
+      "tax": "Tax"
     }
   },
   "quotes": {
