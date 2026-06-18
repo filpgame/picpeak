@@ -41,6 +41,7 @@ import {
   ApiTokensTab,
   WebhooksTab,
   AccountingTab,
+  WhatsAppTab,
 } from '../../features/settings';
 import { EmailConfigPage } from './EmailConfigPage';
 import { BrandingPage } from './BrandingPage';
@@ -53,7 +54,7 @@ import { CrmSettingsPage } from './settings/CrmSettingsPage';
 import { ReminderTemplatesPage } from './settings/ReminderTemplatesPage';
 import { BlockLibraryPage } from './contracts/BlockLibraryPage';
 import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
-import { Briefcase, Receipt, ScrollText, Mail, Landmark } from 'lucide-react';
+import { Briefcase, Receipt, ScrollText, Mail, Landmark, Smartphone } from 'lucide-react';
 
 // Tab keys driving the inner-nav. Must include every key used in
 // `navGroups` below and in the switch at the bottom of the component.
@@ -83,7 +84,8 @@ type TabType =
   | 'crm'
   | 'contracts'
   | 'reminderTemplates'
-  | 'accounting';
+  | 'accounting'
+  | 'whatsapp';
 
 interface NavItem {
   key: TabType;
@@ -103,7 +105,7 @@ const ALL_TAB_KEYS: TabType[] = [
   'security', 'imageSecurity', 'seo',
   'apiTokens', 'webhooks',
   'status', 'analytics', 'backup',
-  'businessProfile', 'crm', 'contracts', 'reminderTemplates', 'accounting',
+  'businessProfile', 'crm', 'contracts', 'reminderTemplates', 'accounting', 'whatsapp',
 ];
 
 function isValidTab(value: string | null): value is TabType {
@@ -255,6 +257,9 @@ export const SettingsPage: React.FC = () => {
           : []),
         ...(flags.accounting
           ? [{ key: 'accounting' as const,         label: t('settings.accounting.title',      'Accounting'),       icon: Landmark }]
+          : []),
+        ...(flags.whatsapp
+          ? [{ key: 'whatsapp' as const,           label: t('settings.whatsapp.title',        'WhatsApp'),         icon: Smartphone }]
           : []),
       ],
     },
@@ -420,6 +425,7 @@ export const SettingsPage: React.FC = () => {
           {activeTab === 'contracts' && <BlockLibraryPage />}
           {activeTab === 'reminderTemplates' && <ReminderTemplatesPage />}
           {activeTab === 'accounting' && <AccountingTab />}
+          {activeTab === 'whatsapp' && <WhatsAppTab />}
 
           {activeTab === 'status' && (
             <StatusTab

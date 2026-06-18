@@ -836,6 +836,29 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       });
     }
 
+    // WhatsApp gallery_ready notification (#640D). Fires when the event is
+    // created NOT as a draft, the `whatsapp` flag is on, a config exists, and
+    // the customer supplied a phone number. Non-fatal: a queue failure should
+    // never block gallery creation.
+    if (!isDraft && customerPhone) {
+      try {
+        const { queueWhatsapp, getWhatsAppConfig } = require('../services/whatsappProcessor');
+        const waConfig = await getWhatsAppConfig();
+        if (waConfig && waConfig.enabled) {
+          await queueWhatsapp(eventId, customerPhone, 'gallery_created', {
+            customer_name: customerName || '',
+            event_name,
+            gallery_link: shareUrl,
+            gallery_password: requirePassword ? password : '',
+            expiry_date: expires_at ? expires_at.toISOString() : null,
+            language: null, // resolved by processor via general_default_language
+          });
+        }
+      } catch (waError) {
+        logger.warn('Failed to queue WhatsApp notification on create', { error: waError.message });
+      }
+    }
+
     // Fire event.published when the event is created NOT as a draft. The
     // separate /publish endpoint fires it for the draft → live transition;
     // this covers the "create-and-publish in one shot" path.
@@ -1140,6 +1163,34 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
         status: 'pending',
         created_at: new Date()
       });
+    }
+
+    // WhatsApp gallery_ready on publish-from-draft (#640D). The PublishGallery
+    // dialog (#627) hands us the password back so we can deliver it via
+    // WhatsApp as well. Uses customer_phone from the persisted event row.
+    if (event.customer_phone) {
+      try {
+        const { queueWhatsapp, getWhatsAppConfig } = require('../services/whatsappProcessor');
+        const waConfig = await getWhatsAppConfig();
+        if (waConfig && waConfig.enabled) {
+          const { shareUrl: shareUrlForWa } = await buildShareLinkVariants({
+            slug: event.slug, shareToken: event.share_token,
+          });
+          await queueWhatsapp(parseInt(id, 10), event.customer_phone, 'gallery_created', {
+            customer_name: event.customer_name || event.host_name || '',
+            event_name: event.event_name,
+            gallery_link: shareUrlForWa || `${await getFrontendBaseUrl()}/gallery/${event.slug}`,
+            // Plaintext only when the admin re-typed at publish; otherwise
+            // omit so the buildComponents() helper renders an empty {{4}}
+            // line instead of leaking the "(set at creation)" sentinel.
+            gallery_password: requirePassword && password ? password : '',
+            expiry_date: event.expires_at ? new Date(event.expires_at).toISOString() : null,
+            language: null, // resolved by processor via general_default_language
+          });
+        }
+      } catch (waError) {
+        logger.warn('Failed to queue WhatsApp notification on publish', { error: waError.message });
+      }
     }
 
     await logActivity('event_published',

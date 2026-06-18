@@ -1319,6 +1319,10 @@
         "title": "Projects",
         "description": "Admin-only grouping layer above events. Bundle several events under one project and open a 360° Project Overview cockpit — milestone timeline plus a dated feed of every email (with the actual sent preview + resend/cancel/retry actions), quote, contract, invoice, gallery and logged hour. Adds a \"book to project\" control when logging hours. Customers never see projects.",
         "sidebar": "Overview"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Deliver the gallery-ready notification via WhatsApp Business API in addition to email. Requires a Meta Business Account, an approved message template, and a customer phone number on the event. Configure credentials under Settings → WhatsApp."
       }
     },
     "customerSurface": {
@@ -1365,6 +1369,26 @@
         "hourlyRatePlaceholder": "e.g. 120.00",
         "hourlyRateHint": "Billing fallback used when a customer has no own rate (hours logging). In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate."
       }
+    },
+    "whatsapp": {
+      "title": "WhatsApp",
+      "subtitle": "Configure Meta Business credentials to deliver the gallery-ready notification via WhatsApp alongside email.",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHint": "From Meta Business → WhatsApp → API Setup. The numeric ID Meta assigns to the phone you registered.",
+      "wabaId": "WABA ID",
+      "wabaIdHint": "WhatsApp Business Account ID. Reference only (the API call uses the Phone Number ID); helpful for auditing.",
+      "accessToken": "Access token",
+      "accessTokenPlaceholder": "EAAB… (system-user token recommended)",
+      "accessTokenHint": "Stored masked as \"********\" on GET. Leave the masked value to keep the existing token; type a new one to replace it.",
+      "templateName": "Template name",
+      "templateNameHint": "Name of the Meta-approved message template. The default `gallery_ready` expects 5 body parameters: customer name, event name, gallery link, password line, expiry date. Approve the template in Meta Business Manager before enabling.",
+      "enabled": "Send WhatsApp notifications",
+      "savedToast": "WhatsApp settings saved.",
+      "testHeading": "Send a test message",
+      "testHelp": "Sends a static template message to the phone number below to verify Meta credentials + template approval. Includes country code (e.g. +49…).",
+      "testSend": "Send test",
+      "testSending": "Sending…",
+      "testSentToast": "Test message sent (id: {{id}})."
     }
   },
   "analytics": {
@@ -1871,7 +1895,8 @@
       "feedbackDeleted": "Feedback deleted",
       "feedbackModerated": "Feedback moderated",
       "feedbackSettingsUpdated": "Feedback settings updated for {{eventName}}",
-      "wordFilterAdded": "Word filter added: {{word}}"
+      "wordFilterAdded": "Word filter added: {{word}}",
+      "whatsappConfigUpdated": "WhatsApp configuration updated"
     },
     "notificationToasts": {
       "markedAllRead": "All notifications marked as read",
@@ -2126,7 +2151,8 @@
       "admin_user_deleted": "Admin user deleted: {{username}}",
       "email_queue_flushed": "Email queue flushed",
       "email_template_created": "Email template created: {{template_key}}",
-      "event_duplicated": "Event duplicated from {{source_event_name}}"
+      "event_duplicated": "Event duplicated from {{source_event_name}}",
+      "whatsapp_config_updated": "WhatsApp configuration updated"
     }
   },
   "acceptInvitation": {

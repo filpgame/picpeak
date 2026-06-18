@@ -6,6 +6,7 @@ import {
   Images,
   BellRing,
   MessageSquare,
+  Smartphone,
   Mailbox,
   CalendarDays,
   FileSignature,
@@ -177,6 +178,21 @@ export const FeaturesTab: React.FC = () => {
             sidebarHiddenLabel={sidebarHiddenLabel}
             enabled={staged.incomingMail}
             onToggle={(next) => setFlag('incomingMail', next)}
+          />
+
+          <FeatureCard
+            icon={Smartphone}
+            title={t('settings.features.whatsapp.title', 'WhatsApp')}
+            description={t(
+              'settings.features.whatsapp.description',
+              'Deliver the gallery-ready notification via WhatsApp Business API in addition to email. Requires a Meta Business Account, an approved message template, and a customer phone number on the event. Configure credentials under Settings → WhatsApp.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarHidden
+            sidebarHiddenLabel={sidebarHiddenLabel}
+            enabled={staged.whatsapp}
+            onToggle={(next) => setFlag('whatsapp', next)}
           />
 
           <FeatureCard
