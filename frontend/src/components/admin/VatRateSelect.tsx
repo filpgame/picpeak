@@ -38,10 +38,15 @@ export const VatRateSelect: React.FC<Props> = ({ rate, code, onChange, label, di
   });
 
   // Selected option: prefer the snapshotted code; else a code whose rate matches
-  // (legacy rows / no code stored); else the document's value is "off-list".
+  // (legacy rows / no code stored) — BUT only when that rate is unambiguous. If
+  // two configured codes share the rate (e.g. two 8.1% codes), rate-matching
+  // could silently swap one for the other on the next save, so fall through to
+  // the legacy "(not configured)" option and make the admin pick explicitly
+  // (PR #636 review #4).
   const matched: VatCodeOption | undefined =
     (code ? codes.find((c) => c.code === code) : undefined)
-    || (!code ? codes.find((c) => Number(c.rate) === Number(rate)) : undefined);
+    || (!code && codes.filter((c) => Number(c.rate) === Number(rate)).length === 1
+      ? codes.find((c) => Number(c.rate) === Number(rate)) : undefined);
   const showLegacy = !matched;
 
   return (
@@ -61,7 +66,7 @@ export const VatRateSelect: React.FC<Props> = ({ rate, code, onChange, label, di
       >
         {showLegacy && (
           <option value={LEGACY}>
-            {t('vat.legacyRate', '{{rate}}% (not configured)', { rate: Number(rate || 0).toFixed(1) })}
+            {t('ledger.vat.legacyRate', '{{rate}}% (not configured)', { rate: Number(rate || 0).toFixed(1) })}
           </option>
         )}
         {codes.map((c) => (

@@ -17,9 +17,7 @@ export const CURRENCY_CODES: string[] = [
  * extra option so nothing is lost), or '' for empty input.
  */
 export function normalizeCurrency(value: string | null | undefined): string {
-  const cleaned = (value || '').trim().toUpperCase();
-  if (!cleaned) return '';
-  return CURRENCY_CODES.includes(cleaned) ? cleaned : cleaned;
+  return (value || '').trim().toUpperCase();
 }
 
 /** Build the option list, prepending an unknown-but-set value so it's preserved. */

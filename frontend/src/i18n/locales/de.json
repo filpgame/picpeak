@@ -1737,13 +1737,11 @@
       "disclaimer": "Sätze und MwSt-/Steuerbehandlung dienen nur als Orientierung — mit Ihrem Treuhänder prüfen.",
       "savedToast": "Buchhaltungseinstellungen gespeichert.",
       "profileFields": {
-        "title": "MwSt-Bezeichnung & Stundensatz",
         "vatLabel": "MwSt-Bezeichnung (z. B. MwSt., VAT)",
         "vatLabelHint": "Wird als Bezeichnung der MwSt-Zeile auf Rechnungs-/Angebots-PDFs gedruckt. Leer lassen, um die Standardbezeichnung der Dokumentsprache zu verwenden.",
         "hourlyRate": "Standard-Stundensatz",
         "hourlyRatePlaceholder": "z. B. 120.00",
-        "hourlyRateHint": "Verrechnungs-Fallback, wenn ein Kunde keinen eigenen Satz hat (Stundenerfassung). In {{currency}}, in Hauptwährungseinheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen.",
-        "savedToast": "Gespeichert."
+        "hourlyRateHint": "Verrechnungs-Fallback, wenn ein Kunde keinen eigenen Satz hat (Stundenerfassung). In {{currency}}, in Hauptwährungseinheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen."
       }
     }
   },
@@ -4373,11 +4371,6 @@
       "defaultCurrency": "Standardwährung",
       "defaultLocale": "Standardsprache",
       "timezone": "Zeitzone (IANA)",
-      "vatLabel": "MwSt-Bezeichnung",
-      "vatRateDefault": "Standard-MwSt-Satz %",
-      "defaultHourlyRate": "Standard-Stundensatz",
-      "defaultHourlyRatePlaceholder": "z. B. 120.00",
-      "defaultHourlyRateHint": "Fallback, wenn ein Kunde keinen eigenen Satz hat. In {{currency}}, in ganzen Einheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen.",
       "defaultQrFormat": "Standard-QR-Format",
       "footerLine": "Fusszeile"
     },

@@ -76,6 +76,10 @@ function resolveTaxTreatment(payloadTreatment, supplierCountry, reclaimCountries
   if (TAX_TREATMENTS.includes(payloadTreatment)) return payloadTreatment;
   const cc = String(supplierCountry || '').toUpperCase();
   if (!cc) return 'domestic';
+  // Don't auto-classify until the admin has actually configured their reclaim
+  // countries — an unset (empty) list must not make every supplier, including
+  // the admin's own domestic one, "foreign". (PR #636 review #1.)
+  if (!reclaimCountries || reclaimCountries.length === 0) return 'domestic';
   return reclaimCountries.includes(cc) ? 'domestic' : 'foreign_vat_non_reclaimable';
 }
 
@@ -287,6 +291,10 @@ const BOOKING_DISPOSITIONS = ['rebill', 'durchlaufend'];
 function isInvoiceMutable(invoice) {
   if (!invoice) return true; // referenced invoice gone — treat as not billed
   if (invoice.is_monthly_draft === true || invoice.is_monthly_draft === 1) return true;
+  // NB: invoices have no 'draft' status (only quotes do). The editable,
+  // not-yet-sent invoice state IS 'scheduled' with no scheduled_send_at (or a
+  // future one), handled below — so there is no plain-'draft' case to slot in
+  // here (PR #636 review #6).
   if (invoice.status !== 'scheduled') return false;
   if (!invoice.scheduled_send_at) return true;
   return new Date(invoice.scheduled_send_at).getTime() > Date.now();
@@ -312,6 +320,15 @@ async function unwindBilledLine(trx, doc) {
   }
   if (invoice) {
     const allItems = await trx('invoice_line_items').where({ invoice_id: invoice.id });
+    if (allItems.length === 0) {
+      // The unwound re-bill was the only line — a net-zero invoice has no reason
+      // to survive, and these would otherwise pile up over re-categorisations.
+      // It's mutable (checked above) and never issued, so delete it outright
+      // (PR #636 review #5). For a monthly draft this just means the next append
+      // re-creates one.
+      await trx('invoices').where({ id: invoice.id }).del();
+      return;
+    }
     let netMinor = 0;
     for (const li of allItems) {
       if (li.parent_line_item_id == null) netMinor += Number(li.line_total_minor || 0);

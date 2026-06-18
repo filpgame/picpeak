@@ -1295,13 +1295,11 @@
       "disclaimer": "Rates and VAT/tax treatment are guidance only — verify with your Treuhänder.",
       "savedToast": "Accounting settings saved.",
       "profileFields": {
-        "title": "VAT label & hourly rate",
         "vatLabel": "VAT label (e.g. MwSt., VAT)",
         "vatLabelHint": "Printed as the VAT-line label on invoice / quote PDFs. Leave blank to use the document language default.",
         "hourlyRate": "Default hourly rate",
         "hourlyRatePlaceholder": "e.g. 120.00",
-        "hourlyRateHint": "Billing fallback used when a customer has no own rate (hours logging). In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.",
-        "savedToast": "Saved."
+        "hourlyRateHint": "Billing fallback used when a customer has no own rate (hours logging). In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate."
       }
     }
   },
@@ -4371,11 +4369,6 @@
       "defaultCurrency": "Default currency",
       "defaultLocale": "Default locale",
       "timezone": "Timezone (IANA)",
-      "vatLabel": "VAT label (e.g. MwSt., VAT)",
-      "vatRateDefault": "Default VAT rate %",
-      "defaultHourlyRate": "Default hourly rate",
-      "defaultHourlyRatePlaceholder": "e.g. 120.00",
-      "defaultHourlyRateHint": "Fallback used when a customer has no own rate. In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.",
       "defaultQrFormat": "Default invoice QR",
       "footerLine": "PDF footer line"
     },

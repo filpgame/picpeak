@@ -131,6 +131,11 @@ describe('resolveTaxTreatment (supplier-country auto-default)', () => {
     expect(resolveTaxTreatment(undefined, '', reclaim)).toBe('domestic');
     expect(resolveTaxTreatment(undefined, null, reclaim)).toBe('domestic');
   });
+  it('an UNCONFIGURED (empty) reclaim list never auto-classifies as foreign (PR #636 #1)', () => {
+    expect(resolveTaxTreatment(undefined, 'CH', [])).toBe('domestic');
+    expect(resolveTaxTreatment(undefined, 'DE', [])).toBe('domestic');
+    expect(resolveTaxTreatment(undefined, 'US', undefined)).toBe('domestic');
+  });
   it('invalid explicit treatment is ignored (falls through to country logic)', () => {
     expect(resolveTaxTreatment('bogus', 'DE', reclaim)).toBe('foreign_vat_non_reclaimable');
   });
