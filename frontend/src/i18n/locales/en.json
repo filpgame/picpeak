@@ -1276,14 +1276,14 @@
     },
     "accounting": {
       "title": "Accounting",
-      "subtitle": "Default rates for internal expenses and the proof requirement.",
+      "subtitle": "Default rates, VAT settings and the proof requirement.",
       "kmRate": "Mileage rate (CHF / km)",
       "kmRateHint": "Default applied to mileage expenses; overridable per entry.",
-      "perDiemRate": "Per-diem rate (CHF / day)",
-      "perDiemRateHint": "Default applied to per-diem expenses; overridable per entry.",
+      "perDiemRate": "Daily allowance (CHF / day)",
+      "perDiemRateHint": "A flat daily allowance booked as an expense (not a client billing rate); overridable per entry.",
       "requireProof": "Require a proof file on every expense",
       "vat": {
-        "title": "VAT registration & reclaim",
+        "title": "VAT",
         "registered": "VAT-registered (charge output VAT + reclaim input VAT)",
         "registeredHint": "Off = small business / under threshold: no VAT charged, input VAT is a cost (not reclaimable).",
         "reclaimCountries": "Countries where input VAT is reclaimable",
@@ -1300,7 +1300,7 @@
         "vatLabelHint": "Printed as the VAT-line label on invoice / quote PDFs. Leave blank to use the document language default.",
         "hourlyRate": "Default hourly rate",
         "hourlyRatePlaceholder": "e.g. 120.00",
-        "hourlyRateHint": "Fallback used when a customer has no own rate. In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.",
+        "hourlyRateHint": "Billing fallback used when a customer has no own rate (hours logging). In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.",
         "savedToast": "Saved."
       }
     }
@@ -3639,7 +3639,7 @@
     "expenseKind": {
       "amount": "Amount",
       "mileage": "Mileage (km)",
-      "per_diem": "Per-diem"
+      "per_diem": "Daily allowance"
     },
     "category": {
       "infrastructure": "Infrastructure & rent",
