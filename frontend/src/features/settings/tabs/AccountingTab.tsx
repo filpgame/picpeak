@@ -11,6 +11,7 @@ import { Save } from 'lucide-react';
 import { Button, Card, CardContent, Loading } from '../../../components/common';
 import { DecimalInput } from '../../../components/common/DecimalInput';
 import { accountingService } from '../../../services/accounting.service';
+import { vatCodesService } from '../../../services/vatCodes.service';
 import { sortedCountryOptions } from '../../../constants/countries';
 import { VatCodesManager } from '../../../components/admin/VatCodesManager';
 import { ChartOfAccountsManager } from '../../../components/admin/ChartOfAccountsManager';
@@ -23,12 +24,14 @@ export const AccountingTab: React.FC = () => {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['accounting-settings'], queryFn: () => accountingService.getSettings() });
+  const { data: outputVatCodes = [] } = useQuery({ queryKey: ['vat-codes', 'output'], queryFn: () => vatCodesService.listOutput() });
 
   const [kmMajor, setKmMajor] = useState<number>(NaN);
   const [perDiemMajor, setPerDiemMajor] = useState<number>(NaN);
   const [requireProof, setRequireProof] = useState(false);
   const [vatRegistered, setVatRegistered] = useState(false);
   const [reclaimCountries, setReclaimCountries] = useState<string[]>([]);
+  const [defaultOutputVatCode, setDefaultOutputVatCode] = useState('');
 
   useEffect(() => {
     if (data) {
@@ -37,6 +40,7 @@ export const AccountingTab: React.FC = () => {
       setRequireProof(data.accounting_require_proof);
       setVatRegistered(data.accounting_vat_registered);
       setReclaimCountries(data.accounting_vat_reclaim_countries || []);
+      setDefaultOutputVatCode(data.accounting_default_output_vat_code || '');
     }
   }, [data]);
 
@@ -49,6 +53,7 @@ export const AccountingTab: React.FC = () => {
       accounting_require_proof: requireProof,
       accounting_vat_registered: vatRegistered,
       accounting_vat_reclaim_countries: reclaimCountries,
+      accounting_default_output_vat_code: defaultOutputVatCode,
     }),
     onSuccess: () => { toast.success(t('settings.accounting.savedToast', 'Accounting settings saved.')); qc.invalidateQueries({ queryKey: ['accounting-settings'] }); },
     onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
@@ -113,6 +118,14 @@ export const AccountingTab: React.FC = () => {
           <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             {t('settings.accounting.vat.reclaimCountriesHint', 'Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select.')}
           </p>
+        </div>
+        <div>
+          <label className={labelCls}>{t('settings.accounting.vat.defaultOutputCode', 'Default VAT code for new invoices')}</label>
+          <select value={defaultOutputVatCode} onChange={(e) => setDefaultOutputVatCode(e.target.value)} className={inputCls}>
+            <option value="">{t('settings.accounting.vat.defaultOutputCodeNone', '— none (start at 0%) —')}</option>
+            {outputVatCodes.map((c) => <option key={c.id} value={c.code}>{c.name} ({Number(c.rate).toFixed(1)}%)</option>)}
+          </select>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{t('settings.accounting.vat.defaultOutputCodeHint', 'New invoices and quotes start with this VAT code selected. Existing documents are unaffected.')}</p>
         </div>
       </CardContent></Card>
 

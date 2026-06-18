@@ -44,7 +44,8 @@ function toIsoDate(v) {
 
 // ── Accounting settings (app_settings, type 'accounting') ───────────────────
 async function getAccountingSettings() {
-  const keys = ['accounting_km_rate_minor', 'accounting_per_diem_rate_minor', 'accounting_require_proof'];
+  const keys = ['accounting_km_rate_minor', 'accounting_per_diem_rate_minor', 'accounting_require_proof',
+    'accounting_vat_reclaim_countries'];
   let rows = [];
   try {
     rows = await db('app_settings').whereIn('setting_key', keys).select('setting_key', 'setting_value');
@@ -59,7 +60,23 @@ async function getAccountingSettings() {
     kmRateMinor: Number.isFinite(Number(map.accounting_km_rate_minor)) ? Number(map.accounting_km_rate_minor) : 0,
     perDiemRateMinor: Number.isFinite(Number(map.accounting_per_diem_rate_minor)) ? Number(map.accounting_per_diem_rate_minor) : 0,
     requireProof: map.accounting_require_proof === true || map.accounting_require_proof === 1 || map.accounting_require_proof === '1',
+    vatReclaimCountries: Array.isArray(map.accounting_vat_reclaim_countries)
+      ? map.accounting_vat_reclaim_countries.map((c) => String(c || '').toUpperCase()) : [],
   };
+}
+
+/**
+ * Default tax treatment from the supplier country: explicit payload wins; else
+ * a country in the reclaim list (typically CH / LI) is `domestic` (input VAT
+ * reclaimable), an out-of-list country is `foreign_vat_non_reclaimable`, and an
+ * unknown country falls back to `domestic`. reverse_charge / import_goods stay
+ * admin-set (can't be auto-detected).
+ */
+function resolveTaxTreatment(payloadTreatment, supplierCountry, reclaimCountries) {
+  if (TAX_TREATMENTS.includes(payloadTreatment)) return payloadTreatment;
+  const cc = String(supplierCountry || '').toUpperCase();
+  if (!cc) return 'domestic';
+  return reclaimCountries.includes(cc) ? 'domestic' : 'foreign_vat_non_reclaimable';
 }
 
 // ── Incoming invoices (inbound_documents) ───────────────────────────────────
@@ -102,6 +119,7 @@ function transformInbound(row) {
     customerAccountId: row.customer_account_id || null,
     customerName: row.customer_display_name || row.customer_company_name || null,
     customerEmail: row.customer_email || null,
+    supplierCountry: row.supplier_country || null,
     note: row.note || null,
     // supplier payment (paid on the incoming invoice itself)
     supplierPaid: !!row.supplier_paid,
@@ -210,7 +228,7 @@ const INBOUND_EDITABLE = {
   supplierName: 'supplier_name', invoiceNumber: 'invoice_number', invoiceDate: 'invoice_date',
   dueDate: 'due_date', currency: 'currency', netAmountMinor: 'net_amount_minor',
   vatAmountMinor: 'vat_amount_minor', totalAmountMinor: 'total_amount_minor', iban: 'iban',
-  paymentReference: 'payment_reference', note: 'note',
+  paymentReference: 'payment_reference', note: 'note', supplierCountry: 'supplier_country',
 };
 
 async function updateInbound(id, payload, adminId) {
@@ -369,6 +387,10 @@ async function categorizeInbound(id, payload, adminId) {
     throw new AppError('customerAccountId is required to re-bill', 400, 'CUSTOMER_REQUIRED');
   }
 
+  // Reclaim-country list for the tax-treatment auto-default (loaded before the
+  // transaction — a global-db read).
+  const { vatReclaimCountries } = await getAccountingSettings();
+
   let billedInvoiceId = null;
   await db.transaction(async (trx) => {
     const row = await trx('inbound_documents').where({ id }).first();
@@ -390,7 +412,8 @@ async function categorizeInbound(id, payload, adminId) {
 
     const patch = {
       disposition,
-      tax_treatment: TAX_TREATMENTS.includes(payload.taxTreatment) ? payload.taxTreatment : 'domestic',
+      // Explicit treatment wins; else auto-default from the supplier country.
+      tax_treatment: resolveTaxTreatment(payload.taxTreatment, doc.supplierCountry, vatReclaimCountries),
       event_id: BOOKING_DISPOSITIONS.includes(disposition) ? (payload.eventId || null) : null,
       category_id: disposition === 'eigener_aufwand' ? (payload.categoryId || null) : null,
       customer_account_id: customerAccountId,
@@ -797,5 +820,5 @@ module.exports = {
   PAYMENT_METHODS,
   EXPENSE_KINDS,
   // unit-test surface
-  _internal: { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert, transformExpense, transformInbound, buildInboundLineItem, isInvoiceMutable },
+  _internal: { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert, transformExpense, transformInbound, buildInboundLineItem, isInvoiceMutable, resolveTaxTreatment },
 };

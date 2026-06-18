@@ -1729,7 +1729,10 @@
         "registered": "MwSt-pflichtig (Umsatzsteuer berechnen + Vorsteuer abziehen)",
         "registeredHint": "Aus = Kleinunternehmen / unter der Schwelle: keine MwSt berechnet, Vorsteuer ist Aufwand (nicht abziehbar).",
         "reclaimCountries": "Länder mit abziehbarer Vorsteuer",
-        "reclaimCountriesHint": "Üblicherweise Ihr Inland (CH / LI). Kosten aus anderen Ländern gelten als nicht abziehbare ausländische MwSt. Cmd/Ctrl-Klick für Mehrfachauswahl."
+        "reclaimCountriesHint": "Üblicherweise Ihr Inland (CH / LI). Kosten aus anderen Ländern gelten als nicht abziehbare ausländische MwSt. Cmd/Ctrl-Klick für Mehrfachauswahl.",
+        "defaultOutputCode": "Standard-MwSt-Code für neue Rechnungen",
+        "defaultOutputCodeNone": "— keiner (bei 0% beginnen) —",
+        "defaultOutputCodeHint": "Neue Rechnungen und Angebote starten mit diesem MwSt-Code. Bestehende Dokumente bleiben unverändert."
       },
       "disclaimer": "Sätze und MwSt-/Steuerbehandlung dienen nur als Orientierung — mit Ihrem Treuhänder prüfen.",
       "savedToast": "Buchhaltungseinstellungen gespeichert.",
@@ -3572,7 +3575,10 @@
         "referenceHint": "QR-/ESR-Referenz oder Mitteilung",
         "note": "Notiz",
         "noteHint": "Interne Notiz zu dieser Rechnung (optional)",
-        "passthroughCustomerHint": "Optional — einen Kunden zuordnen, um diese durchlaufende Position weiterzuverrechnen; leer lassen, um sie nur auf das Event zu buchen."
+        "passthroughCustomerHint": "Optional — einen Kunden zuordnen, um diese durchlaufende Position weiterzuverrechnen; leer lassen, um sie nur auf das Event zu buchen.",
+        "supplierCountry": "Lieferantenland",
+        "supplierCountryNone": "— unbekannt —",
+        "supplierCountryHint": "Setzt die Steuerbehandlung automatisch: ausserhalb deiner Vorsteuer-Länder → ausländische MwSt (nicht abziehbar)."
       }
     },
     "expenseStatus": {

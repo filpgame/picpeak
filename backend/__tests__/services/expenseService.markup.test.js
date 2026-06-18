@@ -4,7 +4,7 @@
  */
 const expenseService = require('../../src/services/expenseService');
 
-const { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert, buildInboundLineItem, isInvoiceMutable } = expenseService._internal;
+const { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert, buildInboundLineItem, isInvoiceMutable, resolveTaxTreatment } = expenseService._internal;
 
 describe('computeMarkupMinor', () => {
   it('percent of base, rounded', () => {
@@ -110,6 +110,29 @@ describe('buildInboundLineItem (re-bill line)', () => {
   it('throws when there is no amount to re-bill', () => {
     expect(() => buildInboundLineItem({ totalAmountMinor: null, netAmountMinor: null }, 'rebill', { type: 'none' }))
       .toThrow(/no amount/i);
+  });
+});
+
+describe('resolveTaxTreatment (supplier-country auto-default)', () => {
+  const reclaim = ['CH', 'LI'];
+  it('explicit valid treatment always wins', () => {
+    expect(resolveTaxTreatment('reverse_charge_service', 'DE', reclaim)).toBe('reverse_charge_service');
+    expect(resolveTaxTreatment('import_goods', 'CH', reclaim)).toBe('import_goods');
+  });
+  it('country in the reclaim list → domestic', () => {
+    expect(resolveTaxTreatment(undefined, 'CH', reclaim)).toBe('domestic');
+    expect(resolveTaxTreatment(null, 'li', reclaim)).toBe('domestic'); // case-insensitive
+  });
+  it('country outside the reclaim list → foreign non-reclaimable', () => {
+    expect(resolveTaxTreatment(undefined, 'DE', reclaim)).toBe('foreign_vat_non_reclaimable');
+    expect(resolveTaxTreatment(undefined, 'US', reclaim)).toBe('foreign_vat_non_reclaimable');
+  });
+  it('unknown / empty country falls back to domestic', () => {
+    expect(resolveTaxTreatment(undefined, '', reclaim)).toBe('domestic');
+    expect(resolveTaxTreatment(undefined, null, reclaim)).toBe('domestic');
+  });
+  it('invalid explicit treatment is ignored (falls through to country logic)', () => {
+    expect(resolveTaxTreatment('bogus', 'DE', reclaim)).toBe('foreign_vat_non_reclaimable');
   });
 });
 

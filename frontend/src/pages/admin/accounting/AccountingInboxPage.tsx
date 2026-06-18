@@ -16,6 +16,7 @@ import { DecimalInput } from '../../../components/common/DecimalInput';
 import { CustomerAccountPicker, type SelectedCustomer } from '../../../components/admin/CustomerAccountPicker';
 import { EventBookingSelect } from '../../../components/admin/EventBookingSelect';
 import { formatMoneyMinor } from '../../../utils/money';
+import { sortedCountryOptions } from '../../../constants/countries';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import {
   accountingService, categoryLabel,
@@ -170,13 +171,14 @@ const ViewModal: React.FC<{ doc: InboundDocument; onClose: () => void }> = ({ do
 };
 
 const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[]; onClose: () => void; onDone: () => void }> = ({ doc, categories, onClose, onDone }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [supplier, setSupplier] = useState(doc.supplierName || '');
   const [amountMajor, setAmountMajor] = useState<number>(doc.totalAmountMinor != null ? doc.totalAmountMinor / 100 : NaN);
   const [currency, setCurrency] = useState(doc.currency || 'CHF');
   const [invoiceDate, setInvoiceDate] = useState(doc.invoiceDate || '');
   const [reference, setReference] = useState(doc.paymentReference || '');
   const [note, setNote] = useState(doc.note || '');
+  const [supplierCountry, setSupplierCountry] = useState(doc.supplierCountry || '');
   // Pre-fill from the existing disposition so a categorized invoice can be
   // re-categorized (#1) — falls back to "company expense" for fresh docs.
   const [disposition, setDisposition] = useState<Disposition>(doc.disposition || 'eigener_aufwand');
@@ -205,7 +207,7 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
   // entered) — no second dialog — so "Save & mark paid" actually pays.
   const save = useMutation({
     mutationFn: async (pay: boolean) => {
-      await accountingService.updateInbound(doc.id, { supplierName: supplier || null, totalAmountMinor: totalMinor, currency: currency || null, invoiceDate: invoiceDate || null, paymentReference: reference || null, note: note || null });
+      await accountingService.updateInbound(doc.id, { supplierName: supplier || null, totalAmountMinor: totalMinor, currency: currency || null, invoiceDate: invoiceDate || null, paymentReference: reference || null, note: note || null, supplierCountry: supplierCountry || null });
       await accountingService.categorizeInbound(doc.id, {
         disposition,
         eventId: BOOKING_DISPOSITIONS.includes(disposition) ? eventId : null,
@@ -243,6 +245,13 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
               <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.supplier', 'Supplier')}</label><Input value={supplier} onChange={(e) => setSupplier(e.target.value)} /></div>
               <div><label className={labelCls}>{t('accounting.inbox.field.total', 'Total')}</label><DecimalInput value={amountMajor} onChange={setAmountMajor} fractionDigits={2} className={selectCls} /></div>
               <div><label className={labelCls}>{t('accounting.inbox.field.currency', 'Currency')}</label><Input value={currency} maxLength={3} onChange={(e) => setCurrency(e.target.value.toUpperCase())} /></div>
+              <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.supplierCountry', 'Supplier country')}</label>
+                <select value={supplierCountry} onChange={(e) => setSupplierCountry(e.target.value)} className={selectCls}>
+                  <option value="">{t('accounting.inbox.field.supplierCountryNone', '— unknown —')}</option>
+                  {sortedCountryOptions(i18n.language).map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+                </select>
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{t('accounting.inbox.field.supplierCountryHint', 'Sets the tax treatment automatically: outside your VAT-reclaim countries → foreign VAT (not reclaimable).')}</p>
+              </div>
               <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.invoiceDate', 'Invoice date')}</label><LocalizedDateInput value={invoiceDate} onChange={setInvoiceDate} /></div>
               <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.reference', 'Payment reference')}</label><Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t('accounting.inbox.field.referenceHint', 'QR / ESR reference or message') as string} /></div>
               <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.note', 'Note')}</label>

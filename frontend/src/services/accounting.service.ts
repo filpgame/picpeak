@@ -39,6 +39,8 @@ export interface InboundDocument {
   customerAccountId: number | null;
   customerName: string | null;
   customerEmail: string | null;
+  /** ISO-2 supplier country — auto-defaults the tax treatment (reclaim list). */
+  supplierCountry: string | null;
   /** Free-text categorisation note. */
   note: string | null;
   supplierPaid: boolean;
@@ -112,6 +114,8 @@ export interface AccountingSettings {
   /** ISO-2 countries whose input VAT can be reclaimed (drives cost
    *  tax-treatment + the report's VAT-payable). */
   accounting_vat_reclaim_countries: string[];
+  /** Output VAT code stamped onto NEW invoices/quotes ('' = none). */
+  accounting_default_output_vat_code: string;
 }
 
 export interface CategorizePayload {
@@ -210,6 +214,8 @@ export const accountingService = {
       accounting_vat_registered: data.accounting_vat_registered === true,
       accounting_vat_reclaim_countries: Array.isArray(data.accounting_vat_reclaim_countries)
         ? data.accounting_vat_reclaim_countries : [],
+      accounting_default_output_vat_code: typeof data.accounting_default_output_vat_code === 'string'
+        ? data.accounting_default_output_vat_code : '',
     };
   },
   async updateSettings(payload: Partial<AccountingSettings>): Promise<{ updated: string[] }> {

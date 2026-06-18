@@ -1287,7 +1287,10 @@
         "registered": "VAT-registered (charge output VAT + reclaim input VAT)",
         "registeredHint": "Off = small business / under threshold: no VAT charged, input VAT is a cost (not reclaimable).",
         "reclaimCountries": "Countries where input VAT is reclaimable",
-        "reclaimCountriesHint": "Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select."
+        "reclaimCountriesHint": "Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select.",
+        "defaultOutputCode": "Default VAT code for new invoices",
+        "defaultOutputCodeNone": "— none (start at 0%) —",
+        "defaultOutputCodeHint": "New invoices and quotes start with this VAT code selected. Existing documents are unaffected."
       },
       "disclaimer": "Rates and VAT/tax treatment are guidance only — verify with your Treuhänder.",
       "savedToast": "Accounting settings saved.",
@@ -3572,7 +3575,10 @@
         "referenceHint": "QR / ESR reference or message",
         "note": "Note",
         "noteHint": "Internal note for this invoice (optional)",
-        "passthroughCustomerHint": "Optional — attach a client to re-bill this passthrough; leave empty to only book it to the event."
+        "passthroughCustomerHint": "Optional — attach a client to re-bill this passthrough; leave empty to only book it to the event.",
+        "supplierCountry": "Supplier country",
+        "supplierCountryNone": "— unknown —",
+        "supplierCountryHint": "Sets the tax treatment automatically: outside your VAT-reclaim countries → foreign VAT (not reclaimable)."
       }
     },
     "expenseStatus": {
