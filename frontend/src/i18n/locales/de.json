@@ -1562,7 +1562,7 @@
       "statusRevoked": "Widerrufen",
       "statusExpired": "Abgelaufen",
       "statusActive": "Aktiv",
-      "confirmRevoke": "Diesen Token wirklich widerrufen?",
+      "confirmRevoke": "\"{{name}}\" widerrufen? Bestehende Integrationen, die dieses Token nutzen, erhalten ab sofort 401.",
       "revoke": "Widerrufen",
       "empty": "Noch keine Tokens. Generieren Sie oben einen, um zu beginnen.",
       "preview": "Vorschau"
@@ -1705,7 +1705,8 @@
       "accounting": {
         "title": "Buchhaltung",
         "description": "Ein eigener Buchhaltungsbereich, getrennt vom CRM. Hier aktivieren und dann die Unterfunktionen unten einschalten (Steuerexport, Eingangsrechnungen). MwSt-/Steuerbehandlung dient nur als Orientierung — vor dem Verlassen darauf mit Ihrem Treuhänder prüfen.",
-        "sidebar": "Buchhaltung"
+        "sidebar": "Buchhaltung",
+        "requiredByBills": "Automatisch an, weil Rechnungen aktiviert ist — die MwSt-Einstellungen der Rechnungen liegen im Buchhaltungsbereich."
       },
       "incomingInvoices": {
         "title": "Eingangsrechnungen",
@@ -1776,21 +1777,31 @@
     },
     "accounting": {
       "title": "Buchhaltung",
-      "subtitle": "Standardsätze für interne Aufwände und die Belegpflicht.",
+      "subtitle": "Standardsätze, MwSt-Einstellungen und die Belegpflicht.",
       "kmRate": "Kilometersatz (CHF / km)",
       "kmRateHint": "Standard für Kilometer-Aufwände; pro Eintrag überschreibbar.",
       "perDiemRate": "Spesenpauschale (CHF / Tag)",
-      "perDiemRateHint": "Standard für Pauschal-Aufwände; pro Eintrag überschreibbar.",
+      "perDiemRateHint": "Eine Tagespauschale, die als Aufwand gebucht wird (kein Kunden-Verrechnungssatz); pro Eintrag überschreibbar.",
       "requireProof": "Beleg für jeden Aufwand verlangen",
       "vat": {
-        "title": "MwSt-Registrierung & Vorsteuerabzug",
+        "title": "MwSt.",
         "registered": "MwSt-pflichtig (Umsatzsteuer berechnen + Vorsteuer abziehen)",
         "registeredHint": "Aus = Kleinunternehmen / unter der Schwelle: keine MwSt berechnet, Vorsteuer ist Aufwand (nicht abziehbar).",
         "reclaimCountries": "Länder mit abziehbarer Vorsteuer",
-        "reclaimCountriesHint": "Üblicherweise Ihr Inland (CH / LI). Kosten aus anderen Ländern gelten als nicht abziehbare ausländische MwSt. Cmd/Ctrl-Klick für Mehrfachauswahl."
+        "reclaimCountriesHint": "Üblicherweise Ihr Inland (CH / LI). Kosten aus anderen Ländern gelten als nicht abziehbare ausländische MwSt. Cmd/Ctrl-Klick für Mehrfachauswahl.",
+        "defaultOutputCode": "Standard-MwSt-Code für neue Rechnungen",
+        "defaultOutputCodeNone": "— keiner (bei 0% beginnen) —",
+        "defaultOutputCodeHint": "Neue Rechnungen und Angebote starten mit diesem MwSt-Code. Bestehende Dokumente bleiben unverändert."
       },
       "disclaimer": "Sätze und MwSt-/Steuerbehandlung dienen nur als Orientierung — mit Ihrem Treuhänder prüfen.",
-      "savedToast": "Buchhaltungseinstellungen gespeichert."
+      "savedToast": "Buchhaltungseinstellungen gespeichert.",
+      "profileFields": {
+        "vatLabel": "MwSt-Bezeichnung (z. B. MwSt., VAT)",
+        "vatLabelHint": "Wird als Bezeichnung der MwSt-Zeile auf Rechnungs-/Angebots-PDFs gedruckt. Leer lassen, um die Standardbezeichnung der Dokumentsprache zu verwenden.",
+        "hourlyRate": "Standard-Stundensatz",
+        "hourlyRatePlaceholder": "z. B. 120.00",
+        "hourlyRateHint": "Verrechnungs-Fallback, wenn ein Kunde keinen eigenen Satz hat (Stundenerfassung). In {{currency}}, in Hauptwährungseinheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen."
+      }
     }
   },
   "branding": {
@@ -3695,7 +3706,14 @@
       "durchlaufend": "Durchlaufender Posten",
       "eigener_aufwand": "Eigener Aufwand",
       "duplikat": "Duplikat",
-      "abgelehnt": "Abgelehnt"
+      "abgelehnt": "Abgelehnt",
+      "help": {
+        "rebill": "Eigene Lieferantenkosten, die du an einen Kunden weiterverrechnest — meist mit Zuschlag. Wird als Kosten und als weiterverrechneter Ertrag gebucht.",
+        "durchlaufend": "Ein Betrag, den du nur im Namen des Kunden vorstreckst und exakt durchreichst — kein Zuschlag, MwSt-neutral (durchlaufender Posten). Kunde zuordnen, um ihn zum Selbstkostenpreis weiterzuverrechnen.",
+        "eigener_aufwand": "Eigene Kosten, die nicht weiterverrechnet werden. Kategorie wählen, damit der Posten richtig in der Erfolgsrechnung landet.",
+        "duplikat": "Duplikat einer bereits erfassten Rechnung — wird nicht verbucht.",
+        "abgelehnt": "Dokument ablehnen — wird nicht verbucht."
+      }
     },
     "markup": {
       "none": "Keiner / aus Vertrag",
@@ -3713,6 +3731,7 @@
       "saveCategorize": "Speichern",
       "saveCategorizePay": "Speichern & als bezahlt markieren",
       "categorize": "Kategorisieren",
+      "recategorize": "Neu kategorisieren",
       "view": "Ansehen",
       "empty": "Noch keine Dokumente — oben eines erfassen.",
       "untitled": "Unbenanntes Dokument",
@@ -3744,7 +3763,13 @@
         "eventId": "Event-ID (optional)",
         "markup": "Zuschlag",
         "reference": "Zahlungsreferenz",
-        "referenceHint": "QR-/ESR-Referenz oder Mitteilung"
+        "referenceHint": "QR-/ESR-Referenz oder Mitteilung",
+        "note": "Notiz",
+        "noteHint": "Interne Notiz zu dieser Rechnung (optional)",
+        "passthroughCustomerHint": "Optional — einen Kunden zuordnen, um diese durchlaufende Position weiterzuverrechnen; leer lassen, um sie nur auf das Event zu buchen.",
+        "supplierCountry": "Lieferantenland",
+        "supplierCountryNone": "— unbekannt —",
+        "supplierCountryHint": "Setzt die Steuerbehandlung automatisch: ausserhalb deiner Vorsteuer-Länder → ausländische MwSt (nicht abziehbar)."
       }
     },
     "expenseStatus": {
@@ -3765,7 +3790,8 @@
       "label": "Buchen auf",
       "company": "Firma",
       "event": "Event",
-      "eventId": "Event-ID"
+      "eventId": "Event-ID",
+      "inboundHint": "Auf welches Event diese Kosten in Auswertungen & Steuerexport entfallen (Firma = allgemeiner Aufwand). Unabhängig davon, an wen du weiterverrechnest."
     },
     "incoming": {
       "triageTitle": "Eingangsrechnung kategorisieren",
@@ -3777,7 +3803,15 @@
       "paid": "Bezahlt",
       "paidToast": "Als bezahlt markiert.",
       "categorizedToast": "Kategorisiert.",
-      "categorizedPaidToast": "Kategorisiert und als bezahlt markiert."
+      "categorizedPaidToast": "Kategorisiert und als bezahlt markiert.",
+      "pendingRebill": "Weiterverrechnung offen",
+      "pendingTitle": "Offene Weiterverrechnungen",
+      "pendingBody": "Kategorisierte Rechnungen, die auf die Weiterverrechnung warten. Posten eines Kunden zu einer Rechnung bündeln.",
+      "pendingCount": "{{count}} Posten",
+      "pendingCount_other": "{{count}} Posten",
+      "billPending": "Verrechnen",
+      "bundledToast": "{{count}} Weiterverrechnung zu einer Rechnung gebündelt.",
+      "bundledToast_other": "{{count}} Weiterverrechnungen zu einer Rechnung gebündelt."
     },
     "expense": {
       "kind": "Art",
@@ -4135,7 +4169,8 @@
       "direction": "Richtung",
       "account": "MWST-Konto",
       "noAccount": "— keines —",
-      "confirmDelete": "Diesen MWST-Code löschen?"
+      "confirmDelete": "Diesen MWST-Code löschen?",
+      "legacyRate": "{{rate}}% (nicht konfiguriert)"
     },
     "export": {
       "title": "Treuhänder-Export",
@@ -4507,6 +4542,7 @@
   },
   "businessProfile": {
     "savedToast": "Geschäftsprofil gespeichert.",
+    "movedToAccounting": "MwSt-Satz, MwSt-Bezeichnung und Standard-Stundensatz befinden sich jetzt unter Einstellungen → Buchhaltung.",
     "title": "Geschäftsprofil",
     "subtitle": "Briefkopf, Kontaktdaten und Standardwerte für Angebote und Rechnungen.",
     "businessHours": {
@@ -4553,11 +4589,6 @@
       "defaultCurrency": "Standardwährung",
       "defaultLocale": "Standardsprache",
       "timezone": "Zeitzone (IANA)",
-      "vatLabel": "MwSt-Bezeichnung",
-      "vatRateDefault": "Standard-MwSt-Satz %",
-      "defaultHourlyRate": "Standard-Stundensatz",
-      "defaultHourlyRatePlaceholder": "z. B. 120.00",
-      "defaultHourlyRateHint": "Fallback, wenn ein Kunde keinen eigenen Satz hat. In {{currency}}, in ganzen Einheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen.",
       "defaultQrFormat": "Standard-QR-Format",
       "footerLine": "Fusszeile"
     },

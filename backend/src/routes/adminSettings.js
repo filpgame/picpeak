@@ -258,6 +258,16 @@ router.put('/accounting', adminAuth, requirePermission('settings.edit'), async (
         setting_type: 'accounting',
       });
     }
+    // Default OUTPUT VAT code stamped onto NEW invoices/quotes (the editor
+    // seeds its VAT picker from it). Stored as the code string; '' clears it.
+    if (Object.prototype.hasOwnProperty.call(req.body, 'accounting_default_output_vat_code')) {
+      const code = String(req.body.accounting_default_output_vat_code || '').trim().slice(0, 16);
+      updates.push({
+        setting_key: 'accounting_default_output_vat_code',
+        setting_value: JSON.stringify(code),
+        setting_type: 'accounting',
+      });
+    }
     if (Object.prototype.hasOwnProperty.call(req.body, 'accounting_vat_reclaim_countries')) {
       const arr = Array.isArray(req.body.accounting_vat_reclaim_countries)
         ? req.body.accounting_vat_reclaim_countries

@@ -101,6 +101,17 @@ router.get('/inbound', requireIncoming, requirePermission('accounting.view'),
   [query('status').optional().isString(), query('page').optional().isInt({ min: 1 }), query('pageSize').optional().isInt({ min: 1, max: 100 })],
   handleAsync(async (req, res) => { validateRequest(req); return successResponse(res, await expenseService.listInbound(req.query)); }));
 
+// Pending re-bills grouped by customer (per-event customers with categorised
+// but not-yet-billed rebill/passthrough docs). Registered BEFORE /inbound/:id
+// so the literal path isn't swallowed by the :id param matcher.
+router.get('/inbound/pending-summary', requireIncoming, requirePermission('accounting.view'),
+  handleAsync(async (_req, res) => successResponse(res, { items: await expenseService.listPendingRebillSummary() })));
+
+// Bundle a customer's pending re-bills into one invoice (per-event only).
+router.post('/inbound/bill-pending', requireIncoming, requirePermission('accounting.manage'),
+  [body('customerAccountId').isInt({ min: 1 })],
+  handleAsync(async (req, res) => { validateRequest(req); return successResponse(res, await expenseService.billPendingRebills(toInt(req.body.customerAccountId), req.admin.id), 201, 'Re-billed'); }));
+
 router.get('/inbound/:id/file', requireIncoming, requirePermission('accounting.view'),
   [param('id').isInt({ min: 1 })],
   handleAsync(async (req, res) => {
@@ -144,7 +155,11 @@ router.patch('/inbound/:id', requireIncoming, requirePermission('accounting.mana
   handleAsync(async (req, res) => { validateRequest(req); return successResponse(res, { document: await expenseService.updateInbound(toInt(req.params.id), req.body, req.admin.id) }); }));
 
 router.post('/inbound/:id/categorize', requireIncoming, requirePermission('accounting.manage'),
-  [param('id').isInt({ min: 1 }), body('disposition').isIn(expenseService.DISPOSITIONS)],
+  [param('id').isInt({ min: 1 }), body('disposition').isIn(expenseService.DISPOSITIONS),
+    body('customerAccountId').optional({ nullable: true }).isInt({ min: 1 }),
+    body('eventId').optional({ nullable: true }).isInt({ min: 1 }),
+    body('categoryId').optional({ nullable: true }).isInt({ min: 1 }),
+    body('markupType').optional().isIn(expenseService.MARKUP_TYPES)],
   handleAsync(async (req, res) => { validateRequest(req); return successResponse(res, { document: await expenseService.categorizeInbound(toInt(req.params.id), req.body, req.admin.id) }, 200, 'Categorized'); }));
 
 router.post('/inbound/:id/rebill', requireIncoming, requirePermission('accounting.manage'),

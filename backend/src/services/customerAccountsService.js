@@ -785,6 +785,18 @@ async function eraseCustomer(id, erasedByAdminId) {
 
     // Active reset tokens for this customer should be invalidated.
     await trx('customer_password_resets').where('customer_account_id', id).del();
+
+    // Pending re-bills (incoming invoices, migration 132) attached to this
+    // customer would otherwise stay billable to the now-anonymized account —
+    // return the not-yet-billed ones to the inbox for re-triage so they're not
+    // silently lost or billed to a ghost (PR #636 review #2). Guarded for
+    // schema drift on installs that predate migration 132.
+    if (await trx.schema.hasColumn('inbound_documents', 'customer_account_id')) {
+      await trx('inbound_documents')
+        .where({ customer_account_id: id })
+        .whereNull('billed_invoice_id')
+        .update({ customer_account_id: null, disposition: null, status: 'unsorted', updated_at: new Date() });
+    }
   });
 
   await logActivity('customer_erased',

@@ -4,7 +4,7 @@
  */
 const expenseService = require('../../src/services/expenseService');
 
-const { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert } = expenseService._internal;
+const { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert, buildInboundLineItem, isInvoiceMutable, resolveTaxTreatment } = expenseService._internal;
 
 describe('computeMarkupMinor', () => {
   it('percent of base, rounded', () => {
@@ -83,5 +83,78 @@ describe('buildExpenseInsert (internal expense)', () => {
     expect(company.receipt_path).toBe('/p/x.pdf');
     const evt = buildExpenseInsert({ kind: 'amount', chfAmountMinor: 100, eventId: 9 }, 1);
     expect(evt.event_id).toBe(9);
+  });
+});
+
+describe('buildInboundLineItem (re-bill line)', () => {
+  it('rebill: base + percent markup, Weiterverrechnung suffix', () => {
+    const li = buildInboundLineItem({ totalAmountMinor: 10000, supplierName: 'ACME' }, 'rebill', { type: 'percent', percent: 10 });
+    expect(li.unit_price_minor).toBe(11000);
+    expect(li.line_total_minor).toBe(11000);
+    expect(li.quantity).toBe(1);
+    expect(li.description).toBe('ACME (Weiterverrechnung)');
+  });
+
+  it('passthrough: distinct suffix, no markup passes through at cost', () => {
+    const li = buildInboundLineItem({ totalAmountMinor: 5000, supplierName: 'SBB' }, 'durchlaufend', { type: 'none' });
+    expect(li.unit_price_minor).toBe(5000);
+    expect(li.description).toBe('SBB (Durchlaufende Position)');
+  });
+
+  it('falls back to net amount + generic label when total/supplier missing', () => {
+    const li = buildInboundLineItem({ totalAmountMinor: null, netAmountMinor: 7000 }, 'rebill', { type: 'flat', flatMinor: 300 });
+    expect(li.unit_price_minor).toBe(7300);
+    expect(li.description).toBe('Weiterverrechnete Auslage (Weiterverrechnung)');
+  });
+
+  it('throws when there is no amount to re-bill', () => {
+    expect(() => buildInboundLineItem({ totalAmountMinor: null, netAmountMinor: null }, 'rebill', { type: 'none' }))
+      .toThrow(/no amount/i);
+  });
+});
+
+describe('resolveTaxTreatment (supplier-country auto-default)', () => {
+  const reclaim = ['CH', 'LI'];
+  it('explicit valid treatment always wins', () => {
+    expect(resolveTaxTreatment('reverse_charge_service', 'DE', reclaim)).toBe('reverse_charge_service');
+    expect(resolveTaxTreatment('import_goods', 'CH', reclaim)).toBe('import_goods');
+  });
+  it('country in the reclaim list → domestic', () => {
+    expect(resolveTaxTreatment(undefined, 'CH', reclaim)).toBe('domestic');
+    expect(resolveTaxTreatment(null, 'li', reclaim)).toBe('domestic'); // case-insensitive
+  });
+  it('country outside the reclaim list → foreign non-reclaimable', () => {
+    expect(resolveTaxTreatment(undefined, 'DE', reclaim)).toBe('foreign_vat_non_reclaimable');
+    expect(resolveTaxTreatment(undefined, 'US', reclaim)).toBe('foreign_vat_non_reclaimable');
+  });
+  it('unknown / empty country falls back to domestic', () => {
+    expect(resolveTaxTreatment(undefined, '', reclaim)).toBe('domestic');
+    expect(resolveTaxTreatment(undefined, null, reclaim)).toBe('domestic');
+  });
+  it('an UNCONFIGURED (empty) reclaim list never auto-classifies as foreign (PR #636 #1)', () => {
+    expect(resolveTaxTreatment(undefined, 'CH', [])).toBe('domestic');
+    expect(resolveTaxTreatment(undefined, 'DE', [])).toBe('domestic');
+    expect(resolveTaxTreatment(undefined, 'US', undefined)).toBe('domestic');
+  });
+  it('invalid explicit treatment is ignored (falls through to country logic)', () => {
+    expect(resolveTaxTreatment('bogus', 'DE', reclaim)).toBe('foreign_vat_non_reclaimable');
+  });
+});
+
+describe('isInvoiceMutable (re-categorise unwind guard)', () => {
+  const future = new Date(Date.now() + 86400000).toISOString();
+  const past = new Date(Date.now() - 86400000).toISOString();
+  it('monthly draft and not-yet-armed scheduled are mutable', () => {
+    expect(isInvoiceMutable(null)).toBe(true); // referenced invoice gone
+    expect(isInvoiceMutable({ is_monthly_draft: true })).toBe(true);
+    expect(isInvoiceMutable({ is_monthly_draft: 1 })).toBe(true);
+    expect(isInvoiceMutable({ status: 'scheduled', scheduled_send_at: null })).toBe(true);
+    expect(isInvoiceMutable({ status: 'scheduled', scheduled_send_at: future })).toBe(true);
+  });
+  it('armed / issued invoices are locked', () => {
+    expect(isInvoiceMutable({ status: 'scheduled', scheduled_send_at: past })).toBe(false);
+    expect(isInvoiceMutable({ status: 'sent' })).toBe(false);
+    expect(isInvoiceMutable({ status: 'paid' })).toBe(false);
+    expect(isInvoiceMutable({ status: 'cancelled' })).toBe(false);
   });
 });

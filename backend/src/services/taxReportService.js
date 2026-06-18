@@ -433,9 +433,15 @@ async function getTaxReport({ from, to, currency, includeCosts = true } = {}) {
     const rows = dbRows.map((r) => {
       const reported = computeReportedAmounts(r);
       const isCancelled = r.status === 'cancelled';
-      if (isCancelled) {
-        cancelledCount += 1;
-      } else {
+      if (isCancelled) cancelledCount += 1;
+      // Exclude BOTH the cancelled original AND its negative Storno row from the
+      // totals. Both stay visible in the row list for the gap-free audit trail,
+      // but a Storno (kind='storno', status='sent', amounts stored negative)
+      // would otherwise double-subtract: the cancelled original is already
+      // netted out by exclusion, so adding the negative storno on top deducts
+      // the revenue a second time — making a cancel-and-reissue read as 0 income
+      // instead of the reissued amount. See feedback_storno_filter_everywhere.
+      if (!isCancelled && r.kind !== 'storno') {
         grandTotalNet += reported.netMinor;
         grandTotalVat += reported.vatMinor;
         grandTotal    += reported.totalMinor;
