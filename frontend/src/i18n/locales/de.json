@@ -827,7 +827,12 @@
     "coverPhotoSet": "Titelbild erfolgreich festgelegt",
     "coverPhotoRemoved": "Titelbild entfernt",
     "failedToSetCoverPhoto": "Titelbild konnte nicht festgelegt werden",
-    "categoryHeroHint": "Wenn kein Titelbild für eine Kategorie festgelegt ist, wird das Standard-Hero-Foto verwendet."
+    "categoryHeroHint": "Wenn kein Titelbild für eine Kategorie festgelegt ist, wird das Standard-Hero-Foto verwendet.",
+    "downloadsEnabled": "Downloads für diese Kategorie aktiviert",
+    "downloadsDisabled": "Downloads für diese Kategorie deaktiviert",
+    "enableDownloadsTitle": "Klicken zum Aktivieren der Downloads für diese Kategorie",
+    "disableDownloadsTitle": "Klicken zum Deaktivieren der Downloads für diese Kategorie",
+    "failedToToggleDownloads": "Aktualisierung der Download-Berechtigung fehlgeschlagen"
   },
   "events": {
     "totalPhotos": "Gesamtfotos",

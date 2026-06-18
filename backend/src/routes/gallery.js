@@ -396,7 +396,7 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
     if (usedCategoryIds.length > 0) {
       const categoryDetails = await db('photo_categories')
         .whereIn('id', usedCategoryIds)
-        .select('id', 'name', 'slug', 'is_global', 'hero_photo_id')
+        .select('id', 'name', 'slug', 'is_global', 'hero_photo_id', 'allow_downloads')
         .orderBy('name', 'asc');
 
       categories = categoryDetails.map(cat => ({
@@ -404,7 +404,11 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
         name: cat.name,
         slug: cat.slug,
         is_global: cat.is_global,
-        hero_photo_id: cat.hero_photo_id || null
+        hero_photo_id: cat.hero_photo_id || null,
+        // Per-category download flag (#640). false explicitly disables; the
+        // gallery hides the download button. Defaults true so categories
+        // created before migration 135 keep working.
+        allow_downloads: cat.allow_downloads !== false
       }));
     }
 
@@ -530,6 +534,11 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
           type: photo.type,
           category_id: photo.category_id || null,
           category_name: photo.category_id && categoryMap[photo.category_id] ? categoryMap[photo.category_id].name : null,
+          // Per-category download permission (#640). Defaults true for photos
+          // without a category or for categories that pre-date migration 135.
+          category_allow_downloads: photo.category_id && categoryMap[photo.category_id]
+            ? categoryMap[photo.category_id].allow_downloads !== false
+            : true,
           category_slug: photo.category_id && categoryMap[photo.category_id] ? categoryMap[photo.category_id].slug : null,
           size: photo.size_bytes,
           uploaded_at: photo.uploaded_at,
@@ -648,6 +657,18 @@ router.get('/:slug/download/:photoId', verifyGalleryAccess, async (req, res) => 
     // Block guest access to hidden photos
     if (photo.visibility === 'hidden' && req.accessLevel !== 'client') {
       return res.status(403).json({ error: 'Photo not available' });
+    }
+
+    // Per-category download permission (#640). Photos without a category are
+    // always downloadable when the event allows downloads — only categorised
+    // photos can opt out per-category.
+    if (photo.category_id) {
+      const cat = await db('photo_categories')
+        .where('id', photo.category_id)
+        .first('allow_downloads');
+      if (cat && cat.allow_downloads === false) {
+        return res.status(403).json({ error: 'Downloads are disabled for this category' });
+      }
     }
 
     // Update download count
@@ -797,9 +818,17 @@ router.get('/:slug/download-all', verifyGalleryAccess, async (req, res) => {
       logger.warn('Background zip generation failed', { eventId: req.event.id, error: err.message })
     );
 
-    // Fetch photos
+    // Fetch photos — exclude photos in categories that disabled downloads (#640).
+    // Uncategorised photos are always included; categories without the column
+    // (pre-migration-135) fall through the LEFT JOIN's null and are included.
     const photos = await db('photos')
+      .leftJoin('photo_categories', 'photos.category_id', 'photo_categories.id')
       .where('photos.event_id', req.event.id)
+      .where(function () {
+        this.whereNull('photos.category_id')
+          .orWhere('photo_categories.allow_downloads', true)
+          .orWhereNull('photo_categories.allow_downloads');
+      })
       .select('photos.*')
       .orderBy('photos.type', 'asc')
       .orderBy('photos.uploaded_at', 'desc');
@@ -926,10 +955,17 @@ router.post('/:slug/download-selected', verifyGalleryAccess, async (req, res) =>
       return res.status(400).json({ error: 'No valid photo IDs provided' });
     }
 
-    // Fetch photos
+    // Fetch photos — exclude photos in categories that disabled downloads (#640).
+    // Same LEFT JOIN pattern as the download-all endpoint.
     const photos = await db('photos')
+      .leftJoin('photo_categories', 'photos.category_id', 'photo_categories.id')
       .where('photos.event_id', req.event.id)
       .whereIn('photos.id', photoIds)
+      .where(function () {
+        this.whereNull('photos.category_id')
+          .orWhere('photo_categories.allow_downloads', true)
+          .orWhereNull('photo_categories.allow_downloads');
+      })
       .select('photos.*')
       .orderBy('photos.uploaded_at', 'desc');
 

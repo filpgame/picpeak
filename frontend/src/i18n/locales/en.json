@@ -385,7 +385,12 @@
     "coverPhotoSet": "Cover photo set successfully",
     "coverPhotoRemoved": "Cover photo removed",
     "failedToSetCoverPhoto": "Failed to set cover photo",
-    "categoryHeroHint": "If no cover photo is set for a category, the default hero photo will be used."
+    "categoryHeroHint": "If no cover photo is set for a category, the default hero photo will be used.",
+    "downloadsEnabled": "Downloads enabled for this category",
+    "downloadsDisabled": "Downloads disabled for this category",
+    "enableDownloadsTitle": "Click to enable downloads for this category",
+    "disableDownloadsTitle": "Click to disable downloads for this category",
+    "failedToToggleDownloads": "Failed to update download permission"
   },
   "events": {
     "title": "Events",

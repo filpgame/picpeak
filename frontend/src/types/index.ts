@@ -112,6 +112,11 @@ export interface Photo {
   category_id?: number | string | null;
   category_name?: string;
   category_slug?: string;
+  // Per-category download permission (#640). Defaults true for uncategorised
+  // photos and for categories that pre-date migration 135. The frontend hides
+  // the lightbox download button when this is false (event-level allow_downloads
+  // also has to be true — they AND together).
+  category_allow_downloads?: boolean;
   size: number;
   uploaded_at: string;
   captured_at?: string; // EXIF capture date (if available)
