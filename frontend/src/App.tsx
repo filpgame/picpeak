@@ -73,6 +73,7 @@ import { RequireFeature } from './components/admin/RequireFeature';
 import { PageErrorBoundary, OfflineIndicator, SkipLink, DynamicFavicon, RobotsMetaTags, CMSContentBlock, Loading } from './components/common';
 import { MaintenanceWrapper } from './components/MaintenanceWrapper';
 import { GlobalThemeProvider } from './components/GlobalThemeProvider';
+import { ConfirmDialogProvider } from './components/common';
 import { usePublicSettings } from './hooks/usePublicSettings';
 
 // Create a client
@@ -149,6 +150,7 @@ function App() {
         <MaintenanceProvider>
           <ThemeProvider>
             <GlobalThemeProvider>
+              <ConfirmDialogProvider>
               <DynamicFavicon />
               <RobotsMetaTags />
               <Router>
@@ -406,6 +408,7 @@ function App() {
               pauseOnHover
               theme={toastTheme}
             />
+              </ConfirmDialogProvider>
             </GlobalThemeProvider>
           </ThemeProvider>
         </MaintenanceProvider>
