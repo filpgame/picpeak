@@ -251,7 +251,12 @@ export const LineItemsTable: React.FC<Props> = ({
   // never roll directly into net — they only feed their parent's
   // auto-resolved line total.
   const subtotal = items.filter((li) => !isSub(li)).reduce((s, li) => s + lineTotal(li), 0);
-  const vatAmount = Math.round(subtotal * vatRate) / 100;
+  // subtotal is in MAJOR units, vatRate is a FRACTION (0.081). Round to cents:
+  // round(subtotal * vatRate * 100) / 100 — the *100 inside round was missing,
+  // which divided the VAT by 100 (CHF 0.63 instead of 63.18). Backend
+  // computeTotals + the PDF were always correct; only this live editor preview
+  // was wrong, and it only surfaced once invoices stopped defaulting to 0% VAT.
+  const vatAmount = Math.round(subtotal * vatRate * 100) / 100;
   const total = subtotal + vatAmount + (Number(shippingAmount) || 0);
 
   // Display numbering: top-level items get 1, 2, 3...; sub-items
