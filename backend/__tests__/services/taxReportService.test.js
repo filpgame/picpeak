@@ -276,6 +276,47 @@ describe('getTaxReport', () => {
     ]);
   });
 
+  it('excludes the negative Storno row from totals on a cancel + reissue (PR #636 audit)', async () => {
+    // The real cancel-and-reissue flow produces THREE rows in the period:
+    // the cancelled original, its negative Storno (kind='storno', status='sent'),
+    // and the reissue. Totals must read the reissued amount, not 0.
+    invoiceRowsForRun = [
+      {
+        id: 20, invoice_number: 'R-2026-0020', issue_date: '2026-02-01',
+        currency: 'CHF', status: 'cancelled', kind: 'invoice', vat_rate: 7.7,
+        net_amount_minor: 10000, vat_amount_minor: 770, total_amount_minor: 10770,
+        late_fee_amount_minor: 0, replaces_invoice_id: null,
+        customer_company_name: 'ACME GmbH', event_name: 'Wedding A',
+      },
+      {
+        id: 21, invoice_number: 'R-2026-0020-S', issue_date: '2026-02-02',
+        currency: 'CHF', status: 'sent', kind: 'storno', vat_rate: 7.7,
+        net_amount_minor: -10000, vat_amount_minor: -770, total_amount_minor: -10770,
+        late_fee_amount_minor: 0, replaces_invoice_id: null,
+        customer_company_name: 'ACME GmbH', event_name: 'Wedding A',
+      },
+      {
+        id: 22, invoice_number: 'R-2026-0021', issue_date: '2026-02-03',
+        currency: 'CHF', status: 'paid', kind: 'invoice', vat_rate: 7.7,
+        net_amount_minor: 10000, vat_amount_minor: 770, total_amount_minor: 10770,
+        late_fee_amount_minor: 0, replaces_invoice_id: 20,
+        customer_company_name: 'ACME GmbH', event_name: 'Wedding A',
+      },
+    ];
+    replacementsRowsForRun = [{ replaces_invoice_id: 20, invoice_number: 'R-2026-0021' }];
+
+    const out = await taxReportService.getTaxReport({ from: '2026-01-01', to: '2026-03-31', currency: 'CHF' });
+    expect(out.rows).toHaveLength(3); // all three stay visible for the audit trail
+    // The negative storno must NOT net against the totals (the cancelled
+    // original is already excluded) — the reissued revenue stands.
+    expect(out.grandTotalNet).toBe(10000);
+    expect(out.grandTotalVat).toBe(770);
+    expect(out.grandTotal).toBe(10770);
+    expect(out.totalsByVatRate).toEqual([
+      { vatRate: 7.7, netMinor: 10000, vatMinor: 770, totalMinor: 10770 },
+    ]);
+  });
+
   it('buckets totals by VAT rate (e.g. 7.7 + 8.1 in same period)', async () => {
     invoiceRowsForRun = [
       {

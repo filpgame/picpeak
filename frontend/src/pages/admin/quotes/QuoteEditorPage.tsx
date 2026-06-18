@@ -26,6 +26,8 @@ import { LineItemsTable, type EditableLineItem } from '../../../components/admin
 import { CustomerPicker } from '../../../components/admin/CustomerPicker';
 import { ProjectSelect } from '../../../components/admin/ProjectSelect';
 import { VatRateSelect } from '../../../components/admin/VatRateSelect';
+import { accountingService } from '../../../services/accounting.service';
+import { vatCodesService } from '../../../services/vatCodes.service';
 import { InstallmentsPanel } from '../../../components/admin/InstallmentsPanel';
 import { customerAdminService } from '../../../services/customerAdmin.service';
 import { userManagementService } from '../../../services/userManagement.service';
@@ -189,6 +191,23 @@ export const QuoteEditorPage: React.FC = () => {
       }
     })();
   }, [isEdit, searchParams]);
+
+  // Seed the VAT from the configured default OUTPUT code (Settings →
+  // Accounting) on a brand-new, blank quote — so quotes (and the invoices they
+  // convert to) don't silently start at 0%. Never clobbers a touched value.
+  const { data: acctSettings } = useQuery({ queryKey: ['accounting-settings'], queryFn: () => accountingService.getSettings() });
+  const { data: outputVatCodes } = useQuery({ queryKey: ['vat-codes', 'output'], queryFn: () => vatCodesService.listOutput() });
+  const didSeedVatRef = useRef(false);
+  useEffect(() => {
+    if (isEdit || didSeedVatRef.current) return;
+    const code = acctSettings?.accounting_default_output_vat_code;
+    if (!code || !outputVatCodes) return;
+    const match = outputVatCodes.find((c) => c.code === code);
+    if (!match) return;
+    setForm((prev) => (prev.vatCode || prev.vatRate ? prev : { ...prev, vatRate: Number(match.rate), vatCode: match.code }));
+    didSeedVatRef.current = true;
+  }, [isEdit, acctSettings, outputVatCodes]);
+
   // Customer search + inline-create state now lives inside
   // <CustomerPicker> (migration C.5 extraction).
 

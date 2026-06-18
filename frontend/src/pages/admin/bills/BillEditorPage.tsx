@@ -15,6 +15,8 @@ import { contractsService } from '../../../services/contracts.service';
 import { businessProfileService } from '../../../services/businessProfile.service';
 import { CustomerPicker } from '../../../components/admin/CustomerPicker';
 import { VatRateSelect } from '../../../components/admin/VatRateSelect';
+import { accountingService } from '../../../services/accounting.service';
+import { vatCodesService } from '../../../services/vatCodes.service';
 import { LineItemsTable, type EditableLineItem } from '../../../components/admin/LineItemsTable';
 import { InstallmentsPanel } from '../../../components/admin/InstallmentsPanel';
 import { customerAdminService } from '../../../services/customerAdmin.service';
@@ -196,6 +198,23 @@ export const BillEditorPage: React.FC = () => {
     didPrefillCcRef.current = true;
     setCcPdfEmail((cur) => cur || currentAdmin.email);
   }, [currentAdmin?.email, isEdit]);
+
+  // Seed the VAT from the configured default OUTPUT code (Settings →
+  // Accounting) on a brand-new, blank invoice — so new invoices don't silently
+  // start at 0%. Skips edits and conversions (quote/contract bring their own
+  // VAT), and never clobbers a value the admin already touched.
+  const { data: acctSettings } = useQuery({ queryKey: ['accounting-settings'], queryFn: () => accountingService.getSettings() });
+  const { data: outputVatCodes } = useQuery({ queryKey: ['vat-codes', 'output'], queryFn: () => vatCodesService.listOutput() });
+  const didSeedVatRef = useRef(false);
+  useEffect(() => {
+    if (isEdit || didSeedVatRef.current) return;
+    if (searchParams.get('fromContractId') || searchParams.get('fromQuoteId')) return;
+    if (vatCode || vatRate) return;
+    const code = acctSettings?.accounting_default_output_vat_code;
+    if (!code || !outputVatCodes) return;
+    const match = outputVatCodes.find((c) => c.code === code);
+    if (match) { didSeedVatRef.current = true; setVatRate(Number(match.rate)); setVatCode(match.code); }
+  }, [isEdit, searchParams, acctSettings, outputVatCodes, vatCode, vatRate]);
 
   // Pre-fill the customer when the editor is opened from a customer
   // detail page via `?customerAccountId=42`. Runs once on mount, only

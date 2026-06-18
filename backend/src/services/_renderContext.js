@@ -73,6 +73,10 @@ function buildIssuerBlock(profile, logoPath, options = {}) {
     // PDF issuer block — §14 UStG requires one or both on every
     // invoice. Kleinunternehmer without a USt-IdNr. carry only this.
     taxId: profile.tax_id || null,
+    // VAT-line label on the totals block (e.g. "MwSt.", "VAT"). Falls back to
+    // the per-locale default in pdfService when blank. Configured under
+    // Settings → Accounting.
+    vatLabel: profile.vat_label || null,
     // pre-resolved absolute path; renderer never re-resolves.
     logoPath,
     pdfFontTtfPath: profile.pdf_font_ttf_path,

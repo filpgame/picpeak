@@ -1229,7 +1229,8 @@
       "accounting": {
         "title": "Accounting",
         "description": "A dedicated Accounting area, separate from CRM. Turn this on, then enable the sub-features below (Tax export, Incoming invoices). VAT / tax treatment is guidance only — verify with your Treuhänder before relying on it.",
-        "sidebar": "Accounting"
+        "sidebar": "Accounting",
+        "requiredByBills": "On automatically because Invoices is enabled — invoice VAT settings live in the Accounting section."
       },
       "incomingInvoices": {
         "title": "Incoming invoices",
@@ -1300,21 +1301,31 @@
     },
     "accounting": {
       "title": "Accounting",
-      "subtitle": "Default rates for internal expenses and the proof requirement.",
+      "subtitle": "Default rates, VAT settings and the proof requirement.",
       "kmRate": "Mileage rate (CHF / km)",
       "kmRateHint": "Default applied to mileage expenses; overridable per entry.",
-      "perDiemRate": "Per-diem rate (CHF / day)",
-      "perDiemRateHint": "Default applied to per-diem expenses; overridable per entry.",
+      "perDiemRate": "Daily allowance (CHF / day)",
+      "perDiemRateHint": "A flat daily allowance booked as an expense (not a client billing rate); overridable per entry.",
       "requireProof": "Require a proof file on every expense",
       "vat": {
-        "title": "VAT registration & reclaim",
+        "title": "VAT",
         "registered": "VAT-registered (charge output VAT + reclaim input VAT)",
         "registeredHint": "Off = small business / under threshold: no VAT charged, input VAT is a cost (not reclaimable).",
         "reclaimCountries": "Countries where input VAT is reclaimable",
-        "reclaimCountriesHint": "Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select."
+        "reclaimCountriesHint": "Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select.",
+        "defaultOutputCode": "Default VAT code for new invoices",
+        "defaultOutputCodeNone": "— none (start at 0%) —",
+        "defaultOutputCodeHint": "New invoices and quotes start with this VAT code selected. Existing documents are unaffected."
       },
       "disclaimer": "Rates and VAT/tax treatment are guidance only — verify with your Treuhänder.",
-      "savedToast": "Accounting settings saved."
+      "savedToast": "Accounting settings saved.",
+      "profileFields": {
+        "vatLabel": "VAT label (e.g. MwSt., VAT)",
+        "vatLabelHint": "Printed as the VAT-line label on invoice / quote PDFs. Leave blank to use the document language default.",
+        "hourlyRate": "Default hourly rate",
+        "hourlyRatePlaceholder": "e.g. 120.00",
+        "hourlyRateHint": "Billing fallback used when a customer has no own rate (hours logging). In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate."
+      }
     }
   },
   "analytics": {
@@ -3538,7 +3549,14 @@
       "durchlaufend": "Pass-through",
       "eigener_aufwand": "Company expense",
       "duplikat": "Duplicate",
-      "abgelehnt": "Declined"
+      "abgelehnt": "Declined",
+      "help": {
+        "rebill": "Your own supplier cost that you invoice on to a client — usually with a markup. Booked as both a cost and re-billed revenue.",
+        "durchlaufend": "An amount you only front on behalf of a client and pass through at the exact figure — no markup, VAT-neutral (durchlaufender Posten). Attach the client to re-bill it at cost.",
+        "eigener_aufwand": "Your own cost, not re-billed to anyone. Pick a category so it lands in the right place in your P&L.",
+        "duplikat": "A duplicate of an invoice you already captured — excluded from the books.",
+        "abgelehnt": "Decline this document — excluded from the books."
+      }
     },
     "markup": {
       "none": "None / from contract",
@@ -3556,6 +3574,7 @@
       "saveCategorize": "Save",
       "saveCategorizePay": "Save & mark paid",
       "categorize": "Categorize",
+      "recategorize": "Re-categorize",
       "view": "View",
       "empty": "No documents yet — capture one above.",
       "untitled": "Untitled document",
@@ -3587,7 +3606,13 @@
         "eventId": "Event ID (optional)",
         "markup": "Markup",
         "reference": "Payment reference",
-        "referenceHint": "QR / ESR reference or message"
+        "referenceHint": "QR / ESR reference or message",
+        "note": "Note",
+        "noteHint": "Internal note for this invoice (optional)",
+        "passthroughCustomerHint": "Optional — attach a client to re-bill this passthrough; leave empty to only book it to the event.",
+        "supplierCountry": "Supplier country",
+        "supplierCountryNone": "— unknown —",
+        "supplierCountryHint": "Sets the tax treatment automatically: outside your VAT-reclaim countries → foreign VAT (not reclaimable)."
       }
     },
     "expenseStatus": {
@@ -3608,7 +3633,8 @@
       "label": "Book to",
       "company": "Company",
       "event": "Event",
-      "eventId": "Event ID"
+      "eventId": "Event ID",
+      "inboundHint": "Which event carries this cost in your reports & tax export (Company = general overhead). This is separate from who you re-bill it to."
     },
     "incoming": {
       "triageTitle": "Categorize incoming invoice",
@@ -3620,7 +3646,15 @@
       "paid": "Paid",
       "paidToast": "Marked as paid.",
       "categorizedToast": "Categorized.",
-      "categorizedPaidToast": "Categorized and marked paid."
+      "categorizedPaidToast": "Categorized and marked paid.",
+      "pendingRebill": "Pending re-bill",
+      "pendingTitle": "Pending re-bills",
+      "pendingBody": "Categorized invoices waiting to be re-billed. Bundle a client’s items into one invoice.",
+      "pendingCount": "{{count}} item",
+      "pendingCount_other": "{{count}} items",
+      "billPending": "Bill these",
+      "bundledToast": "Bundled {{count}} re-bill into one invoice.",
+      "bundledToast_other": "Bundled {{count}} re-bills into one invoice."
     },
     "expense": {
       "kind": "Type",
@@ -3639,7 +3673,7 @@
     "expenseKind": {
       "amount": "Amount",
       "mileage": "Mileage (km)",
-      "per_diem": "Per-diem"
+      "per_diem": "Daily allowance"
     },
     "category": {
       "infrastructure": "Infrastructure & rent",
@@ -3953,7 +3987,8 @@
     "vat": {
       "addTitle": "Add VAT code", "editTitle": "Edit VAT code",
       "code": "Code", "name": "Name", "rate": "Rate %", "direction": "Direction",
-      "account": "VAT account", "noAccount": "— none —", "confirmDelete": "Delete this VAT code?"
+      "account": "VAT account", "noAccount": "— none —", "confirmDelete": "Delete this VAT code?",
+      "legacyRate": "{{rate}}% (not configured)"
     },
     "export": {
       "title": "Treuhänder export",
@@ -4323,6 +4358,7 @@
   },
   "businessProfile": {
     "savedToast": "Business profile saved.",
+    "movedToAccounting": "The VAT rate, VAT label and default hourly rate now live under Settings → Accounting.",
     "title": "Business profile",
     "subtitle": "Issuer block shown on every quote and invoice PDF.",
     "businessHours": {
@@ -4369,11 +4405,6 @@
       "defaultCurrency": "Default currency",
       "defaultLocale": "Default locale",
       "timezone": "Timezone (IANA)",
-      "vatLabel": "VAT label (e.g. MwSt., VAT)",
-      "vatRateDefault": "Default VAT rate %",
-      "defaultHourlyRate": "Default hourly rate",
-      "defaultHourlyRatePlaceholder": "e.g. 120.00",
-      "defaultHourlyRateHint": "Fallback used when a customer has no own rate. In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.",
       "defaultQrFormat": "Default invoice QR",
       "footerLine": "PDF footer line"
     },

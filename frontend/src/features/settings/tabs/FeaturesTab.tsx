@@ -324,6 +324,13 @@ export const FeaturesTab: React.FC = () => {
             sidebarLabel={t('settings.features.accounting.sidebar', 'Accounting')}
             enabled={staged.accounting}
             onToggle={(next) => setFlag('accounting', next)}
+            // Invoices force-enable Accounting (invoice VAT settings live here),
+            // so the master can't be turned off while Bills is on.
+            disabled={staged.bills}
+            lockedReason={staged.bills ? t(
+              'settings.features.accounting.requiredByBills',
+              'On automatically because Invoices is enabled — invoice VAT settings live in the Accounting section.',
+            ) : undefined}
           />
 
           <FeatureCard

@@ -127,6 +127,11 @@ function applyDependencyRules(flags) {
   // Sub-features can't outlive their parents.
   if (out.quotes === false) out.bills = false;
   if (out.calendar === false) out.calendarBooking = false;
+  // Invoices (Bills) force-enable the Accounting master: invoice VAT config
+  // (codes + label) and the hourly rate live under Settings → Accounting, so
+  // an install with invoices must have Accounting available. Runs BEFORE the
+  // accounting→children rule so the sub-features keep their own stored state.
+  if (out.bills === true) out.accounting = true;
   // Accounting is a top-level MASTER; its sub-features can't outlive it.
   // Tax export is now independent of Bills — it relocated permanently
   // into the Accounting section (its own master gate).
