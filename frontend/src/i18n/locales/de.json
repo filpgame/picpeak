@@ -2920,7 +2920,18 @@
     "exportFiltered": "Gefilterte Fotos exportieren",
     "hint": "Fotos auswählen oder Filter anwenden zum Exportieren",
     "exportSelected_one": "{{count}} ausgewähltes exportieren",
-    "exportSelected_other": "{{count}} ausgewählte exportieren"
+    "exportSelected_other": "{{count}} ausgewählte exportieren",
+    "preview": {
+      "titleTxt": "Dateinamen-Liste für Lightroom",
+      "titleCsv": "CSV-Export",
+      "helpTxt": "In das Lightroom-Dateinamensuchfeld einfügen. Die Liste ist kommagetrennt und ohne Dateiendung, damit sie auch zu einem Katalog mit RAW-Dateien passt.",
+      "helpCsv": "In eine Tabellenkalkulation einfügen (Google Sheets, Excel, Numbers) – die erste Zeile ist die Spaltenüberschrift.",
+      "copyButton": "In die Zwischenablage kopieren",
+      "copiedShort": "Kopiert",
+      "copied": "In die Zwischenablage kopiert.",
+      "copyFailed": "Zugriff auf die Zwischenablage blockiert. Bitte den Text markieren und manuell kopieren.",
+      "download": "Als Datei herunterladen"
+    }
   },
   "clientAccess": {
     "title": "Kundenzugang",

@@ -19,6 +19,7 @@ export { PhotoFilters } from './PhotoFilters';
 export { PasswordResetModal } from './PasswordResetModal';
 export { PublishGalleryDialog } from './PublishGalleryDialog';
 export { DuplicateEventDialog } from './DuplicateEventDialog';
+export { ExportPreviewModal } from './ExportPreviewModal';
 export { AdminAuthenticatedImage } from './AdminAuthenticatedImage';
 export { AdminAuthenticatedVideo } from './AdminAuthenticatedVideo';
 export { ThemeCustomizerEnhanced } from './ThemeCustomizerEnhanced';
