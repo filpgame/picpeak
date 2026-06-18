@@ -5,6 +5,26 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.65.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.64.0-beta.0...v3.65.0-beta.0) (2026-06-18)
+
+
+### Features
+
+* **accounting:** consolidate VAT/financial config into Settings → Accounting ([dc7b87b](https://github.com/the-luap/picpeak/commit/dc7b87bb874e22ac6902fd2d48531ecdb6108c88))
+* **accounting:** explain dispositions inline, drop markup from pass-through ([9a023c0](https://github.com/the-luap/picpeak/commit/9a023c019750ebcd8d21e005aaf9a77a32cb34a3))
+* **accounting:** incoming-invoice workflow v2 + VAT/financial settings consolidation ([b527915](https://github.com/the-luap/picpeak/commit/b5279155ea4c545e13bab8bde46a39cfccf107fe))
+* **accounting:** invoices force-enable the Accounting master ([51837c3](https://github.com/the-luap/picpeak/commit/51837c3a88f711b164fafe2c7677e1a91c7542f9))
+* **accounting:** re-categorize incoming invoices, note field, pending re-bill pool ([36a8e42](https://github.com/the-luap/picpeak/commit/36a8e42f90f15a1ba96d9c4f004fa542d33e4937))
+* **accounting:** supplier-country tax default + configurable default output VAT code ([267b121](https://github.com/the-luap/picpeak/commit/267b121d66994bc57b10cd0694ab0e4320b163d9))
+
+
+### Bug Fixes
+
+* **accounting:** address the-luap PR [#636](https://github.com/the-luap/picpeak/issues/636) review ([707c5d0](https://github.com/the-luap/picpeak/commit/707c5d027798bdafb9fe09d7efcbd9ea65330076))
+* **accounting:** tax-report storno totals + hours-line date on Postgres ([db9e41d](https://github.com/the-luap/picpeak/commit/db9e41d19846b31b29c5c1be2ee06a7958bb43b0))
+* **crm:** editor totals box computed VAT 100× too small ([e9b297c](https://github.com/the-luap/picpeak/commit/e9b297c162a19da31d53de377b90bfd5cda1b0a7))
+* **hours:** move logActivity out of the entry transactions (SQLite deadlock) ([348955b](https://github.com/the-luap/picpeak/commit/348955b261713fc9f0b48391a1d4117f6f8c873f))
+
 ## [3.64.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.63.0-beta.0...v3.64.0-beta.0) (2026-06-18)
 
 
