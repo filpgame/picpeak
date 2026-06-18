@@ -1646,7 +1646,8 @@
       "accounting": {
         "title": "Buchhaltung",
         "description": "Ein eigener Buchhaltungsbereich, getrennt vom CRM. Hier aktivieren und dann die Unterfunktionen unten einschalten (Steuerexport, Eingangsrechnungen). MwSt-/Steuerbehandlung dient nur als Orientierung — vor dem Verlassen darauf mit Ihrem Treuhänder prüfen.",
-        "sidebar": "Buchhaltung"
+        "sidebar": "Buchhaltung",
+        "requiredByBills": "Automatisch an, weil Rechnungen aktiviert ist — die MwSt-Einstellungen der Rechnungen liegen im Buchhaltungsbereich."
       },
       "incomingInvoices": {
         "title": "Eingangsrechnungen",
@@ -1731,7 +1732,16 @@
         "reclaimCountriesHint": "Üblicherweise Ihr Inland (CH / LI). Kosten aus anderen Ländern gelten als nicht abziehbare ausländische MwSt. Cmd/Ctrl-Klick für Mehrfachauswahl."
       },
       "disclaimer": "Sätze und MwSt-/Steuerbehandlung dienen nur als Orientierung — mit Ihrem Treuhänder prüfen.",
-      "savedToast": "Buchhaltungseinstellungen gespeichert."
+      "savedToast": "Buchhaltungseinstellungen gespeichert.",
+      "profileFields": {
+        "title": "MwSt-Bezeichnung & Stundensatz",
+        "vatLabel": "MwSt-Bezeichnung (z. B. MwSt., VAT)",
+        "vatLabelHint": "Wird als Bezeichnung der MwSt-Zeile auf Rechnungs-/Angebots-PDFs gedruckt. Leer lassen, um die Standardbezeichnung der Dokumentsprache zu verwenden.",
+        "hourlyRate": "Standard-Stundensatz",
+        "hourlyRatePlaceholder": "z. B. 120.00",
+        "hourlyRateHint": "Fallback, wenn ein Kunde keinen eigenen Satz hat. In {{currency}}, in Hauptwährungseinheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen.",
+        "savedToast": "Gespeichert."
+      }
     }
   },
   "branding": {
@@ -3937,7 +3947,8 @@
     "vat": {
       "addTitle": "MWST-Code hinzufügen", "editTitle": "MWST-Code bearbeiten",
       "code": "Code", "name": "Name", "rate": "Satz %", "direction": "Richtung",
-      "account": "MWST-Konto", "noAccount": "— keines —", "confirmDelete": "Diesen MWST-Code löschen?"
+      "account": "MWST-Konto", "noAccount": "— keines —", "confirmDelete": "Diesen MWST-Code löschen?",
+      "legacyRate": "{{rate}}% (nicht konfiguriert)"
     },
     "export": {
       "title": "Treuhänder-Export",
@@ -4309,6 +4320,7 @@
   },
   "businessProfile": {
     "savedToast": "Geschäftsprofil gespeichert.",
+    "movedToAccounting": "MwSt-Satz, MwSt-Bezeichnung und Standard-Stundensatz befinden sich jetzt unter Einstellungen → Buchhaltung.",
     "title": "Geschäftsprofil",
     "subtitle": "Briefkopf, Kontaktdaten und Standardwerte für Angebote und Rechnungen.",
     "businessHours": {

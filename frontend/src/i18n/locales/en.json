@@ -1204,7 +1204,8 @@
       "accounting": {
         "title": "Accounting",
         "description": "A dedicated Accounting area, separate from CRM. Turn this on, then enable the sub-features below (Tax export, Incoming invoices). VAT / tax treatment is guidance only — verify with your Treuhänder before relying on it.",
-        "sidebar": "Accounting"
+        "sidebar": "Accounting",
+        "requiredByBills": "On automatically because Invoices is enabled — invoice VAT settings live in the Accounting section."
       },
       "incomingInvoices": {
         "title": "Incoming invoices",
@@ -1289,7 +1290,16 @@
         "reclaimCountriesHint": "Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select."
       },
       "disclaimer": "Rates and VAT/tax treatment are guidance only — verify with your Treuhänder.",
-      "savedToast": "Accounting settings saved."
+      "savedToast": "Accounting settings saved.",
+      "profileFields": {
+        "title": "VAT label & hourly rate",
+        "vatLabel": "VAT label (e.g. MwSt., VAT)",
+        "vatLabelHint": "Printed as the VAT-line label on invoice / quote PDFs. Leave blank to use the document language default.",
+        "hourlyRate": "Default hourly rate",
+        "hourlyRatePlaceholder": "e.g. 120.00",
+        "hourlyRateHint": "Fallback used when a customer has no own rate. In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.",
+        "savedToast": "Saved."
+      }
     }
   },
   "analytics": {
@@ -3937,7 +3947,8 @@
     "vat": {
       "addTitle": "Add VAT code", "editTitle": "Edit VAT code",
       "code": "Code", "name": "Name", "rate": "Rate %", "direction": "Direction",
-      "account": "VAT account", "noAccount": "— none —", "confirmDelete": "Delete this VAT code?"
+      "account": "VAT account", "noAccount": "— none —", "confirmDelete": "Delete this VAT code?",
+      "legacyRate": "{{rate}}% (not configured)"
     },
     "export": {
       "title": "Treuhänder export",
@@ -4307,6 +4318,7 @@
   },
   "businessProfile": {
     "savedToast": "Business profile saved.",
+    "movedToAccounting": "The VAT rate, VAT label and default hourly rate now live under Settings → Accounting.",
     "title": "Business profile",
     "subtitle": "Issuer block shown on every quote and invoice PDF.",
     "businessHours": {
