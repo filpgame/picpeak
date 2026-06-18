@@ -18,8 +18,8 @@ import {
   type QrFormat,
 } from '../../../services/businessProfile.service';
 import { Button, Card, Loading, Input, CountrySelect, TimeField } from '../../../components/common';
-import { DecimalInput } from '../../../components/common/DecimalInput';
 import { toast } from 'react-toastify';
+import { currencyOptions, normalizeCurrency } from '../../../constants/currencies';
 
 // Full IANA timezone list for the picker. `Intl.supportedValuesOf` is ES2022
 // (all current browsers); fall back to a small CH/LI-relevant set on the rare
@@ -45,7 +45,16 @@ export const SettingsBusinessProfilePage: React.FC = () => {
   useEffect(() => { if (data?.profile) setProfile(data.profile); }, [data]);
 
   const saveProfile = useMutation({
-    mutationFn: () => profile ? businessProfileService.update(profile) : Promise.reject(),
+    // vatLabel + defaultHourlyRateMinor now live on Settings → Accounting, and
+    // vatRateDefault is retired (the rates are the Accounting VAT codes). Strip
+    // them from this save so an open Business-profile page can't clobber an edit
+    // made on the Accounting tab with its stale loaded value.
+    mutationFn: () => {
+      if (!profile) return Promise.reject();
+      const { vatLabel, defaultHourlyRateMinor, vatRateDefault, ...rest } = profile;
+      void vatLabel; void defaultHourlyRateMinor; void vatRateDefault;
+      return businessProfileService.update(rest);
+    },
     onSuccess: () => {
       toast.success(t('businessProfile.savedToast', 'Business profile saved.'));
       qc.invalidateQueries({ queryKey: ['business-profile'] });
@@ -124,9 +133,29 @@ export const SettingsBusinessProfilePage: React.FC = () => {
 
       <Card>
         <h3 className="font-semibold mb-3">{t('businessProfile.section.defaults', 'Defaults')}</h3>
+        {/* Pointer so admins who look for the old VAT/hourly-rate fields here
+            know where they went. */}
+        <p className="mb-3 rounded-md border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 text-xs text-blue-800 dark:text-blue-300">
+          {t('businessProfile.movedToAccounting', 'The VAT rate, VAT label and default hourly rate now live under Settings → Accounting.')}
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Input label={t('businessProfile.field.defaultCurrency', 'Default currency') as string} value={profile.defaultCurrency}
-            maxLength={3} onChange={(e) => setProfile({ ...profile, defaultCurrency: e.target.value.toUpperCase() })} />
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              {t('businessProfile.field.defaultCurrency', 'Default currency')}
+            </label>
+            {/* Dropdown; the stored value is normalised (e.g. an old free-text
+                "chf" → "CHF") so it pre-selects, and an unknown code is kept as
+                an extra option so nothing is lost. */}
+            <select
+              value={normalizeCurrency(profile.defaultCurrency)}
+              onChange={(e) => setProfile({ ...profile, defaultCurrency: e.target.value })}
+              className="w-full px-3 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              {currencyOptions(profile.defaultCurrency).map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
           <Input label={t('businessProfile.field.defaultLocale', 'Default locale') as string} value={profile.defaultLocale}
             maxLength={8} onChange={(e) => setProfile({ ...profile, defaultLocale: e.target.value })} />
           {/* Migration 137 — IANA timezone for the admin calendar + the
@@ -149,35 +178,9 @@ export const SettingsBusinessProfilePage: React.FC = () => {
               ))}
             </select>
           </div>
-          <Input label={t('businessProfile.field.vatLabel', 'VAT label (e.g. MwSt., VAT)') as string} value={profile.vatLabel}
-            onChange={(e) => setProfile({ ...profile, vatLabel: e.target.value })} />
-          <Input type="number" step="0.01" label={t('businessProfile.field.vatRateDefault', 'Default VAT rate %') as string}
-            value={profile.vatRateDefault ?? 0}
-            onChange={(e) => setProfile({ ...profile, vatRateDefault: Number(e.target.value) })} />
-          {/* Install-wide fallback hourly rate (migration 113). Stored in
-              minor units; entered here in major units. Blank = no global
-              default, so hours-logging then needs a per-customer or
-              per-entry rate. Comma-tolerant via DecimalInput. */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t('businessProfile.field.defaultHourlyRate', 'Default hourly rate')}
-            </label>
-            <DecimalInput
-              value={profile.defaultHourlyRateMinor != null ? profile.defaultHourlyRateMinor / 100 : NaN}
-              fractionDigits={2}
-              onChange={(n) => setProfile({
-                ...profile,
-                defaultHourlyRateMinor: Number.isFinite(n) ? Math.max(0, Math.round(n * 100)) : null,
-              })}
-              className="w-full px-3 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm"
-              placeholder={t('businessProfile.field.defaultHourlyRatePlaceholder', 'e.g. 120.00') as string}
-            />
-            <p className="text-xs text-muted-theme mt-1">
-              {t('businessProfile.field.defaultHourlyRateHint',
-                'Fallback used when a customer has no own rate. In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.',
-                { currency: profile.defaultCurrency || 'CHF' })}
-            </p>
-          </div>
+          {/* VAT rate %, VAT label and the default hourly rate moved to
+              Settings → Accounting (so all financial/VAT config lives in one
+              place). See the callout above. */}
           <div>
             <label className="block text-sm font-medium mb-1">{t('businessProfile.field.defaultQrFormat', 'Default invoice QR')}</label>
             <select value={profile.defaultQrFormat} onChange={(e) => setProfile({ ...profile, defaultQrFormat: e.target.value as QrFormat })}

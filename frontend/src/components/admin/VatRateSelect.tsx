@@ -1,17 +1,23 @@
 /**
- * VAT-rate picker for the invoice/quote editors. A dropdown of the configured
- * OUTPUT VAT codes (Settings → Accounting) plus an "Other (custom rate)" escape
- * hatch. Controlled by `(rate, code)`: selecting a code emits its rate + code
- * string (snapshotted on the document for the accounting export); "Other" emits
- * the typed rate with a null code. Reads the un-gated /admin/vat-codes endpoint,
- * so it works even when the accounting feature is off.
+ * VAT-rate picker for the invoice/quote editors. A dropdown whose ONLY options
+ * are the configured OUTPUT VAT codes (Settings → Accounting) — there is no
+ * free-text custom rate; to use a different rate, add a VAT code in Accounting.
+ * Controlled by `(rate, code)`: selecting a code emits its rate + code string
+ * (snapshotted on the document for the accounting export). Reads the un-gated
+ * /admin/vat-codes endpoint so it works even when the accounting feature is off.
+ *
+ * Legacy preservation: when editing a document whose stored rate/code isn't an
+ * accounting code anymore (an old invoice, or a deleted code), that value is
+ * shown as a read-only "(not configured)" option so it stays selected and is
+ * never silently changed — issued invoices are immutable. The admin can still
+ * switch it to a current code.
  */
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { vatCodesService, type VatCodeOption } from '../../services/vatCodes.service';
 
-const CUSTOM = '__custom__';
+const LEGACY = '__legacy__';
 const selectCls =
   'w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500';
 
@@ -32,11 +38,11 @@ export const VatRateSelect: React.FC<Props> = ({ rate, code, onChange, label, di
   });
 
   // Selected option: prefer the snapshotted code; else a code whose rate matches
-  // (legacy rows / no code stored); else "custom".
+  // (legacy rows / no code stored); else the document's value is "off-list".
   const matched: VatCodeOption | undefined =
     (code ? codes.find((c) => c.code === code) : undefined)
     || (!code ? codes.find((c) => Number(c.rate) === Number(rate)) : undefined);
-  const isCustom = !matched;
+  const showLegacy = !matched;
 
   return (
     <div>
@@ -46,32 +52,24 @@ export const VatRateSelect: React.FC<Props> = ({ rate, code, onChange, label, di
       <select
         className={selectCls}
         disabled={disabled}
-        value={isCustom ? CUSTOM : String(matched!.id)}
+        value={matched ? String(matched.id) : LEGACY}
         onChange={(e) => {
-          if (e.target.value === CUSTOM) { onChange(rate, null); return; }
+          if (e.target.value === LEGACY) { onChange(rate, code); return; } // keep the legacy value
           const c = codes.find((x) => String(x.id) === e.target.value);
           if (c) onChange(Number(c.rate), c.code);
         }}
       >
+        {showLegacy && (
+          <option value={LEGACY}>
+            {t('vat.legacyRate', '{{rate}}% (not configured)', { rate: Number(rate || 0).toFixed(1) })}
+          </option>
+        )}
         {codes.map((c) => (
           <option key={c.id} value={String(c.id)}>
             {c.name} ({Number(c.rate).toFixed(1)}%)
           </option>
         ))}
-        <option value={CUSTOM}>{t('vat.customRate', 'Other (custom rate)')}</option>
       </select>
-      {isCustom && (
-        <input
-          type="number"
-          step="0.1"
-          min="0"
-          className={`${selectCls} mt-2`}
-          disabled={disabled}
-          value={rate}
-          placeholder={t('vat.ratePercent', 'VAT rate %') as string}
-          onChange={(e) => onChange(Number(e.target.value) || 0, null)}
-        />
-      )}
     </div>
   );
 };
