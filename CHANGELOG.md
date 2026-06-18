@@ -5,6 +5,14 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.64.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.63.0-beta.0...v3.64.0-beta.0) (2026-06-18)
+
+
+### Features
+
+* **admin/exports:** inline preview modal with copy-to-clipboard ([#631](https://github.com/the-luap/picpeak/issues/631)) ([fc5c1ae](https://github.com/the-luap/picpeak/commit/fc5c1ae93f87678fcc16bc84a14a60a59b1a3c7b))
+* **admin/exports:** inline preview modal with copy-to-clipboard ([#631](https://github.com/the-luap/picpeak/issues/631)) ([27b5f7e](https://github.com/the-luap/picpeak/commit/27b5f7e4b68e43345cd99dd5cc77308dcd7ec98b))
+
 ## [3.63.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.62.0-beta.0...v3.63.0-beta.0) (2026-06-17)
 
 
