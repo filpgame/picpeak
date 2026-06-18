@@ -3520,6 +3520,7 @@
       "saveCategorize": "Speichern",
       "saveCategorizePay": "Speichern & als bezahlt markieren",
       "categorize": "Kategorisieren",
+      "recategorize": "Neu kategorisieren",
       "view": "Ansehen",
       "empty": "Noch keine Dokumente — oben eines erfassen.",
       "untitled": "Unbenanntes Dokument",
@@ -3551,7 +3552,10 @@
         "eventId": "Event-ID (optional)",
         "markup": "Zuschlag",
         "reference": "Zahlungsreferenz",
-        "referenceHint": "QR-/ESR-Referenz oder Mitteilung"
+        "referenceHint": "QR-/ESR-Referenz oder Mitteilung",
+        "note": "Notiz",
+        "noteHint": "Interne Notiz zu dieser Rechnung (optional)",
+        "passthroughCustomerHint": "Optional — einen Kunden zuordnen, um diese durchlaufende Position weiterzuverrechnen; leer lassen, um sie nur auf das Event zu buchen."
       }
     },
     "expenseStatus": {
@@ -3584,7 +3588,15 @@
       "paid": "Bezahlt",
       "paidToast": "Als bezahlt markiert.",
       "categorizedToast": "Kategorisiert.",
-      "categorizedPaidToast": "Kategorisiert und als bezahlt markiert."
+      "categorizedPaidToast": "Kategorisiert und als bezahlt markiert.",
+      "pendingRebill": "Weiterverrechnung offen",
+      "pendingTitle": "Offene Weiterverrechnungen",
+      "pendingBody": "Kategorisierte Rechnungen, die auf die Weiterverrechnung warten. Posten eines Kunden zu einer Rechnung bündeln.",
+      "pendingCount": "{{count}} Posten",
+      "pendingCount_other": "{{count}} Posten",
+      "billPending": "Verrechnen",
+      "bundledToast": "{{count}} Weiterverrechnung zu einer Rechnung gebündelt.",
+      "bundledToast_other": "{{count}} Weiterverrechnungen zu einer Rechnung gebündelt."
     },
     "expense": {
       "kind": "Art",

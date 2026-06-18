@@ -35,6 +35,12 @@ export interface InboundDocument {
   markupPercent: number | null;
   markupFlatMinor: number | null;
   billedInvoiceId: number | null;
+  /** Client a rebill/passthrough is attached to (migration 132). */
+  customerAccountId: number | null;
+  customerName: string | null;
+  customerEmail: string | null;
+  /** Free-text categorisation note. */
+  note: string | null;
   supplierPaid: boolean;
   supplierPaidAt: string | null;
   supplierPaymentMethod: PaymentMethod | null;
@@ -77,6 +83,20 @@ export interface InvoiceExpensePayload {
   markupType?: MarkupType;
   markupPercent?: number | null;
   markupFlatMinor?: number | null;
+}
+
+/** One customer with categorised-but-unbilled rebill/passthrough docs. */
+export interface PendingRebillSummary {
+  customerAccountId: number;
+  companyName: string | null;
+  displayName: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  isPassive: boolean;
+  billingCadence: string | null;
+  itemCount: number;
+  openAmountMinor: number;
 }
 
 export interface ExpenseCategory { id: number; name: string; color: string | null; is_seed: boolean; display_order: number; }
@@ -148,6 +168,10 @@ export const accountingService = {
   async updateInbound(id: number, fields: Partial<InboundDocument>): Promise<InboundDocument> { const { data } = await api.patch(`/admin/expenses/inbound/${id}`, fields); return data.document; },
   async categorizeInbound(id: number, payload: CategorizePayload): Promise<InboundDocument> { const { data } = await api.post(`/admin/expenses/inbound/${id}/categorize`, payload); return data.document; },
   async rebillInbound(id: number, payload: CategorizePayload): Promise<{ document: InboundDocument; invoiceId: number }> { const { data } = await api.post(`/admin/expenses/inbound/${id}/rebill`, payload); return data; },
+  /** Per-event customers with pending (categorised, unbilled) re-bills. */
+  async listPendingRebills(): Promise<PendingRebillSummary[]> { const { data } = await api.get('/admin/expenses/inbound/pending-summary'); return data.items; },
+  /** Bundle one customer's pending re-bills into a single invoice. */
+  async billPendingRebills(customerAccountId: number): Promise<{ invoiceId: number; count: number }> { const { data } = await api.post('/admin/expenses/inbound/bill-pending', { customerAccountId }); return data; },
   async markInboundPaid(id: number, payload: { paid: boolean; paidAt?: string; paymentMethod?: PaymentMethod; paymentReference?: string }): Promise<InboundDocument> { const { data } = await api.post(`/admin/expenses/inbound/${id}/supplier-payment`, payload); return data.document; },
   async getInboundFileBlob(id: number): Promise<Blob> { const { data } = await api.get(`/admin/expenses/inbound/${id}/file`, { responseType: 'blob' }); return data; },
   async getInboundPageBlob(id: number, page: number): Promise<Blob> { const { data } = await api.get(`/admin/expenses/inbound/${id}/page/${page}`, { responseType: 'blob' }); return data; },

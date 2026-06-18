@@ -4,7 +4,7 @@
  */
 const expenseService = require('../../src/services/expenseService');
 
-const { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert } = expenseService._internal;
+const { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert, buildInboundLineItem, isInvoiceMutable } = expenseService._internal;
 
 describe('computeMarkupMinor', () => {
   it('percent of base, rounded', () => {
@@ -83,5 +83,50 @@ describe('buildExpenseInsert (internal expense)', () => {
     expect(company.receipt_path).toBe('/p/x.pdf');
     const evt = buildExpenseInsert({ kind: 'amount', chfAmountMinor: 100, eventId: 9 }, 1);
     expect(evt.event_id).toBe(9);
+  });
+});
+
+describe('buildInboundLineItem (re-bill line)', () => {
+  it('rebill: base + percent markup, Weiterverrechnung suffix', () => {
+    const li = buildInboundLineItem({ totalAmountMinor: 10000, supplierName: 'ACME' }, 'rebill', { type: 'percent', percent: 10 });
+    expect(li.unit_price_minor).toBe(11000);
+    expect(li.line_total_minor).toBe(11000);
+    expect(li.quantity).toBe(1);
+    expect(li.description).toBe('ACME (Weiterverrechnung)');
+  });
+
+  it('passthrough: distinct suffix, no markup passes through at cost', () => {
+    const li = buildInboundLineItem({ totalAmountMinor: 5000, supplierName: 'SBB' }, 'durchlaufend', { type: 'none' });
+    expect(li.unit_price_minor).toBe(5000);
+    expect(li.description).toBe('SBB (Durchlaufende Position)');
+  });
+
+  it('falls back to net amount + generic label when total/supplier missing', () => {
+    const li = buildInboundLineItem({ totalAmountMinor: null, netAmountMinor: 7000 }, 'rebill', { type: 'flat', flatMinor: 300 });
+    expect(li.unit_price_minor).toBe(7300);
+    expect(li.description).toBe('Weiterverrechnete Auslage (Weiterverrechnung)');
+  });
+
+  it('throws when there is no amount to re-bill', () => {
+    expect(() => buildInboundLineItem({ totalAmountMinor: null, netAmountMinor: null }, 'rebill', { type: 'none' }))
+      .toThrow(/no amount/i);
+  });
+});
+
+describe('isInvoiceMutable (re-categorise unwind guard)', () => {
+  const future = new Date(Date.now() + 86400000).toISOString();
+  const past = new Date(Date.now() - 86400000).toISOString();
+  it('monthly draft and not-yet-armed scheduled are mutable', () => {
+    expect(isInvoiceMutable(null)).toBe(true); // referenced invoice gone
+    expect(isInvoiceMutable({ is_monthly_draft: true })).toBe(true);
+    expect(isInvoiceMutable({ is_monthly_draft: 1 })).toBe(true);
+    expect(isInvoiceMutable({ status: 'scheduled', scheduled_send_at: null })).toBe(true);
+    expect(isInvoiceMutable({ status: 'scheduled', scheduled_send_at: future })).toBe(true);
+  });
+  it('armed / issued invoices are locked', () => {
+    expect(isInvoiceMutable({ status: 'scheduled', scheduled_send_at: past })).toBe(false);
+    expect(isInvoiceMutable({ status: 'sent' })).toBe(false);
+    expect(isInvoiceMutable({ status: 'paid' })).toBe(false);
+    expect(isInvoiceMutable({ status: 'cancelled' })).toBe(false);
   });
 });

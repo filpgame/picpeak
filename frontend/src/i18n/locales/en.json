@@ -3520,6 +3520,7 @@
       "saveCategorize": "Save",
       "saveCategorizePay": "Save & mark paid",
       "categorize": "Categorize",
+      "recategorize": "Re-categorize",
       "view": "View",
       "empty": "No documents yet — capture one above.",
       "untitled": "Untitled document",
@@ -3551,7 +3552,10 @@
         "eventId": "Event ID (optional)",
         "markup": "Markup",
         "reference": "Payment reference",
-        "referenceHint": "QR / ESR reference or message"
+        "referenceHint": "QR / ESR reference or message",
+        "note": "Note",
+        "noteHint": "Internal note for this invoice (optional)",
+        "passthroughCustomerHint": "Optional — attach a client to re-bill this passthrough; leave empty to only book it to the event."
       }
     },
     "expenseStatus": {
@@ -3584,7 +3588,15 @@
       "paid": "Paid",
       "paidToast": "Marked as paid.",
       "categorizedToast": "Categorized.",
-      "categorizedPaidToast": "Categorized and marked paid."
+      "categorizedPaidToast": "Categorized and marked paid.",
+      "pendingRebill": "Pending re-bill",
+      "pendingTitle": "Pending re-bills",
+      "pendingBody": "Categorized invoices waiting to be re-billed. Bundle a client’s items into one invoice.",
+      "pendingCount": "{{count}} item",
+      "pendingCount_other": "{{count}} items",
+      "billPending": "Bill these",
+      "bundledToast": "Bundled {{count}} re-bill into one invoice.",
+      "bundledToast_other": "Bundled {{count}} re-bills into one invoice."
     },
     "expense": {
       "kind": "Type",

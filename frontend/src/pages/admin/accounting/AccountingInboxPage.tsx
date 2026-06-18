@@ -6,10 +6,11 @@
  * client. PDFs are previewed as server-rasterised page images (never raw).
  */
 import React, { useRef, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { Camera, Upload, Inbox, X, Circle, Eye, RotateCcw } from 'lucide-react';
+import { Camera, Upload, Inbox, X, Circle, Eye, RotateCcw, Send, Pencil } from 'lucide-react';
 import { Button, Card, CardContent, Input, LocalizedDateInput, Loading } from '../../../components/common';
 import { DecimalInput } from '../../../components/common/DecimalInput';
 import { CustomerAccountPicker, type SelectedCustomer } from '../../../components/admin/CustomerAccountPicker';
@@ -150,10 +151,14 @@ const ViewModal: React.FC<{ doc: InboundDocument; onClose: () => void }> = ({ do
             {field(t('accounting.inbox.field.total', 'Total'), doc.totalAmountMinor != null ? formatMoneyMinor(doc.totalAmountMinor, doc.currency || 'CHF') : null)}
             {field(t('accounting.inbox.field.invoiceDate', 'Invoice date'), doc.invoiceDate ? format(doc.invoiceDate) : null)}
             {field(t('accounting.inbox.field.disposition', 'Disposition'), doc.disposition ? t(`accounting.disposition.${doc.disposition}`, doc.disposition) : null)}
-            {field(t('accounting.inbox.status.label', 'Status'), t(`accounting.inbox.status.${doc.status}`, doc.status))}
+            {doc.customerName && field(t('accounting.inbox.field.customer', 'Client'), doc.customerName)}
+            {field(t('accounting.inbox.status.label', 'Status'), doc.customerAccountId && !doc.billedInvoiceId
+              ? t('accounting.incoming.pendingRebill', 'Pending re-bill')
+              : t(`accounting.inbox.status.${doc.status}`, doc.status))}
             {field(t('accounting.incoming.paid', 'Paid'), doc.supplierPaid
               ? (doc.supplierPaidAt ? format(doc.supplierPaidAt) : t('common.yes', 'Yes'))
               : t('common.no', 'No'))}
+            {doc.note && field(t('accounting.inbox.field.note', 'Note'), doc.note)}
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-neutral-200 dark:border-neutral-700 px-5 py-3">
@@ -171,12 +176,21 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
   const [currency, setCurrency] = useState(doc.currency || 'CHF');
   const [invoiceDate, setInvoiceDate] = useState(doc.invoiceDate || '');
   const [reference, setReference] = useState(doc.paymentReference || '');
-  const [disposition, setDisposition] = useState<Disposition>('eigener_aufwand');
-  const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
-  const [eventId, setEventId] = useState<number | null>(null);
-  const [customer, setCustomer] = useState<SelectedCustomer[]>([]);
-  const [markupType, setMarkupType] = useState<MarkupType>('none');
-  const [markupValue, setMarkupValue] = useState<number>(NaN);
+  const [note, setNote] = useState(doc.note || '');
+  // Pre-fill from the existing disposition so a categorized invoice can be
+  // re-categorized (#1) — falls back to "company expense" for fresh docs.
+  const [disposition, setDisposition] = useState<Disposition>(doc.disposition || 'eigener_aufwand');
+  const [categoryId, setCategoryId] = useState<number | undefined>(doc.categoryId ?? undefined);
+  const [eventId, setEventId] = useState<number | null>(doc.eventId ?? null);
+  const [customer, setCustomer] = useState<SelectedCustomer[]>(
+    doc.customerAccountId ? [{ id: doc.customerAccountId, email: doc.customerEmail || '', displayName: doc.customerName }] : [],
+  );
+  const [markupType, setMarkupType] = useState<MarkupType>(doc.markupType || 'none');
+  const [markupValue, setMarkupValue] = useState<number>(
+    doc.markupType === 'percent' && doc.markupPercent != null ? doc.markupPercent
+      : doc.markupType === 'flat' && doc.markupFlatMinor != null ? doc.markupFlatMinor / 100
+        : NaN,
+  );
 
   const totalMinor = Number.isFinite(amountMajor) ? Math.round(amountMajor * 100) : null;
 
@@ -191,12 +205,13 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
   // entered) — no second dialog — so "Save & mark paid" actually pays.
   const save = useMutation({
     mutationFn: async (pay: boolean) => {
-      await accountingService.updateInbound(doc.id, { supplierName: supplier || null, totalAmountMinor: totalMinor, currency: currency || null, invoiceDate: invoiceDate || null, paymentReference: reference || null });
+      await accountingService.updateInbound(doc.id, { supplierName: supplier || null, totalAmountMinor: totalMinor, currency: currency || null, invoiceDate: invoiceDate || null, paymentReference: reference || null, note: note || null });
       await accountingService.categorizeInbound(doc.id, {
         disposition,
         eventId: BOOKING_DISPOSITIONS.includes(disposition) ? eventId : null,
         categoryId: disposition === 'eigener_aufwand' ? (categoryId ?? null) : null,
-        customerAccountId: disposition === 'rebill' && customer[0] ? customer[0].id : null,
+        // Both rebill and passthrough can attach to a customer (#3).
+        customerAccountId: BOOKING_DISPOSITIONS.includes(disposition) && customer[0] ? customer[0].id : null,
         ...markupPayload(),
       });
       if (pay) {
@@ -229,6 +244,8 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
               <div><label className={labelCls}>{t('accounting.inbox.field.currency', 'Currency')}</label><Input value={currency} maxLength={3} onChange={(e) => setCurrency(e.target.value.toUpperCase())} /></div>
               <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.invoiceDate', 'Invoice date')}</label><LocalizedDateInput value={invoiceDate} onChange={setInvoiceDate} /></div>
               <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.reference', 'Payment reference')}</label><Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t('accounting.inbox.field.referenceHint', 'QR / ESR reference or message') as string} /></div>
+              <div className="col-span-2"><label className={labelCls}>{t('accounting.inbox.field.note', 'Note')}</label>
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className={selectCls} placeholder={t('accounting.inbox.field.noteHint', 'Internal note for this invoice (optional)') as string} /></div>
             </div>
 
             <div><label className={labelCls}>{t('accounting.inbox.field.disposition', 'Disposition')}</label>
@@ -253,10 +270,12 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
               </div>
             )}
 
-            {disposition === 'rebill' && (
+            {BOOKING_DISPOSITIONS.includes(disposition) && (
               <div className="space-y-3 rounded-lg border border-neutral-200 dark:border-neutral-700 p-3">
-                <div><label className={labelCls}>{t('accounting.inbox.field.customer', 'Client')} *</label>
-                  <CustomerAccountPicker value={customer.slice(0, 1)} onChange={(next) => setCustomer(next.slice(-1))} /></div>
+                <div><label className={labelCls}>{t('accounting.inbox.field.customer', 'Client')} {disposition === 'rebill' ? '*' : ''}</label>
+                  <CustomerAccountPicker value={customer.slice(0, 1)} onChange={(next) => setCustomer(next.slice(-1))} />
+                  {disposition === 'durchlaufend' && <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{t('accounting.inbox.field.passthroughCustomerHint', 'Optional — attach a client to re-bill this passthrough; leave empty to only book it to the event.')}</p>}
+                </div>
                 <div><label className={labelCls}>{t('accounting.inbox.field.markup', 'Markup')}</label>
                   <select value={markupType} onChange={(e) => setMarkupType(e.target.value as MarkupType)} className={selectCls}>
                     <option value="none">{t('accounting.markup.none', 'None / from contract')}</option>
@@ -283,6 +302,7 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
 export const AccountingInboxPage: React.FC = () => {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { format } = useLocalizedDate();
   const cameraRef = useRef<HTMLInputElement>(null);
   const uploadRef = useRef<HTMLInputElement>(null);
@@ -294,6 +314,8 @@ export const AccountingInboxPage: React.FC = () => {
   // without a manual reload (the poller runs server-side every 60s).
   const { data, isLoading } = useQuery({ queryKey: ['accounting-inbound'], queryFn: () => accountingService.listInbound({ pageSize: 100 }), refetchInterval: 30000, refetchOnWindowFocus: true });
   const { data: categories } = useQuery({ queryKey: ['expense-categories'], queryFn: () => accountingService.listCategories() });
+  // Per-event customers carrying pending (categorised, unbilled) re-bills (#3).
+  const { data: pending } = useQuery({ queryKey: ['accounting-pending-rebills'], queryFn: () => accountingService.listPendingRebills(), refetchInterval: 30000 });
 
   const upload = useMutation({
     mutationFn: ({ file, source }: { file: File; source: 'upload' | 'camera' }) => accountingService.uploadInbound(file, source),
@@ -305,11 +327,24 @@ export const AccountingInboxPage: React.FC = () => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['accounting-inbound'] }); },
     onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
   });
+  const billPending = useMutation({
+    mutationFn: (customerAccountId: number) => accountingService.billPendingRebills(customerAccountId),
+    onSuccess: ({ invoiceId, count }) => {
+      toast.success(t('accounting.incoming.bundledToast', 'Bundled {{count}} re-bill(s) into one invoice.', { count }));
+      qc.invalidateQueries({ queryKey: ['accounting-inbound'] });
+      qc.invalidateQueries({ queryKey: ['accounting-pending-rebills'] });
+      navigate(`/admin/clients/bills/${invoiceId}/edit`);
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+  });
 
   const onFile = (source: 'upload' | 'camera') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (file) upload.mutate({ file, source }); e.target.value = '';
   };
-  const refresh = () => qc.invalidateQueries({ queryKey: ['accounting-inbound'] });
+  const refresh = () => { qc.invalidateQueries({ queryKey: ['accounting-inbound'] }); qc.invalidateQueries({ queryKey: ['accounting-pending-rebills'] }); };
+
+  const pendingItems = pending ?? [];
+  const customerLabel = (p: typeof pendingItems[number]) => p.displayName || p.companyName || [p.firstName, p.lastName].filter(Boolean).join(' ') || p.email || `#${p.customerAccountId}`;
 
   const handleTriageDone = () => { setTriageDoc(null); refresh(); };
 
@@ -328,6 +363,31 @@ export const AccountingInboxPage: React.FC = () => {
         <Button onClick={() => cameraRef.current?.click()} disabled={upload.isPending}><Camera className="w-4 h-4 mr-2" /> {t('accounting.inbox.scanCamera', 'Scan with camera')}</Button>
         <Button variant="outline" onClick={() => uploadRef.current?.click()} disabled={upload.isPending}><Upload className="w-4 h-4 mr-2" /> {t('accounting.inbox.uploadFile', 'Upload file')}</Button>
       </CardContent></Card>
+
+      {/* Pending re-bills (#3): per-event customers accumulate categorised
+          rebill/passthrough invoices here; bundle them into one invoice like
+          "Bill these hours". Monthly/manual customers never surface (they
+          consolidate onto their running draft at categorise time). */}
+      {pendingItems.length > 0 && (
+        <Card className="mb-6"><CardContent className="p-5">
+          <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-1">{t('accounting.incoming.pendingTitle', 'Pending re-bills')}</h2>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">{t('accounting.incoming.pendingBody', 'Categorized invoices waiting to be re-billed. Bundle a client’s items into one invoice.')}</p>
+          <div className="space-y-2">
+            {pendingItems.map((p) => (
+              <div key={p.customerAccountId} className="flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 dark:border-neutral-700 px-4 py-2">
+                <div className="flex-1 min-w-[12rem]">
+                  <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{customerLabel(p)}</div>
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {t('accounting.incoming.pendingCount', '{{count}} item(s)', { count: p.itemCount })}
+                    {' · '}{formatMoneyMinor(p.openAmountMinor, 'CHF')}
+                  </div>
+                </div>
+                <Button size="sm" onClick={() => billPending.mutate(p.customerAccountId)} disabled={billPending.isPending}><Send className="w-3.5 h-3.5 mr-1" /> {t('accounting.incoming.billPending', 'Bill these')}</Button>
+              </div>
+            ))}
+          </div>
+        </CardContent></Card>
+      )}
 
       {isLoading ? <Loading /> : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-8 text-center">
@@ -362,6 +422,10 @@ export const AccountingInboxPage: React.FC = () => {
                   {doc.totalAmountMinor != null ? formatMoneyMinor(doc.totalAmountMinor, doc.currency || 'CHF') : t('accounting.inbox.noAmount', 'amount not entered')}
                   {' · '}{format(doc.createdAt)}
                   {doc.disposition && <>{' · '}{t(`accounting.disposition.${doc.disposition}`, doc.disposition)}</>}
+                  {/* Pending re-bill = attached to a client but not yet on an invoice. */}
+                  {doc.customerAccountId && !doc.billedInvoiceId && (
+                    <span className="text-indigo-600 dark:text-indigo-400">{' · '}{t('accounting.incoming.pendingRebill', 'Pending re-bill')}{doc.customerName ? ` → ${doc.customerName}` : ''}</span>
+                  )}
                 </div>
               </button>
               <Button size="sm" variant="ghost" onClick={() => setViewDoc(doc)}><Eye className="w-3.5 h-3.5 mr-1" /> {t('accounting.inbox.view', 'View')}</Button>
@@ -372,7 +436,11 @@ export const AccountingInboxPage: React.FC = () => {
                   ? <Button size="sm" variant="ghost" onClick={() => unpay.mutate(doc.id)} disabled={unpay.isPending}><RotateCcw className="w-3.5 h-3.5 mr-1" /> {t('accounting.incoming.markUnpaid', 'Mark unpaid')}</Button>
                   : <Button size="sm" variant="outline" onClick={() => setPayDoc(doc)}><Circle className="w-3.5 h-3.5 mr-1" /> {t('accounting.incoming.markPaid', 'Mark paid')}</Button>
               )}
-              {doc.status === 'unsorted' && <Button size="sm" onClick={() => setTriageDoc(doc)}>{t('accounting.inbox.categorize', 'Categorize')}</Button>}
+              {/* #1: re-categorize is available after the first triage too, so a
+                  disposition can be changed (e.g. passthrough → company expense). */}
+              {doc.status === 'unsorted'
+                ? <Button size="sm" onClick={() => setTriageDoc(doc)}>{t('accounting.inbox.categorize', 'Categorize')}</Button>
+                : <Button size="sm" variant="outline" onClick={() => setTriageDoc(doc)}><Pencil className="w-3.5 h-3.5 mr-1" /> {t('accounting.inbox.recategorize', 'Re-categorize')}</Button>}
             </div>
           ))}
         </div>

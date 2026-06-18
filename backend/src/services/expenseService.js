@@ -96,6 +96,13 @@ function transformInbound(row) {
     markupFlatMinor: row.markup_flat_minor,
     billedInvoiceId: row.billed_invoice_id,
     billedInvoiceLineItemId: row.billed_invoice_line_item_id,
+    // re-bill customer linkage (migration 132) — the client a rebill/passthrough
+    // is attached to. customerName/Email are denormalised from a LEFT JOIN in
+    // list/get (null when the row came from a query without the join).
+    customerAccountId: row.customer_account_id || null,
+    customerName: row.customer_display_name || row.customer_company_name || null,
+    customerEmail: row.customer_email || null,
+    note: row.note || null,
     // supplier payment (paid on the incoming invoice itself)
     supplierPaid: !!row.supplier_paid,
     supplierPaidAt: row.supplier_paid_at,
@@ -168,19 +175,34 @@ async function recordInboundDocument({ source, filePath, originalFilename, mimeT
   return getInbound(id);
 }
 
+// Denormalise the attached customer's name/email for the inbox UI (re-bill
+// chip + pending-pool grouping). LEFT JOIN so docs without a customer still
+// return. Selected explicitly to avoid colliding with inbound_documents.*.
+const INBOUND_CUSTOMER_SELECT = [
+  'inbound_documents.*',
+  'c.display_name as customer_display_name',
+  'c.company_name as customer_company_name',
+  'c.email as customer_email',
+];
+function inboundWithCustomer() {
+  return db('inbound_documents')
+    .leftJoin('customer_accounts as c', 'inbound_documents.customer_account_id', 'c.id');
+}
+
 async function getInbound(id) {
-  const row = await db('inbound_documents').where({ id }).first();
+  const row = await inboundWithCustomer().where('inbound_documents.id', id).first(INBOUND_CUSTOMER_SELECT);
   if (!row) throw new AppError('Incoming invoice not found', 404, 'INBOUND_NOT_FOUND');
   return transformInbound(row);
 }
 
 async function listInbound({ status, page, pageSize } = {}) {
   const { p, ps } = clampPage(page, pageSize);
-  const base = db('inbound_documents');
-  if (status) base.where({ status });
-  const countRow = await base.clone().count({ count: '*' }).first();
+  const base = inboundWithCustomer();
+  if (status) base.where('inbound_documents.status', status);
+  const countRow = await base.clone().clearSelect().count({ count: 'inbound_documents.id' }).first();
   const total = parseInt(countRow?.count || 0, 10);
-  const rows = await base.clone().orderBy('created_at', 'desc').limit(ps).offset((p - 1) * ps);
+  const rows = await base.clone().orderBy('inbound_documents.created_at', 'desc').limit(ps).offset((p - 1) * ps)
+    .select(INBOUND_CUSTOMER_SELECT);
   return { items: rows.map(transformInbound), pagination: { page: p, pageSize: ps, total, totalPages: Math.ceil(total / ps) } };
 }
 
@@ -188,7 +210,7 @@ const INBOUND_EDITABLE = {
   supplierName: 'supplier_name', invoiceNumber: 'invoice_number', invoiceDate: 'invoice_date',
   dueDate: 'due_date', currency: 'currency', netAmountMinor: 'net_amount_minor',
   vatAmountMinor: 'vat_amount_minor', totalAmountMinor: 'total_amount_minor', iban: 'iban',
-  paymentReference: 'payment_reference',
+  paymentReference: 'payment_reference', note: 'note',
 };
 
 async function updateInbound(id, payload, adminId) {
@@ -232,79 +254,308 @@ function computeMarkupMinor(baseMinor, markup) {
   return 0;
 }
 
-/** Re-bill an incoming invoice to a client (mints an editable scheduled invoice). */
+// Dispositions that can be billed to a client. 'rebill' always carries a
+// customer; 'durchlaufend' (passthrough) may now ALSO attach to a customer
+// (with optional markup) so it can be re-billed like a rebill.
+const CUSTOMER_DISPOSITIONS = ['rebill', 'durchlaufend'];
+const BOOKING_DISPOSITIONS = ['rebill', 'durchlaufend'];
+
+/**
+ * Can this invoice still be edited (line removed / appended)? Mirrors the
+ * hour-entry lock rules (customerHoursService.isEntryLocked, inverted):
+ * monthly drafts and not-yet-armed scheduled invoices are mutable; anything
+ * sent/paid/overdue/cancelled or past its scheduled_send_at is locked.
+ */
+function isInvoiceMutable(invoice) {
+  if (!invoice) return true; // referenced invoice gone — treat as not billed
+  if (invoice.is_monthly_draft === true || invoice.is_monthly_draft === 1) return true;
+  if (invoice.status !== 'scheduled') return false;
+  if (!invoice.scheduled_send_at) return true;
+  return new Date(invoice.scheduled_send_at).getTime() > Date.now();
+}
+
+/**
+ * Re-categorisation unwind: remove this document's billed line item from its
+ * invoice and recompute the invoice totals, so the disposition can change.
+ * Refuses when the invoice is already issued (Storno required instead).
+ */
+async function unwindBilledLine(trx, doc) {
+  const invoice = doc.billedInvoiceId
+    ? await trx('invoices').where({ id: doc.billedInvoiceId }).first()
+    : null;
+  if (invoice && !isInvoiceMutable(invoice)) {
+    throw new AppError(
+      'This re-bill is on an invoice that has already been issued — Storno it before re-categorising.',
+      409, 'INVOICE_LOCKED',
+    );
+  }
+  if (doc.billedInvoiceLineItemId) {
+    await trx('invoice_line_items').where({ id: doc.billedInvoiceLineItemId }).del();
+  }
+  if (invoice) {
+    const allItems = await trx('invoice_line_items').where({ invoice_id: invoice.id });
+    let netMinor = 0;
+    for (const li of allItems) {
+      if (li.parent_line_item_id == null) netMinor += Number(li.line_total_minor || 0);
+    }
+    const vatRate = Number(invoice.vat_rate || 0);
+    const vatMinor = Math.round(netMinor * vatRate / 100);
+    const shippingMinor = Number(invoice.shipping_amount_minor || 0);
+    await trx('invoices').where({ id: invoice.id }).update({
+      net_amount_minor: netMinor,
+      vat_amount_minor: vatMinor,
+      total_amount_minor: netMinor + vatMinor + shippingMinor,
+      updated_at: new Date(),
+    });
+  }
+}
+
+/** The single invoice line that re-bills one incoming invoice (base + markup). */
+function buildInboundLineItem(doc, disposition, markup) {
+  const base = doc.totalAmountMinor != null ? doc.totalAmountMinor : doc.netAmountMinor;
+  if (base == null) throw new AppError('Incoming invoice has no amount to re-bill', 400, 'AMOUNT_REQUIRED');
+  const lineTotal = base + computeMarkupMinor(base, markup);
+  const label = doc.supplierName || 'Weiterverrechnete Auslage';
+  const suffix = disposition === 'durchlaufend' ? ' (Durchlaufende Position)' : ' (Weiterverrechnung)';
+  return { description: `${label}${suffix}`, quantity: 1, unit_price_minor: lineTotal, discount_percent: 0, line_total_minor: lineTotal };
+}
+
+/**
+ * Immediately bill ONE incoming invoice to its customer. createInvoice routes
+ * monthly/manual customers onto the running draft (consolidated, like hours)
+ * and mints a standalone invoice for per-event customers. Stamps the document
+ * with the resulting invoice + line.
+ */
+async function billInboundNow(trx, id, customerAccountId, eventId, disposition, markup, adminId) {
+  const row = await trx('inbound_documents').where({ id }).first();
+  const doc = transformInbound(row);
+  const lineItem = buildInboundLineItem(doc, disposition, markup);
+  const { invoiceIds } = await invoiceService.createInvoice({
+    customerAccountId,
+    eventId: eventId || doc.eventId || null,
+    lineItems: [lineItem],
+  }, adminId, trx);
+  const invoiceId = Array.isArray(invoiceIds) ? invoiceIds[0] : null;
+  if (!invoiceId) throw new AppError('Failed to create the re-bill invoice', 500, 'REBILL_FAILED');
+  const line = await trx('invoice_line_items').where({ invoice_id: invoiceId }).orderBy('id', 'desc').first('id');
+  await trx('inbound_documents').where({ id }).update({
+    billed_invoice_id: invoiceId,
+    billed_invoice_line_item_id: line ? line.id : null,
+    updated_at: new Date(),
+  });
+  await logActivity('incoming_invoice_rebilled', { inboundDocumentId: id, invoiceId }, adminId);
+  return invoiceId;
+}
+
+/**
+ * Give an incoming invoice a disposition (updates the document, no expense
+ * row). Re-runnable: re-categorising an already-billed document first unwinds
+ * its prior re-bill line. For rebill/passthrough with a customer, monthly &
+ * manual customers are billed immediately onto the running draft (like hours);
+ * per-event customers stay PENDING in the customer's pool until "Bill these".
+ */
+async function categorizeInbound(id, payload, adminId) {
+  const disposition = payload.disposition;
+  if (!DISPOSITIONS.includes(disposition)) {
+    throw new AppError(`disposition must be one of ${DISPOSITIONS.join(', ')}`, 400, 'BAD_DISPOSITION');
+  }
+  const billsToCustomer = CUSTOMER_DISPOSITIONS.includes(disposition);
+  const customerAccountId = billsToCustomer && payload.customerAccountId ? payload.customerAccountId : null;
+  // rebill REQUIRES a customer; passthrough may omit one (then it's only booked
+  // to an event/company and never re-billed).
+  if (disposition === 'rebill' && !customerAccountId) {
+    throw new AppError('customerAccountId is required to re-bill', 400, 'CUSTOMER_REQUIRED');
+  }
+
+  await db.transaction(async (trx) => {
+    const row = await trx('inbound_documents').where({ id }).first();
+    if (!row) throw new AppError('Incoming invoice not found', 404, 'INBOUND_NOT_FOUND');
+    const doc = transformInbound(row);
+
+    // #1: unwind any prior re-bill so the disposition can change.
+    if (doc.billedInvoiceId) await unwindBilledLine(trx, doc);
+
+    const markup = billsToCustomer
+      ? await resolveMarkup(
+        { markupType: payload.markupType, markupPercent: payload.markupPercent, markupFlatMinor: payload.markupFlatMinor },
+        payload, payload.contractId, trx,
+      )
+      : { type: 'none', percent: null, flatMinor: null };
+
+    const patch = {
+      disposition,
+      tax_treatment: TAX_TREATMENTS.includes(payload.taxTreatment) ? payload.taxTreatment : 'domestic',
+      event_id: BOOKING_DISPOSITIONS.includes(disposition) ? (payload.eventId || null) : null,
+      category_id: disposition === 'eigener_aufwand' ? (payload.categoryId || null) : null,
+      customer_account_id: customerAccountId,
+      markup_type: billsToCustomer ? markup.type : 'none',
+      markup_percent: billsToCustomer && markup.type === 'percent' ? markup.percent : null,
+      markup_flat_minor: billsToCustomer && markup.type === 'flat' ? markup.flatMinor : null,
+      // Cleared here; re-set by billInboundNow when we bill immediately.
+      billed_invoice_id: null,
+      billed_invoice_line_item_id: null,
+      status: DISPOSITION_DOC_STATUS[disposition] || 'categorized',
+      updated_at: new Date(),
+    };
+    if (disposition === 'duplikat' && payload.duplicateOfId) patch.duplicate_of_id = payload.duplicateOfId;
+    await trx('inbound_documents').where({ id }).update(patch);
+
+    if (customerAccountId) {
+      const customer = await trx('customer_accounts').where({ id: customerAccountId }).first();
+      if (!customer) throw new AppError('Customer not found', 404, 'CUSTOMER_NOT_FOUND');
+      // Monthly/manual = accumulator → bill now onto the running draft.
+      // Per-event → leave PENDING for bundling via billPendingRebills.
+      if (customer.billing_cadence === 'monthly' || customer.billing_cadence === 'manual') {
+        await billInboundNow(trx, id, customerAccountId, payload.eventId || null, disposition, markup, adminId);
+      }
+    }
+
+    await logActivity('incoming_invoice_categorized', { inboundDocumentId: id, disposition }, adminId);
+  });
+  return getInbound(id);
+}
+
+/**
+ * Explicit "re-bill this one now" endpoint (legacy /inbound/:id/rebill). Forces
+ * an immediate single-document bill regardless of cadence. Re-runnable: unwinds
+ * a prior re-bill first.
+ */
 async function rebillInbound(id, payload, adminId, trx0) {
+  if (!payload.customerAccountId) throw new AppError('customerAccountId is required to re-bill', 400, 'CUSTOMER_REQUIRED');
   const run = async (trx) => {
     const row = await trx('inbound_documents').where({ id }).first();
     if (!row) throw new AppError('Incoming invoice not found', 404, 'INBOUND_NOT_FOUND');
     const doc = transformInbound(row);
-    if (doc.billedInvoiceId) throw new AppError('Already re-billed', 409, 'ALREADY_BILLED');
-    if (!payload.customerAccountId) throw new AppError('customerAccountId is required to re-bill', 400, 'CUSTOMER_REQUIRED');
-    const base = doc.totalAmountMinor != null ? doc.totalAmountMinor : doc.netAmountMinor;
-    if (base == null) throw new AppError('Incoming invoice has no amount to re-bill', 400, 'AMOUNT_REQUIRED');
-
+    if (doc.billedInvoiceId) await unwindBilledLine(trx, doc);
     const markup = await resolveMarkup(
       { markupType: doc.markupType, markupPercent: doc.markupPercent, markupFlatMinor: doc.markupFlatMinor },
       payload, payload.contractId, trx,
     );
-    const lineTotal = base + computeMarkupMinor(base, markup);
-    const label = doc.supplierName || 'Weiterverrechnete Auslage';
-    const { invoiceIds } = await invoiceService.createInvoice({
-      customerAccountId: payload.customerAccountId,
-      eventId: payload.eventId || doc.eventId || null,
-      lineItems: [{ description: `${label} (Weiterverrechnung)`, quantity: 1, unit_price_minor: lineTotal, discount_percent: 0, line_total_minor: lineTotal }],
-    }, adminId, trx);
-    const invoiceId = Array.isArray(invoiceIds) ? invoiceIds[0] : null;
-    if (!invoiceId) throw new AppError('Failed to create the re-bill invoice', 500, 'REBILL_FAILED');
-    const line = await trx('invoice_line_items').where({ invoice_id: invoiceId }).orderBy('id', 'desc').first('id');
-
     await trx('inbound_documents').where({ id }).update({
       disposition: 'rebill',
       status: 'categorized',
+      customer_account_id: payload.customerAccountId,
       event_id: payload.eventId || doc.eventId || null,
       markup_type: markup.type,
       markup_percent: markup.type === 'percent' ? markup.percent : null,
       markup_flat_minor: markup.type === 'flat' ? markup.flatMinor : null,
-      billed_invoice_id: invoiceId,
-      billed_invoice_line_item_id: line ? line.id : null,
       updated_at: new Date(),
     });
-    await logActivity('incoming_invoice_rebilled', { inboundDocumentId: id, invoiceId }, adminId);
-    return invoiceId;
+    return billInboundNow(trx, id, payload.customerAccountId, payload.eventId || doc.eventId || null, 'rebill', markup, adminId);
   };
   const invoiceId = trx0 ? await run(trx0) : await db.transaction(run);
   return { document: await getInbound(id), invoiceId };
 }
 
-/** Give an incoming invoice a disposition (updates the document, no expense row). */
-async function categorizeInbound(id, payload, adminId) {
-  const doc = await getInbound(id);
-  const disposition = payload.disposition;
-  if (!DISPOSITIONS.includes(disposition)) {
-    throw new AppError(`disposition must be one of ${DISPOSITIONS.join(', ')}`, 400, 'BAD_DISPOSITION');
+/**
+ * Landing aggregate for the inbox "pending re-bills" card: one row per customer
+ * that carries categorised-but-unbilled rebill/passthrough documents, with the
+ * count + open amount (base + markup). In practice only per-event customers
+ * surface here — monthly/manual cadences bill immediately on categorise.
+ */
+async function listPendingRebillSummary() {
+  const rows = await db('inbound_documents as d')
+    .join('customer_accounts as c', 'd.customer_account_id', 'c.id')
+    .whereNotNull('d.customer_account_id')
+    .whereNull('d.billed_invoice_id')
+    .whereIn('d.disposition', CUSTOMER_DISPOSITIONS)
+    .where('d.status', 'categorized')
+    .select(
+      'd.customer_account_id', 'd.total_amount_minor', 'd.net_amount_minor',
+      'd.markup_type', 'd.markup_percent', 'd.markup_flat_minor',
+      'c.company_name', 'c.display_name', 'c.first_name', 'c.last_name',
+      'c.email', 'c.password_hash', 'c.billing_cadence',
+    );
+
+  const byCustomer = new Map();
+  for (const r of rows) {
+    let agg = byCustomer.get(r.customer_account_id);
+    if (!agg) {
+      agg = {
+        customerAccountId: r.customer_account_id,
+        companyName: r.company_name || null,
+        displayName: r.display_name || null,
+        firstName: r.first_name || null,
+        lastName: r.last_name || null,
+        email: r.email || null,
+        isPassive: r.password_hash == null,
+        billingCadence: r.billing_cadence || null,
+        itemCount: 0,
+        openAmountMinor: 0,
+      };
+      byCustomer.set(r.customer_account_id, agg);
+    }
+    agg.itemCount += 1;
+    const base = r.total_amount_minor != null ? Number(r.total_amount_minor)
+      : (r.net_amount_minor != null ? Number(r.net_amount_minor) : 0);
+    const markup = {
+      type: MARKUP_TYPES.includes(r.markup_type) ? r.markup_type : 'none',
+      percent: r.markup_percent != null ? Number(r.markup_percent) : null,
+      flatMinor: Number.isInteger(r.markup_flat_minor) ? r.markup_flat_minor : null,
+    };
+    agg.openAmountMinor += base + computeMarkupMinor(base, markup);
   }
-  if (disposition === 'rebill') {
-    const { document } = await rebillInbound(id, payload, adminId);
-    // also stamp tax_treatment/category/event from payload
-    await db('inbound_documents').where({ id }).update({
-      tax_treatment: TAX_TREATMENTS.includes(payload.taxTreatment) ? payload.taxTreatment : (document.taxTreatment || 'domestic'),
-      category_id: payload.categoryId || null,
-      updated_at: new Date(),
-    });
-    return getInbound(id);
+
+  return Array.from(byCustomer.values()).sort((a, b) => b.openAmountMinor - a.openAmountMinor);
+}
+
+/**
+ * Per-event flow: bundle all pending rebill/passthrough documents for a
+ * customer into ONE invoice, one line per document. Refuses for monthly/manual
+ * customers (those bill immediately on categorise). Mirrors
+ * customerHoursService.billUnbilledEntries.
+ */
+async function billPendingRebills(customerId, adminId) {
+  const customer = await db('customer_accounts').where({ id: customerId }).first();
+  if (!customer) throw new AppError('Customer not found', 404);
+  if (customer.billing_cadence === 'monthly' || customer.billing_cadence === 'manual') {
+    throw new AppError(
+      'Monthly/manual customers consolidate automatically on categorise; bundling is for per-event customers.',
+      409, 'CADENCE_MISMATCH',
+    );
   }
-  const patch = {
-    disposition,
-    tax_treatment: TAX_TREATMENTS.includes(payload.taxTreatment) ? payload.taxTreatment : 'domestic',
-    event_id: payload.eventId || null, // null = company
-    category_id: disposition === 'eigener_aufwand' ? (payload.categoryId || null) : null,
-    status: DISPOSITION_DOC_STATUS[disposition] || 'categorized',
-    updated_at: new Date(),
-  };
-  if (disposition === 'duplikat' && payload.duplicateOfId) patch.duplicate_of_id = payload.duplicateOfId;
-  await db('inbound_documents').where({ id }).update(patch);
-  await logActivity('incoming_invoice_categorized', { inboundDocumentId: id, disposition }, adminId);
-  return getInbound(id);
+
+  return await db.transaction(async (trx) => {
+    const pending = await trx('inbound_documents')
+      .where({ customer_account_id: customer.id })
+      .whereNull('billed_invoice_id')
+      .whereIn('disposition', CUSTOMER_DISPOSITIONS)
+      .where('status', 'categorized')
+      .orderBy('invoice_date', 'asc').orderBy('id', 'asc');
+    if (pending.length === 0) throw new AppError('No pending re-bills to bill', 409, 'NO_PENDING');
+
+    const lineItems = [];
+    for (let i = 0; i < pending.length; i += 1) {
+      const doc = transformInbound(pending[i]);
+      // eslint-disable-next-line no-await-in-loop
+      const markup = await resolveMarkup(
+        { markupType: doc.markupType, markupPercent: doc.markupPercent, markupFlatMinor: doc.markupFlatMinor },
+        null, null, trx,
+      );
+      lineItems.push({ ...buildInboundLineItem(doc, doc.disposition, markup), position: i + 1 });
+    }
+
+    const { invoiceIds } = await invoiceService.createInvoice({
+      customerAccountId: customer.id,
+      lineItems,
+    }, adminId, trx);
+    const invoiceId = invoiceIds[0];
+
+    const insertedLines = await trx('invoice_line_items').where({ invoice_id: invoiceId }).orderBy('position', 'asc');
+    const lineByPos = new Map(insertedLines.map((li) => [li.position, li.id]));
+    const now = new Date();
+    for (let i = 0; i < pending.length; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      await trx('inbound_documents').where({ id: pending[i].id }).update({
+        billed_invoice_id: invoiceId,
+        billed_invoice_line_item_id: lineByPos.get(i + 1) || null,
+        updated_at: now,
+      });
+    }
+
+    await logActivity('incoming_invoices_rebilled_bundle', { customerId: customer.id, invoiceId, count: pending.length }, adminId);
+    return { invoiceId, count: pending.length };
+  });
 }
 
 /** Mark the supplier paid on the incoming invoice (the payable lives here). */
@@ -518,6 +769,8 @@ module.exports = {
   updateInbound,
   categorizeInbound,
   rebillInbound,
+  listPendingRebillSummary,
+  billPendingRebills,
   markInboundSupplierPayment,
   // expenses
   createExpense,
@@ -531,5 +784,5 @@ module.exports = {
   PAYMENT_METHODS,
   EXPENSE_KINDS,
   // unit-test surface
-  _internal: { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert, transformExpense, transformInbound },
+  _internal: { computeMarkupMinor, resolveMarkup, computeExpenseAmount, buildExpenseInsert, transformExpense, transformInbound, buildInboundLineItem, isInvoiceMutable },
 };
