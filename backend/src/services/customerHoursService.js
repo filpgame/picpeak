@@ -127,9 +127,14 @@ function isEntryLocked(entry, invoice) {
  */
 function buildLineItemFromEntry(entry, rateMinor) {
   const hours = (entry.duration_minutes / 60).toFixed(2);
-  // ISO date input is already YYYY-MM-DD; admin's locale formatting
-  // happens at PDF render time, so keep the entry description portable.
-  const datePart = String(entry.entry_date).slice(0, 10);
+  // Keep the entry description portable (admin's locale formatting happens at
+  // PDF render time). `entry_date` is a `date` column: Postgres hands it back as
+  // a JS Date, SQLite as a 'YYYY-MM-DD' string — so `String(dateObj).slice(0,10)`
+  // would bake "Wed Apr 06" into the invoice line on PG. Normalise via the Date
+  // branch (see feedback_pg_date_columns_serialize).
+  const datePart = entry.entry_date instanceof Date
+    ? entry.entry_date.toISOString().slice(0, 10)
+    : String(entry.entry_date).slice(0, 10);
   const note = (entry.description || '').trim();
   const description = `${datePart} ${entry.start_time}–${entry.end_time} (${hours}h)${note ? ': ' + note : ''}`;
   const qty = Number(hours);
