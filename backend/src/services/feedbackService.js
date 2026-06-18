@@ -377,7 +377,9 @@ class FeedbackService {
   }
 
   /**
-   * Export feedback data for an event
+   * Export feedback data for an event — long-form (one row per individual
+   * feedback action: favourite, like, rating, or comment). Backward-compatible
+   * with archives and any external integrations that consume the existing CSV.
    */
   async exportEventFeedback(eventId) {
     try {
@@ -395,10 +397,101 @@ class FeedbackService {
         )
         .orderBy('photos.filename')
         .orderBy('photo_feedback.created_at');
-      
+
       return feedback;
     } catch (error) {
       logger.error('Error exporting feedback:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Export feedback data for an event — pivoted (one row per
+   * (filename, guest_identifier) pair, columns: is_favorited, is_liked,
+   * star_rating, comment, latest_at). Useful for spreadsheet pivot tables
+   * and per-guest engagement scans. Hidden-by-moderator rows are excluded
+   * because the pivot represents "what the guest currently sees / what we
+   * want to surface" rather than the raw event log.
+   *
+   * Returns the same shape regardless of database driver — pivot is built
+   * in JS so Postgres / SQLite behave identically. Ported from
+   * 8digit/picpeak@ed7943b (#640 part #6).
+   */
+  async exportEventFeedbackPivoted(eventId) {
+    try {
+      const rows = await db('photo_feedback')
+        .join('photos', 'photo_feedback.photo_id', 'photos.id')
+        .where('photo_feedback.event_id', eventId)
+        .where('photo_feedback.is_hidden', false)
+        .select(
+          'photos.filename',
+          'photo_feedback.feedback_type',
+          'photo_feedback.rating',
+          'photo_feedback.comment_text',
+          'photo_feedback.guest_name',
+          'photo_feedback.guest_email',
+          'photo_feedback.guest_identifier',
+          'photo_feedback.created_at'
+        )
+        .orderBy('photos.filename')
+        .orderBy('photo_feedback.guest_identifier');
+
+      const byKey = new Map();
+      for (const row of rows) {
+        // Key needs both the photo and the guest. Anonymous feedback (no
+        // identifier) gets a synthetic key per row so two anonymous guests'
+        // actions on the same photo don't collapse together.
+        const guestKey = row.guest_identifier || `anon-${row.created_at}`;
+        const key = `${row.filename}::${guestKey}`;
+        let entry = byKey.get(key);
+        if (!entry) {
+          entry = {
+            filename: row.filename,
+            guest_name: row.guest_name || '',
+            guest_email: row.guest_email || '',
+            is_favorited: false,
+            is_liked: false,
+            star_rating: '',
+            comment: '',
+            latest_at: row.created_at,
+          };
+          byKey.set(key, entry);
+        }
+        // Prefer non-empty contact fields if any row supplied them.
+        if (!entry.guest_name && row.guest_name) entry.guest_name = row.guest_name;
+        if (!entry.guest_email && row.guest_email) entry.guest_email = row.guest_email;
+
+        switch (row.feedback_type) {
+          case 'favorite':
+            entry.is_favorited = true;
+            break;
+          case 'like':
+            entry.is_liked = true;
+            break;
+          case 'rating':
+            if (row.rating != null) entry.star_rating = row.rating;
+            break;
+          case 'comment':
+            if (row.comment_text) {
+              // Most recent comment wins. Older comments from the same guest
+              // on the same photo are dropped — the export is "current state",
+              // not the comment history.
+              entry.comment = row.comment_text;
+            }
+            break;
+          default:
+            // Unknown feedback type — ignore so a future type doesn't break the export.
+            break;
+        }
+        // Track the latest action timestamp across all feedback types.
+        if (row.created_at && entry.latest_at && row.created_at > entry.latest_at) {
+          entry.latest_at = row.created_at;
+        }
+      }
+
+      return Array.from(byKey.values());
+    } catch (error) {
+      logger.error('Error exporting feedback (pivoted):', error);
       throw error;
     }
   }

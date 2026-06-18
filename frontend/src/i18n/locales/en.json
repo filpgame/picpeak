@@ -3113,7 +3113,10 @@
     "onPhoto": "On photo",
     "showAll_one": "Show all {{count}} pending comments",
     "showAll_other": "Show all {{count}} pending comments",
-    "viewAllFeedback": "View all feedback & settings"
+    "viewAllFeedback": "View all feedback & settings",
+    "exportShapeLabel": "Shape",
+    "exportShapeLong": "Per-action (long)",
+    "exportShapePivot": "Per-guest (pivot)"
   },
   "filter": {
     "feedbackFilters": "Feedback Filters",

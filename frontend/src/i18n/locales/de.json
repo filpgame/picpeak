@@ -3092,7 +3092,10 @@
     "onPhoto": "Auf Foto",
     "showAll_one": "Alle {{count}} ausstehenden Kommentare anzeigen",
     "showAll_other": "Alle {{count}} ausstehenden Kommentare anzeigen",
-    "viewAllFeedback": "Gesamtes Feedback & Einstellungen anzeigen"
+    "viewAllFeedback": "Gesamtes Feedback & Einstellungen anzeigen",
+    "exportShapeLabel": "Form",
+    "exportShapeLong": "Pro Aktion (lang)",
+    "exportShapePivot": "Pro Gast (pivot)"
   },
   "filter": {
     "feedbackFilters": "Feedback-Filter",
