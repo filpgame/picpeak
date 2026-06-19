@@ -1944,9 +1944,10 @@ router.post('/:id/slideshow/generate', adminAuth, requirePermission('events.edit
     }
 
     const token = crypto.randomBytes(32).toString('hex');
+    // NB: the events table has no updated_at column (only created_at), so we
+    // must not set it here or the UPDATE throws.
     await db('events').where('id', req.params.id).update({
-      show_share_token: token,
-      updated_at: new Date()
+      show_share_token: token
     });
 
     await logActivity('slideshow_link_generated',
@@ -1975,8 +1976,7 @@ router.post('/:id/slideshow/disable', adminAuth, requirePermission('events.edit'
     }
 
     await db('events').where('id', req.params.id).update({
-      show_share_token: null,
-      updated_at: new Date()
+      show_share_token: null
     });
 
     await logActivity('slideshow_link_disabled',
@@ -2017,7 +2017,8 @@ router.patch('/:id/slideshow', adminAuth, requirePermission('events.edit'), requ
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    const updates = { updated_at: new Date() };
+    // events has no updated_at column — don't set it.
+    const updates = {};
     if (req.body.show_interval_ms !== undefined) updates.show_interval_ms = parseInt(req.body.show_interval_ms, 10);
     if (req.body.show_transition !== undefined) updates.show_transition = req.body.show_transition;
     if (req.body.show_transition_ms !== undefined) updates.show_transition_ms = parseInt(req.body.show_transition_ms, 10);
@@ -2033,7 +2034,10 @@ router.patch('/:id/slideshow', adminAuth, requirePermission('events.edit'), requ
     if (req.body.show_watermark_style !== undefined) updates.show_watermark_style = req.body.show_watermark_style;
     if (req.body.show_colorfilter !== undefined) updates.show_colorfilter = req.body.show_colorfilter;
 
-    await db('events').where('id', req.params.id).update(updates);
+    // Knex throws on an empty update; only write if something changed.
+    if (Object.keys(updates).length > 0) {
+      await db('events').where('id', req.params.id).update(updates);
+    }
 
     res.json({
       show_interval_ms: updates.show_interval_ms ?? event.show_interval_ms ?? 5000,
