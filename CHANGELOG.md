@@ -5,6 +5,23 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.66.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.65.1-beta.0...v3.66.0-beta.0) (2026-06-19)
+
+
+### Features
+
+* **categories:** per-category download permissions ([#640](https://github.com/the-luap/picpeak/issues/640) part B) ([820f483](https://github.com/the-luap/picpeak/commit/820f4835f1f5a41cbef6816c387ef9ec3dafd526))
+* **common:** generic Promise-based ConfirmDialog primitive ([#640](https://github.com/the-luap/picpeak/issues/640) part C) ([a3fcb5b](https://github.com/the-luap/picpeak/commit/a3fcb5bc9e82849ebe1f55620e8aa7e60ccd973f))
+* **feedback:** export shape toggle — per-action vs per-guest pivot ([#640](https://github.com/the-luap/picpeak/issues/640) part E) ([fabd67a](https://github.com/the-luap/picpeak/commit/fabd67aecd6caf308956e5b4cb9df7dd44452142))
+* **whatsapp:** WhatsApp Business API notification channel ([#640](https://github.com/the-luap/picpeak/issues/640) part D) ([78c8e9d](https://github.com/the-luap/picpeak/commit/78c8e9d9f91d56e07e04df4ed90fb05ccdfb69d2))
+
+
+### Bug Fixes
+
+* **archives:** stream-extract restore for &gt;2 GiB + preserve original_filename via manifest ([#640](https://github.com/the-luap/picpeak/issues/640)) ([e4e79a0](https://github.com/the-luap/picpeak/commit/e4e79a0b3a6d3ddbbc2f3cebdcadc89307147248))
+* **i18n:** wrap WhatsApp token show/hide aria-label through t() ([a8bb7b4](https://github.com/the-luap/picpeak/commit/a8bb7b439f6f57af9653ce283c951070bd52f3c2))
+* **settings:** hoist tab-visibility useEffect above isLoading early return ([49bfb45](https://github.com/the-luap/picpeak/commit/49bfb45332993b919ad4f949a0cd912a85888620))
+
 ## [3.65.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.65.0-beta.0...v3.65.1-beta.0) (2026-06-18)
 
 
