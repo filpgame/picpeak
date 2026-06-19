@@ -100,7 +100,8 @@ const createEventType = async (eventTypeData) => {
     emoji,
     theme_preset,
     theme_config,
-    display_order
+    display_order,
+    slideshow_preset
   } = eventTypeData;
 
   // Normalize slug_prefix
@@ -127,6 +128,7 @@ const createEventType = async (eventTypeData) => {
     emoji: emoji || '📷',
     theme_preset: theme_preset || 'default',
     theme_config: theme_config ? JSON.stringify(theme_config) : null,
+    slideshow_preset: slideshow_preset ? JSON.stringify(slideshow_preset) : null,
     display_order: finalDisplayOrder,
     is_system: false,
     is_active: true,
@@ -189,6 +191,10 @@ const updateEventType = async (id, updates) => {
 
   if (updates.theme_config !== undefined) {
     updateData.theme_config = updates.theme_config ? JSON.stringify(updates.theme_config) : null;
+  }
+
+  if (updates.slideshow_preset !== undefined) {
+    updateData.slideshow_preset = updates.slideshow_preset ? JSON.stringify(updates.slideshow_preset) : null;
   }
 
   if (updates.display_order !== undefined) {

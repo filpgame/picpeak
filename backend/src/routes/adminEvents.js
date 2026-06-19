@@ -672,10 +672,52 @@ router.post('/', adminAuth, requirePermission('events.create'), [
     const calendarColumnsExist = await hasColumnCached('events', 'is_full_day');
 
     // Insert into database
+    // Seed the new event's Live Slideshow settings from the event TYPE's preset
+    // (migration 138). The admin configures "weddings fade slowly with our
+    // white logo, sepia" once on the type; every new wedding inherits it. The
+    // share token is NOT seeded — the link is still minted on demand. Guarded
+    // so un-migrated installs (mid-branch) don't reference missing columns.
+    let slideshowSeed = {};
+    if (await hasColumnCached('events', 'show_interval_ms')) {
+      try {
+        const type = await eventTypeService.getEventTypeBySlugPrefix(event_type);
+        const preset = type?.slideshow_preset
+          ? (typeof type.slideshow_preset === 'string' ? JSON.parse(type.slideshow_preset) : type.slideshow_preset)
+          : null;
+        if (preset && typeof preset === 'object') {
+          const intP = (v, min, max) => (Number.isFinite(+v) ? Math.min(max, Math.max(min, parseInt(v, 10))) : undefined);
+          const oneOf = (v, allowed) => (allowed.includes(v) ? v : undefined);
+          // Tri-state watermark: 'on'/'off' seed an explicit override; 'inherit'
+          // (or unset) leaves the column NULL so the event follows the global.
+          let watermarkSeed;
+          if (preset.watermark === 'on' || preset.watermark === true) watermarkSeed = formatBoolean(true);
+          else if (preset.watermark === 'off' || preset.watermark === false) watermarkSeed = formatBoolean(false);
+          const seed = {
+            show_interval_ms: intP(preset.interval_ms, 1000, 120000),
+            show_transition: oneOf(preset.transition, SLIDESHOW_TRANSITIONS),
+            show_transition_ms: intP(preset.transition_ms, 100, 5000),
+            show_watermark: watermarkSeed,
+            show_watermark_source: oneOf(preset.watermark_source, SLIDESHOW_WATERMARK_SOURCES),
+            show_watermark_position: oneOf(preset.watermark_position, SLIDESHOW_WATERMARK_POSITIONS),
+            show_watermark_opacity: intP(preset.watermark_opacity, 0, 100),
+            show_watermark_style: oneOf(preset.watermark_style, SLIDESHOW_WATERMARK_STYLES),
+            show_colorfilter: oneOf(preset.colorfilter, SLIDESHOW_COLORFILTERS),
+          };
+          // Only carry through fields the preset actually set.
+          for (const [k, v] of Object.entries(seed)) {
+            if (v !== undefined) slideshowSeed[k] = v;
+          }
+        }
+      } catch (e) {
+        logger.warn('Failed to seed slideshow settings from event type preset', { error: e.message });
+      }
+    }
+
     const insertResult = await db('events').insert({
       slug,
       event_type,
       event_name,
+      ...slideshowSeed,
       event_date: event_date || null,
       ...(calendarColumnsExist ? {
         event_time_start: calendarTriple.event_time_start,
@@ -1851,6 +1893,162 @@ router.post('/:id/toggle-status', adminAuth, requirePermission('events.edit'), r
   } catch (error) {
     console.error('Error toggling event status:', error);
     res.status(500).json({ error: 'Failed to toggle event status' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Live Slideshow ("Diashow") — a token-only fullscreen kiosk link for live
+// events that auto-picks-up new uploads (migration 137). Mirrors the
+// client-access second-token pattern: the link is minted on demand, rotatable
+// and disable-able, independent of the gallery password / share link.
+// ---------------------------------------------------------------------------
+
+// Allowed slide transition styles (kept in sync with the SlideshowPage).
+// dipwhite/dipblack = fade through highlights / lowlights between images.
+const SLIDESHOW_TRANSITIONS = ['crossfade', 'cut', 'slide', 'kenburns', 'dipwhite', 'dipblack'];
+// Allowed per-slide color filters.
+const SLIDESHOW_COLORFILTERS = ['none', 'bw', 'sepia', 'warm', 'cool', 'vignette'];
+// Allowed watermark logo sources + corners.
+const SLIDESHOW_WATERMARK_SOURCES = ['logo', 'logo_dark', 'favicon', 'event'];
+const SLIDESHOW_WATERMARK_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+// 'white' recolors the logo white; 'original' keeps its own colors (for boxed
+// / colored logos that would otherwise whiten into a solid blob).
+const SLIDESHOW_WATERMARK_STYLES = ['white', 'original'];
+
+// Build the public slideshow URL for a freshly-minted/existing token.
+async function buildSlideshowUrl(slug, token) {
+  if (!token) return null;
+  const base = await getFrontendBaseUrl();
+  return `${base.replace(/\/$/, '')}/gallery/${slug}/show/${token}`;
+}
+
+// Fetch the event respecting the editor-role ownership scope (requireEventOwnership
+// already gates the route; this re-applies the created_by filter for editors so the
+// 404 is identical to the rest of this file).
+async function loadOwnedEvent(req) {
+  let q = db('events').where('id', req.params.id);
+  if (req.admin.roleName === 'editor') {
+    q = q.where('created_by', req.admin.id);
+  }
+  return q.first();
+}
+
+// Generate (or rotate) the slideshow share token. Idempotent in intent: each
+// call mints a fresh token, which both "Generate" (first time) and "Regenerate"
+// (rotate, kills the old link) use.
+router.post('/:id/slideshow/generate', adminAuth, requirePermission('events.edit'), requireEventOwnership, async (req, res) => {
+  try {
+    const event = await loadOwnedEvent(req);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    await db('events').where('id', req.params.id).update({
+      show_share_token: token,
+      updated_at: new Date()
+    });
+
+    await logActivity('slideshow_link_generated',
+      { eventName: event.event_name, rotated: Boolean(event.show_share_token) },
+      req.params.id,
+      { type: 'admin', id: req.admin.id, name: req.admin.username }
+    );
+
+    res.json({
+      show_share_token: token,
+      slideshow_url: await buildSlideshowUrl(event.slug, token)
+    });
+  } catch (error) {
+    logger.error('Error generating slideshow link', { error: error.message });
+    res.status(500).json({ error: 'Failed to generate slideshow link' });
+  }
+});
+
+// Disable the slideshow link (null the token). The public /show/ route dies on
+// its next poll, killing any projector currently pointed at the old link.
+router.post('/:id/slideshow/disable', adminAuth, requirePermission('events.edit'), requireEventOwnership, async (req, res) => {
+  try {
+    const event = await loadOwnedEvent(req);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    await db('events').where('id', req.params.id).update({
+      show_share_token: null,
+      updated_at: new Date()
+    });
+
+    await logActivity('slideshow_link_disabled',
+      { eventName: event.event_name },
+      req.params.id,
+      { type: 'admin', id: req.admin.id, name: req.admin.username }
+    );
+
+    res.json({ show_share_token: null });
+  } catch (error) {
+    logger.error('Error disabling slideshow link', { error: error.message });
+    res.status(500).json({ error: 'Failed to disable slideshow link' });
+  }
+});
+
+// Update the LIVE slideshow settings (display time / transition style / speed).
+// A running projector picks these up via the show-page settings poll within a
+// few seconds — no need to regenerate the link.
+router.patch('/:id/slideshow', adminAuth, requirePermission('events.edit'), requireEventOwnership, [
+  body('show_interval_ms').optional().isInt({ min: 1000, max: 120000 }),
+  body('show_transition').optional().isIn(SLIDESHOW_TRANSITIONS),
+  body('show_transition_ms').optional().isInt({ min: 100, max: 5000 }),
+  body('show_watermark').optional({ nullable: true }),
+  body('show_watermark_source').optional().isIn(SLIDESHOW_WATERMARK_SOURCES),
+  body('show_watermark_position').optional().isIn(SLIDESHOW_WATERMARK_POSITIONS),
+  body('show_watermark_opacity').optional().isInt({ min: 0, max: 100 }),
+  body('show_watermark_style').optional().isIn(SLIDESHOW_WATERMARK_STYLES),
+  body('show_colorfilter').optional().isIn(SLIDESHOW_COLORFILTERS)
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Invalid slideshow settings', details: errors.array() });
+    }
+
+    const event = await loadOwnedEvent(req);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const updates = { updated_at: new Date() };
+    if (req.body.show_interval_ms !== undefined) updates.show_interval_ms = parseInt(req.body.show_interval_ms, 10);
+    if (req.body.show_transition !== undefined) updates.show_transition = req.body.show_transition;
+    if (req.body.show_transition_ms !== undefined) updates.show_transition_ms = parseInt(req.body.show_transition_ms, 10);
+    // Tri-state: explicit null = inherit the global default.
+    if (req.body.show_watermark !== undefined) {
+      updates.show_watermark = req.body.show_watermark === null
+        ? null
+        : formatBoolean(parseBooleanInput(req.body.show_watermark, false));
+    }
+    if (req.body.show_watermark_source !== undefined) updates.show_watermark_source = req.body.show_watermark_source;
+    if (req.body.show_watermark_position !== undefined) updates.show_watermark_position = req.body.show_watermark_position;
+    if (req.body.show_watermark_opacity !== undefined) updates.show_watermark_opacity = parseInt(req.body.show_watermark_opacity, 10);
+    if (req.body.show_watermark_style !== undefined) updates.show_watermark_style = req.body.show_watermark_style;
+    if (req.body.show_colorfilter !== undefined) updates.show_colorfilter = req.body.show_colorfilter;
+
+    await db('events').where('id', req.params.id).update(updates);
+
+    res.json({
+      show_interval_ms: updates.show_interval_ms ?? event.show_interval_ms ?? 5000,
+      show_transition: updates.show_transition ?? event.show_transition ?? 'crossfade',
+      show_transition_ms: updates.show_transition_ms ?? event.show_transition_ms ?? 800,
+      show_watermark: updates.show_watermark ?? event.show_watermark ?? false,
+      show_watermark_source: updates.show_watermark_source ?? event.show_watermark_source ?? 'logo',
+      show_watermark_position: updates.show_watermark_position ?? event.show_watermark_position ?? 'bottom-right',
+      show_watermark_opacity: updates.show_watermark_opacity ?? event.show_watermark_opacity ?? 60,
+      show_watermark_style: updates.show_watermark_style ?? event.show_watermark_style ?? 'white',
+      show_colorfilter: updates.show_colorfilter ?? event.show_colorfilter ?? 'none'
+    });
+  } catch (error) {
+    logger.error('Error updating slideshow settings', { error: error.message });
+    res.status(500).json({ error: 'Failed to update slideshow settings' });
   }
 });
 

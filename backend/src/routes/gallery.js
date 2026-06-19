@@ -1,4 +1,5 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { db } = require('../database/db');
 const { formatBoolean } = require('../utils/dbCompat');
 const archiver = require('archiver');
@@ -24,6 +25,8 @@ const {
 } = require('../services/downloadFilenameService');
 const { buildContentDisposition } = require('../utils/filenameSanitizer');
 const { getStorage } = require('../services/storage');
+const { setGalleryAuthCookies } = require('../utils/tokenUtils');
+const { getSetting } = require('../services/settingsService');
 const fs = require('fs');
 
 // Get storage path from environment or default
@@ -211,6 +214,162 @@ router.get('/:slug/info', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch gallery info' });
   }
 });
+
+// ---------------------------------------------------------------------------
+// Live Slideshow ("Diashow") — token-only fullscreen kiosk surface
+// (migration 137). The token in the URL IS the secret (no gallery password),
+// so these routes are unauthenticated except for the token match itself. The
+// slideshow shows ALL public/visible, finished photos — exactly the guest
+// set — so once /session mints a short-lived `accessLevel:'slideshow'` JWT,
+// the page reuses the normal /photos + image endpoints unchanged.
+// ---------------------------------------------------------------------------
+
+// Photos a slideshow may display: published, finished, non-hidden. Mirrors the
+// guest filter in GET /:slug/photos so the live count matches the rendered set.
+function slideshowPhotosQuery(eventId) {
+  return db('photos')
+    .where('photos.event_id', eventId)
+    .where(function() {
+      this.where('photos.processing_status', 'complete').orWhereNull('photos.processing_status');
+    })
+    .where(function() {
+      this.where('photos.visibility', 'visible').orWhereNull('photos.visibility');
+    });
+}
+
+// Resolve an active slideshow by slug + token. Returns the event row, or null
+// when the link is missing/rotated/disabled or the gallery isn't live (archived
+// / draft / inactive / expired) — every one of those collapses to a 404 so a
+// dead link reveals nothing and stops any projector on its next poll.
+async function resolveSlideshow(slug, token) {
+  if (!token) return null;
+  const event = await db('events')
+    .where({
+      slug,
+      show_share_token: token,
+      is_active: formatBoolean(true),
+      is_archived: formatBoolean(false),
+      is_draft: formatBoolean(false)
+    })
+    .first();
+  if (!event) return null;
+  if (event.expires_at && new Date(event.expires_at) < new Date()) return null;
+  return event;
+}
+
+// Resolve the slideshow's live styling, including the ZDF/ARD-ident-style
+// watermark (a white, semi-transparent corner logo). The logo URL is resolved
+// from the chosen source so the kiosk renders it without knowing about
+// branding/event internals; null url = nothing to overlay.
+async function slideshowSettings(event) {
+  // Watermark cascade: per-event `show_watermark` overrides the global default,
+  // NULL inherits it. When inheriting, the source/position/opacity also come
+  // from the global settings; when overriding, from the event's own columns.
+  const wm = event.show_watermark;
+  const inherit = (wm === null || wm === undefined);
+  const enabled = inherit
+    ? (await getSetting('slideshow_watermark_enabled', false)) === true
+    : (wm === true || wm === 1 || wm === '1');
+  let watermark = null;
+  if (enabled) {
+    const source = inherit
+      ? (await getSetting('slideshow_watermark_source', 'logo'))
+      : (event.show_watermark_source || 'logo');
+    const position = inherit
+      ? (await getSetting('slideshow_watermark_position', 'bottom-right'))
+      : (event.show_watermark_position || 'bottom-right');
+    const opacity = inherit
+      ? (await getSetting('slideshow_watermark_opacity', 60))
+      : (event.show_watermark_opacity ?? 60);
+    const style = inherit
+      ? (await getSetting('slideshow_watermark_style', 'white'))
+      : (event.show_watermark_style || 'white');
+    // Resolve the chosen logo to a URL. Branding assets come from settings;
+    // the event source uses the event's own hero logo.
+    let url;
+    if (source === 'event') {
+      url = event.hero_logo_url || null;
+    } else if (source === 'logo_dark') {
+      url = await getSetting('branding_logo_url_dark', null);
+    } else if (source === 'favicon') {
+      url = await getSetting('branding_favicon_url', null);
+    } else {
+      url = await getSetting('branding_logo_url', null);
+    }
+    if (url) {
+      watermark = { url, position: position || 'bottom-right', opacity: opacity ?? 60, style: style || 'white' };
+    }
+  }
+  return {
+    interval_ms: event.show_interval_ms || 5000,
+    transition: event.show_transition || 'crossfade',
+    transition_ms: event.show_transition_ms || 800,
+    colorfilter: event.show_colorfilter || 'none',
+    watermark,
+  };
+}
+
+// Open a slideshow session: validate the token and mint a short-lived gallery
+// JWT scoped to `accessLevel:'slideshow'` (treated as a guest by the photo /
+// image endpoints → visible photos only, no client-only/hidden). The page
+// stores this token and the existing axios interceptor injects it.
+router.get('/:slug/show/:token/session', handleAsync(async (req, res) => {
+  const { slug, token } = req.params;
+  const event = await resolveSlideshow(slug, token);
+  if (!event) {
+    throw new NotFoundError('Slideshow');
+  }
+
+  const sessionToken = jwt.sign({
+    eventId: event.id,
+    eventSlug: event.slug,
+    type: 'gallery',
+    accessLevel: 'slideshow',
+    loginTime: Date.now()
+  }, process.env.JWT_SECRET, {
+    expiresIn: '12h',
+    issuer: 'picpeak-auth'
+  });
+
+  // <img> tags can't carry an Authorization header, so the photo/thumbnail/
+  // preview endpoints authenticate via the per-slug gallery cookie. Set it
+  // here so the kiosk's image requests are authorized with zero extra wiring.
+  setGalleryAuthCookies(res, sessionToken, event.slug);
+
+  const [{ count }] = await slideshowPhotosQuery(event.id).count('* as count');
+
+  res.json({
+    token: sessionToken,
+    event: {
+      event_name: event.event_name,
+      event_type: event.event_type,
+      color_theme: event.color_theme
+    },
+    settings: await slideshowSettings(event),
+    photo_count: parseInt(count, 10) || 0,
+    expires_at: event.expires_at || null
+  });
+}));
+
+// Cheap live-poll endpoint (tiny payload, hit every ~3s by the running show):
+// current settings + the visible photo count. The page diffs photo_count to
+// decide when to refetch the full list, and re-reads settings so admin changes
+// take effect live. A dead/disabled link 404s here → the projector stops.
+router.get('/:slug/show/:token/state', handleAsync(async (req, res) => {
+  const { slug, token } = req.params;
+  const event = await resolveSlideshow(slug, token);
+  if (!event) {
+    throw new NotFoundError('Slideshow');
+  }
+
+  const [{ count }] = await slideshowPhotosQuery(event.id).count('* as count');
+
+  res.json({
+    ...(await slideshowSettings(event)),
+    photo_count: parseInt(count, 10) || 0,
+    expires_at: event.expires_at || null
+  });
+}));
 
 // Get all photos
 router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) => {
@@ -418,13 +577,18 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
       categoryMap[cat.id] = cat;
     });
     
-    // Log view
-    await db('access_logs').insert({
-      event_id: req.event.id,
-      ip_address: req.ip,
-      user_agent: req.headers['user-agent'],
-      action: 'view'
-    });
+    // Log view — but NOT for the Live Slideshow kiosk. A running projector
+    // refetches this list on every new-upload poll, which would massively
+    // inflate total_views / unique_visitors. The slideshow is explicitly
+    // excluded from real visitor analytics (migration 137 design).
+    if (req.accessLevel !== 'slideshow') {
+      await db('access_logs').insert({
+        event_id: req.event.id,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+        action: 'view'
+      });
+    }
     
     // Include protection settings in response
     const protectionSettings = {

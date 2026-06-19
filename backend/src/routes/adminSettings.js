@@ -290,6 +290,44 @@ router.put('/accounting', adminAuth, requirePermission('settings.edit'), async (
   }
 });
 
+// Global Live Slideshow defaults (migration 138). The per-event watermark is
+// tri-state (events.show_watermark NULL = inherit these). Read via the generic
+// GET /:type ('slideshow'); this is the typed write.
+router.put('/slideshow', adminAuth, requirePermission('settings.edit'), async (req, res) => {
+  try {
+    const updates = [];
+    const push = (key, value) => updates.push({ setting_key: key, setting_value: JSON.stringify(value), setting_type: 'slideshow' });
+    const has = (k) => Object.prototype.hasOwnProperty.call(req.body, k);
+
+    if (has('slideshow_watermark_enabled')) push('slideshow_watermark_enabled', !!req.body.slideshow_watermark_enabled);
+    if (has('slideshow_watermark_source')) {
+      const v = ['logo', 'logo_dark', 'favicon', 'event'].includes(req.body.slideshow_watermark_source) ? req.body.slideshow_watermark_source : 'logo';
+      push('slideshow_watermark_source', v);
+    }
+    if (has('slideshow_watermark_position')) {
+      const allowed = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+      const v = allowed.includes(req.body.slideshow_watermark_position) ? req.body.slideshow_watermark_position : 'bottom-right';
+      push('slideshow_watermark_position', v);
+    }
+    if (has('slideshow_watermark_opacity')) {
+      const n = Math.min(100, Math.max(0, Math.round(Number(req.body.slideshow_watermark_opacity) || 0)));
+      push('slideshow_watermark_opacity', n);
+    }
+    if (has('slideshow_watermark_style')) {
+      const v = ['white', 'original'].includes(req.body.slideshow_watermark_style) ? req.body.slideshow_watermark_style : 'white';
+      push('slideshow_watermark_style', v);
+    }
+
+    for (const u of updates) {
+      await upsertAppSetting(u.setting_key, u.setting_value, u.setting_type);
+    }
+    res.json({ message: 'Slideshow settings updated', updated: updates.map((u) => u.setting_key) });
+  } catch (error) {
+    console.error('Slideshow settings save error:', error);
+    res.status(500).json({ error: 'Failed to save slideshow settings' });
+  }
+});
+
 // Get settings by type
 router.get('/:type', adminAuth, requirePermission('settings.view'), async (req, res) => {
   try {
