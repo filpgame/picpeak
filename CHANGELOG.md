@@ -5,6 +5,15 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.66.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.66.0-beta.0...v3.66.1-beta.0) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deps:** bump qs/brace-expansion overrides + add uuid override for node-cron ([d705059](https://github.com/the-luap/picpeak/commit/d705059d3c2904184f037bbe0208fe128fdb9b63))
+* **security:** close BOLA on photo-export + NAT64 SSRF in URL guard ([b8211e9](https://github.com/the-luap/picpeak/commit/b8211e9944da9e7b1c43a25e2f24c8a2425000cf))
+* **security:** close NAT64 SSRF + photo-export BOLA + sweep Trivy alerts (GHSA-wmjx-pc37-272r, GHSA-9v4w-jrhx-g5wr) ([6f40db8](https://github.com/the-luap/picpeak/commit/6f40db859751efc2c931bc981a48148808fd3701))
+
 ## [3.66.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.65.1-beta.0...v3.66.0-beta.0) (2026-06-19)
 
 
