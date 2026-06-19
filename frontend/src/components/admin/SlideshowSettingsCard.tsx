@@ -85,8 +85,10 @@ export const SlideshowSettingsCard: React.FC<SlideshowSettingsCardProps> = ({
       setToken(res.show_share_token);
       toast.success(t('slideshow.linkGenerated', 'Slideshow link generated'));
       onChanged?.();
-    } catch {
-      toast.error(t('common.error', 'Something went wrong'));
+    } catch (e: any) {
+      // Surface the real backend reason (the toast otherwise just says "Error").
+      console.error('[slideshow]', e?.response?.status, e?.response?.data || e?.message || e);
+      toast.error(e?.response?.data?.error || t('common.error', 'Something went wrong'));
     } finally {
       setBusy(false);
     }
@@ -102,8 +104,10 @@ export const SlideshowSettingsCard: React.FC<SlideshowSettingsCardProps> = ({
       setToken(null);
       toast.success(t('slideshow.linkDisabled', 'Slideshow link disabled'));
       onChanged?.();
-    } catch {
-      toast.error(t('common.error', 'Something went wrong'));
+    } catch (e: any) {
+      // Surface the real backend reason (the toast otherwise just says "Error").
+      console.error('[slideshow]', e?.response?.status, e?.response?.data || e?.message || e);
+      toast.error(e?.response?.data?.error || t('common.error', 'Something went wrong'));
     } finally {
       setBusy(false);
     }
@@ -141,8 +145,10 @@ export const SlideshowSettingsCard: React.FC<SlideshowSettingsCardProps> = ({
       });
       toast.success(t('slideshow.settingsSaved', 'Slideshow settings saved'));
       onChanged?.();
-    } catch {
-      toast.error(t('common.error', 'Something went wrong'));
+    } catch (e: any) {
+      // Surface the real backend reason (the toast otherwise just says "Error").
+      console.error('[slideshow]', e?.response?.status, e?.response?.data || e?.message || e);
+      toast.error(e?.response?.data?.error || t('common.error', 'Something went wrong'));
     } finally {
       setSaving(false);
     }
