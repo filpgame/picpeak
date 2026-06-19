@@ -18,6 +18,21 @@ import {
 import { Button, Input, Card, Loading } from '../../components/common';
 import { eventTypesService, EventType, CreateEventTypeData, UpdateEventTypeData } from '../../services/eventTypes.service';
 import { GALLERY_THEME_PRESETS } from '../../types/theme.types';
+import { SlideshowStyleFields } from '../../components/admin/SlideshowStyleFields';
+import { SlideshowGlobalDefaultsCard } from '../../components/admin/SlideshowGlobalDefaultsCard';
+import { DEFAULT_SLIDESHOW_STYLE, type SlideshowStyle } from '../../services/slideshow.service';
+
+// Parse a type's stored slideshow_preset (JSON string | object | null) into a
+// full SlideshowStyle, falling back to defaults for any missing keys.
+function parseSlideshowPreset(raw: EventType['slideshow_preset']): SlideshowStyle {
+  if (!raw) return { ...DEFAULT_SLIDESHOW_STYLE };
+  try {
+    const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return { ...DEFAULT_SLIDESHOW_STYLE, ...obj };
+  } catch {
+    return { ...DEFAULT_SLIDESHOW_STYLE };
+  }
+}
 
 // Common emoji options for event types
 const EMOJI_OPTIONS = [
@@ -136,6 +151,9 @@ export const EventTypesPage: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Global Live Slideshow watermark default (per-event/type can override) */}
+      <SlideshowGlobalDefaultsCard />
 
       {/* Filters */}
       <Card className="mb-6">
@@ -329,6 +347,12 @@ const EventTypeModal: React.FC<EventTypeModalProps> = ({
     theme_preset: eventType?.theme_preset || 'default'
   });
 
+  // Slideshow preset new events of this type inherit. Edited via the shared
+  // <SlideshowStyleFields>; serialized into slideshow_preset on submit.
+  const [slideshowStyle, setSlideshowStyle] = useState<SlideshowStyle>(
+    () => parseSlideshowPreset(eventType?.slideshow_preset)
+  );
+
   const [errors, setErrors] = useState<Partial<Record<keyof CreateEventTypeData, string>>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -357,15 +381,17 @@ const EventTypeModal: React.FC<EventTypeModalProps> = ({
       if (form.slug_prefix !== eventType?.slug_prefix) updates.slug_prefix = form.slug_prefix;
       if (form.emoji !== eventType?.emoji) updates.emoji = form.emoji;
       if (form.theme_preset !== eventType?.theme_preset) updates.theme_preset = form.theme_preset;
+      const originalStyle = JSON.stringify(parseSlideshowPreset(eventType?.slideshow_preset));
+      if (JSON.stringify(slideshowStyle) !== originalStyle) updates.slideshow_preset = slideshowStyle;
       onSubmit(updates);
     } else {
-      onSubmit(form);
+      onSubmit({ ...form, slideshow_preset: slideshowStyle });
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-lg">
+      <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
@@ -458,6 +484,19 @@ const EventTypeModal: React.FC<EventTypeModalProps> = ({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Live Slideshow preset (migration 138). New events of this type
+                  inherit these slideshow defaults; admins can still override
+                  per event on the event detail page. */}
+              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  {t('eventTypes.form.slideshowPreset', 'Slideshow preset')}
+                </label>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
+                  {t('eventTypes.form.slideshowPresetHint', 'Default slideshow style for new events of this type.')}
+                </p>
+                <SlideshowStyleFields value={slideshowStyle} onChange={setSlideshowStyle} />
               </div>
 
               {/* Active toggle for editing */}

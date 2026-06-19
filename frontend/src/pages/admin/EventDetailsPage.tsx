@@ -62,6 +62,7 @@ import { Button, Input, Card, Loading, MarkdownContent, LocalizedDateInput } fro
 import { EventCategoryManager, AdminPhotoGrid, AdminPhotoViewer, PhotoFilters, PasswordResetModal, PublishGalleryDialog, DuplicateEventDialog, ThemeCustomizerEnhanced, ThemeDisplay, HeroPhotoSelector, FocalPointPicker, PhotoUploadModal, FeedbackSettings, FeedbackModerationPanel, EventRenameDialog, PhotoFilterPanel, PhotoExportMenu, AdminGuestsList } from '../../components/admin';
 import { CustomerAccountPicker } from '../../components/admin/CustomerAccountPicker';
 import { EventReminderOverrideCard } from '../../components/admin/EventReminderOverrideCard';
+import { SlideshowSettingsCard } from '../../components/admin/SlideshowSettingsCard';
 import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
@@ -2157,6 +2158,27 @@ export const EventDetailsPage: React.FC = () => {
               )}
             </div>
           </Card>
+
+          {/* Live Slideshow ("Diashow") link + live display settings (migration 137) */}
+          <SlideshowSettingsCard
+            eventId={event.id}
+            slug={event.slug}
+            isArchived={event.is_archived}
+            eventLogoUrl={event.hero_logo_url}
+            initial={{
+              show_share_token: event.show_share_token,
+              show_interval_ms: event.show_interval_ms,
+              show_transition: event.show_transition,
+              show_transition_ms: event.show_transition_ms,
+              show_watermark: event.show_watermark,
+              show_watermark_source: event.show_watermark_source,
+              show_watermark_position: event.show_watermark_position,
+              show_watermark_opacity: event.show_watermark_opacity,
+              show_watermark_style: event.show_watermark_style,
+              show_colorfilter: event.show_colorfilter,
+            }}
+            onChanged={() => refetchEvent()}
+          />
 
           {/* Pre-event reminder override (migration 143). Hidden when
               the reminderEmails master flag is off — the override here

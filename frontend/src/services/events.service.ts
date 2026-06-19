@@ -138,6 +138,36 @@ export const eventsService = {
     await api.delete(`/admin/events/${id}`);
   },
 
+  // Live Slideshow ("Diashow") — mint/rotate the share token (admin)
+  async generateSlideshowLink(id: number): Promise<{ show_share_token: string; slideshow_url: string }> {
+    const response = await api.post(`/admin/events/${id}/slideshow/generate`);
+    return response.data;
+  },
+
+  // Disable the slideshow link (null the token) (admin)
+  async disableSlideshowLink(id: number): Promise<void> {
+    await api.post(`/admin/events/${id}/slideshow/disable`);
+  },
+
+  // Update live slideshow settings (display time / transition / style) (admin)
+  async updateSlideshowSettings(
+    id: number,
+    settings: {
+      show_interval_ms?: number;
+      show_transition?: string;
+      show_transition_ms?: number;
+      show_watermark?: boolean | null;
+      show_watermark_source?: string;
+      show_watermark_position?: string;
+      show_watermark_opacity?: number;
+      show_watermark_style?: string;
+      show_colorfilter?: string;
+    }
+  ): Promise<Record<string, unknown>> {
+    const response = await api.patch(`/admin/events/${id}/slideshow`, settings);
+    return response.data;
+  },
+
   // Force archive event (admin)
   async archiveEvent(id: number): Promise<void> {
     await api.post(`/admin/events/${id}/archive`);
