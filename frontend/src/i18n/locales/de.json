@@ -234,6 +234,8 @@
       "slugPreview": "Beispiel-URL:",
       "emoji": "Symbol",
       "themePreset": "Standard-Theme",
+      "slideshowPreset": "Diashow-Voreinstellung",
+      "slideshowPresetHint": "Standard-Diashow-Stil für neue Events dieses Typs.",
       "isActive": "Aktiv (sichtbar bei Veranstaltungserstellung)"
     },
     "validation": {
@@ -3135,6 +3137,76 @@
       "copyFailed": "Zugriff auf die Zwischenablage blockiert. Bitte den Text markieren und manuell kopieren.",
       "download": "Als Datei herunterladen"
     }
+  },
+  "slideshow": {
+    "adminTitle": "Live-Diashow",
+    "adminDescription": "Ein separater Vollbild-Link für Beamer bei Live-Events. Zeigt alle veröffentlichten Fotos und übernimmt neue Uploads automatisch, während die Diashow läuft.",
+    "generateLink": "Diashow-Link erstellen",
+    "linkLabel": "Diashow-Link",
+    "linkGenerated": "Diashow-Link erstellt",
+    "linkDisabled": "Diashow-Link deaktiviert",
+    "regenerate": "Neu erstellen",
+    "disable": "Deaktivieren",
+    "disableConfirm": "Diesen Diashow-Link deaktivieren? Der aktuelle Link funktioniert dann nicht mehr.",
+    "intervalLabel": "Anzeigedauer (Sek.)",
+    "transitionLabel": "Übergang",
+    "transitionSpeedLabel": "Übergangsdauer (ms)",
+    "transition": {
+      "crossfade": "Überblenden",
+      "cut": "Hart schneiden",
+      "slide": "Schieben",
+      "kenburns": "Ken Burns",
+      "dipwhite": "Über Weiß blenden",
+      "dipblack": "Über Schwarz blenden"
+    },
+    "colorfilterLabel": "Farbfilter",
+    "colorfilter": {
+      "none": "Keiner",
+      "bw": "Schwarz-Weiß",
+      "sepia": "Sepia",
+      "warm": "Warm",
+      "cool": "Kühl",
+      "vignette": "Vignette"
+    },
+    "watermarkToggle": "Logo-Wasserzeichen anzeigen",
+    "watermarkDescription": "Blendet ein weißes, halbtransparentes Logo in einer Ecke ein (wie ein Senderlogo im TV).",
+    "watermarkSourceLabel": "Logo",
+    "watermarkSource": {
+      "logo": "Helles Logo",
+      "logo_dark": "Dunkelmodus-Logo",
+      "favicon": "Favicon",
+      "event": "Event-Logo",
+      "notSet": "Nicht gesetzt"
+    },
+    "watermarkPositionLabel": "Position",
+    "watermarkPosition": {
+      "top-left": "Oben links",
+      "top-right": "Oben rechts",
+      "bottom-left": "Unten links",
+      "bottom-right": "Unten rechts"
+    },
+    "watermarkOpacityLabel": "Deckkraft (%)",
+    "watermarkStyleLabel": "Logo-Darstellung",
+    "watermarkStyle": {
+      "white": "Weiß (einfärben)",
+      "original": "Originalfarben"
+    },
+    "watermarkMode": {
+      "inherit": "Globale Vorgabe verwenden",
+      "on": "An",
+      "off": "Aus"
+    },
+    "globalTitle": "Globales Diashow-Wasserzeichen",
+    "globalDescription": "Standard-Logo-Wasserzeichen für jede Diashow. Einzelne Events können es überschreiben (an/aus).",
+    "defaultsSaved": "Diashow-Vorgaben gespeichert",
+    "liveHint": "Änderungen werden in einer laufenden Diashow innerhalb weniger Sekunden übernommen – der Link muss nicht neu erstellt werden.",
+    "saveSettings": "Diashow-Einstellungen speichern",
+    "settingsSaved": "Diashow-Einstellungen gespeichert",
+    "start": "Diashow starten",
+    "waiting": "Warte auf Fotos …",
+    "ended": "Diashow beendet.",
+    "notFound": "Dieser Diashow-Link ist nicht aktiv.",
+    "startFailed": "Diashow konnte nicht gestartet werden. Bitte erneut versuchen."
   },
   "clientAccess": {
     "title": "Kundenzugang",
