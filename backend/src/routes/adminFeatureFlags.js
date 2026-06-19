@@ -80,6 +80,10 @@ const KNOWN_FLAGS = [
   // the Project Overview cockpit ("book to project" hours control, 360°
   // rollup feed). Lights up the Clients section. Customers never see it.
   'projects',
+  // WhatsApp Business API delivery channel (migration 136, #640D). Strictly
+  // opt-in — operators must register a Meta-approved template before turning
+  // it on. Independent of email; both can fire on the same event.
+  'whatsapp',
 ];
 
 // Spec defaults for any flag missing from the DB (e.g. a row added by a
@@ -107,6 +111,7 @@ const DEFAULT_FLAGS = {
   incomingInvoices: false,
   expenses: false,
   projects: false,
+  whatsapp: false,
 };
 
 async function readAllFlags() {

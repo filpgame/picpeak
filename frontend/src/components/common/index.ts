@@ -29,3 +29,4 @@ export { ProtectionWarning } from './ProtectionWarning';
 export { ReCaptcha } from './ReCaptcha';
 export { PasswordGenerator } from './PasswordGenerator';
 export { MarkdownContent } from './MarkdownContent';
+export { ConfirmDialogProvider, useConfirm, type ConfirmOptions, type ConfirmVariant } from './ConfirmDialog';

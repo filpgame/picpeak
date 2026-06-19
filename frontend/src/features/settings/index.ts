@@ -19,3 +19,4 @@ export { ThumbnailsTab } from './tabs/ThumbnailsTab';
 export { ApiTokensTab } from './tabs/ApiTokensTab';
 export { WebhooksTab } from './tabs/WebhooksTab';
 export { AccountingTab } from './tabs/AccountingTab';
+export { WhatsAppTab } from './tabs/WhatsAppTab';

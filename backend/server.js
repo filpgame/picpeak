@@ -639,6 +639,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin/system', require('./src/routes/adminSystem'));
 app.use('/api/admin/feature-flags', require('./src/routes/adminFeatureFlags'));
+app.use('/api/admin/whatsapp', require('./src/routes/adminWhatsapp'));
 app.use('/api/admin/backup', require('./src/routes/adminBackup'));
 app.use('/api/admin/database-backup', require('./src/routes/adminDatabaseBackup'));
 app.use('/api/admin/feedback', require('./src/routes/adminFeedback'));
@@ -841,6 +842,15 @@ async function startServer() {
       logger.warn('Email template self-heal failed at boot:', err.message);
     }
     startEmailQueueProcessor();
+
+    // Start WhatsApp queue processor — no-ops each cycle unless the
+    // `whatsapp` flag is on and a config exists (migration 136, #640D).
+    try {
+      const { startWhatsAppQueueProcessor } = require('./src/services/whatsappProcessor');
+      startWhatsAppQueueProcessor();
+    } catch (err) {
+      logger.warn('WhatsApp queue processor start failed:', err.message);
+    }
 
     // Start incoming-mail (IMAP) poller — no-ops each minute unless the
     // `incomingMail` flag is on and a mailbox is configured (migration 128).

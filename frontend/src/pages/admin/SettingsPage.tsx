@@ -41,6 +41,7 @@ import {
   ApiTokensTab,
   WebhooksTab,
   AccountingTab,
+  WhatsAppTab,
 } from '../../features/settings';
 import { EmailConfigPage } from './EmailConfigPage';
 import { BrandingPage } from './BrandingPage';
@@ -53,7 +54,7 @@ import { CrmSettingsPage } from './settings/CrmSettingsPage';
 import { ReminderTemplatesPage } from './settings/ReminderTemplatesPage';
 import { BlockLibraryPage } from './contracts/BlockLibraryPage';
 import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
-import { Briefcase, Receipt, ScrollText, Mail, Landmark } from 'lucide-react';
+import { Briefcase, Receipt, ScrollText, Mail, Landmark, Smartphone } from 'lucide-react';
 
 // Tab keys driving the inner-nav. Must include every key used in
 // `navGroups` below and in the switch at the bottom of the component.
@@ -83,7 +84,8 @@ type TabType =
   | 'crm'
   | 'contracts'
   | 'reminderTemplates'
-  | 'accounting';
+  | 'accounting'
+  | 'whatsapp';
 
 interface NavItem {
   key: TabType;
@@ -103,7 +105,7 @@ const ALL_TAB_KEYS: TabType[] = [
   'security', 'imageSecurity', 'seo',
   'apiTokens', 'webhooks',
   'status', 'analytics', 'backup',
-  'businessProfile', 'crm', 'contracts', 'reminderTemplates', 'accounting',
+  'businessProfile', 'crm', 'contracts', 'reminderTemplates', 'accounting', 'whatsapp',
 ];
 
 function isValidTab(value: string | null): value is TabType {
@@ -113,7 +115,7 @@ function isValidTab(value: string | null): value is TabType {
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { flags } = useFeatureFlags();
+  const { flags, isLoading: flagsLoading } = useFeatureFlags();
 
   // Read ?tab=… on mount; default to Features per the redesign.
   const initialTab: TabType = isValidTab(searchParams.get('tab'))
@@ -180,6 +182,33 @@ export const SettingsPage: React.FC = () => {
     setSeoSettings,
     saveSeoMutation,
   } = useSettingsState();
+
+  // If the active tab refers to an item that's now hidden (e.g. admin
+  // landed on ?tab=reminderTemplates after disabling reminderEmails),
+  // snap to the first key that the dependency-rule flags allow. Effect
+  // re-fires when flags toggle live. MUST stay above the isLoading early
+  // return so React's rules-of-hooks count stays consistent across renders
+  // (was previously after the early return — that's a hooks violation that
+  // surfaced as React error #310 once settled long enough for `isLoading`
+  // to transition true→false in the same mount, #640D pre-existing-bug fix).
+  useEffect(() => {
+    // Wait for the server's actual flag values before deciding whether the
+    // current tab is allowed — during initial load `flags` is the defaults
+    // placeholder which would falsely snap-back away from a tab the server
+    // has actually enabled.
+    if (flagsLoading) return;
+    const gatedOff: Record<string, boolean> = {
+      crm: !(flags.quotes || flags.bills || flags.contracts),
+      contracts: !flags.contracts,
+      reminderTemplates: !flags.reminderEmails,
+      accounting: !flags.accounting,
+      whatsapp: !flags.whatsapp,
+    };
+    if (gatedOff[activeTab]) {
+      setActiveTab('features');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flagsLoading, flags.quotes, flags.bills, flags.contracts, flags.reminderEmails, flags.accounting, flags.whatsapp, activeTab]);
 
   if (isLoading) {
     return (
@@ -256,6 +285,9 @@ export const SettingsPage: React.FC = () => {
         ...(flags.accounting
           ? [{ key: 'accounting' as const,         label: t('settings.accounting.title',      'Accounting'),       icon: Landmark }]
           : []),
+        ...(flags.whatsapp
+          ? [{ key: 'whatsapp' as const,           label: t('settings.whatsapp.title',        'WhatsApp'),         icon: Smartphone }]
+          : []),
       ],
     },
     {
@@ -270,18 +302,8 @@ export const SettingsPage: React.FC = () => {
 
   const allItems = navGroups.flatMap((g) => g.items);
   const activeItem = allItems.find((i) => i.key === activeTab) ?? allItems[0];
-
-  // If the active tab refers to an item that's now hidden (e.g. admin
-  // landed on ?tab=reminderTemplates after disabling reminderEmails),
-  // snap to the first visible item so the content area doesn't render
-  // a hidden tab's UI. Effect re-fires when flags toggle live.
-  useEffect(() => {
-    const visibleKeys = allItems.map((i) => i.key);
-    if (!visibleKeys.includes(activeTab) && visibleKeys.length > 0) {
-      setActiveTab(visibleKeys[0]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flags.quotes, flags.bills, flags.contracts, flags.reminderEmails, flags.accounting, activeTab]);
+  // (Visibility snap-back is handled in the useEffect above, which sits
+  // before the isLoading early return to keep hook ordering stable.)
 
   // For tabs that mount existing top-level pages OR bring their own
   // header (FeaturesTab has its own icon+title+description block), skip
@@ -420,6 +442,7 @@ export const SettingsPage: React.FC = () => {
           {activeTab === 'contracts' && <BlockLibraryPage />}
           {activeTab === 'reminderTemplates' && <ReminderTemplatesPage />}
           {activeTab === 'accounting' && <AccountingTab />}
+          {activeTab === 'whatsapp' && <WhatsAppTab />}
 
           {activeTab === 'status' && (
             <StatusTab

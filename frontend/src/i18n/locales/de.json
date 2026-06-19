@@ -151,7 +151,8 @@
     "preview": "Vorschau",
     "duplicate": "Duplizieren",
     "showAll": "Alle anzeigen",
-    "confirm": "Bestätigen"
+    "confirm": "Bestätigen",
+    "show": "Einblenden"
   },
   "upload": {
     "photoCategory": "Fotokategorie",
@@ -827,7 +828,12 @@
     "coverPhotoSet": "Titelbild erfolgreich festgelegt",
     "coverPhotoRemoved": "Titelbild entfernt",
     "failedToSetCoverPhoto": "Titelbild konnte nicht festgelegt werden",
-    "categoryHeroHint": "Wenn kein Titelbild für eine Kategorie festgelegt ist, wird das Standard-Hero-Foto verwendet."
+    "categoryHeroHint": "Wenn kein Titelbild für eine Kategorie festgelegt ist, wird das Standard-Hero-Foto verwendet.",
+    "downloadsEnabled": "Downloads für diese Kategorie aktiviert",
+    "downloadsDisabled": "Downloads für diese Kategorie deaktiviert",
+    "enableDownloadsTitle": "Klicken zum Aktivieren der Downloads für diese Kategorie",
+    "disableDownloadsTitle": "Klicken zum Deaktivieren der Downloads für diese Kategorie",
+    "failedToToggleDownloads": "Aktualisierung der Download-Berechtigung fehlgeschlagen"
   },
   "events": {
     "totalPhotos": "Gesamtfotos",
@@ -1756,6 +1762,10 @@
         "title": "Projekte",
         "description": "Nur-Admin-Gruppierungsebene über Events. Bündle mehrere Events unter einem Projekt und öffne ein 360°-Projektübersichts-Cockpit — Meilenstein-Zeitleiste plus ein datierter Verlauf aller E-Mails (mit der tatsächlich gesendeten Vorschau + Erneut-senden/Abbrechen/Wiederholen-Aktionen), Angebote, Verträge, Rechnungen, Galerien und erfassten Stunden. Fügt beim Erfassen von Stunden eine „Auf Projekt buchen“-Option hinzu. Kunden sehen Projekte nie.",
         "sidebar": "Übersicht"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Liefert die Gallerie-Bereit-Benachrichtigung zusätzlich zur E-Mail über die WhatsApp Business API. Voraussetzung: Meta-Business-Konto, genehmigte Nachrichtenvorlage und eine Kunden-Telefonnummer am Event. Zugangsdaten unter Einstellungen → WhatsApp konfigurieren."
       }
     },
     "customerSurface": {
@@ -1802,6 +1812,26 @@
         "hourlyRatePlaceholder": "z. B. 120.00",
         "hourlyRateHint": "Verrechnungs-Fallback, wenn ein Kunde keinen eigenen Satz hat (Stundenerfassung). In {{currency}}, in Hauptwährungseinheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen."
       }
+    },
+    "whatsapp": {
+      "title": "WhatsApp",
+      "subtitle": "Meta-Business-Zugangsdaten konfigurieren, um die Gallerie-Bereit-Benachrichtigung zusätzlich zur E-Mail per WhatsApp zu senden.",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHint": "Aus Meta Business → WhatsApp → API-Einrichtung. Die numerische ID, die Meta der hinterlegten Telefonnummer zuweist.",
+      "wabaId": "WABA-ID",
+      "wabaIdHint": "WhatsApp-Business-Konto-ID. Nur als Referenz (der API-Aufruf nutzt die Phone Number ID); nützlich für Audits.",
+      "accessToken": "Zugriffs-Token",
+      "accessTokenPlaceholder": "EAAB… (System-User-Token empfohlen)",
+      "accessTokenHint": "Beim Abruf maskiert als \"********\" gespeichert. Maskierten Wert beibehalten, um das bestehende Token zu behalten; neuen Wert eingeben, um zu ersetzen.",
+      "templateName": "Vorlagenname",
+      "templateNameHint": "Name der von Meta genehmigten Nachrichtenvorlage. Die Standardvorlage `gallery_ready` erwartet 5 Body-Parameter: Kundenname, Event-Name, Galerie-Link, Passwortzeile, Ablaufdatum. Die Vorlage vor der Aktivierung im Meta Business Manager genehmigen lassen.",
+      "enabled": "WhatsApp-Benachrichtigungen senden",
+      "savedToast": "WhatsApp-Einstellungen gespeichert.",
+      "testHeading": "Testnachricht senden",
+      "testHelp": "Sendet eine statische Vorlagennachricht an die angegebene Telefonnummer, um Meta-Zugangsdaten und Vorlagenfreigabe zu prüfen. Mit Ländervorwahl (z. B. +49…).",
+      "testSend": "Test senden",
+      "testSending": "Senden…",
+      "testSentToast": "Testnachricht gesendet (ID: {{id}})."
     }
   },
   "branding": {
@@ -2279,7 +2309,8 @@
       "feedbackDeleted": "Feedback gelöscht",
       "feedbackModerated": "Feedback moderiert",
       "feedbackSettingsUpdated": "Feedback-Einstellungen aktualisiert für {{eventName}}",
-      "wordFilterAdded": "Wortfilter hinzugefügt: {{word}}"
+      "wordFilterAdded": "Wortfilter hinzugefügt: {{word}}",
+      "whatsappConfigUpdated": "WhatsApp-Konfiguration aktualisiert"
     },
     "notificationToasts": {
       "markedAllRead": "Alle Benachrichtigungen als gelesen markiert",
@@ -2532,7 +2563,8 @@
       "admin_user_deleted": "Admin-Konto gelöscht: {{username}}",
       "email_queue_flushed": "E-Mail-Warteschlange geleert",
       "email_template_created": "E-Mail-Vorlage erstellt: {{template_key}}",
-      "event_duplicated": "Event dupliziert aus {{source_event_name}}"
+      "event_duplicated": "Event dupliziert aus {{source_event_name}}",
+      "whatsapp_config_updated": "WhatsApp-Konfiguration aktualisiert"
     }
   },
   "acceptInvitation": {
@@ -3061,7 +3093,10 @@
     "onPhoto": "Auf Foto",
     "showAll_one": "Alle {{count}} ausstehenden Kommentare anzeigen",
     "showAll_other": "Alle {{count}} ausstehenden Kommentare anzeigen",
-    "viewAllFeedback": "Gesamtes Feedback & Einstellungen anzeigen"
+    "viewAllFeedback": "Gesamtes Feedback & Einstellungen anzeigen",
+    "exportShapeLabel": "Form",
+    "exportShapeLong": "Pro Aktion (lang)",
+    "exportShapePivot": "Pro Gast (pivot)"
   },
   "filter": {
     "feedbackFilters": "Feedback-Filter",

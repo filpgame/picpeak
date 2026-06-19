@@ -58,7 +58,12 @@ export type FeatureKey =
   // Projects (migration 120). Admin-only grouping layer above events with the
   // 360° Project Overview cockpit + the "book to project" hours control. Off
   // by default; gates the CRM → Overview area entirely.
-  | 'projects';
+  | 'projects'
+  // WhatsApp Business API delivery channel (migration 136, #640D).
+  // Strictly opt-in — requires a Meta Business Account, an approved
+  // message template, and a Meta access token. Independent of email; both
+  // can fire on the same event.
+  | 'whatsapp';
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 

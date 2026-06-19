@@ -112,7 +112,8 @@ router.put('/:id', adminAuth, requirePermission('settings.edit'), [
   body('hero_photo_id').optional({ nullable: true }).custom((value) => {
     if (value === null || value === undefined) return true;
     return Number.isInteger(Number(value));
-  }).withMessage('hero_photo_id must be an integer or null')
+  }).withMessage('hero_photo_id must be an integer or null'),
+  body('allow_downloads').optional().isBoolean()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -142,6 +143,11 @@ router.put('/:id', adminAuth, requirePermission('settings.edit'), [
     // Update hero_photo_id if provided (including null to clear it)
     if (Object.prototype.hasOwnProperty.call(req.body, 'hero_photo_id')) {
       updateData.hero_photo_id = hero_photo_id || null;
+    }
+
+    // Per-category download permission (#640). AND with event-level allow_downloads.
+    if (Object.prototype.hasOwnProperty.call(req.body, 'allow_downloads')) {
+      updateData.allow_downloads = req.body.allow_downloads;
     }
 
     await db('photo_categories')
