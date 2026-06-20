@@ -259,7 +259,13 @@ export const ThemeCustomizerEnhanced: React.FC<ThemeCustomizerEnhancedProps> = (
     if (preset) {
       setSelectedPreset(presetKey);
       setLocalTheme(preset.config);
-      setCustomCss(''); // Clear custom CSS when selecting a preset
+      // Don't wipe customCss on preset pick — preset configs carry no
+      // customCss, and the admin's persisted styling extras should
+      // survive a layout switch (#645). Matches ThemeCustomizer.tsx
+      // which never cleared it. The parent's handleThemeChange merges
+      // via `customCss: newTheme.customCss ?? currentTheme.customCss`,
+      // so propagating preset.config (no customCss) keeps the saved
+      // value intact end-to-end.
       if (onPresetChange) {
         onPresetChange(presetKey);
       }
