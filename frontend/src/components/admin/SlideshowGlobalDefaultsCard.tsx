@@ -26,6 +26,7 @@ const DEFAULTS: SlideshowGlobalDefaults = {
   slideshow_watermark_position: 'bottom-right',
   slideshow_watermark_opacity: 60,
   slideshow_watermark_style: 'white',
+  slideshow_watermark_size: 12,
 };
 
 const inputClass =
@@ -47,6 +48,7 @@ export const SlideshowGlobalDefaultsCard: React.FC = () => {
         slideshow_watermark_position: s.slideshow_watermark_position ?? DEFAULTS.slideshow_watermark_position,
         slideshow_watermark_opacity: s.slideshow_watermark_opacity ?? DEFAULTS.slideshow_watermark_opacity,
         slideshow_watermark_style: s.slideshow_watermark_style ?? DEFAULTS.slideshow_watermark_style,
+        slideshow_watermark_size: s.slideshow_watermark_size ?? DEFAULTS.slideshow_watermark_size,
       });
     }).catch(() => { /* keep defaults */ });
     return () => { cancelled = true; };
@@ -141,6 +143,18 @@ export const SlideshowGlobalDefaultsCard: React.FC = () => {
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className={labelClass}>{t('slideshow.watermarkSizeLabel', 'Size (% of screen)')}</label>
+              <input
+                type="number"
+                min={3}
+                max={40}
+                step={1}
+                value={val.slideshow_watermark_size}
+                onChange={(e) => setVal({ ...val, slideshow_watermark_size: Math.min(40, Math.max(3, parseInt(e.target.value, 10) || 12)) })}
+                className={inputClass}
+              />
             </div>
             </div>
           </div>

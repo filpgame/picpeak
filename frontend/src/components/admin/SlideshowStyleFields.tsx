@@ -14,18 +14,13 @@ import { useTranslation } from 'react-i18next';
 import {
   SLIDESHOW_TRANSITIONS,
   SLIDESHOW_COLORFILTERS,
-  SLIDESHOW_WATERMARK_POSITIONS,
   SLIDESHOW_WATERMARK_MODES,
-  SLIDESHOW_WATERMARK_STYLES,
   type SlideshowStyle,
 } from '../../services/slideshow.service';
-import { WatermarkSourcePicker } from './WatermarkSourcePicker';
 
 export interface SlideshowStyleFieldsProps {
   value: SlideshowStyle;
   onChange: (next: SlideshowStyle) => void;
-  /** Per-event hero logo, previewed for the 'event' watermark source. */
-  eventLogoUrl?: string | null;
 }
 
 const inputClass =
@@ -34,7 +29,7 @@ const labelClass = 'block text-sm font-medium text-neutral-700 dark:text-neutral
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export const SlideshowStyleFields: React.FC<SlideshowStyleFieldsProps> = ({ value, onChange, eventLogoUrl }) => {
+export const SlideshowStyleFields: React.FC<SlideshowStyleFieldsProps> = ({ value, onChange }) => {
   const { t } = useTranslation();
   const set = (patch: Partial<SlideshowStyle>) => onChange({ ...value, ...patch });
 
@@ -97,7 +92,8 @@ export const SlideshowStyleFields: React.FC<SlideshowStyleFieldsProps> = ({ valu
         </select>
       </div>
 
-      {/* Watermark */}
+      {/* Watermark — MODE only. The look (logo/position/opacity/style/size)
+          lives in Settings → Slideshow, so it isn't duplicated here. */}
       <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
         <label className={labelClass}>{t('slideshow.watermarkToggle', 'Logo watermark')}</label>
         <select
@@ -112,63 +108,8 @@ export const SlideshowStyleFields: React.FC<SlideshowStyleFieldsProps> = ({ valu
           ))}
         </select>
         <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-          {t('slideshow.watermarkDescription', 'Overlay a white, semi-transparent logo in a corner (like a TV station ident).')}
+          {t('slideshow.watermarkModeHint', 'The logo, position, opacity, style and size are configured under Settings → Slideshow.')}
         </p>
-
-        {value.watermark === 'on' && (
-          <div className="mt-3 space-y-3">
-            <div>
-              <label className={labelClass}>{t('slideshow.watermarkSourceLabel', 'Logo')}</label>
-              <WatermarkSourcePicker
-                value={value.watermark_source}
-                onChange={(s) => set({ watermark_source: s })}
-                eventLogoUrl={eventLogoUrl}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className={labelClass}>{t('slideshow.watermarkPositionLabel', 'Position')}</label>
-              <select
-                value={value.watermark_position}
-                onChange={(e) => set({ watermark_position: e.target.value as SlideshowStyle['watermark_position'] })}
-                className={inputClass}
-              >
-                {SLIDESHOW_WATERMARK_POSITIONS.map((pos) => (
-                  <option key={pos} value={pos}>
-                    {t(`slideshow.watermarkPosition.${pos}`, pos)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>{t('slideshow.watermarkOpacityLabel', 'Opacity (%)')}</label>
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={5}
-                value={value.watermark_opacity}
-                onChange={(e) => set({ watermark_opacity: Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)) })}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>{t('slideshow.watermarkStyleLabel', 'Logo style')}</label>
-              <select
-                value={value.watermark_style}
-                onChange={(e) => set({ watermark_style: e.target.value as SlideshowStyle['watermark_style'] })}
-                className={inputClass}
-              >
-                {SLIDESHOW_WATERMARK_STYLES.map((st) => (
-                  <option key={st} value={st}>
-                    {t(`slideshow.watermarkStyle.${st}`, st === 'original' ? 'Original colors' : 'White')}
-                  </option>
-                ))}
-              </select>
-            </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

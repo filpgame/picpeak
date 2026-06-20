@@ -157,10 +157,6 @@ export const eventsService = {
       show_transition?: string;
       show_transition_ms?: number;
       show_watermark?: boolean | null;
-      show_watermark_source?: string;
-      show_watermark_position?: string;
-      show_watermark_opacity?: number;
-      show_watermark_style?: string;
       show_colorfilter?: string;
     }
   ): Promise<Record<string, unknown>> {

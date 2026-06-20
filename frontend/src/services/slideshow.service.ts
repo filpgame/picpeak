@@ -23,15 +23,15 @@ export const SLIDESHOW_WATERMARK_POSITIONS: SlideshowWatermarkPosition[] = ['top
 // Canonical editable style shape, shared by the per-event card and the
 // per-event-type preset editor. The per-event-type `slideshow_preset` JSON
 // uses exactly these keys; the per-event API maps them to `show_*` columns.
+//
+// NOTE: the watermark LOOK (logo/position/opacity/style/size) lives ONLY in the
+// global Settings → Slideshow tab — it is not duplicated here. Per-event/type
+// carry just the `watermark` MODE (inherit/on/off), i.e. the override structure.
 export interface SlideshowStyle {
   interval_ms: number;
   transition: SlideshowTransition;
   transition_ms: number;
   watermark: SlideshowWatermarkMode;
-  watermark_source: SlideshowWatermarkSource;
-  watermark_position: SlideshowWatermarkPosition;
-  watermark_opacity: number;
-  watermark_style: SlideshowWatermarkStyle;
   colorfilter: SlideshowColorFilter;
 }
 
@@ -40,21 +40,20 @@ export const DEFAULT_SLIDESHOW_STYLE: SlideshowStyle = {
   transition: 'crossfade',
   transition_ms: 800,
   watermark: 'inherit',
-  watermark_source: 'logo',
-  watermark_position: 'bottom-right',
-  watermark_opacity: 60,
-  watermark_style: 'white',
   colorfilter: 'none',
 };
 
-// Global slideshow defaults (admin Settings → Slideshow). The per-event
-// watermark mode 'inherit' falls back to these.
+// Global slideshow defaults (admin Settings → Slideshow). The single source of
+// truth for the watermark look; the per-event watermark mode 'inherit'/'on'
+// renders with exactly these.
 export interface SlideshowGlobalDefaults {
   slideshow_watermark_enabled: boolean;
   slideshow_watermark_source: SlideshowWatermarkSource;
   slideshow_watermark_position: SlideshowWatermarkPosition;
   slideshow_watermark_opacity: number;
   slideshow_watermark_style: SlideshowWatermarkStyle;
+  // Logo size as a % of the viewport's shorter side.
+  slideshow_watermark_size: number;
 }
 
 // Resolved watermark the kiosk renders (logo URL already resolved server-side).
@@ -63,6 +62,7 @@ export interface SlideshowWatermark {
   position: SlideshowWatermarkPosition;
   opacity: number;
   style: SlideshowWatermarkStyle;
+  size: number;
 }
 
 export interface SlideshowSettings {

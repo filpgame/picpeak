@@ -3195,6 +3195,8 @@
     },
     "watermarkOpacityLabel": "Deckkraft (%)",
     "watermarkStyleLabel": "Logo-Darstellung",
+    "watermarkSizeLabel": "Größe (% des Bildschirms)",
+    "watermarkModeHint": "Logo, Position, Deckkraft, Darstellung und Größe werden unter Einstellungen → Diashow konfiguriert.",
     "watermarkStyle": {
       "white": "Weiß (einfärben)",
       "original": "Originalfarben"

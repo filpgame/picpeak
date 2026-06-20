@@ -423,8 +423,10 @@ export function SlideshowPage() {
                 ...watermarkCorner(settings.watermark!.position),
                 width: 'auto',
                 height: 'auto',
-                maxWidth: '16vw',
-                maxHeight: '14vh',
+                // Size = % of the viewport's shorter side (vmin), so the logo
+                // scales the same on any screen. Configured globally.
+                maxWidth: `${settings.watermark!.size ?? 12}vmin`,
+                maxHeight: `${settings.watermark!.size ?? 12}vmin`,
                 opacity: Math.min(1, Math.max(0, (settings.watermark!.opacity ?? 60) / 100)),
                 // 'white' recolors the logo white (dark/transparent marks); 'original'
                 // leaves a boxed/colored logo as-is so it doesn't become a white blob.

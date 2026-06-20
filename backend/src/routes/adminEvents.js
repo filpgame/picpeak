@@ -697,10 +697,6 @@ router.post('/', adminAuth, requirePermission('events.create'), [
             show_transition: oneOf(preset.transition, SLIDESHOW_TRANSITIONS),
             show_transition_ms: intP(preset.transition_ms, 100, 5000),
             show_watermark: watermarkSeed,
-            show_watermark_source: oneOf(preset.watermark_source, SLIDESHOW_WATERMARK_SOURCES),
-            show_watermark_position: oneOf(preset.watermark_position, SLIDESHOW_WATERMARK_POSITIONS),
-            show_watermark_opacity: intP(preset.watermark_opacity, 0, 100),
-            show_watermark_style: oneOf(preset.watermark_style, SLIDESHOW_WATERMARK_STYLES),
             show_colorfilter: oneOf(preset.colorfilter, SLIDESHOW_COLORFILTERS),
           };
           // Only carry through fields the preset actually set.
@@ -1908,12 +1904,9 @@ router.post('/:id/toggle-status', adminAuth, requirePermission('events.edit'), r
 const SLIDESHOW_TRANSITIONS = ['crossfade', 'cut', 'slide', 'kenburns', 'dipwhite', 'dipblack'];
 // Allowed per-slide color filters.
 const SLIDESHOW_COLORFILTERS = ['none', 'bw', 'sepia', 'warm', 'cool', 'vignette'];
-// Allowed watermark logo sources + corners.
-const SLIDESHOW_WATERMARK_SOURCES = ['logo', 'logo_dark', 'favicon', 'event'];
-const SLIDESHOW_WATERMARK_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-// 'white' recolors the logo white; 'original' keeps its own colors (for boxed
-// / colored logos that would otherwise whiten into a solid blob).
-const SLIDESHOW_WATERMARK_STYLES = ['white', 'original'];
+// The watermark LOOK (source/position/opacity/style/size) is global-only
+// (app_settings, Settings → Slideshow); events only carry the show_watermark
+// mode (NULL=inherit / true / false), so no per-event look enums live here.
 
 // Build the public slideshow URL for a freshly-minted/existing token.
 async function buildSlideshowUrl(slug, token) {
@@ -2000,10 +1993,6 @@ router.patch('/:id/slideshow', adminAuth, requirePermission('events.edit'), requ
   body('show_transition').optional().isIn(SLIDESHOW_TRANSITIONS),
   body('show_transition_ms').optional().isInt({ min: 100, max: 5000 }),
   body('show_watermark').optional({ nullable: true }),
-  body('show_watermark_source').optional().isIn(SLIDESHOW_WATERMARK_SOURCES),
-  body('show_watermark_position').optional().isIn(SLIDESHOW_WATERMARK_POSITIONS),
-  body('show_watermark_opacity').optional().isInt({ min: 0, max: 100 }),
-  body('show_watermark_style').optional().isIn(SLIDESHOW_WATERMARK_STYLES),
   body('show_colorfilter').optional().isIn(SLIDESHOW_COLORFILTERS)
 ], async (req, res) => {
   try {
@@ -2028,10 +2017,6 @@ router.patch('/:id/slideshow', adminAuth, requirePermission('events.edit'), requ
         ? null
         : formatBoolean(parseBooleanInput(req.body.show_watermark, false));
     }
-    if (req.body.show_watermark_source !== undefined) updates.show_watermark_source = req.body.show_watermark_source;
-    if (req.body.show_watermark_position !== undefined) updates.show_watermark_position = req.body.show_watermark_position;
-    if (req.body.show_watermark_opacity !== undefined) updates.show_watermark_opacity = parseInt(req.body.show_watermark_opacity, 10);
-    if (req.body.show_watermark_style !== undefined) updates.show_watermark_style = req.body.show_watermark_style;
     if (req.body.show_colorfilter !== undefined) updates.show_colorfilter = req.body.show_colorfilter;
 
     // Knex throws on an empty update; only write if something changed.
@@ -2043,11 +2028,7 @@ router.patch('/:id/slideshow', adminAuth, requirePermission('events.edit'), requ
       show_interval_ms: updates.show_interval_ms ?? event.show_interval_ms ?? 5000,
       show_transition: updates.show_transition ?? event.show_transition ?? 'crossfade',
       show_transition_ms: updates.show_transition_ms ?? event.show_transition_ms ?? 800,
-      show_watermark: updates.show_watermark ?? event.show_watermark ?? false,
-      show_watermark_source: updates.show_watermark_source ?? event.show_watermark_source ?? 'logo',
-      show_watermark_position: updates.show_watermark_position ?? event.show_watermark_position ?? 'bottom-right',
-      show_watermark_opacity: updates.show_watermark_opacity ?? event.show_watermark_opacity ?? 60,
-      show_watermark_style: updates.show_watermark_style ?? event.show_watermark_style ?? 'white',
+      show_watermark: updates.show_watermark ?? event.show_watermark ?? null,
       show_colorfilter: updates.show_colorfilter ?? event.show_colorfilter ?? 'none'
     });
   } catch (error) {

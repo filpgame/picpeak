@@ -317,6 +317,10 @@ router.put('/slideshow', adminAuth, requirePermission('settings.edit'), async (r
       const v = ['white', 'original'].includes(req.body.slideshow_watermark_style) ? req.body.slideshow_watermark_style : 'white';
       push('slideshow_watermark_style', v);
     }
+    if (has('slideshow_watermark_size')) {
+      const n = Math.min(40, Math.max(3, Math.round(Number(req.body.slideshow_watermark_size) || 12)));
+      push('slideshow_watermark_size', n);
+    }
 
     for (const u of updates) {
       await upsertAppSetting(u.setting_key, u.setting_value, u.setting_type);

@@ -74,11 +74,9 @@ export interface Event {
   show_interval_ms?: number;
   show_transition?: 'crossfade' | 'cut' | 'slide' | 'kenburns' | 'dipwhite' | 'dipblack';
   show_transition_ms?: number;
-  show_watermark?: boolean;
-  show_watermark_source?: 'branding' | 'event';
-  show_watermark_position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-  show_watermark_opacity?: number;
-  show_watermark_style?: 'white' | 'original';
+  // Watermark MODE only (null=inherit global / true / false). The look lives
+  // globally in Settings → Slideshow, not per event.
+  show_watermark?: boolean | null;
   show_colorfilter?: 'none' | 'bw' | 'sepia' | 'warm' | 'cool' | 'vignette';
   // Default photo sort order
   default_photo_sort?: string;

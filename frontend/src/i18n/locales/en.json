@@ -3219,6 +3219,8 @@
     },
     "watermarkOpacityLabel": "Opacity (%)",
     "watermarkStyleLabel": "Logo style",
+    "watermarkSizeLabel": "Size (% of screen)",
+    "watermarkModeHint": "The logo, position, opacity, style and size are configured under Settings → Slideshow.",
     "watermarkStyle": {
       "white": "White (recolor)",
       "original": "Original colors"

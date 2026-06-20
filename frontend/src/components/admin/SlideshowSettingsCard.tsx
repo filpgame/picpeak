@@ -28,18 +28,12 @@ export interface SlideshowSettingsCardProps {
   eventId: number;
   slug: string;
   isArchived?: boolean;
-  /** The event's own hero logo, previewed for the 'event' watermark source. */
-  eventLogoUrl?: string | null;
   initial: {
     show_share_token?: string | null;
     show_interval_ms?: number;
     show_transition?: string;
     show_transition_ms?: number;
     show_watermark?: boolean | null;
-    show_watermark_source?: string;
-    show_watermark_position?: string;
-    show_watermark_opacity?: number;
-    show_watermark_style?: string;
     show_colorfilter?: string;
   };
   onChanged?: () => void;
@@ -57,16 +51,12 @@ function styleFromInitial(initial: SlideshowSettingsCardProps['initial']): Slide
     transition: (initial.show_transition as SlideshowStyle['transition']) ?? DEFAULT_SLIDESHOW_STYLE.transition,
     transition_ms: initial.show_transition_ms ?? DEFAULT_SLIDESHOW_STYLE.transition_ms,
     watermark: watermarkMode(initial.show_watermark),
-    watermark_source: (initial.show_watermark_source as SlideshowStyle['watermark_source']) ?? DEFAULT_SLIDESHOW_STYLE.watermark_source,
-    watermark_position: (initial.show_watermark_position as SlideshowStyle['watermark_position']) ?? DEFAULT_SLIDESHOW_STYLE.watermark_position,
-    watermark_opacity: initial.show_watermark_opacity ?? DEFAULT_SLIDESHOW_STYLE.watermark_opacity,
-    watermark_style: (initial.show_watermark_style as SlideshowStyle['watermark_style']) ?? DEFAULT_SLIDESHOW_STYLE.watermark_style,
     colorfilter: (initial.show_colorfilter as SlideshowStyle['colorfilter']) ?? DEFAULT_SLIDESHOW_STYLE.colorfilter,
   };
 }
 
 export const SlideshowSettingsCard: React.FC<SlideshowSettingsCardProps> = ({
-  eventId, slug, isArchived, eventLogoUrl, initial, onChanged,
+  eventId, slug, isArchived, initial, onChanged,
 }) => {
   const { t } = useTranslation();
 
@@ -135,12 +125,9 @@ export const SlideshowSettingsCard: React.FC<SlideshowSettingsCardProps> = ({
         show_interval_ms: style.interval_ms,
         show_transition: style.transition,
         show_transition_ms: style.transition_ms,
-        // Tri-state → null (inherit global) / true / false.
+        // Tri-state → null (inherit global) / true / false. The watermark LOOK
+        // is global-only (Settings → Slideshow); we only send the mode here.
         show_watermark: style.watermark === 'inherit' ? null : style.watermark === 'on',
-        show_watermark_source: style.watermark_source,
-        show_watermark_position: style.watermark_position,
-        show_watermark_opacity: style.watermark_opacity,
-        show_watermark_style: style.watermark_style,
         show_colorfilter: style.colorfilter,
       });
       toast.success(t('slideshow.settingsSaved', 'Slideshow settings saved'));
@@ -221,7 +208,7 @@ export const SlideshowSettingsCard: React.FC<SlideshowSettingsCardProps> = ({
 
             {/* Live style settings */}
             <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
-              <SlideshowStyleFields value={style} onChange={setStyle} eventLogoUrl={eventLogoUrl} />
+              <SlideshowStyleFields value={style} onChange={setStyle} />
             </div>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
               {t('slideshow.liveHint', 'Changes apply to a running slideshow within a few seconds — no need to regenerate the link.')}

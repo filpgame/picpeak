@@ -264,9 +264,10 @@ async function resolveSlideshow(slug, token) {
 // from the chosen source so the kiosk renders it without knowing about
 // branding/event internals; null url = nothing to overlay.
 async function slideshowSettings(event) {
-  // Watermark cascade: per-event `show_watermark` overrides the global default,
-  // NULL inherits it. When inheriting, the source/position/opacity also come
-  // from the global settings; when overriding, from the event's own columns.
+  // Watermark: the LOOK (logo/position/opacity/style/size) is configured ONCE
+  // globally (Settings → Slideshow); it is NOT duplicated per event. The only
+  // per-event control is whether the watermark shows: `show_watermark` NULL
+  // inherits the global enabled flag, true/false force it on/off.
   const wm = event.show_watermark;
   const inherit = (wm === null || wm === undefined);
   const enabled = inherit
@@ -274,18 +275,11 @@ async function slideshowSettings(event) {
     : (wm === true || wm === 1 || wm === '1');
   let watermark = null;
   if (enabled) {
-    const source = inherit
-      ? (await getAppSetting('slideshow_watermark_source', 'logo'))
-      : (event.show_watermark_source || 'logo');
-    const position = inherit
-      ? (await getAppSetting('slideshow_watermark_position', 'bottom-right'))
-      : (event.show_watermark_position || 'bottom-right');
-    const opacity = inherit
-      ? (await getAppSetting('slideshow_watermark_opacity', 60))
-      : (event.show_watermark_opacity ?? 60);
-    const style = inherit
-      ? (await getAppSetting('slideshow_watermark_style', 'white'))
-      : (event.show_watermark_style || 'white');
+    const source = await getAppSetting('slideshow_watermark_source', 'logo');
+    const position = await getAppSetting('slideshow_watermark_position', 'bottom-right');
+    const opacity = await getAppSetting('slideshow_watermark_opacity', 60);
+    const style = await getAppSetting('slideshow_watermark_style', 'white');
+    const size = await getAppSetting('slideshow_watermark_size', 12);
     // Resolve the chosen logo to a URL. Branding assets come from settings;
     // the event source uses the event's own hero logo.
     let url;
@@ -299,7 +293,7 @@ async function slideshowSettings(event) {
       url = await getAppSetting('branding_logo_url', null);
     }
     if (url) {
-      watermark = { url, position: position || 'bottom-right', opacity: opacity ?? 60, style: style || 'white' };
+      watermark = { url, position: position || 'bottom-right', opacity: opacity ?? 60, style: style || 'white', size: size ?? 12 };
     }
   }
   return {
