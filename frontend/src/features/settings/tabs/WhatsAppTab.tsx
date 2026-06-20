@@ -31,6 +31,7 @@ export const WhatsAppTab: React.FC = () => {
   const [wabaId, setWabaId] = useState('');
   const [accessToken, setAccessToken] = useState('');
   const [templateName, setTemplateName] = useState('gallery_ready');
+  const [templateLanguage, setTemplateLanguage] = useState('');
   const [enabled, setEnabled] = useState(false);
   const [showToken, setShowToken] = useState(false);
   const [testPhone, setTestPhone] = useState('');
@@ -43,6 +44,7 @@ export const WhatsAppTab: React.FC = () => {
       // Leave it visible-as-masked so the admin sees that a token exists.
       setAccessToken(data.access_token || '');
       setTemplateName(data.template_name || 'gallery_ready');
+      setTemplateLanguage(data.template_language || '');
       setEnabled(Boolean(data.enabled));
     }
   }, [data]);
@@ -53,6 +55,7 @@ export const WhatsAppTab: React.FC = () => {
       waba_id: wabaId,
       access_token: accessToken,
       template_name: templateName,
+      template_language: templateLanguage,
       enabled,
     }),
     onSuccess: () => {
@@ -171,6 +174,23 @@ export const WhatsAppTab: React.FC = () => {
               {t(
                 'settings.whatsapp.templateNameHint',
                 'Name of the Meta-approved message template. The default `gallery_ready` expects 5 body parameters: customer name, event name, gallery link, password line, expiry date. Approve the template in Meta Business Manager before enabling.',
+              )}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              {t('settings.whatsapp.templateLanguage', 'Template language')}
+            </label>
+            <Input
+              value={templateLanguage}
+              onChange={(e) => setTemplateLanguage(e.target.value)}
+              placeholder={t('settings.whatsapp.templateLanguagePlaceholder', 'e.g. en_US, de_DE, ar, pt_BR') as string}
+            />
+            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              {t(
+                'settings.whatsapp.templateLanguageHint',
+                'Meta template language code, exactly as you registered it in Meta Business Manager (`ar`, `en_US`, `de_DE`, `pt_BR`, etc.). Leave empty to fall back to the system default language. Meta returns "template not found in language" if this doesn\'t match a registered template.',
               )}
             </p>
           </div>

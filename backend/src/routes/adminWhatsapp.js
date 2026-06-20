@@ -37,6 +37,7 @@ router.get('/config', adminAuth, requirePermission('settings.view'), async (req,
         waba_id: '',
         access_token: '',
         template_name: 'gallery_ready',
+        template_language: '',
         enabled: false,
       });
     }
@@ -45,6 +46,7 @@ router.get('/config', adminAuth, requirePermission('settings.view'), async (req,
       waba_id: config.waba_id,
       access_token: config.access_token ? '********' : '',
       template_name: config.template_name,
+      template_language: config.template_language || '',
       enabled: Boolean(config.enabled),
     });
   } catch (error) {
@@ -55,15 +57,25 @@ router.get('/config', adminAuth, requirePermission('settings.view'), async (req,
 
 router.put('/config', adminAuth, requirePermission('settings.edit'), async (req, res) => {
   try {
-    const { phone_number_id, waba_id, access_token, template_name, enabled } = req.body;
+    const { phone_number_id, waba_id, access_token, template_name, template_language, enabled } = req.body;
 
     const existing = await db('whatsapp_configs').first();
     const isEnabled = Boolean(enabled);
+
+    // Meta template-language codes are BCP-47 style: `ar`, `en_US`, `de_DE`,
+    // `pt_BR`, etc. We accept arbitrary strings and pass through to Meta —
+    // they'll return template_not_found_in_language (132001) if the code
+    // doesn't match a registered template. No client-side allowlist because
+    // Meta's supported-languages list changes.
+    const normalizedTemplateLanguage = typeof template_language === 'string'
+      ? template_language.trim().slice(0, 20)
+      : '';
 
     const data = {
       phone_number_id: phone_number_id || '',
       waba_id: waba_id || '',
       template_name: template_name || 'gallery_ready',
+      template_language: normalizedTemplateLanguage,
       enabled: isEnabled,
       updated_at: new Date(),
     };
@@ -138,7 +150,11 @@ router.post('/test', adminAuth, requirePermission('settings.edit'), async (req, 
       '',
     ];
 
-    const result = await sendWhatsAppMessage(phone, config, 'en_US', testComponents);
+    // Use the configured template language so non-English templates can be
+    // tested too (#647). Falls back to en_US for the default `gallery_ready`
+    // shape that ships in English.
+    const language = (config.template_language && config.template_language.trim()) || 'en_US';
+    const result = await sendWhatsAppMessage(phone, config, language, testComponents);
     res.json({ success: true, messageId: result.messageId });
   } catch (error) {
     logger.error('WhatsApp test send error:', error);

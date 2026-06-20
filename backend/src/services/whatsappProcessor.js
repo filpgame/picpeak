@@ -33,6 +33,10 @@ const LANGUAGE_MAP = {
   fr:    'fr_FR', 'fr-fr': 'fr_FR', 'fr_fr': 'fr_FR',
   es:    'es_ES', 'es-es': 'es_ES', 'es_es': 'es_ES',
   it:    'it_IT', 'it-it': 'it_IT', 'it_it': 'it_IT',
+  // Meta lists Arabic as a single code `ar` (no region variant). The common
+  // BCP-47 region variants land on the same Meta code (#647).
+  ar:    'ar', 'ar-sa': 'ar', 'ar_sa': 'ar', 'ar-eg': 'ar', 'ar_eg': 'ar',
+  'ar-ar': 'ar', 'ar_ar': 'ar',
 };
 
 // Per-locale label embedded in the {{4}} password line. Meta templates only
@@ -47,12 +51,16 @@ const PASSWORD_LABELS = {
   fr_FR: '🔒 Mot de passe',
   es_ES: '🔒 Contraseña',
   it_IT: '🔒 Password',
+  ar:    '🔒 كلمة المرور',
 };
 
 const INTL_LOCALE_MAP = {
   pt_BR: 'pt-BR', en_US: 'en-US', de_DE: 'de-DE',
   ru_RU: 'ru-RU', nl_NL: 'nl-NL', fr_FR: 'fr-FR',
   es_ES: 'es-ES', it_IT: 'it-IT',
+  // Pick a representative region for Arabic date formatting. Meta has no
+  // region variant on the template code, but JS Intl needs one.
+  ar:    'ar-SA',
 };
 
 const POLL_INTERVAL_MS = parseInt(process.env.WHATSAPP_QUEUE_POLL_MS || '30000', 10);
@@ -64,11 +72,29 @@ let pollHandle = null;
 /**
  * Resolve a Meta template language code from whatever's in the message_data
  * (admin-set per-event language) or the system default.
+ *
+ * Pass-through fallback (#647): if the admin types a code we don't have in
+ * the map (e.g. `tr_TR` for Turkish, `zh_CN` for Chinese), but it matches
+ * the Meta BCP-47 shape, we trust them and forward it as-is. Meta returns
+ * template_not_found_in_language (132001) if the code doesn't match a
+ * registered template, surfacing the typo back to the admin via the test
+ * route's error response.
  */
 function resolveLanguageCode(lang) {
   if (!lang) return null; // signal: caller should fall through to default
-  const normalised = String(lang).toLowerCase().replace(/-/g, '_');
-  return LANGUAGE_MAP[normalised] || null;
+  const raw = String(lang).trim();
+  if (!raw) return null;
+  const normalised = raw.toLowerCase().replace(/-/g, '_');
+  if (LANGUAGE_MAP[normalised]) return LANGUAGE_MAP[normalised];
+  // Pass-through for valid-shape Meta codes the map doesn't enumerate.
+  // Accept `xx` or `xx_YY` (case-insensitive on input); emit Meta's
+  // canonical lowercase-language + uppercase-region form.
+  const passthrough = /^([a-z]{2})(?:[_-]([a-z]{2}))?$/i.exec(raw);
+  if (passthrough) {
+    const [, langPart, regionPart] = passthrough;
+    return regionPart ? `${langPart.toLowerCase()}_${regionPart.toUpperCase()}` : langPart.toLowerCase();
+  }
+  return null;
 }
 
 async function getSystemDefaultLanguageCode() {
@@ -175,7 +201,16 @@ async function processWhatsAppQueue() {
   }
   if (!config || !config.enabled || !config.phone_number_id || !config.access_token) return;
 
-  const defaultLanguage = await getSystemDefaultLanguageCode();
+  // Priority order for the *default* (when message_data.language is null):
+  //   1. config.template_language — admin-pinned to match their Meta-registered
+  //      template (#647). This is the only way to send Arabic/Chinese/etc.
+  //      templates correctly, since general_default_language is the UI
+  //      language not the template's.
+  //   2. general_default_language — system fallback for installs that haven't
+  //      pinned a template_language.
+  //   3. en_US — hardcoded last resort.
+  const configLanguage = resolveLanguageCode(config.template_language);
+  const defaultLanguage = configLanguage || await getSystemDefaultLanguageCode();
 
   let pending;
   try {
