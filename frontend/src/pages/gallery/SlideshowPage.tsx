@@ -127,15 +127,25 @@ export function SlideshowPage() {
     if (list.length < 2) return;
     const next = (positionRef.current + 1) % list.length;
     positionRef.current = next;
-    const hidden: 0 | 1 = activeRef.current === 0 ? 1 : 0;
-    setBuffers((prev) => {
-      const updated: [number, number] = [...prev] as [number, number];
-      updated[hidden] = next;
-      return updated;
-    });
-    setActive(hidden);
+    const swap = () => {
+      const hidden: 0 | 1 = activeRef.current === 0 ? 1 : 0;
+      setBuffers((prev) => {
+        const updated: [number, number] = [...prev] as [number, number];
+        updated[hidden] = next;
+        return updated;
+      });
+      setActive(hidden);
+    };
     const tr = settingsRef.current.transition;
-    if (tr === 'dipwhite' || tr === 'dipblack') setFlash((f) => f + 1);
+    if (tr === 'dipwhite' || tr === 'dipblack') {
+      // Dip: start the white/black flash now, and swap the image at the flash
+      // PEAK (fully opaque) so the cut is hidden — otherwise the new image is
+      // visible before the flash covers it, which reads as a flicker.
+      setFlash((f) => f + 1);
+      window.setTimeout(swap, Math.max(100, settingsRef.current.transition_ms) / 2);
+    } else {
+      swap();
+    }
   }, []);
 
   // ----- Start: gesture-driven (fullscreen needs a user gesture). -----
@@ -392,6 +402,11 @@ export function SlideshowPage() {
                 inset: 0,
                 pointerEvents: 'none',
                 background: settings.transition === 'dipwhite' ? '#fff' : '#000',
+                // Base opacity 0 so that BEFORE and AFTER the one-shot animation
+                // (animation-fill-mode defaults to none) the overlay is fully
+                // transparent. Without this it reverted to opacity 1 and stayed
+                // opaque between slides, hiding the image repeatedly.
+                opacity: 0,
                 animation: `picpeak-dip ${Math.max(200, settings.transition_ms)}ms ease-in-out`,
               }}
             />
