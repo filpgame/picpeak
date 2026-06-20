@@ -2,6 +2,10 @@ import { api } from '../config/api';
 
 export type SlideshowTransition = 'crossfade' | 'cut' | 'slide' | 'kenburns' | 'dipwhite' | 'dipblack';
 export type SlideshowColorFilter = 'none' | 'bw' | 'sepia' | 'warm' | 'cool' | 'vignette';
+// How each slide fills the screen: 'cover' = fill, crop to aspect; 'contain' =
+// whole image with black bars (no crop — best for mixed portrait/landscape).
+export type SlideshowFit = 'cover' | 'contain';
+export const SLIDESHOW_FITS: SlideshowFit[] = ['cover', 'contain'];
 // Which logo the watermark overlays. The first three are branding assets the
 // admin uploads in Settings → Branding; 'event' is the event's own hero logo.
 export type SlideshowWatermarkSource = 'logo' | 'logo_dark' | 'favicon' | 'event';
@@ -47,6 +51,8 @@ export const DEFAULT_SLIDESHOW_STYLE: SlideshowStyle = {
 // truth for the watermark look; the per-event watermark mode 'inherit'/'on'
 // renders with exactly these.
 export interface SlideshowGlobalDefaults {
+  // How slides fill the screen (fill+crop vs letterbox/black bars).
+  slideshow_fit: SlideshowFit;
   slideshow_watermark_enabled: boolean;
   slideshow_watermark_source: SlideshowWatermarkSource;
   slideshow_watermark_position: SlideshowWatermarkPosition;
@@ -70,6 +76,7 @@ export interface SlideshowSettings {
   transition: SlideshowTransition;
   transition_ms: number;
   colorfilter: SlideshowColorFilter;
+  fit: SlideshowFit;
   watermark: SlideshowWatermark | null;
 }
 

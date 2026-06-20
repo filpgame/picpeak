@@ -299,6 +299,9 @@ router.put('/slideshow', adminAuth, requirePermission('settings.edit'), async (r
     const push = (key, value) => updates.push({ setting_key: key, setting_value: JSON.stringify(value), setting_type: 'slideshow' });
     const has = (k) => Object.prototype.hasOwnProperty.call(req.body, k);
 
+    if (has('slideshow_fit')) {
+      push('slideshow_fit', req.body.slideshow_fit === 'contain' ? 'contain' : 'cover');
+    }
     if (has('slideshow_watermark_enabled')) push('slideshow_watermark_enabled', !!req.body.slideshow_watermark_enabled);
     if (has('slideshow_watermark_source')) {
       const v = ['logo', 'logo_dark', 'favicon', 'event'].includes(req.body.slideshow_watermark_source) ? req.body.slideshow_watermark_source : 'logo';

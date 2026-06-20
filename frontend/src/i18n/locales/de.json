@@ -3206,8 +3206,14 @@
       "on": "An",
       "off": "Aus"
     },
-    "globalTitle": "Globales Diashow-Wasserzeichen",
-    "globalDescription": "Standard-Logo-Wasserzeichen für jede Diashow. Einzelne Events können es überschreiben (an/aus).",
+    "globalTitle": "Globale Diashow-Einstellungen",
+    "globalDescription": "Vorgaben für jede Diashow. Events können das Wasserzeichen überschreiben (an/aus).",
+    "fitLabel": "Bildanpassung",
+    "fit": {
+      "cover": "Bildschirm füllen (beschneiden)",
+      "contain": "Schwarze Balken (kein Beschnitt)"
+    },
+    "fitHint": "„Füllen“ beschneidet das Bild zum Ausfüllen; „Schwarze Balken“ zeigt das ganze Foto – besser für Hochformat.",
     "defaultsSaved": "Diashow-Vorgaben gespeichert",
     "liveHint": "Änderungen werden in einer laufenden Diashow innerhalb weniger Sekunden übernommen – der Link muss nicht neu erstellt werden.",
     "saveSettings": "Diashow-Einstellungen speichern",

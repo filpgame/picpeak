@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: SlideshowSettings = {
   transition: 'crossfade',
   transition_ms: 800,
   colorfilter: 'none',
+  fit: 'cover',
   watermark: null,
 };
 
@@ -210,6 +211,7 @@ export function SlideshowPage() {
           transition: state.transition,
           transition_ms: state.transition_ms,
           colorfilter: state.colorfilter,
+          fit: state.fit,
           watermark: state.watermark,
         };
         if (JSON.stringify(next) !== JSON.stringify({
@@ -217,6 +219,7 @@ export function SlideshowPage() {
           transition: prev.transition,
           transition_ms: prev.transition_ms,
           colorfilter: prev.colorfilter,
+          fit: prev.fit,
           watermark: prev.watermark,
         })) {
           setSettings(next);
@@ -288,13 +291,13 @@ export function SlideshowPage() {
   const imgStyle = (buf: 0 | 1): React.CSSProperties => {
     const isActive = active === buf;
     const style: React.CSSProperties = {
-      // Fill the whole viewport. `maxWidth/maxHeight` alone left the <img> at
-      // the photo's intrinsic size (e.g. the 1920px preview), so it never
-      // scaled up to the projector — leaving black bars all round. Pin to the
-      // full container and let object-fit do the scaling.
+      // Pin to the full viewport (maxWidth/maxHeight alone left the <img> at the
+      // photo's intrinsic ≤1920px size, so it never scaled up to the projector).
+      // `fit` decides the rest: 'cover' fills + crops, 'contain' letterboxes the
+      // whole image with black bars (no crop — kinder to portrait photos).
       width: '100%',
       height: '100%',
-      objectFit: 'cover',
+      objectFit: settings.fit === 'contain' ? 'contain' : 'cover',
       filter: imageFilter(settings.colorfilter),
     };
     if (settings.transition === 'kenburns' && isActive) {

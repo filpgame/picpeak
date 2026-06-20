@@ -16,11 +16,13 @@ import { settingsService } from '../../services/settings.service';
 import {
   SLIDESHOW_WATERMARK_POSITIONS,
   SLIDESHOW_WATERMARK_STYLES,
+  SLIDESHOW_FITS,
   type SlideshowGlobalDefaults,
 } from '../../services/slideshow.service';
 import { WatermarkSourcePicker } from './WatermarkSourcePicker';
 
 const DEFAULTS: SlideshowGlobalDefaults = {
+  slideshow_fit: 'cover',
   slideshow_watermark_enabled: false,
   slideshow_watermark_source: 'logo',
   slideshow_watermark_position: 'bottom-right',
@@ -43,6 +45,7 @@ export const SlideshowGlobalDefaultsCard: React.FC = () => {
     settingsService.getSettingsByType('slideshow').then((s) => {
       if (cancelled || !s) return;
       setVal({
+        slideshow_fit: s.slideshow_fit ?? DEFAULTS.slideshow_fit,
         slideshow_watermark_enabled: s.slideshow_watermark_enabled ?? DEFAULTS.slideshow_watermark_enabled,
         slideshow_watermark_source: s.slideshow_watermark_source ?? DEFAULTS.slideshow_watermark_source,
         slideshow_watermark_position: s.slideshow_watermark_position ?? DEFAULTS.slideshow_watermark_position,
@@ -70,13 +73,33 @@ export const SlideshowGlobalDefaultsCard: React.FC = () => {
     <Card padding="md" className="mb-6">
       <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1 flex items-center gap-2">
         <MonitorPlay className="w-5 h-5" />
-        {t('slideshow.globalTitle', 'Global slideshow watermark')}
+        {t('slideshow.globalTitle', 'Global slideshow settings')}
       </h2>
       <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
-        {t('slideshow.globalDescription', 'Default logo watermark for every slideshow. Individual events can override this on or off.')}
+        {t('slideshow.globalDescription', 'Defaults for every slideshow. Events can override the watermark on or off.')}
       </p>
 
       <div className="space-y-4">
+        {/* Image fit */}
+        <div>
+          <label className={labelClass}>{t('slideshow.fitLabel', 'Image fit')}</label>
+          <select
+            value={val.slideshow_fit}
+            onChange={(e) => setVal({ ...val, slideshow_fit: e.target.value as SlideshowGlobalDefaults['slideshow_fit'] })}
+            className={inputClass}
+          >
+            {SLIDESHOW_FITS.map((f) => (
+              <option key={f} value={f}>
+                {t(`slideshow.fit.${f}`, f === 'contain' ? 'Black bars (no crop)' : 'Fill screen (crop)')}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            {t('slideshow.fitHint', '"Fill" crops to fill the screen; "Black bars" shows the whole photo — better for portrait images.')}
+          </p>
+        </div>
+
+        <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
         <label className="flex items-start gap-2">
           <input
             type="checkbox"
@@ -159,6 +182,7 @@ export const SlideshowGlobalDefaultsCard: React.FC = () => {
             </div>
           </div>
         )}
+        </div>
 
         <Button variant="outline" size="md" leftIcon={<Save className="w-4 h-4" />} onClick={save} isLoading={saving}>
           {t('common.save', 'Save')}

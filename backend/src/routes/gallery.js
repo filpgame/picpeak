@@ -301,11 +301,16 @@ async function slideshowSettings(event) {
       watermark = { url, position: position || 'bottom-right', opacity: opacity ?? 60, style: style || 'white', size: size ?? 12 };
     }
   }
+  // Image fit is a global setting (Settings → Slideshow): 'cover' fills + crops,
+  // 'contain' shows the whole image with black bars (no crop).
+  const fitRaw = await getAppSetting('slideshow_fit', 'cover');
+  const fit = fitRaw === 'contain' ? 'contain' : 'cover';
   return {
     interval_ms: event.show_interval_ms || 5000,
     transition: event.show_transition || 'crossfade',
     transition_ms: event.show_transition_ms || 800,
     colorfilter: event.show_colorfilter || 'none',
+    fit,
     watermark,
   };
 }
