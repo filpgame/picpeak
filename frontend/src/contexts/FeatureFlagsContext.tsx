@@ -62,6 +62,8 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   projects: false,
   // WhatsApp Business API delivery channel (migration 136, #640D).
   whatsapp: false,
+  // Live Slideshow ("Diashow") — opt-in; gates all slideshow admin UI.
+  slideshow: false,
 };
 
 export const FEATURE_FLAGS_QUERY_KEY = ['feature-flags'] as const;

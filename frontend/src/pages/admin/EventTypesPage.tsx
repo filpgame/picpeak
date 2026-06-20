@@ -19,8 +19,8 @@ import { Button, Input, Card, Loading } from '../../components/common';
 import { eventTypesService, EventType, CreateEventTypeData, UpdateEventTypeData } from '../../services/eventTypes.service';
 import { GALLERY_THEME_PRESETS } from '../../types/theme.types';
 import { SlideshowStyleFields } from '../../components/admin/SlideshowStyleFields';
-import { SlideshowGlobalDefaultsCard } from '../../components/admin/SlideshowGlobalDefaultsCard';
 import { DEFAULT_SLIDESHOW_STYLE, type SlideshowStyle } from '../../services/slideshow.service';
+import { useFeatureEnabled } from '../../contexts/FeatureFlagsContext';
 
 // Parse a type's stored slideshow_preset (JSON string | object | null) into a
 // full SlideshowStyle, falling back to defaults for any missing keys.
@@ -151,9 +151,6 @@ export const EventTypesPage: React.FC = () => {
           </Button>
         </div>
       </div>
-
-      {/* Global Live Slideshow watermark default (per-event/type can override) */}
-      <SlideshowGlobalDefaultsCard />
 
       {/* Filters */}
       <Card className="mb-6">
@@ -339,6 +336,7 @@ const EventTypeModal: React.FC<EventTypeModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const isEditing = !!eventType;
+  const slideshowEnabled = useFeatureEnabled('slideshow');
 
   const [form, setForm] = useState<CreateEventTypeData>({
     name: eventType?.name || '',
@@ -382,10 +380,10 @@ const EventTypeModal: React.FC<EventTypeModalProps> = ({
       if (form.emoji !== eventType?.emoji) updates.emoji = form.emoji;
       if (form.theme_preset !== eventType?.theme_preset) updates.theme_preset = form.theme_preset;
       const originalStyle = JSON.stringify(parseSlideshowPreset(eventType?.slideshow_preset));
-      if (JSON.stringify(slideshowStyle) !== originalStyle) updates.slideshow_preset = slideshowStyle;
+      if (slideshowEnabled && JSON.stringify(slideshowStyle) !== originalStyle) updates.slideshow_preset = slideshowStyle;
       onSubmit(updates);
     } else {
-      onSubmit({ ...form, slideshow_preset: slideshowStyle });
+      onSubmit({ ...form, ...(slideshowEnabled ? { slideshow_preset: slideshowStyle } : {}) });
     }
   };
 
@@ -488,7 +486,9 @@ const EventTypeModal: React.FC<EventTypeModalProps> = ({
 
               {/* Live Slideshow preset (migration 138). New events of this type
                   inherit these slideshow defaults; admins can still override
-                  per event on the event detail page. */}
+                  per event on the event detail page. Gated behind the
+                  `slideshow` feature flag. */}
+              {slideshowEnabled && (
               <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                   {t('eventTypes.form.slideshowPreset', 'Slideshow preset')}
@@ -498,6 +498,7 @@ const EventTypeModal: React.FC<EventTypeModalProps> = ({
                 </p>
                 <SlideshowStyleFields value={slideshowStyle} onChange={setSlideshowStyle} />
               </div>
+              )}
 
               {/* Active toggle for editing */}
               {isEditing && (

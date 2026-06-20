@@ -1768,6 +1768,10 @@
       "whatsapp": {
         "title": "WhatsApp",
         "description": "Liefert die Gallerie-Bereit-Benachrichtigung zusätzlich zur E-Mail über die WhatsApp Business API. Voraussetzung: Meta-Business-Konto, genehmigte Nachrichtenvorlage und eine Kunden-Telefonnummer am Event. Zugangsdaten unter Einstellungen → WhatsApp konfigurieren."
+      },
+      "slideshow": {
+        "title": "Live-Diashow",
+        "description": "Ein separater Vollbild-„Diashow“-Link pro Event für Beamer bei Live-Events – übernimmt neue Uploads automatisch, mit Voreinstellungen je Event-Typ und globalen Wasserzeichen-Vorgaben unter Einstellungen → Diashow."
       }
     },
     "customerSurface": {
@@ -1814,6 +1818,10 @@
         "hourlyRatePlaceholder": "z. B. 120.00",
         "hourlyRateHint": "Verrechnungs-Fallback, wenn ein Kunde keinen eigenen Satz hat (Stundenerfassung). In {{currency}}, in Hauptwährungseinheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen."
       }
+    },
+    "slideshow": {
+      "title": "Diashow",
+      "subtitle": "Globale Vorgaben für die Live-Diashow. Events und Event-Typen können diese überschreiben."
     },
     "whatsapp": {
       "title": "WhatsApp",

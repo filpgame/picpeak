@@ -22,6 +22,7 @@ import {
   ScanLine,
   Wallet,
   FolderKanban,
+  MonitorPlay,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../../../components/common';
@@ -115,6 +116,21 @@ export const FeaturesTab: React.FC = () => {
               'settings.features.galleries.locked',
               "Galleries are the foundation of PicPeak and can't be turned off.",
             )}
+          />
+
+          <FeatureCard
+            icon={MonitorPlay}
+            title={t('settings.features.slideshow.title', 'Live Slideshow')}
+            description={t(
+              'settings.features.slideshow.description',
+              'A separate fullscreen "Diashow" link per event for projectors at live events — auto-picks-up new uploads, with per-event-type presets and global watermark defaults under Settings → Slideshow.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarHidden
+            sidebarHiddenLabel={sidebarHiddenLabel}
+            enabled={staged.slideshow}
+            onToggle={(next) => setFlag('slideshow', next)}
           />
         </Section>
 

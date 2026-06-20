@@ -46,6 +46,7 @@ import {
 import { EmailConfigPage } from './EmailConfigPage';
 import { BrandingPage } from './BrandingPage';
 import { EventTypesPage } from './EventTypesPage';
+import { SlideshowSettingsPage } from './SlideshowSettingsPage';
 import { BackupManagement } from './BackupManagement';
 import { CMSPage } from './CMSPage';
 // CRM (#TBD)
@@ -54,7 +55,7 @@ import { CrmSettingsPage } from './settings/CrmSettingsPage';
 import { ReminderTemplatesPage } from './settings/ReminderTemplatesPage';
 import { BlockLibraryPage } from './contracts/BlockLibraryPage';
 import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
-import { Briefcase, Receipt, ScrollText, Mail, Landmark, Smartphone } from 'lucide-react';
+import { Briefcase, Receipt, ScrollText, Mail, Landmark, Smartphone, MonitorPlay } from 'lucide-react';
 
 // Tab keys driving the inner-nav. Must include every key used in
 // `navGroups` below and in the switch at the bottom of the component.
@@ -85,7 +86,8 @@ type TabType =
   | 'contracts'
   | 'reminderTemplates'
   | 'accounting'
-  | 'whatsapp';
+  | 'whatsapp'
+  | 'slideshow';
 
 interface NavItem {
   key: TabType;
@@ -106,6 +108,7 @@ const ALL_TAB_KEYS: TabType[] = [
   'apiTokens', 'webhooks',
   'status', 'analytics', 'backup',
   'businessProfile', 'crm', 'contracts', 'reminderTemplates', 'accounting', 'whatsapp',
+  'slideshow',
 ];
 
 function isValidTab(value: string | null): value is TabType {
@@ -203,12 +206,13 @@ export const SettingsPage: React.FC = () => {
       reminderTemplates: !flags.reminderEmails,
       accounting: !flags.accounting,
       whatsapp: !flags.whatsapp,
+      slideshow: !flags.slideshow,
     };
     if (gatedOff[activeTab]) {
       setActiveTab('features');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flagsLoading, flags.quotes, flags.bills, flags.contracts, flags.reminderEmails, flags.accounting, flags.whatsapp, activeTab]);
+  }, [flagsLoading, flags.quotes, flags.bills, flags.contracts, flags.reminderEmails, flags.accounting, flags.whatsapp, flags.slideshow, activeTab]);
 
   if (isLoading) {
     return (
@@ -240,6 +244,9 @@ export const SettingsPage: React.FC = () => {
         { key: 'thumbnails', label: t('settings.thumbnails.title', 'Thumbnails'),  icon: ImageIcon },
         { key: 'styling',    label: t('settings.styling.title',    'Custom CSS'),  icon: Code },
         { key: 'cms',        label: t('settings.cms.title',        'CMS Pages'),   icon: FileText },
+        ...(flags.slideshow
+          ? [{ key: 'slideshow' as const, label: t('settings.slideshow.title', 'Slideshow'), icon: MonitorPlay }]
+          : []),
       ],
     },
     {
@@ -433,6 +440,7 @@ export const SettingsPage: React.FC = () => {
           )}
 
           {activeTab === 'eventTypes' && <EventTypesPage />}
+          {activeTab === 'slideshow' && <SlideshowSettingsPage />}
           {activeTab === 'branding' && <BrandingPage />}
           {activeTab === 'cms' && <CMSPage />}
           {activeTab === 'email' && <EmailConfigPage />}

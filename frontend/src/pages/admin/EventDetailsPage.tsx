@@ -2159,7 +2159,9 @@ export const EventDetailsPage: React.FC = () => {
             </div>
           </Card>
 
-          {/* Live Slideshow ("Diashow") link + live display settings (migration 137) */}
+          {/* Live Slideshow ("Diashow") link + live display settings (migrations 137/138).
+              Gated behind the `slideshow` feature flag. */}
+          {flags.slideshow && (
           <SlideshowSettingsCard
             eventId={event.id}
             slug={event.slug}
@@ -2179,6 +2181,7 @@ export const EventDetailsPage: React.FC = () => {
             }}
             onChanged={() => refetchEvent()}
           />
+          )}
 
           {/* Pre-event reminder override (migration 143). Hidden when
               the reminderEmails master flag is off — the override here

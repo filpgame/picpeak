@@ -1324,6 +1324,10 @@
       "whatsapp": {
         "title": "WhatsApp",
         "description": "Deliver the gallery-ready notification via WhatsApp Business API in addition to email. Requires a Meta Business Account, an approved message template, and a customer phone number on the event. Configure credentials under Settings → WhatsApp."
+      },
+      "slideshow": {
+        "title": "Live Slideshow",
+        "description": "A separate fullscreen \"Diashow\" link per event for projectors at live events — auto-picks-up new uploads, with per-event-type presets and global watermark defaults under Settings → Slideshow."
       }
     },
     "customerSurface": {
@@ -1370,6 +1374,10 @@
         "hourlyRatePlaceholder": "e.g. 120.00",
         "hourlyRateHint": "Billing fallback used when a customer has no own rate (hours logging). In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate."
       }
+    },
+    "slideshow": {
+      "title": "Slideshow",
+      "subtitle": "Global defaults for the Live Slideshow. Events and event types can override these."
     },
     "whatsapp": {
       "title": "WhatsApp",
