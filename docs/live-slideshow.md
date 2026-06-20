@@ -1,9 +1,3 @@
----
-title: Live Slideshow
-description: A separate fullscreen "Diashow" link per event that auto-picks-up new uploads while it runs — built for projectors at live events.
-sidebar_position: 5
----
-
 # Live Slideshow ("Diashow")
 
 The Live Slideshow is a dedicated, token-only, **fullscreen** URL for an event that **auto-picks-up newly uploaded photos while it runs** — designed for a projector or screen at a live event (weddings, concerts, parties). Guests at the venue watch the photos appear in near real time; the photographer keeps culling and uploading from the back of the room.
