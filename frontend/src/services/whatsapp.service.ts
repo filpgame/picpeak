@@ -11,6 +11,11 @@ export interface WhatsAppConfig {
   waba_id: string;
   access_token: string; // masked '********' on GET when a real token is stored
   template_name: string;
+  // Meta template language code (`ar`, `en_US`, `de_DE`, etc.) (#647). Must
+  // match the language the operator registered with Meta for `template_name`,
+  // otherwise Meta returns template_not_found_in_language (132001). Empty
+  // string falls through to general_default_language.
+  template_language: string;
   enabled: boolean;
 }
 
