@@ -79,6 +79,57 @@ export interface EmailPreview {
   body_text: string;
 }
 
+export interface IncomingMailConfig {
+  imap_host: string;
+  imap_port: number;
+  imap_secure: boolean;
+  imap_user: string;
+  imap_pass: string;
+  imap_folder: string;
+}
+
+export interface ImapFolder {
+  path: string;
+  name: string;
+  /** IMAP special-use flag, e.g. '\\Inbox', '\\Sent' — used to auto-select. */
+  specialUse: string | null;
+}
+
+export interface ImapTestResult {
+  ok: boolean;
+  folder: string;
+  messages: number;
+  unseen: number;
+}
+
+export interface ImapRoundTripResult {
+  ok: boolean;
+  seconds?: number;
+  recipient?: string;
+}
+
+export interface ImapPollResult {
+  processed?: number;
+  skipped?: 'disabled' | 'unconfigured' | 'busy';
+}
+
+export interface ReceivedEmail {
+  id: number;
+  message_id: string | null;
+  from_address: string | null;
+  subject: string | null;
+  received_at: string | null;
+  attachment_count: number;
+  status: string;
+  inbound_document_id: number | null;
+  error: string | null;
+}
+
+export interface ReceivedEmailsResponse {
+  items: ReceivedEmail[];
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
 export const emailService = {
   // Get email configuration
   async getConfig(): Promise<EmailConfig> {
@@ -89,6 +140,41 @@ export const emailService = {
   // Update email configuration
   async updateConfig(config: EmailConfig): Promise<void> {
     await api.post('/admin/email/config', config);
+  },
+
+  // Incoming mail (IMAP) configuration
+  async getIncomingConfig(): Promise<IncomingMailConfig> {
+    const response = await api.get<IncomingMailConfig>('/admin/email/incoming-config');
+    return response.data;
+  },
+  async updateIncomingConfig(config: IncomingMailConfig): Promise<void> {
+    await api.post('/admin/email/incoming-config', config);
+  },
+  // Auto-detect mailbox folders. Sends the current form values so detection
+  // works before the config is saved (masked password falls back server-side).
+  async listIncomingFolders(config?: Partial<IncomingMailConfig>): Promise<ImapFolder[]> {
+    const response = await api.post<{ folders: ImapFolder[] }>('/admin/email/incoming-config/folders', config || {});
+    return response.data.folders;
+  },
+  // Test the IMAP connection: opens the configured folder, reports counts.
+  async testIncoming(config?: Partial<IncomingMailConfig>): Promise<ImapTestResult> {
+    const response = await api.post<ImapTestResult>('/admin/email/incoming-config/test', config || {});
+    return response.data;
+  },
+  // End-to-end: send via SMTP to the IMAP mailbox and confirm it arrives.
+  // Uses saved config for both sides — no body. May take up to ~30s.
+  async roundTripIncoming(): Promise<ImapRoundTripResult> {
+    const response = await api.post<ImapRoundTripResult>('/admin/email/incoming-config/roundtrip', {});
+    return response.data;
+  },
+  // Run the poller on demand. Returns { processed } or { skipped: '…' }.
+  async pollIncoming(): Promise<ImapPollResult> {
+    const response = await api.post<ImapPollResult>('/admin/email/incoming-config/poll', {});
+    return response.data;
+  },
+  async listReceived(params: { page?: number; pageSize?: number } = {}): Promise<ReceivedEmailsResponse> {
+    const response = await api.get<ReceivedEmailsResponse>('/admin/email/received', { params });
+    return response.data;
   },
 
   // Test email configuration

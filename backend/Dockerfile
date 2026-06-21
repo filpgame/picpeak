@@ -50,8 +50,13 @@ RUN npm install -g npm@10
 # Unicode fallback; picpeak's own brand fonts (assets/fonts/, the same files
 # PDFKit + the web UI use) are registered with fontconfig further down so the
 # logo's text renders in its actual typeface, not a fallback.
+# poppler-utils provides `pdftoppm`, used to rasterise inbound supplier-invoice
+# PDFs to flat PNGs server-side so the admin UI NEVER renders a raw (possibly
+# malicious) PDF. pdftoppm does not execute embedded JS or fetch remote
+# resources, so it doubles as the SSRF/phone-home guard for untrusted inbound
+# documents (see docs/accounting-inbound-invoices.md).
 RUN apk add --no-cache dumb-init postgresql-client ffmpeg su-exec \
-    fontconfig ttf-dejavu ttf-liberation && \
+    fontconfig ttf-dejavu ttf-liberation poppler-utils && \
     fc-cache -f
 
 # Create non-root user

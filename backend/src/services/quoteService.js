@@ -554,8 +554,24 @@ async function createQuote(payload, adminId) {
       created_at: new Date(),
       updated_at: new Date(),
     };
+    // Migration 121 — optional link to a Project Overview project.
+    if (payload.projectId !== undefined && await hasColumnCached('quotes', 'project_id')) {
+      row.project_id = payload.projectId || null;
+    }
+    // Migration 130 — snapshot the chosen output VAT code (immutable; the export
+    // emits exactly this rather than re-deriving from the mutable rate→code map).
+    if (payload.vatCode !== undefined && await hasColumnCached('quotes', 'vat_code')) {
+      row.vat_code = payload.vatCode ? String(payload.vatCode).slice(0, 16) : null;
+    }
     const inserted = await trx('quotes').insert(row).returning('id');
     const quoteId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
+
+    // Cascade the project link across the deal lineage (no-op for a brand-new
+    // quote with no contract/event yet — just adopts the customer onto an
+    // empty project).
+    if (row.project_id) {
+      await require('./projectService').linkDealToProject(row.deal_uuid, row.project_id, trx);
+    }
 
     if (totals.lineItems.length > 0) {
       // Normalise rows for the hierarchical-insert helper. We preserve
@@ -667,7 +683,22 @@ async function updateQuote(id, payload, adminId) {
           ? JSON.stringify(payload.installments)
           : null;
     }
+    // Migration 121 — optional Project Overview link.
+    if (Object.prototype.hasOwnProperty.call(payload, 'projectId') && await hasColumnCached('quotes', 'project_id')) {
+      updates.project_id = payload.projectId || null;
+    }
+    // Migration 130 — VAT code snapshot.
+    if (Object.prototype.hasOwnProperty.call(payload, 'vatCode') && await hasColumnCached('quotes', 'vat_code')) {
+      updates.vat_code = payload.vatCode ? String(payload.vatCode).slice(0, 16) : null;
+    }
     await trx('quotes').where({ id }).update(updates);
+
+    // When linked to a project, cascade across the deal lineage so the linked
+    // contract / event / invoices roll up into the same project automatically.
+    if (updates.project_id) {
+      const dealRow = await trx('quotes').where({ id }).select('deal_uuid').first();
+      await require('./projectService').linkDealToProject(dealRow && dealRow.deal_uuid, updates.project_id, trx);
+    }
 
     // Delete + reinsert keeps the editor flow simple: the frontend
     // sends the canonical line-item set on every save, we drop the
@@ -1531,6 +1562,8 @@ async function duplicateQuote(id, adminId) {
     expectedDurationHours: quote.expected_duration_hours,
     paymentTermTemplateId: quote.payment_term_template_id,
     vatRate: quote.vat_rate,
+    // Migration 130 — VAT-code snapshot (so re-editing preserves it).
+    vatCode: quote.vat_code ?? null,
     shippingAmountMinor: quote.shipping_amount_minor,
     introText: quote.intro_text,
     outroText: quote.outro_text,

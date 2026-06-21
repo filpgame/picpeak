@@ -30,7 +30,6 @@ const { startFileWatcher } = require('./src/services/fileWatcher');
 const { startExpirationChecker } = require('./src/services/expirationChecker');
 const { startInvoiceScheduler } = require('./src/services/invoiceSchedulerService');
 const { initializeTransporter, startEmailQueueProcessor } = require('./src/services/emailProcessor');
-const { startWhatsAppQueueProcessor } = require('./src/services/whatsappProcessor');
 const { startBackupService } = require('./src/services/backupService');
 const { startScheduledBackups } = require('./src/services/databaseBackup');
 const backgroundProcessor = require('./src/services/backgroundProcessor');
@@ -659,6 +658,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin/system', require('./src/routes/adminSystem'));
 app.use('/api/admin/feature-flags', require('./src/routes/adminFeatureFlags'));
+app.use('/api/admin/whatsapp', require('./src/routes/adminWhatsapp'));
 app.use('/api/admin/backup', require('./src/routes/adminBackup'));
 app.use('/api/admin/database-backup', require('./src/routes/adminDatabaseBackup'));
 app.use('/api/admin/feedback', require('./src/routes/adminFeedback'));
@@ -723,9 +723,15 @@ app.use('/api/admin/business-profile', require('./src/routes/adminBusinessProfil
 app.use('/api/admin/quotes',     require('./src/routes/adminQuotes'));
 app.use('/api/admin/invoices',   require('./src/routes/adminInvoices'));
 app.use('/api/admin/contracts',  require('./src/routes/adminContracts'));
+app.use('/api/admin/projects',   require('./src/routes/adminProjects'));
 app.use('/api/admin/calendar',   require('./src/routes/adminCalendar'));
 app.use('/api/admin/deals',      require('./src/routes/adminDeals'));
 app.use('/api/admin/tax-report', require('./src/routes/adminTaxReport'));
+app.use('/api/admin/expenses',   require('./src/routes/adminExpenses'));
+app.use('/api/admin/ledger',     require('./src/routes/adminLedger'));
+// Read-only VAT-code registry for the invoice/quote editors — un-gated by the
+// accounting flag (management stays under /ledger).
+app.use('/api/admin/vat-codes',  require('./src/routes/adminVatCodes'));
 app.use('/api/admin/system-health', require('./src/routes/adminSystemHealth'));
 app.use('/api/admin/dev',        require('./src/routes/adminDev'));
 app.use('/api/public/quotes',  require('./src/routes/publicQuotes'));
@@ -856,8 +862,25 @@ async function startServer() {
       logger.warn('Email template self-heal failed at boot:', err.message);
     }
     startEmailQueueProcessor();
-    startWhatsAppQueueProcessor();
-    
+
+    // Start WhatsApp queue processor — no-ops each cycle unless the
+    // `whatsapp` flag is on and a config exists (migration 136, #640D).
+    try {
+      const { startWhatsAppQueueProcessor } = require('./src/services/whatsappProcessor');
+      startWhatsAppQueueProcessor();
+    } catch (err) {
+      logger.warn('WhatsApp queue processor start failed:', err.message);
+    }
+
+    // Start incoming-mail (IMAP) poller — no-ops each minute unless the
+    // `incomingMail` flag is on and a mailbox is configured (migration 128).
+    try {
+      const { startIncomingMailPoller } = require('./src/services/emailIntakeService');
+      startIncomingMailPoller();
+    } catch (err) {
+      logger.warn('Incoming-mail poller failed to start:', err.message);
+    }
+
     // Start webhook delivery worker (#327)
     const { startWebhookDeliveryWorker } = require('./src/services/webhookDeliveryWorker');
     startWebhookDeliveryWorker();

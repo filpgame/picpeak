@@ -18,6 +18,7 @@ const router = express.Router();
 const { db, logActivity } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
+const { invalidateFeatureFlagCache } = require('../middleware/requireFeatureFlag');
 const logger = require('../utils/logger');
 
 // Canonical flag list. Keep in sync with frontend
@@ -25,6 +26,9 @@ const logger = require('../utils/logger');
 const KNOWN_FLAGS = [
   'galleries',
   'reminderEmails',
+  // Incoming mail (migration 128) — IMAP polling of a dedicated mailbox into
+  // the incoming-invoices inbox. Standalone toggle.
+  'incomingMail',
   'calendar',
   'calendarBooking',
   'quotes',
@@ -45,10 +49,9 @@ const KNOWN_FLAGS = [
   // payment-check email flow without waiting 30 days, etc.).
   // Strictly opt-in.
   'crmDevelopment',
-  // Tax / Steuer report sub-tab under Clients. Independent toggle so
-  // admins who use Bills but don't need the tax export (or aren't
-  // ready to enable it yet) can leave it off. Forced off when `bills`
-  // is off (no invoices → nothing to report).
+  // Tax / Steuer report — an Accounting sub-feature (moved out of CRM).
+  // Independent of `bills`; forced off when the `accounting` master is off
+  // (see applyDependencyRules below).
   'taxReport',
   // Hours logging (migration 129). Master switch for the per-customer
   // Hours card + the auto-append into monthly draft / "Bill these
@@ -62,12 +65,36 @@ const KNOWN_FLAGS = [
   // upload). Seeded block bodies are EXAMPLES ONLY; admins must have a
   // lawyer review before sending. See docs/crm-disclaimers.md.
   'contracts',
+  // Accounting (migration 122). Top-level Accounting area — inbound
+  // supplier invoices, expenses + re-bill, and the tax report (which
+  // relocates here from CRM when this is on). Strictly opt-in.
+  'accounting',
+  // Incoming invoices (migration 124) — external supplier-invoice capture +
+  // re-bill. Accounting sub-feature; forced off when the `accounting` master
+  // is off.
+  'incomingInvoices',
+  // Expenses (migration 127) — internal expenses (mileage / per-diem / cash).
+  // Separate Accounting sub-feature; forced off when `accounting` is off.
+  'expenses',
+  // Projects (migration 120). Admin-only grouping layer above events +
+  // the Project Overview cockpit ("book to project" hours control, 360°
+  // rollup feed). Lights up the Clients section. Customers never see it.
+  'projects',
+  // WhatsApp Business API delivery channel (migration 136, #640D). Strictly
+  // opt-in — operators must register a Meta-approved template before turning
+  // it on. Independent of email; both can fire on the same event.
+  'whatsapp',
+  // Live Slideshow ("Diashow") — the per-event fullscreen kiosk link + its
+  // per-event-type presets and global watermark defaults tab. Strictly opt-in;
+  // gates all slideshow admin UI (per-event card, type preset, settings tab).
+  'slideshow',
 ];
 
 // Spec defaults for any flag missing from the DB (e.g. a row added by a
 // new release that hasn't run its migration yet on this instance).
 const DEFAULT_FLAGS = {
   galleries: true,
+  incomingMail: false,
   // F.3 — reminderEmails is a placeholder card in the Features tab
   // (lockedReason: NOT_YET_AVAILABLE). Default FALSE so it matches
   // the locked-but-off visual state of messaging / calendarBooking
@@ -84,6 +111,12 @@ const DEFAULT_FLAGS = {
   taxReport: false,
   hoursLogging: false,
   contracts: false,
+  accounting: false,
+  incomingInvoices: false,
+  expenses: false,
+  projects: false,
+  whatsapp: false,
+  slideshow: false,
 };
 
 async function readAllFlags() {
@@ -104,10 +137,19 @@ function applyDependencyRules(flags) {
   // Sub-features can't outlive their parents.
   if (out.quotes === false) out.bills = false;
   if (out.calendar === false) out.calendarBooking = false;
-  // Tax report only makes sense when bills are on — turning bills off
-  // implicitly turns the tax report off too. Admins enabling tax
-  // report must first enable bills.
-  if (out.bills === false) out.taxReport = false;
+  // Invoices (Bills) force-enable the Accounting master: invoice VAT config
+  // (codes + label) and the hourly rate live under Settings → Accounting, so
+  // an install with invoices must have Accounting available. Runs BEFORE the
+  // accounting→children rule so the sub-features keep their own stored state.
+  if (out.bills === true) out.accounting = true;
+  // Accounting is a top-level MASTER; its sub-features can't outlive it.
+  // Tax export is now independent of Bills — it relocated permanently
+  // into the Accounting section (its own master gate).
+  if (out.accounting === false) {
+    out.taxReport = false;
+    out.incomingInvoices = false;
+    out.expenses = false;
+  }
   // Clients parent flag is DERIVED from its children. Admins don't
   // toggle it directly in the Features tab — they enable a specific
   // sub-feature (Accounts today; Calendar/Quotes/Bills/Messaging
@@ -120,9 +162,12 @@ function applyDependencyRules(flags) {
     || out.crmDevelopment
     || out.quotes
     || out.bills
-    || out.taxReport
     || out.hoursLogging
     || out.contracts
+    // NOTE: taxReport intentionally removed — Tax export moved to the
+    // Accounting section (its own master), no longer a CRM sub-feature.
+    // Migration 120 — admin-only Project Overview cockpit lives under Clients.
+    || out.projects
     // Migration 137 — admin calendar lights up the Clients section.
     // (calendarBooking is gated behind `calendar` so adding the parent
     // is sufficient.)
@@ -196,6 +241,10 @@ router.put('/', adminAuth, requirePermission('settings.edit'), async (req, res) 
         }
       }
     });
+
+    // Drop the requireFeatureFlag middleware's short-TTL cache so a toggle takes
+    // effect immediately instead of after ≤10s.
+    invalidateFeatureFlagCache();
 
     await logActivity(
       'feature_flags_updated',

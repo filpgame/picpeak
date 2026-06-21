@@ -98,6 +98,7 @@
     "error": "Fehler",
     "configureInSettings": "Standards in den Einstellungen anpassen ↗",
     "save": "Speichern",
+    "saving": "Speichern…",
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
@@ -150,7 +151,8 @@
     "preview": "Vorschau",
     "duplicate": "Duplizieren",
     "showAll": "Alle anzeigen",
-    "confirm": "Bestätigen"
+    "confirm": "Bestätigen",
+    "show": "Einblenden"
   },
   "upload": {
     "photoCategory": "Fotokategorie",
@@ -196,6 +198,7 @@
     "users": "Benutzer",
     "calendar": "Kalender",
     "clients": "CRM",
+    "accounting": "Buchhaltung",
     "betaTag": "Beta"
   },
   "eventTypes": {
@@ -231,6 +234,8 @@
       "slugPreview": "Beispiel-URL:",
       "emoji": "Symbol",
       "themePreset": "Standard-Theme",
+      "slideshowPreset": "Diashow-Voreinstellung",
+      "slideshowPresetHint": "Standard-Diashow-Stil für neue Events dieses Typs.",
       "isActive": "Aktiv (sichtbar bei Veranstaltungserstellung)"
     },
     "validation": {
@@ -825,7 +830,12 @@
     "coverPhotoSet": "Titelbild erfolgreich festgelegt",
     "coverPhotoRemoved": "Titelbild entfernt",
     "failedToSetCoverPhoto": "Titelbild konnte nicht festgelegt werden",
-    "categoryHeroHint": "Wenn kein Titelbild für eine Kategorie festgelegt ist, wird das Standard-Hero-Foto verwendet."
+    "categoryHeroHint": "Wenn kein Titelbild für eine Kategorie festgelegt ist, wird das Standard-Hero-Foto verwendet.",
+    "downloadsEnabled": "Downloads für diese Kategorie aktiviert",
+    "downloadsDisabled": "Downloads für diese Kategorie deaktiviert",
+    "enableDownloadsTitle": "Klicken zum Aktivieren der Downloads für diese Kategorie",
+    "disableDownloadsTitle": "Klicken zum Deaktivieren der Downloads für diese Kategorie",
+    "failedToToggleDownloads": "Aktualisierung der Download-Berechtigung fehlgeschlagen"
   },
   "events": {
     "totalPhotos": "Gesamtfotos",
@@ -1019,6 +1029,31 @@
     "publishAndNotify": "Veröffentlichen & Kunden benachrichtigen",
     "publishConfirm": "Dadurch wird die Galerie zugänglich und die Benachrichtigungs-E-Mail an den Kunden gesendet. Fortfahren?",
     "publishSuccess": "Galerie veröffentlicht und Kunde benachrichtigt!",
+    "publishDialog": {
+      "title": "Galerie veröffentlichen",
+      "descriptionWithEmail": "Die Galerie \"{{eventName}}\" wird zugänglich gemacht und die Benachrichtigungs-E-Mail an {{customerEmail}} gesendet.",
+      "descriptionNoEmail": "Die Galerie \"{{eventName}}\" wird zugänglich gemacht. Es ist keine Kunden-E-Mail hinterlegt – es wird keine Benachrichtigung gesendet.",
+      "passwordLabel": "Galerie-Passwort",
+      "passwordPlaceholder": "Galerie-Passwort eingeben",
+      "passwordHelp": "Gib das bei der Erstellung gesetzte Passwort erneut ein (oder wähle ein neues). Die E-Mail enthält genau diesen Text; das Backend hasht es erneut, sodass die Galerie-Anmeldung weiterhin funktioniert.",
+      "errorMinLength": "Das Passwort muss mindestens 6 Zeichen lang sein."
+    },
+    "duplicateEvent": "Galerie duplizieren",
+    "duplicateDialog": {
+      "title": "Galerie duplizieren",
+      "description": "Erstellt eine neue Entwurfsgalerie, die Branding, Verhalten, Feedback und Kategorien aus \"{{sourceEventName}}\" übernimmt. Fotos, Passwort und Share-Tokens werden NICHT übernommen.",
+      "eventNameLabel": "Neuer Veranstaltungsname *",
+      "eventNamePlaceholder": "z. B. Hochzeit Müller 2026",
+      "eventDateLabel": "Veranstaltungsdatum",
+      "eventDateHelp": "Leer lassen, um eine zufällige Endung in der Galerie-URL zu verwenden. Das Ablaufdatum wird aus diesem Datum zuzüglich des Ablauffensters der Quellgalerie berechnet.",
+      "customerNameLabel": "Kundenname",
+      "customerNamePlaceholder": "Optional – kann später ausgefüllt werden",
+      "customerEmailLabel": "Kunden-E-Mail",
+      "customerEmailPlaceholder": "Optional",
+      "confirm": "Duplikat erstellen",
+      "errorNameRequired": "Veranstaltungsname ist erforderlich.",
+      "successToast": "Galerie dupliziert."
+    },
     "draftBanner": "Diese Galerie befindet sich im Entwurfsmodus. Laden Sie Ihre Fotos hoch und veröffentlichen Sie, wenn Sie bereit sind.",
     "subtitle": "Verwalten Sie Ihre Fotogalerien und Veranstaltungen",
     "failedToLoadEvents": "Veranstaltungen konnten nicht geladen werden",
@@ -1288,7 +1323,9 @@
       "showGalleryFilterBar": "Filterleiste in Galerien anzeigen",
       "showGalleryFilterBarHelp": "Dateiname-Suche und Sortiersteuerungen über Raster-Galerien anzeigen. Deaktivieren für ein übersichtlicheres Layout.",
       "enablePhoneField": "Telefonnummer-Feld aktivieren",
-      "enablePhoneFieldHelp": "Fügt ein optionales Telefonnummer-Eingabefeld zum Veranstaltungsformular hinzu. Nützlich für Folgeautomatisierungen wie WhatsApp-Zustellung via n8n. Immer optional, auch wenn aktiviert."
+      "enablePhoneFieldHelp": "Fügt ein optionales Telefonnummer-Eingabefeld zum Veranstaltungsformular hinzu. Nützlich für Folgeautomatisierungen wie WhatsApp-Zustellung via n8n. Immer optional, auch wenn aktiviert.",
+      "defaultFeedbackEnabled": "Gäste-Feedback standardmäßig aktivieren",
+      "defaultFeedbackEnabledHelp": "Vorbelegt \"Gäste-Feedback\" beim Erstellen neuer Events. Einzelne Feedback-Optionen (Likes, Bewertungen, Kommentare) bleiben pro Event anpassbar."
     },
     "imageSecurity": {
       "title": "Bildschutz",
@@ -1536,9 +1573,10 @@
       "statusRevoked": "Widerrufen",
       "statusExpired": "Abgelaufen",
       "statusActive": "Aktiv",
-      "confirmRevoke": "Diesen Token wirklich widerrufen?",
+      "confirmRevoke": "\"{{name}}\" widerrufen? Bestehende Integrationen, die dieses Token nutzen, erhalten ab sofort 401.",
       "revoke": "Widerrufen",
-      "empty": "Noch keine Tokens. Generieren Sie oben einen, um zu beginnen."
+      "empty": "Noch keine Tokens. Generieren Sie oben einen, um zu beginnen.",
+      "preview": "Vorschau"
     },
     "webhooks": {
       "title": "Webhooks",
@@ -1552,7 +1590,38 @@
       "template": "Vorlage (optional)",
       "create": "Webhook erstellen",
       "existing": "Vorhandene Webhooks",
-      "empty": "Noch keine Webhooks. Erstellen Sie oben einen, um Ereignisbenachrichtigungen zu erhalten."
+      "empty": "Noch keine Webhooks. Erstellen Sie oben einen, um Ereignisbenachrichtigungen zu erhalten.",
+      "namePlaceholder": "z. B. n8n WhatsApp",
+      "urlPlaceholder": "https://n8n.example.com/webhook/picpeak",
+      "showAdvanced": "+ Erweitert (Filter, Vorlage)",
+      "hideAdvanced": "− Erweitert ausblenden (Filter, Vorlage)",
+      "filterHelp": "Dot-Pfad → erwarteter Wert. Alle Schlüssel müssen übereinstimmen (AND). Array für \"eines aus\".",
+      "filterError": "Filter muss gültiges JSON sein",
+      "templatePlaceholder": "Neue Galerie: ${data.event.event_name} → ${data.event.share_url}",
+      "templateHelp": "Ersetzt den Standard-JSON-Umschlag als Request-Body. Nur ${dot.path}-Substitution aus der Payload — keine Logik, keine Ausdrücke.",
+      "copyButton": "Kopieren",
+      "dismiss": "Schließen",
+      "copied": "Kopiert",
+      "copyFailed": "Kopieren fehlgeschlagen",
+      "colName": "Name",
+      "colUrl": "URL",
+      "colEvents": "Events",
+      "colLastDelivery": "Letzte Zustellung",
+      "colStatus": "Status",
+      "colActions": "Aktionen",
+      "eventsSubscribed_one": "{{count}} abonniert",
+      "eventsSubscribed_other": "{{count}} abonniert",
+      "statusActive": "Aktiv",
+      "statusDisabled": "Deaktiviert",
+      "toggleToDisable": "Klicken zum Deaktivieren",
+      "toggleToEnable": "Klicken zum Aktivieren",
+      "deliveriesLink": "Zustellungen",
+      "delete": "Löschen",
+      "confirmDelete": "\"{{name}}\" löschen? Ausstehende Zustellungen werden ebenfalls entfernt.",
+      "createError": "Webhook konnte nicht erstellt werden",
+      "updateError": "Webhook konnte nicht aktualisiert werden",
+      "deletedToast": "Webhook gelöscht",
+      "deleteError": "Webhook konnte nicht gelöscht werden"
     },
     "sectionLabel": "Einstellungsbereich",
     "navAriaLabel": "Einstellungsnavigation",
@@ -1609,6 +1678,7 @@
         "communication": "Kommunikation",
         "scheduling": "Terminplanung",
         "sales": "Vertrieb",
+        "accounting": "Buchhaltung",
         "insights": "Auswertungen & Zugriff",
         "customers": "Kunden",
         "clients": "CRM"
@@ -1624,6 +1694,10 @@
         "title": "Galerien",
         "description": "Der Kern von PicPeak. Immer verfügbar.",
         "locked": "Galerien sind die Grundlage von PicPeak und können nicht deaktiviert werden."
+      },
+      "incomingMail": {
+        "title": "Eingehende E-Mails",
+        "description": "Ruft ein dediziertes Postfach (IMAP) jede Minute ab und legt Rechnungsanhänge in Buchhaltung → Eingangsrechnungen ab. Postfach unter Einstellungen → E-Mail konfigurieren."
       },
       "reminderEmails": {
         "title": "Erinnerungs-E-Mails",
@@ -1655,10 +1729,29 @@
         "sidebar": "Rechnungen"
       },
       "taxReport": {
-        "title": "Steuerliste",
+        "title": "Steuerexport",
         "description": "Periodenbezogene Umsatzliste mit Netto- und MwSt-Aufschlüsselung, gruppiert nach MwSt-Satz. Exportieren Sie als PDF (Querformat, Firmenbriefkopf) oder CSV für Ihre Buchhaltung. Stornierte Rechnungen bleiben für die lückenlose Nummernfolge sichtbar, sind aber nicht in den Summen enthalten.",
         "sidebar": "Steuer",
-        "requiresBills": "Bitte zuerst Rechnungen aktivieren — die Steuerliste liest aus Ihren Rechnungen."
+        "requiresBills": "Bitte zuerst Rechnungen aktivieren — die Steuerliste liest aus Ihren Rechnungen.",
+        "requiresAccounting": "Bitte zuerst Buchhaltung aktivieren — der Steuerexport liegt im Buchhaltungsbereich."
+      },
+      "accounting": {
+        "title": "Buchhaltung",
+        "description": "Ein eigener Buchhaltungsbereich, getrennt vom CRM. Hier aktivieren und dann die Unterfunktionen unten einschalten (Steuerexport, Eingangsrechnungen). MwSt-/Steuerbehandlung dient nur als Orientierung — vor dem Verlassen darauf mit Ihrem Treuhänder prüfen.",
+        "sidebar": "Buchhaltung",
+        "requiredByBills": "Automatisch an, weil Rechnungen aktiviert ist — die MwSt-Einstellungen der Rechnungen liegen im Buchhaltungsbereich."
+      },
+      "incomingInvoices": {
+        "title": "Eingangsrechnungen",
+        "description": "Eingehende Lieferantenrechnungen erfassen (Upload oder Handy-/Tablet-Kamera), Aufwände kategorisieren und Kosten dem passenden Event des Kunden mit vertraglich hinterlegtem Zuschlag weiterverrechnen.",
+        "sidebar": "Eingang",
+        "requiresAccounting": "Bitte zuerst Buchhaltung aktivieren — Eingangsrechnungen liegen im Buchhaltungsbereich."
+      },
+      "expenses": {
+        "title": "Aufwände",
+        "description": "Interne Aufwände (Kilometer, Spesenpauschale, Barbelege), gebucht auf ein Event oder die Firma, mit optionalem Beleg. Getrennt von Eingangsrechnungen.",
+        "sidebar": "Aufwände",
+        "requiresAccounting": "Bitte zuerst Buchhaltung aktivieren — Aufwände liegen im Buchhaltungsbereich."
       },
       "analytics": {
         "title": "Statistiken",
@@ -1691,6 +1784,19 @@
         "title": "Stundenerfassung",
         "description": "Zeiterfassung pro Kunde. Admin erfasst Datum + Start-/Endzeit + optionalen Satz-Override + Notiz. Kunden im Monatsmodus akkumulieren Stunden automatisch in den laufenden Monatsentwurf; Kunden pro Anlass sehen eine Schaltfläche „Entwurfsrechnung erstellen“, die eine eigenständige Entwurfsrechnung mit einer Zeile pro Eintrag erzeugt. Unabhängig von Rechnungen — Stunden erfassen, noch bevor die volle Abrechnungsoberfläche aktiviert ist.",
         "sidebar": "Stunden"
+      },
+      "projects": {
+        "title": "Projekte",
+        "description": "Nur-Admin-Gruppierungsebene über Events. Bündle mehrere Events unter einem Projekt und öffne ein 360°-Projektübersichts-Cockpit — Meilenstein-Zeitleiste plus ein datierter Verlauf aller E-Mails (mit der tatsächlich gesendeten Vorschau + Erneut-senden/Abbrechen/Wiederholen-Aktionen), Angebote, Verträge, Rechnungen, Galerien und erfassten Stunden. Fügt beim Erfassen von Stunden eine „Auf Projekt buchen“-Option hinzu. Kunden sehen Projekte nie.",
+        "sidebar": "Übersicht"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Liefert die Gallerie-Bereit-Benachrichtigung zusätzlich zur E-Mail über die WhatsApp Business API. Voraussetzung: Meta-Business-Konto, genehmigte Nachrichtenvorlage und eine Kunden-Telefonnummer am Event. Zugangsdaten unter Einstellungen → WhatsApp konfigurieren."
+      },
+      "slideshow": {
+        "title": "Live-Diashow",
+        "description": "Ein separater Vollbild-„Diashow“-Link pro Event für Beamer bei Live-Events – übernimmt neue Uploads automatisch, mit Voreinstellungen je Event-Typ und globalen Wasserzeichen-Vorgaben unter Einstellungen → Diashow."
       }
     },
     "customerSurface": {
@@ -1709,6 +1815,74 @@
     },
     "crm": {
       "title": "CRM-Verhalten"
+    },
+    "accounting": {
+      "title": "Buchhaltung",
+      "subtitle": "Standardsätze, MwSt-Einstellungen und die Belegpflicht.",
+      "kmRate": "Kilometersatz (CHF / km)",
+      "kmRateHint": "Standard für Kilometer-Aufwände; pro Eintrag überschreibbar.",
+      "perDiemRate": "Spesenpauschale (CHF / Tag)",
+      "perDiemRateHint": "Eine Tagespauschale, die als Aufwand gebucht wird (kein Kunden-Verrechnungssatz); pro Eintrag überschreibbar.",
+      "requireProof": "Beleg für jeden Aufwand verlangen",
+      "vat": {
+        "title": "MwSt.",
+        "registered": "MwSt-pflichtig (Umsatzsteuer berechnen + Vorsteuer abziehen)",
+        "registeredHint": "Aus = Kleinunternehmen / unter der Schwelle: keine MwSt berechnet, Vorsteuer ist Aufwand (nicht abziehbar).",
+        "reclaimCountries": "Länder mit abziehbarer Vorsteuer",
+        "reclaimCountriesHint": "Üblicherweise Ihr Inland (CH / LI). Kosten aus anderen Ländern gelten als nicht abziehbare ausländische MwSt. Cmd/Ctrl-Klick für Mehrfachauswahl.",
+        "defaultOutputCode": "Standard-MwSt-Code für neue Rechnungen",
+        "defaultOutputCodeNone": "— keiner (bei 0% beginnen) —",
+        "defaultOutputCodeHint": "Neue Rechnungen und Angebote starten mit diesem MwSt-Code. Bestehende Dokumente bleiben unverändert."
+      },
+      "disclaimer": "Sätze und MwSt-/Steuerbehandlung dienen nur als Orientierung — mit Ihrem Treuhänder prüfen.",
+      "savedToast": "Buchhaltungseinstellungen gespeichert.",
+      "profileFields": {
+        "vatLabel": "MwSt-Bezeichnung (z. B. MwSt., VAT)",
+        "vatLabelHint": "Wird als Bezeichnung der MwSt-Zeile auf Rechnungs-/Angebots-PDFs gedruckt. Leer lassen, um die Standardbezeichnung der Dokumentsprache zu verwenden.",
+        "hourlyRate": "Standard-Stundensatz",
+        "hourlyRatePlaceholder": "z. B. 120.00",
+        "hourlyRateHint": "Verrechnungs-Fallback, wenn ein Kunde keinen eigenen Satz hat (Stundenerfassung). In {{currency}}, in Hauptwährungseinheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen."
+      }
+    },
+    "slideshow": {
+      "title": "Diashow",
+      "subtitle": "Globale Vorgaben für die Live-Diashow. Events und Event-Typen können diese überschreiben."
+    },
+    "whatsapp": {
+      "title": "WhatsApp",
+      "subtitle": "Meta-Business-Zugangsdaten konfigurieren, um die Gallerie-Bereit-Benachrichtigung zusätzlich zur E-Mail per WhatsApp zu senden.",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHint": "Aus Meta Business → WhatsApp → API-Einrichtung. Die numerische ID, die Meta der hinterlegten Telefonnummer zuweist.",
+      "wabaId": "WABA-ID",
+      "wabaIdHint": "WhatsApp-Business-Konto-ID. Nur als Referenz (der API-Aufruf nutzt die Phone Number ID); nützlich für Audits.",
+      "accessToken": "Zugriffs-Token",
+      "accessTokenPlaceholder": "EAAB… (System-User-Token empfohlen)",
+      "accessTokenHint": "Beim Abruf maskiert als \"********\" gespeichert. Maskierten Wert beibehalten, um das bestehende Token zu behalten; neuen Wert eingeben, um zu ersetzen.",
+      "templateName": "Vorlagenname",
+      "templateNameHint": "Name der von Meta genehmigten Nachrichtenvorlage. Die Standardvorlage `gallery_ready` erwartet 5 Body-Parameter: Kundenname, Event-Name, Galerie-Link, Passwortzeile, Ablaufdatum. Die Vorlage vor der Aktivierung im Meta Business Manager genehmigen lassen.",
+      "templateLanguage": "Vorlagensprache",
+      "templateLanguagePlaceholder": "z. B. en_US, de_DE, ar, pt_BR",
+      "templateLanguageHint": "Meta-Sprachcode der Vorlage, exakt wie im Meta Business Manager hinterlegt (`ar`, `en_US`, `de_DE`, `pt_BR` usw.). Leer lassen, um auf die Standardsprache der Installation zurückzufallen. Stimmt der Code nicht mit einer registrierten Vorlage überein, meldet Meta „Vorlage in dieser Sprache nicht gefunden“.",
+      "templateParams": "Vorlagenparameter",
+      "templateParamsHint": "Auswählen, welche Werte als Positionsparameter (Slot 1, Slot 2, …) an Meta gesendet werden, und in der Reihenfolge anordnen, in der sie im Vorlagentext stehen. Nicht markierte Slots werden gar nicht gesendet. Standard entspricht der eingebauten `gallery_ready`-Vorlage mit 5 Parametern.",
+      "templateParamsEmpty": "Keine Slots ausgewählt – das Speichern fällt auf die Standardform mit 5 Parametern zurück.",
+      "templateParamsPreview": "Ihre Vorlage erhält: {{preview}}",
+      "paramMoveUp": "Nach oben",
+      "paramMoveDown": "Nach unten",
+      "params": {
+        "customer_name": "Kundenname",
+        "event_name": "Event-Name",
+        "gallery_link": "Galerie-Link",
+        "password_line": "Passwort-Zeile (mit 🔒-Präfix, leer ohne Passwort)",
+        "expiry_date": "Ablaufdatum"
+      },
+      "enabled": "WhatsApp-Benachrichtigungen senden",
+      "savedToast": "WhatsApp-Einstellungen gespeichert.",
+      "testHeading": "Testnachricht senden",
+      "testHelp": "Sendet eine statische Vorlagennachricht an die angegebene Telefonnummer, um Meta-Zugangsdaten und Vorlagenfreigabe zu prüfen. Mit Ländervorwahl (z. B. +49…).",
+      "testSend": "Test senden",
+      "testSending": "Senden…",
+      "testSentToast": "Testnachricht gesendet (ID: {{id}})."
     }
   },
   "branding": {
@@ -1933,6 +2107,8 @@
     "forceColorModeNone": "Kein Zwang (Benutzerauswahl)",
     "forceColorModeDark": "Dunkelmodus erzwingen",
     "forceColorModeLight": "Hellmodus erzwingen",
+    "forcedModeBrandingHint": "Hell/Dunkel wird site-weit über die Erzwingen-Steuerung unten festgelegt — die themenspezifische Modusauswahl ist ausgeblendet, da sie keine Wirkung hätte.",
+    "forcedModeGalleryNote": "Eine site-weite Farbsperre ist aktiv, daher folgt diese Galerie dem gesperrten Hell-/Dunkel-Modus. Farb- und Hell/Dunkel-Optionen sind hier ausgeblendet und können nicht pro Galerie überschrieben werden.",
     "colorGroupSurfaces": "Oberflächen",
     "colorGroupSurfacesHelp": "Die neutralen Ebenen hinter Ihrem Inhalt. Hintergrund liegt am weitesten zurück; Oberfläche und Erhöht stapeln sich darüber.",
     "backgroundColorHelp": "Die Seite selbst — Hintergrundfarbe jeder Galerie, Admin-Seite und CMS-Seite.",
@@ -2136,7 +2312,73 @@
       "categoryHeroUpdated": "Kategorie-Titelbild aktualisiert",
       "publicSiteResetToDefault": "Öffentliche Seite auf Standard zurückgesetzt",
       "cmsPageLogoUploaded": "CMS-Seiten-Logo hochgeladen: {{slug}}",
-      "adminPasswordResetByAdmin": "Admin-Passwort durch anderen Admin zurückgesetzt: {{username}}"
+      "adminPasswordResetByAdmin": "Admin-Passwort durch anderen Admin zurückgesetzt: {{username}}",
+      "contractCreated": "Vertrag erstellt: {{contractNumber}}",
+      "contractCreatedFromQuote": "Vertrag aus Angebot erstellt: {{contractNumber}}",
+      "contractUpdated": "Vertrag aktualisiert: {{contractNumber}}",
+      "contractSent": "Vertrag gesendet: {{contractNumber}}",
+      "contractResentSigned": "Unterschriebener Vertrag erneut gesendet: {{contractNumber}}",
+      "contractSignedByCustomer": "Vertrag vom Kunden unterschrieben: {{contractNumber}}",
+      "contractSignedPdfUploaded": "Unterschriebenes Vertrag-PDF hochgeladen: {{contractNumber}}",
+      "contractSignaturesRestamped": "Vertragsunterschriften neu gestempelt: {{contractNumber}}",
+      "contractCancelled": "Vertrag storniert: {{contractNumber}}",
+      "contractConvertedToEvent": "Vertrag in Event umgewandelt: {{contractNumber}}",
+      "contractConvertedToEmptyEvent": "Vertrag in leeres Event umgewandelt: {{contractNumber}}",
+      "contractConvertedToInvoices": "Vertrag in Rechnungen umgewandelt: {{contractNumber}}",
+      "contractConvertedToEmptyInvoice": "Vertrag in leere Rechnung umgewandelt: {{contractNumber}}",
+      "quoteCreated": "Angebot erstellt: {{quoteNumber}}",
+      "quoteSent": "Angebot gesendet: {{quoteNumber}}",
+      "quoteUpdated": "Angebot aktualisiert: {{quoteNumber}}",
+      "quoteAcceptedByAdmin": "Angebot angenommen: {{quoteNumber}}",
+      "quoteDeclinedByAdmin": "Angebot abgelehnt: {{quoteNumber}}",
+      "quoteConverted": "Angebot umgewandelt: {{quoteNumber}}",
+      "quoteConvertedInvoicesOnly": "Angebot in Rechnungen umgewandelt: {{quoteNumber}}",
+      "invoiceCreated": "Rechnung erstellt: {{invoiceNumber}}",
+      "invoiceSent": "Rechnung gesendet: {{invoiceNumber}}",
+      "invoiceScheduled": "Rechnung geplant: {{invoiceNumber}}",
+      "invoiceCancelled": "Rechnung storniert: {{invoiceNumber}}",
+      "invoiceCancelledViaStorno": "Rechnung per Storno storniert: {{invoiceNumber}}",
+      "invoiceReissued": "Rechnung neu ausgestellt: {{invoiceNumber}}",
+      "invoicePaidAdminNotified": "Rechnung als bezahlt markiert: {{invoiceNumber}}",
+      "invoicePaymentCheckRecorded": "Zahlungsprüfung erfasst für Rechnung: {{invoiceNumber}}",
+      "invoicePaymentCheckSent": "Zahlungsprüfung gesendet für Rechnung: {{invoiceNumber}}",
+      "invoiceReleasedForDelivery": "Rechnung zur Lieferung freigegeben: {{invoiceNumber}}",
+      "invoiceReminderSent": "Rechnungserinnerung gesendet: {{invoiceNumber}}",
+      "stornoSent": "Storno gesendet: {{invoiceNumber}}",
+      "monthlyBillIssued": "Monatsrechnung für Kunden ausgestellt",
+      "monthlyBillSkippedEmpty": "Monatsrechnung übersprungen (keine Einträge)",
+      "monthlyBillTriggeredManually": "Monatsrechnung manuell ausgelöst",
+      "monthlyBillingItemsQueued": "Monatsabrechnungsposten in Warteschlange",
+      "installmentPlanUpdated": "Ratenplan aktualisiert",
+      "expenseCreated": "Ausgabe erstellt",
+      "expenseUpdated": "Ausgabe aktualisiert",
+      "expensePaid": "Ausgabe als bezahlt markiert",
+      "expenseInvoiced": "Ausgabe in Rechnung gestellt",
+      "hourEntryLogged": "Stundeneintrag erfasst",
+      "hourEntryUpdated": "Stundeneintrag aktualisiert",
+      "hourEntryDeleted": "Stundeneintrag gelöscht",
+      "hourEntryLoggedToMonthlyDraft": "Stundeneintrag in Monatsentwurf erfasst",
+      "hourEntriesBilled": "Stundeneinträge an Kunden abgerechnet",
+      "incomingInvoiceCaptured": "Eingangsrechnung erfasst",
+      "incomingInvoiceCategorized": "Eingangsrechnung kategorisiert",
+      "incomingInvoiceUpdated": "Eingangsrechnung aktualisiert",
+      "incomingInvoiceRebilled": "Eingangsrechnung an Kunden weiterverrechnet",
+      "incomingInvoiceSupplierPayment": "Lieferantenzahlung erfasst",
+      "incomingMailConfigUpdated": "Eingangs-Mail-Konfiguration aktualisiert",
+      "customerCreatedPassive": "Passiver Kunde erstellt: {{email}}",
+      "adminUserActivated": "Admin-Konto aktiviert: {{username}}",
+      "adminUserDeleted": "Admin-Konto gelöscht: {{username}}",
+      "adminPasswordReset": "Admin-Passwort zurückgesetzt: {{username}}",
+      "bulkArchiveCompleted": "Massen-Archivierung abgeschlossen: {{count}} Events archiviert",
+      "emailQueueFlushed": "E-Mail-Warteschlange geleert",
+      "emailResent": "Erstellungs-E-Mail erneut gesendet für {{eventName}}",
+      "emailTemplateCreated": "E-Mail-Vorlage erstellt: {{template_key}}",
+      "eventDuplicated": "Event dupliziert aus {{source_event_name}}",
+      "feedbackDeleted": "Feedback gelöscht",
+      "feedbackModerated": "Feedback moderiert",
+      "feedbackSettingsUpdated": "Feedback-Einstellungen aktualisiert für {{eventName}}",
+      "wordFilterAdded": "Wortfilter hinzugefügt: {{word}}",
+      "whatsappConfigUpdated": "WhatsApp-Konfiguration aktualisiert"
     },
     "notificationToasts": {
       "markedAllRead": "Alle Benachrichtigungen als gelesen markiert",
@@ -2331,7 +2573,66 @@
       "photo_uploaded": "Foto hochgeladen in {{eventName}}",
       "category_hero_updated": "Kategorie-Titelbild aktualisiert",
       "public_site_reset_to_default": "Öffentliche Seite auf Standard zurückgesetzt",
-      "cms_page_logo_uploaded": "CMS-Seiten-Logo hochgeladen: {{slug}}"
+      "cms_page_logo_uploaded": "CMS-Seiten-Logo hochgeladen: {{slug}}",
+      "contract_created": "Vertrag erstellt: {{contractNumber}}",
+      "contract_created_from_quote": "Vertrag aus Angebot erstellt: {{contractNumber}}",
+      "contract_updated": "Vertrag aktualisiert: {{contractNumber}}",
+      "contract_sent": "Vertrag gesendet: {{contractNumber}}",
+      "contract_resent_signed": "Unterschriebener Vertrag erneut gesendet: {{contractNumber}}",
+      "contract_signed_by_customer": "Vertrag vom Kunden unterschrieben: {{contractNumber}}",
+      "contract_signed_pdf_uploaded": "Unterschriebenes Vertrag-PDF hochgeladen: {{contractNumber}}",
+      "contract_signatures_restamped": "Vertragsunterschriften neu gestempelt: {{contractNumber}}",
+      "contract_cancelled": "Vertrag storniert: {{contractNumber}}",
+      "contract_converted_to_event": "Vertrag in Event umgewandelt: {{contractNumber}}",
+      "contract_converted_to_empty_event": "Vertrag in leeres Event umgewandelt: {{contractNumber}}",
+      "contract_converted_to_invoices": "Vertrag in Rechnungen umgewandelt: {{contractNumber}}",
+      "contract_converted_to_empty_invoice": "Vertrag in leere Rechnung umgewandelt: {{contractNumber}}",
+      "quote_created": "Angebot erstellt: {{quoteNumber}}",
+      "quote_sent": "Angebot gesendet: {{quoteNumber}}",
+      "quote_updated": "Angebot aktualisiert: {{quoteNumber}}",
+      "quote_accepted_by_admin": "Angebot angenommen: {{quoteNumber}}",
+      "quote_declined_by_admin": "Angebot abgelehnt: {{quoteNumber}}",
+      "quote_converted": "Angebot umgewandelt: {{quoteNumber}}",
+      "quote_converted_invoices_only": "Angebot in Rechnungen umgewandelt: {{quoteNumber}}",
+      "invoice_created": "Rechnung erstellt: {{invoiceNumber}}",
+      "invoice_sent": "Rechnung gesendet: {{invoiceNumber}}",
+      "invoice_scheduled": "Rechnung geplant: {{invoiceNumber}}",
+      "invoice_cancelled": "Rechnung storniert: {{invoiceNumber}}",
+      "invoice_cancelled_via_storno": "Rechnung per Storno storniert: {{invoiceNumber}}",
+      "invoice_reissued": "Rechnung neu ausgestellt: {{invoiceNumber}}",
+      "invoice_paid_admin_notified": "Rechnung als bezahlt markiert: {{invoiceNumber}}",
+      "invoice_payment_check_recorded": "Zahlungsprüfung erfasst für Rechnung: {{invoiceNumber}}",
+      "invoice_payment_check_sent": "Zahlungsprüfung gesendet für Rechnung: {{invoiceNumber}}",
+      "invoice_released_for_delivery": "Rechnung zur Lieferung freigegeben: {{invoiceNumber}}",
+      "invoice_reminder_sent": "Rechnungserinnerung gesendet: {{invoiceNumber}}",
+      "storno_sent": "Storno gesendet: {{invoiceNumber}}",
+      "monthly_bill_issued": "Monatsrechnung für Kunden ausgestellt",
+      "monthly_bill_skipped_empty": "Monatsrechnung übersprungen (keine Einträge)",
+      "monthly_bill_triggered_manually": "Monatsrechnung manuell ausgelöst",
+      "monthly_billing_items_queued": "Monatsabrechnungsposten in Warteschlange",
+      "installment_plan_updated": "Ratenplan aktualisiert",
+      "expense_created": "Ausgabe erstellt",
+      "expense_updated": "Ausgabe aktualisiert",
+      "expense_paid": "Ausgabe als bezahlt markiert",
+      "expense_invoiced": "Ausgabe in Rechnung gestellt",
+      "hour_entry_logged": "Stundeneintrag erfasst",
+      "hour_entry_updated": "Stundeneintrag aktualisiert",
+      "hour_entry_deleted": "Stundeneintrag gelöscht",
+      "hour_entry_logged_to_monthly_draft": "Stundeneintrag in Monatsentwurf erfasst",
+      "hour_entries_billed": "Stundeneinträge an Kunden abgerechnet",
+      "incoming_invoice_captured": "Eingangsrechnung erfasst",
+      "incoming_invoice_categorized": "Eingangsrechnung kategorisiert",
+      "incoming_invoice_updated": "Eingangsrechnung aktualisiert",
+      "incoming_invoice_rebilled": "Eingangsrechnung an Kunden weiterverrechnet",
+      "incoming_invoice_supplier_payment": "Lieferantenzahlung erfasst",
+      "incoming_mail_config_updated": "Eingangs-Mail-Konfiguration aktualisiert",
+      "customer_created_passive": "Passiver Kunde erstellt: {{email}}",
+      "admin_user_activated": "Admin-Konto aktiviert: {{username}}",
+      "admin_user_deleted": "Admin-Konto gelöscht: {{username}}",
+      "email_queue_flushed": "E-Mail-Warteschlange geleert",
+      "email_template_created": "E-Mail-Vorlage erstellt: {{template_key}}",
+      "event_duplicated": "Event dupliziert aus {{source_event_name}}",
+      "whatsapp_config_updated": "WhatsApp-Konfiguration aktualisiert"
     }
   },
   "acceptInvitation": {
@@ -2480,6 +2781,55 @@
       "button": "Wartende E-Mails jetzt senden",
       "success": "Warteschlange geleert – {{sent}} gesendet, {{failed}} fehlgeschlagen",
       "empty": "Keine ausstehenden E-Mails zum Senden"
+    },
+    "incoming": {
+      "title": "Eingehende E-Mails (IMAP)",
+      "subtitle": "Ein dediziertes Postfach, jede Minute abgerufen; Anhänge landen in Buchhaltung → Eingangsrechnungen.",
+      "host": "IMAP-Host",
+      "test": "Verbindung testen",
+      "testOk": "Verbunden mit {{folder}} — {{messages}} Nachrichten, {{unseen}} ungelesen.",
+      "testFailed": "Verbindung fehlgeschlagen.",
+      "roundTrip": "Rundlauf-Test",
+      "roundTripHint": "Sendet über die SMTP-Einstellungen eine Test-E-Mail an dieses Postfach und prüft, ob sie ankommt. Beide vorher speichern.",
+      "roundTripOk": "Rundlauf OK — an {{recipient}} zugestellt in {{seconds}}s.",
+      "roundTripFailed": "Rundlauf-Test fehlgeschlagen.",
+      "poll": "Jetzt prüfen",
+      "pollHint": "Postfach sofort prüfen, statt auf den 60-Sekunden-Abruf zu warten. Ungelesene Anhänge werden in Eingangsrechnungen übernommen.",
+      "pollOk": "Postfach geprüft — {{count}} neue E-Mail(s) übernommen.",
+      "pollDisabled": "Eingehende E-Mails sind deaktiviert — unter Einstellungen → Funktionen aktivieren.",
+      "pollUnconfigured": "Zuerst die Einstellungen für eingehende E-Mails speichern.",
+      "pollBusy": "Ein Abruf läuft bereits — bitte gleich erneut versuchen.",
+      "pollFailed": "Postfach-Abruf fehlgeschlagen.",
+      "port": "Port",
+      "security": "Sicherheit",
+      "ssl": "SSL/TLS",
+      "plain": "Keine / STARTTLS",
+      "user": "Benutzername",
+      "pass": "Passwort",
+      "folder": "Ordner",
+      "save": "Eingangs-E-Mail-Einstellungen speichern",
+      "detectFolders": "Erkennen",
+      "folderHint": "Host, Benutzername und Passwort eingeben, dann „Erkennen“, um die Postfach-Ordner aufzulisten.",
+      "foldersDetected": "{{count}} Ordner gefunden.",
+      "noFolders": "Der Server hat keine Ordner zurückgegeben.",
+      "detectFailed": "Ordner konnten nicht erkannt werden.",
+      "requiredFields": "Host, Port und Benutzername sind erforderlich.",
+      "savedToast": "Einstellungen für eingehende E-Mails gespeichert."
+    },
+    "received": {
+      "tab": "Empfangene E-Mails",
+      "from": "Von",
+      "subject": "Betreff",
+      "received": "Empfangen",
+      "status": "Status",
+      "empty": "Noch keine empfangenen E-Mails. Eingehende E-Mails aktivieren und Postfach konfigurieren.",
+      "inbox": "Eingang",
+      "statusValue": {
+        "ingested": "Erfasst",
+        "no_attachment": "Kein Anhang",
+        "duplicate": "Duplikat",
+        "error": "Fehler"
+      }
     },
     "sentEmails": {
       "tab": "Gesendete E-Mails",
@@ -2811,7 +3161,10 @@
     "onPhoto": "Auf Foto",
     "showAll_one": "Alle {{count}} ausstehenden Kommentare anzeigen",
     "showAll_other": "Alle {{count}} ausstehenden Kommentare anzeigen",
-    "viewAllFeedback": "Gesamtes Feedback & Einstellungen anzeigen"
+    "viewAllFeedback": "Gesamtes Feedback & Einstellungen anzeigen",
+    "exportShapeLabel": "Form",
+    "exportShapeLong": "Pro Aktion (lang)",
+    "exportShapePivot": "Pro Gast (pivot)"
   },
   "filter": {
     "feedbackFilters": "Feedback-Filter",
@@ -2838,7 +3191,98 @@
     "exportFiltered": "Gefilterte Fotos exportieren",
     "hint": "Fotos auswählen oder Filter anwenden zum Exportieren",
     "exportSelected_one": "{{count}} ausgewähltes exportieren",
-    "exportSelected_other": "{{count}} ausgewählte exportieren"
+    "exportSelected_other": "{{count}} ausgewählte exportieren",
+    "preview": {
+      "titleTxt": "Dateinamen-Liste für Lightroom",
+      "titleCsv": "CSV-Export",
+      "helpTxt": "In das Lightroom-Dateinamensuchfeld einfügen. Die Liste ist kommagetrennt und ohne Dateiendung, damit sie auch zu einem Katalog mit RAW-Dateien passt.",
+      "helpCsv": "In eine Tabellenkalkulation einfügen (Google Sheets, Excel, Numbers) – die erste Zeile ist die Spaltenüberschrift.",
+      "copyButton": "In die Zwischenablage kopieren",
+      "copiedShort": "Kopiert",
+      "copied": "In die Zwischenablage kopiert.",
+      "copyFailed": "Zugriff auf die Zwischenablage blockiert. Bitte den Text markieren und manuell kopieren.",
+      "download": "Als Datei herunterladen"
+    }
+  },
+  "slideshow": {
+    "adminTitle": "Live-Diashow",
+    "adminDescription": "Ein separater Vollbild-Link für Beamer bei Live-Events. Zeigt alle veröffentlichten Fotos und übernimmt neue Uploads automatisch, während die Diashow läuft.",
+    "generateLink": "Diashow-Link erstellen",
+    "linkLabel": "Diashow-Link",
+    "linkGenerated": "Diashow-Link erstellt",
+    "linkDisabled": "Diashow-Link deaktiviert",
+    "regenerate": "Neu erstellen",
+    "disable": "Deaktivieren",
+    "disableConfirm": "Diesen Diashow-Link deaktivieren? Der aktuelle Link funktioniert dann nicht mehr.",
+    "intervalLabel": "Anzeigedauer (Sek.)",
+    "transitionLabel": "Übergang",
+    "transitionSpeedLabel": "Übergangsdauer (ms)",
+    "transition": {
+      "crossfade": "Überblenden",
+      "cut": "Hart schneiden",
+      "slide": "Schieben",
+      "kenburns": "Ken Burns",
+      "dipwhite": "Über Weiß blenden",
+      "dipblack": "Über Schwarz blenden"
+    },
+    "colorfilterLabel": "Farbfilter",
+    "colorfilter": {
+      "none": "Keiner",
+      "bw": "Schwarz-Weiß",
+      "sepia": "Sepia",
+      "warm": "Warm",
+      "cool": "Kühl",
+      "vignette": "Vignette"
+    },
+    "watermarkToggle": "Logo-Wasserzeichen anzeigen",
+    "watermarkDescription": "Blendet ein weißes, halbtransparentes Logo in einer Ecke ein (wie ein Senderlogo im TV).",
+    "watermarkSourceLabel": "Logo",
+    "watermarkSource": {
+      "logo": "Helles Logo",
+      "logo_dark": "Dunkelmodus-Logo",
+      "favicon": "Favicon",
+      "event": "Event-Logo",
+      "notSet": "Nicht gesetzt"
+    },
+    "watermarkPositionLabel": "Position",
+    "watermarkPosition": {
+      "top-left": "Oben links",
+      "top-right": "Oben rechts",
+      "bottom-left": "Unten links",
+      "bottom-right": "Unten rechts"
+    },
+    "watermarkOpacityLabel": "Deckkraft (%)",
+    "watermarkStyleLabel": "Logo-Darstellung",
+    "watermarkSizeLabel": "Größe (% des Bildschirms)",
+    "watermarkModeHint": "Logo, Position, Deckkraft, Darstellung und Größe werden unter Einstellungen → Diashow konfiguriert.",
+    "watermarkStyle": {
+      "white": "Weiß (einfärben)",
+      "original": "Originalfarben"
+    },
+    "watermarkMode": {
+      "inherit": "Globale Vorgabe verwenden",
+      "on": "An",
+      "off": "Aus"
+    },
+    "globalTitle": "Globale Diashow-Einstellungen",
+    "globalDescription": "Vorgaben für jede Diashow. Events können das Wasserzeichen überschreiben (an/aus).",
+    "fitLabel": "Bildanpassung",
+    "fit": {
+      "cover": "Bildschirm füllen (beschneiden)",
+      "contain": "Schwarze Balken (kein Beschnitt)"
+    },
+    "fitHint": "„Füllen“ beschneidet das Bild zum Ausfüllen; „Schwarze Balken“ zeigt das ganze Foto – besser für Hochformat.",
+    "presetTitle": "Standard-Stil für neue Diashows",
+    "presetHint": "Gilt für ab jetzt erstellte Events; jedes Event kann ihn weiterhin überschreiben.",
+    "defaultsSaved": "Diashow-Vorgaben gespeichert",
+    "liveHint": "Änderungen werden in einer laufenden Diashow innerhalb weniger Sekunden übernommen – der Link muss nicht neu erstellt werden.",
+    "saveSettings": "Diashow-Einstellungen speichern",
+    "settingsSaved": "Diashow-Einstellungen gespeichert",
+    "start": "Diashow starten",
+    "waiting": "Warte auf Fotos …",
+    "ended": "Diashow beendet.",
+    "notFound": "Dieser Diashow-Link ist nicht aktiv.",
+    "startFailed": "Diashow konnte nicht gestartet werden. Bitte erneut versuchen."
   },
   "clientAccess": {
     "title": "Kundenzugang",
@@ -3160,6 +3604,7 @@
         "rateOverride": "Satz-Override",
         "note": "Notiz / Beschreibung",
         "notePlaceholder": "Was wurde gearbeitet?",
+        "bookToProject": "Auf Projekt buchen",
         "save": "Eintrag hinzufügen",
         "needRate": "Satz festlegen oder Override eingeben, um Zeit zu erfassen."
       },
@@ -3407,6 +3852,7 @@
       "body": "Aktiviere „Konten\" (oder eine andere CRM-Unterfunktion) unter Einstellungen → Funktionen, um loszulegen."
     },
     "subnav": {
+      "overview": "Übersicht",
       "accounts": "Konten",
       "quotes": "Angebote",
       "contracts": "Verträge",
@@ -3415,6 +3861,277 @@
       "bills": "Rechnungen",
       "taxReport": "Steuer",
       "development": "Entwicklung"
+    }
+  },
+  "accounting": {
+    "title": "Buchhaltung",
+    "subtitle": "Eingehende Lieferantenrechnungen, Aufwände und Auswertungen.",
+    "navAriaLabel": "Buchhaltungs-Navigation",
+    "empty": {
+      "title": "Keine Buchhaltungsfunktionen aktiviert",
+      "body": "Aktiviere die Steuerliste (oder eine andere Buchhaltungs-Unterfunktion) unter Einstellungen → Funktionen, um loszulegen."
+    },
+    "subnav": {
+      "incomingInvoices": "Eingangsrechnungen",
+      "expenses": "Aufwände",
+      "taxReport": "Steuer",
+      "export": "Treuhänder-Export",
+      "chartOfAccounts": "Kontenplan"
+    },
+    "taxTreatment": {
+      "domestic": "Inland (mit MWST)",
+      "reverse_charge_service": "Bezugsteuer (Dienstleistungen)",
+      "foreign_vat_non_reclaimable": "Ausländische MWST (nicht abziehbar)",
+      "import_goods": "Wareneinfuhr"
+    },
+    "disposition": {
+      "rebill": "An Kunde weiterverrechnen",
+      "durchlaufend": "Durchlaufender Posten",
+      "eigener_aufwand": "Eigener Aufwand",
+      "duplikat": "Duplikat",
+      "abgelehnt": "Abgelehnt",
+      "help": {
+        "rebill": "Eigene Lieferantenkosten, die du an einen Kunden weiterverrechnest — meist mit Zuschlag. Wird als Kosten und als weiterverrechneter Ertrag gebucht.",
+        "durchlaufend": "Ein Betrag, den du nur im Namen des Kunden vorstreckst und exakt durchreichst — kein Zuschlag, MwSt-neutral (durchlaufender Posten). Kunde zuordnen, um ihn zum Selbstkostenpreis weiterzuverrechnen.",
+        "eigener_aufwand": "Eigene Kosten, die nicht weiterverrechnet werden. Kategorie wählen, damit der Posten richtig in der Erfolgsrechnung landet.",
+        "duplikat": "Duplikat einer bereits erfassten Rechnung — wird nicht verbucht.",
+        "abgelehnt": "Dokument ablehnen — wird nicht verbucht."
+      }
+    },
+    "markup": {
+      "none": "Keiner / aus Vertrag",
+      "percent": "Prozent",
+      "flat": "Pauschal"
+    },
+    "inbox": {
+      "captureTitle": "Lieferantenrechnung erfassen",
+      "captureBody": "Fotografiere eine Papierrechnung mit der Gerätekamera oder lade ein PDF / Bild hoch.",
+      "scanCamera": "Mit Kamera scannen",
+      "uploadFile": "Datei hochladen",
+      "capturedToast": "Dokument erfasst.",
+      "categorizedToast": "Dokument kategorisiert.",
+      "triageTitle": "Dokument kategorisieren",
+      "saveCategorize": "Speichern",
+      "saveCategorizePay": "Speichern & als bezahlt markieren",
+      "categorize": "Kategorisieren",
+      "recategorize": "Neu kategorisieren",
+      "view": "Ansehen",
+      "empty": "Noch keine Dokumente — oben eines erfassen.",
+      "untitled": "Unbenanntes Dokument",
+      "noAmount": "Betrag nicht erfasst",
+      "rebillHint": "Erstellt eine bearbeitbare geplante Rechnung beim Kunden. MwSt-/Steuerbehandlung ist v1 — mit Treuhänder prüfen.",
+      "previewLoading": "Vorschau wird geladen…",
+      "previewError": "Vorschau nicht verfügbar — Felder manuell erfassen.",
+      "qrHint": "Letzte Seite — der Schweizer QR-Einzahlschein sitzt meist unten.",
+      "prevPage": "Zurück",
+      "nextPage": "Weiter",
+      "pageOf": "Seite {{n}} / {{total}}",
+      "status": {
+        "label": "Status",
+        "unsorted": "Neu",
+        "categorized": "Kategorisiert",
+        "declined": "Abgelehnt",
+        "duplicate": "Duplikat"
+      },
+      "field": {
+        "supplier": "Lieferant",
+        "total": "Total",
+        "currency": "Währung",
+        "invoiceDate": "Rechnungsdatum",
+        "disposition": "Zuordnung",
+        "category": "Kategorie",
+        "categoryNone": "— keine —",
+        "declineReason": "Grund",
+        "customer": "Kunde",
+        "eventId": "Event-ID (optional)",
+        "markup": "Zuschlag",
+        "reference": "Zahlungsreferenz",
+        "referenceHint": "QR-/ESR-Referenz oder Mitteilung",
+        "note": "Notiz",
+        "noteHint": "Interne Notiz zu dieser Rechnung (optional)",
+        "passthroughCustomerHint": "Optional — einen Kunden zuordnen, um diese durchlaufende Position weiterzuverrechnen; leer lassen, um sie nur auf das Event zu buchen.",
+        "supplierCountry": "Lieferantenland",
+        "supplierCountryNone": "— unbekannt —",
+        "supplierCountryHint": "Setzt die Steuerbehandlung automatisch: ausserhalb deiner Vorsteuer-Länder → ausländische MwSt (nicht abziehbar)."
+      }
+    },
+    "expenseStatus": {
+      "open": "Offen",
+      "parked": "Geparkt",
+      "billed": "Verrechnet",
+      "declined": "Abgelehnt"
+    },
+    "paymentMethod": {
+      "bank_transfer": "Überweisung",
+      "cash": "Bargeld",
+      "twint": "TWINT",
+      "paypal": "PayPal",
+      "card": "Karte",
+      "other": "Sonstiges"
+    },
+    "booking": {
+      "label": "Buchen auf",
+      "company": "Firma",
+      "event": "Event",
+      "eventId": "Event-ID",
+      "inboundHint": "Auf welches Event diese Kosten in Auswertungen & Steuerexport entfallen (Firma = allgemeiner Aufwand). Unabhängig davon, an wen du weiterverrechnest."
+    },
+    "incoming": {
+      "triageTitle": "Eingangsrechnung kategorisieren",
+      "payTitle": "Lieferant als bezahlt markieren",
+      "outstanding": "Offen",
+      "markPaid": "Als bezahlt markieren",
+      "markUnpaid": "Als unbezahlt markieren",
+      "confirmPaid": "Als bezahlt markieren",
+      "paid": "Bezahlt",
+      "paidToast": "Als bezahlt markiert.",
+      "categorizedToast": "Kategorisiert.",
+      "categorizedPaidToast": "Kategorisiert und als bezahlt markiert.",
+      "pendingRebill": "Weiterverrechnung offen",
+      "pendingTitle": "Offene Weiterverrechnungen",
+      "pendingBody": "Kategorisierte Rechnungen, die auf die Weiterverrechnung warten. Posten eines Kunden zu einer Rechnung bündeln.",
+      "pendingCount": "{{count}} Posten",
+      "pendingCount_other": "{{count}} Posten",
+      "billPending": "Verrechnen",
+      "bundledToast": "{{count}} Weiterverrechnung zu einer Rechnung gebündelt.",
+      "bundledToast_other": "{{count}} Weiterverrechnungen zu einer Rechnung gebündelt."
+    },
+    "expense": {
+      "kind": "Art",
+      "km": "Kilometer",
+      "days": "Tage",
+      "rate": "Satz",
+      "rateDefault": "Standard {{rate}} — leer lassen, um ihn zu verwenden",
+      "computed": "Betrag",
+      "who": "Bezahlt von / Lieferant",
+      "whoHint": "z. B. Mitarbeitername oder Geschäft",
+      "proof": "Beleg",
+      "proofRequired": "Ein Beleg ist erforderlich.",
+      "proofExisting": "Es ist bereits ein Beleg angehängt — neuen hochladen, um ihn zu ersetzen.",
+      "viewProof": "Beleg"
+    },
+    "expenseKind": {
+      "amount": "Betrag",
+      "mileage": "Kilometer (km)",
+      "per_diem": "Spesenpauschale"
+    },
+    "category": {
+      "infrastructure": "Infrastruktur & Miete",
+      "equipment": "Equipment & Hardware",
+      "software": "Software & Lizenzen",
+      "material": "Material & Verbrauch",
+      "travel": "Reise & Spesen",
+      "marketing": "Werbung & Marketing",
+      "services": "Dienstleistungen/Fremdleistungen",
+      "insurance": "Versicherungen & Gebühren",
+      "training": "Weiterbildung",
+      "other": "Sonstiges"
+    },
+    "ledger": {
+      "allStatuses": "Alle Status",
+      "allDispositions": "Alle Zuordnungen",
+      "allKinds": "Alle Arten",
+      "empty": "Noch keine Aufwände — oben einen hinzufügen.",
+      "untitled": "Aufwand",
+      "invoiceLink": "Rechnung",
+      "paid": "Bezahlt",
+      "markPaid": "Als bezahlt markieren",
+      "markPaidTitle": "Lieferant als bezahlt markieren",
+      "paidDate": "Zahldatum",
+      "method": "Methode",
+      "reference": "Referenz (optional)",
+      "confirmPaid": "Als bezahlt markieren",
+      "paidToast": "Als bezahlt markiert.",
+      "unpaidToast": "Als nicht bezahlt markiert.",
+      "addExpense": "Aufwand hinzufügen",
+      "addTitle": "Aufwand hinzufügen",
+      "editTitle": "Aufwand bearbeiten",
+      "updatedToast": "Aufwand aktualisiert.",
+      "payTitle": "Aufwand als bezahlt markieren",
+      "invoiced": "Verrechnet",
+      "invoicedToast": "Zu einer Kundenrechnung hinzugefügt.",
+      "invoiceTitle": "Zur Kundenrechnung hinzufügen",
+      "invoiceHint": "Erstellt eine verrechenbare Position auf der nächsten geplanten Rechnung des Kunden und sperrt den Aufwand für weitere Änderungen.",
+      "addToInvoice": "Zur Rechnung hinzufügen",
+      "locked": "Gesperrt",
+      "lockedHint": "Gesperrt — dieser Aufwand ist auf einer Kundenrechnung.",
+      "description": "Beschreibung",
+      "descriptionHint": "z. B. Kilometer, Spesenpauschale, Barbeleg",
+      "createdToast": "Aufwand hinzugefügt."
+    }
+  },
+  "projects": {
+    "title": "Projektübersicht",
+    "subtitle": "Fasse Events zu Projekten zusammen und sieh jede E-Mail, jedes Dokument, jede Galerie und jede Stunde in einem Cockpit.",
+    "search": "Nach Name oder Kunde suchen…",
+    "empty": "Noch keine Projekte. Erstelle oben eines, oder vorhandene Events wurden automatisch gruppiert.",
+    "notFound": "Projekt nicht gefunden",
+    "backToList": "Alle Projekte",
+    "noCustomer": "Kein einzelner Kunde",
+    "rename": "Umbenennen",
+    "timeline": "Meilensteine",
+    "eventCount": "{{count}} Events",
+    "totalHours": "{{hours}} erfasst",
+    "create": {
+      "label": "Name des neuen Projekts",
+      "placeholder": "z. B. Hochzeit Müller 2026",
+      "button": "Projekt erstellen"
+    },
+    "col": {
+      "name": "Projekt",
+      "customer": "Kunde",
+      "events": "Events",
+      "value": "Wert",
+      "status": "Status",
+      "updated": "Aktualisiert"
+    },
+    "picker": {
+      "label": "Projekt",
+      "none": "Kein Projekt"
+    },
+    "value": {
+      "label": "Projektwert",
+      "paid": "bezahlt"
+    },
+    "events": {
+      "title": "Events",
+      "none": "Diesem Projekt sind noch keine Events zugeordnet.",
+      "searchPlaceholder": "Event zuordnen — nach Name suchen…",
+      "attached": "Event zugeordnet",
+      "attachFailed": "Event konnte nicht zugeordnet werden"
+    },
+    "feed": {
+      "title": "Aktivität",
+      "empty": "Diesem Projekt ist noch nichts zugeordnet.",
+      "email": "E-Mail",
+      "quote": "Angebot",
+      "contract": "Vertrag",
+      "invoice": "Rechnung",
+      "gallery": "Galerie",
+      "hours": "Stunden"
+    },
+    "email": {
+      "preview": "Vorschau",
+      "resend": "Erneut senden",
+      "sendNow": "Jetzt senden",
+      "cancel": "Abbrechen",
+      "retry": "Wiederholen",
+      "previewTitle": "E-Mail-Vorschau",
+      "noPreview": "Keine gespeicherte Vorschau für diese E-Mail — sie wurde gesendet, bevor Vorschauen erfasst wurden.",
+      "reRendered": "Neu gerendert aus der aktuellen Vorlage — diese E-Mail wurde gesendet, bevor Vorschauen erfasst wurden, und kann daher leicht von der tatsächlich versendeten abweichen.",
+      "reRenderedTag": "≈ neu gerendert"
+    },
+    "toast": {
+      "created": "Projekt erstellt",
+      "createFailed": "Projekt konnte nicht erstellt werden",
+      "saved": "Projekt gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "emailAction": "Erledigt",
+      "emailActionFailed": "Aktion fehlgeschlagen",
+      "previewFailed": "Vorschau konnte nicht geladen werden"
+    },
+    "error": {
+      "customerMismatch": "Das gehört zu einem anderen Kunden als dieses Projekt."
     }
   },
   "calendar": {
@@ -3574,6 +4291,83 @@
       }
     }
   },
+  "ledger": {
+    "intro": "Dient nur dem Treuhänder-Export — picpeak führt keine doppelte Buchhaltung. Der vorbelegte Kontenplan + die MWST-Codes folgen dem Schweizer/LI KMU-Kontenrahmen; passe sie an das Setup deines Treuhänders an.",
+    "settingsSaved": "Zuordnungen gespeichert.",
+    "saveDefaults": "Zuordnungen speichern",
+    "accountType": {
+      "asset": "Aktiven",
+      "liability": "Passiven",
+      "equity": "Eigenkapital",
+      "revenue": "Ertrag",
+      "expense": "Aufwand"
+    },
+    "vatDirection": {
+      "input": "Vorsteuer",
+      "output": "Umsatzsteuer"
+    },
+    "defaults": {
+      "title": "Standard- & Systemkonten",
+      "none": "— keines —",
+      "ledger_account_debitoren": "Forderungen (Debitoren)",
+      "ledger_account_kreditoren": "Verbindlichkeiten (Kreditoren)",
+      "ledger_account_bank": "Bank",
+      "ledger_account_cash": "Kasse",
+      "ledger_account_default_revenue": "Standard-Ertragskonto",
+      "ledger_account_default_expense": "Standard-Aufwandkonto",
+      "ledger_account_mileage": "Kilometer-Konto",
+      "ledger_account_per_diem": "Spesenpauschalen-Konto",
+      "ledger_account_rebilled_revenue": "Weiterverrechnete Spesen (Ertrag)"
+    },
+    "vatMap": {
+      "title": "MWST-Code nach steuerlicher Behandlung (Kosten)"
+    },
+    "outputVatMap": {
+      "title": "MWST-Code nach Umsatzsatz",
+      "empty": "Fügen Sie oben Ausgangs-MWST-Codes hinzu, um pro Umsatzsatz einen Code festzulegen."
+    },
+    "categoryMap": {
+      "title": "Aufwandkategorie → Konto"
+    },
+    "accounts": {
+      "title": "Kontenplan"
+    },
+    "vatCodes": {
+      "title": "MWST-Codes"
+    },
+    "account": {
+      "addTitle": "Konto hinzufügen",
+      "editTitle": "Konto bearbeiten",
+      "number": "Kontonummer",
+      "name": "Name",
+      "type": "Art",
+      "confirmDelete": "Dieses Konto löschen?"
+    },
+    "vat": {
+      "addTitle": "MWST-Code hinzufügen",
+      "editTitle": "MWST-Code bearbeiten",
+      "code": "Code",
+      "name": "Name",
+      "rate": "Satz %",
+      "direction": "Richtung",
+      "account": "MWST-Konto",
+      "noAccount": "— keines —",
+      "confirmDelete": "Diesen MWST-Code löschen?",
+      "legacyRate": "{{rate}}% (nicht konfiguriert)"
+    },
+    "export": {
+      "title": "Treuhänder-Export",
+      "intro": "Lade das Sammeljournal (Erträge + Kosten als periodengerechte Buchungssätze mit Konto- und MWST-Codes) zum Import in die Buchhaltungssoftware deines Treuhänders herunter.",
+      "format": "Zielsoftware",
+      "format_generic": "Generisch (alle Spalten)",
+      "format_banana": "Banana — doppelte Buchhaltung",
+      "format_banana_ie": "Banana — Einnahmen/Ausgaben",
+      "format_bexio": "bexio",
+      "download": "CSV herunterladen",
+      "failed": "Export fehlgeschlagen.",
+      "disclaimer": "Nur periodengerecht (Belegdaten) — Zahlungen/Bankbewegungen sind nicht enthalten. Konto- + MWST-Codes folgen deiner Kontenplan-Zuordnung. Den Import vor der Einreichung immer mit dem Treuhänder prüfen."
+    }
+  },
   "taxReport": {
     "title": "Steuerliste",
     "intro": "Periodenbezogene Umsatzliste mit Netto- und MwSt-Aufschlüsselung, gruppiert nach MwSt-Satz. Stornierte Rechnungen bleiben für die lückenlose Nummernfolge sichtbar, sind aber nicht in den Summen enthalten.",
@@ -3589,6 +4383,18 @@
       "currency": "Währung"
     },
     "exportPdf": "PDF exportieren",
+    "ledgerExport": "Treuhänder-Export",
+    "ledgerExportHint": "Buchungssätze für Ihren Treuhänder, abgebildet über Ihren Kontenplan.",
+    "ledgerExportConfigure": "Einrichten →",
+    "export": {
+      "reportTitle": "Bericht",
+      "reportHint": "Lesbare Liste — für Ihre Unterlagen.",
+      "scopeLabel": "Umfang",
+      "scopeAll": "Vollständig",
+      "scopeIncome": "Nur Einnahmen",
+      "scopeCost": "Nur Kosten",
+      "journalTitle": "Buchungsjournal"
+    },
     "exportCsv": "CSV exportieren",
     "exportFailed": "Export fehlgeschlagen. Bitte erneut versuchen.",
     "errorTitle": "Steuerliste konnte nicht geladen werden",
@@ -3599,6 +4405,32 @@
     "grandTotalVat": "Gesamt MwSt.",
     "grandTotalGross": "Gesamt Brutto",
     "cancelledFootnote": "{{count}} stornierte Rechnung(en) — Beträge nicht in den Summen enthalten (für lückenlose Nummernfolge dargestellt).",
+    "skontoTooltip": "Mit Skonto bezahlt",
+    "costsTitle": "Kosten (Eingangsrechnungen + Spesen)",
+    "costsDisclaimer": "Diese Einnahmen-Ausgaben-Übersicht ist eine Orientierungshilfe für Ihre Aufzeichnungen (Milchbüchleinrechnung). Vorsteuerabzug und Ergebnis hängen von der steuerlichen Behandlung jeder Kostenposition ab — vor der Einreichung mit Ihrem Treuhänder / der Steuerverwaltung prüfen.",
+    "summary": {
+      "outgoingTitle": "Ausgangsrechnungen",
+      "title": "Einnahmen / Ausgaben",
+      "income": "Einnahmen",
+      "costs": "Ausgaben",
+      "result": "Ergebnis",
+      "vatPayable": "MWST-Zahllast (Umsatz- − Vorsteuer)",
+      "vatUnconfigured": "Die MWST-Registrierung ist nicht konfiguriert, daher kann die MWST-Zahllast nicht berechnet werden. Lege sie unter Einstellungen → Buchhaltung fest."
+    },
+    "cost": {
+      "source": "Art",
+      "sourceIncoming": "Eingang",
+      "sourceExpense": "Spese",
+      "supplier": "Lieferant / Beschreibung",
+      "taxTreatment": "Steuerliche Behandlung",
+      "company": "Unternehmen",
+      "total": "Summe Kosten"
+    },
+    "type": {
+      "outgoing": "Ausgangsrechnung",
+      "incoming": "Eingangsrechnung",
+      "expense": "Aufwand"
+    },
     "col": {
       "date": "Datum",
       "invoice": "Rechnung",
@@ -3607,7 +4439,12 @@
       "vatRate": "MwSt %",
       "net": "Netto",
       "vat": "MwSt.",
-      "total": "Brutto"
+      "total": "Brutto",
+      "skonto": "Skonto",
+      "type": "Typ",
+      "reference": "Referenz",
+      "party": "Kunde / Lieferant",
+      "tax": "Steuer"
     }
   },
   "quotes": {
@@ -3888,6 +4725,7 @@
   },
   "businessProfile": {
     "savedToast": "Geschäftsprofil gespeichert.",
+    "movedToAccounting": "MwSt-Satz, MwSt-Bezeichnung und Standard-Stundensatz befinden sich jetzt unter Einstellungen → Buchhaltung.",
     "title": "Geschäftsprofil",
     "subtitle": "Briefkopf, Kontaktdaten und Standardwerte für Angebote und Rechnungen.",
     "businessHours": {
@@ -3934,11 +4772,6 @@
       "defaultCurrency": "Standardwährung",
       "defaultLocale": "Standardsprache",
       "timezone": "Zeitzone (IANA)",
-      "vatLabel": "MwSt-Bezeichnung",
-      "vatRateDefault": "Standard-MwSt-Satz %",
-      "defaultHourlyRate": "Standard-Stundensatz",
-      "defaultHourlyRatePlaceholder": "z. B. 120.00",
-      "defaultHourlyRateHint": "Fallback, wenn ein Kunde keinen eigenen Satz hat. In {{currency}}, in ganzen Einheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen.",
       "defaultQrFormat": "Standard-QR-Format",
       "footerLine": "Fusszeile"
     },

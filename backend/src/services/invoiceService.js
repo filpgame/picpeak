@@ -43,6 +43,7 @@ function getHierarchyHelpers() {
 
 // D.2 — `ensureInt` + `ensureNumber` consolidated into utils/numericHelpers.
 const { ensureInt, ensureNumber } = require('../utils/numericHelpers');
+const { hasColumnCached } = require('../utils/schemaCache');
 
 function formatNumberInTemplate(format, year, seq) {
   return format
@@ -694,6 +695,22 @@ async function createInvoice(payload, adminId, trx = db) {
   const customer = await trx('customer_accounts').where({ id: payload.customerAccountId }).first();
   ensureCustomerCanBill(customer);
 
+  // PR #603 review follow-up #1 — when an invoice is attached to an event,
+  // make sure that event actually belongs to the chosen customer. Without
+  // this, a typo'd/copy-pasted eventId silently links the invoice to an
+  // unrelated event, producing misleading reporting links. Only enforced
+  // when the event HAS customer assignments (an event with none — e.g. a
+  // legacy import — is allowed through, since we can't prove a mismatch).
+  if (payload.eventId && await trx.schema.hasTable('event_customer_assignments')) {
+    const assignments = await trx('event_customer_assignments')
+      .where({ event_id: payload.eventId })
+      .select('customer_account_id');
+    if (assignments.length > 0 &&
+        !assignments.some(a => a.customer_account_id === payload.customerAccountId)) {
+      throw new AppError('The selected event is not assigned to this customer', 422, 'EVENT_CUSTOMER_MISMATCH');
+    }
+  }
+
   // Accumulator intercept (migration 128). For customers in
   // billing_cadence='monthly' OR 'manual' mode every createInvoice call
   // APPENDS line items onto a single running draft instead of minting a
@@ -939,6 +956,11 @@ async function createInvoice(payload, adminId, trx = db) {
     created_at: new Date(),
     updated_at: new Date(),
   };
+  // Migration 130 — snapshot the chosen output VAT code (immutable; the
+  // accounting export emits exactly this rather than re-deriving from the map).
+  if (payload.vatCode !== undefined && await hasColumnCached('invoices', 'vat_code')) {
+    row.vat_code = payload.vatCode ? String(payload.vatCode).slice(0, 16) : null;
+  }
   const inserted = await trx('invoices').insert(row).returning('id');
   const invoiceId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
 
@@ -1758,6 +1780,8 @@ async function buildInvoiceRenderContext(invoice, lineItems) {
     totals: {
       netAmountMinor: invoice.net_amount_minor,
       vatRate: invoice.vat_rate,
+      // Migration 130 — VAT-code snapshot (so re-editing preserves it).
+      vatCode: invoice.vat_code ?? null,
       vatAmountMinor: invoice.vat_amount_minor,
       shippingAmountMinor: invoice.shipping_amount_minor,
       totalAmountMinor: invoice.total_amount_minor,
@@ -2196,6 +2220,10 @@ async function createStorno(originalId, adminId, trx = db) {
     currency: original.currency,
     language: original.language,
     vat_rate: original.vat_rate,
+    // Migration 130 — carry the original's VAT-code snapshot onto the Storno so
+    // both documents export the same code. Conditional spread = safe on pre-130
+    // DBs (undefined → omitted).
+    ...(original.vat_code ? { vat_code: original.vat_code } : {}),
     shipping_amount_minor: -ensureInt(original.shipping_amount_minor || 0),
     net_amount_minor: -ensureInt(original.net_amount_minor),
     vat_amount_minor: -ensureInt(original.vat_amount_minor),

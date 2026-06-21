@@ -98,6 +98,7 @@
     "error": "Error",
     "configureInSettings": "Configure defaults in Settings ↗",
     "save": "Save",
+    "saving": "Saving…",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -150,7 +151,8 @@
     "preview": "Preview",
     "duplicate": "Duplicate",
     "showAll": "Show all",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "show": "Show"
   },
   "upload": {
     "photoCategory": "Photo Category",
@@ -196,6 +198,7 @@
     "users": "Users",
     "calendar": "Calendar",
     "clients": "CRM",
+    "accounting": "Accounting",
     "betaTag": "Beta"
   },
   "archives": {
@@ -383,7 +386,12 @@
     "coverPhotoSet": "Cover photo set successfully",
     "coverPhotoRemoved": "Cover photo removed",
     "failedToSetCoverPhoto": "Failed to set cover photo",
-    "categoryHeroHint": "If no cover photo is set for a category, the default hero photo will be used."
+    "categoryHeroHint": "If no cover photo is set for a category, the default hero photo will be used.",
+    "downloadsEnabled": "Downloads enabled for this category",
+    "downloadsDisabled": "Downloads disabled for this category",
+    "enableDownloadsTitle": "Click to enable downloads for this category",
+    "disableDownloadsTitle": "Click to disable downloads for this category",
+    "failedToToggleDownloads": "Failed to update download permission"
   },
   "events": {
     "title": "Events",
@@ -566,6 +574,31 @@
     "publishAndNotify": "Publish & Notify Client",
     "publishConfirm": "This will make the gallery accessible and send the notification email to the client. Continue?",
     "publishSuccess": "Gallery published and client notified!",
+    "publishDialog": {
+      "title": "Publish gallery",
+      "descriptionWithEmail": "Publishing \"{{eventName}}\" makes the gallery accessible and sends the notification email to {{customerEmail}}.",
+      "descriptionNoEmail": "Publishing \"{{eventName}}\" makes the gallery accessible. No customer email is set, so no notification will be sent.",
+      "passwordLabel": "Gallery password",
+      "passwordPlaceholder": "Enter the gallery password",
+      "passwordHelp": "Re-type the password set at creation (or pick a new one). The email includes this exact text; the backend re-hashes it so the gallery login still works.",
+      "errorMinLength": "Password must be at least 6 characters long."
+    },
+    "duplicateEvent": "Duplicate gallery",
+    "duplicateDialog": {
+      "title": "Duplicate gallery",
+      "description": "Creates a new draft gallery that inherits the branding, behaviour, feedback, and category configuration from \"{{sourceEventName}}\". Photos, password, and share tokens are NOT carried over.",
+      "eventNameLabel": "New event name *",
+      "eventNamePlaceholder": "e.g. Müller Wedding 2026",
+      "eventDateLabel": "Event date",
+      "eventDateHelp": "Leave blank to use a random suffix in the gallery URL. Expiration is recomputed from this date plus the source gallery's expiration window.",
+      "customerNameLabel": "Customer name",
+      "customerNamePlaceholder": "Optional — fill in later if unknown",
+      "customerEmailLabel": "Customer email",
+      "customerEmailPlaceholder": "Optional",
+      "confirm": "Create duplicate",
+      "errorNameRequired": "Event name is required.",
+      "successToast": "Gallery duplicated."
+    },
     "draftBanner": "This gallery is in draft mode. Upload your photos, then publish when ready.",
     "subtitle": "Manage your photo galleries and events",
     "failedToLoadEvents": "Failed to load events",
@@ -909,7 +942,9 @@
       "showGalleryFilterBar": "Show filter bar in galleries",
       "showGalleryFilterBarHelp": "Display the search-by-filename and sort controls above grid-layout galleries. Disable for a cleaner layout.",
       "enablePhoneField": "Enable phone number field",
-      "enablePhoneFieldHelp": "Adds an optional phone number input to the event form. Useful for downstream automations like WhatsApp delivery via n8n. Always optional even when enabled."
+      "enablePhoneFieldHelp": "Adds an optional phone number input to the event form. Useful for downstream automations like WhatsApp delivery via n8n. Always optional even when enabled.",
+      "defaultFeedbackEnabled": "Enable Guest Feedback by default",
+      "defaultFeedbackEnabledHelp": "Pre-check \"Guest Feedback\" when creating new events. Individual feedback options (likes, ratings, comments) can still be customised per event."
     },
     "imageSecurity": {
       "title": "Image Protection",
@@ -1094,9 +1129,10 @@
       "statusRevoked": "Revoked",
       "statusExpired": "Expired",
       "statusActive": "Active",
-      "confirmRevoke": "Do you want to revoke this token? This action cannot be undone.",
+      "confirmRevoke": "Revoke \"{{name}}\"? Existing integrations using this token will start getting 401.",
       "revoke": "Revoke",
-      "empty": "No tokens yet. Generate one above to get started."
+      "empty": "No tokens yet. Generate one above to get started.",
+      "preview": "Preview"
     },
     "webhooks": {
       "title": "Webhooks",
@@ -1110,7 +1146,38 @@
       "template": "Template (optional)",
       "create": "Create Webhook",
       "existing": "Existing webhooks",
-      "empty": "No webhooks yet. Create one above to start receiving event notifications."
+      "empty": "No webhooks yet. Create one above to start receiving event notifications.",
+      "namePlaceholder": "e.g. n8n WhatsApp",
+      "urlPlaceholder": "https://n8n.example.com/webhook/picpeak",
+      "showAdvanced": "+ Advanced (filter, template)",
+      "hideAdvanced": "− Hide advanced (filter, template)",
+      "filterHelp": "Dot-path → expected value. All keys must match (AND). Use an array for \"any of\".",
+      "filterError": "Filter must be valid JSON",
+      "templatePlaceholder": "New gallery: ${data.event.event_name} → ${data.event.share_url}",
+      "templateHelp": "Replaces the default JSON envelope as the request body. ${dot.path} substitution from the payload only — no logic, no expressions.",
+      "copyButton": "Copy",
+      "dismiss": "Dismiss",
+      "copied": "Copied",
+      "copyFailed": "Copy failed",
+      "colName": "Name",
+      "colUrl": "URL",
+      "colEvents": "Events",
+      "colLastDelivery": "Last delivery",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "eventsSubscribed_one": "{{count}} subscribed",
+      "eventsSubscribed_other": "{{count}} subscribed",
+      "statusActive": "Active",
+      "statusDisabled": "Disabled",
+      "toggleToDisable": "Click to disable",
+      "toggleToEnable": "Click to enable",
+      "deliveriesLink": "Deliveries",
+      "delete": "Delete",
+      "confirmDelete": "Delete \"{{name}}\"? Pending deliveries are also removed.",
+      "createError": "Failed to create webhook",
+      "updateError": "Failed to update webhook",
+      "deletedToast": "Webhook deleted",
+      "deleteError": "Failed to delete webhook"
     },
     "sectionLabel": "Settings section",
     "navAriaLabel": "Settings navigation",
@@ -1167,6 +1234,7 @@
         "communication": "Communication",
         "scheduling": "Scheduling",
         "sales": "Sales",
+        "accounting": "Accounting",
         "insights": "Insights & Access",
         "customers": "Customers",
         "clients": "CRM"
@@ -1182,6 +1250,10 @@
         "title": "Galleries",
         "description": "The core PicPeak surface. Always available.",
         "locked": "Galleries are the foundation of PicPeak and can't be turned off."
+      },
+      "incomingMail": {
+        "title": "Incoming mail",
+        "description": "Poll a dedicated mailbox (IMAP) every minute and drop invoice attachments into Accounting → Incoming invoices. Configure the mailbox under Settings → Email."
       },
       "reminderEmails": {
         "title": "Reminder Emails",
@@ -1213,10 +1285,29 @@
         "sidebar": "Invoices"
       },
       "taxReport": {
-        "title": "Tax report",
+        "title": "Tax export",
         "description": "Period-scoped revenue list with net + VAT breakdown grouped by VAT rate. Export as PDF (landscape, company letterhead) or CSV for your accountant. Cancelled invoices stay visible for a gap-free audit trail but are excluded from totals.",
         "sidebar": "Tax",
-        "requiresBills": "Enable Bills first — the tax report reads from your invoices."
+        "requiresBills": "Enable Bills first — the tax report reads from your invoices.",
+        "requiresAccounting": "Enable Accounting first — Tax export lives in the Accounting section."
+      },
+      "accounting": {
+        "title": "Accounting",
+        "description": "A dedicated Accounting area, separate from CRM. Turn this on, then enable the sub-features below (Tax export, Incoming invoices). VAT / tax treatment is guidance only — verify with your Treuhänder before relying on it.",
+        "sidebar": "Accounting",
+        "requiredByBills": "On automatically because Invoices is enabled — invoice VAT settings live in the Accounting section."
+      },
+      "incomingInvoices": {
+        "title": "Incoming invoices",
+        "description": "Capture received supplier invoices (upload or phone/tablet camera), categorize expenses, and re-bill costs to clients on the relevant event with a contract-driven markup.",
+        "sidebar": "Incoming",
+        "requiresAccounting": "Enable Accounting first — Incoming invoices live in the Accounting section."
+      },
+      "expenses": {
+        "title": "Expenses",
+        "description": "Internal expenses (mileage, per-diem, cash) booked to an event or the company, with optional proof. Separate from incoming supplier invoices.",
+        "sidebar": "Expenses",
+        "requiresAccounting": "Enable Accounting first — Expenses live in the Accounting section."
       },
       "analytics": {
         "title": "Analytics",
@@ -1249,6 +1340,19 @@
         "title": "Hours logging",
         "description": "Per-customer time tracking. Admin logs date + start/end times + optional rate override + note. Monthly-mode customers auto-accumulate hours into the running monthly draft; per-event customers see a \"Create draft invoice\" button that mints a standalone draft invoice with one line per entry. Independent of Bills — log hours even before turning the full billing surface on.",
         "sidebar": "Hours"
+      },
+      "projects": {
+        "title": "Projects",
+        "description": "Admin-only grouping layer above events. Bundle several events under one project and open a 360° Project Overview cockpit — milestone timeline plus a dated feed of every email (with the actual sent preview + resend/cancel/retry actions), quote, contract, invoice, gallery and logged hour. Adds a \"book to project\" control when logging hours. Customers never see projects.",
+        "sidebar": "Overview"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Deliver the gallery-ready notification via WhatsApp Business API in addition to email. Requires a Meta Business Account, an approved message template, and a customer phone number on the event. Configure credentials under Settings → WhatsApp."
+      },
+      "slideshow": {
+        "title": "Live Slideshow",
+        "description": "A separate fullscreen \"Diashow\" link per event for projectors at live events — auto-picks-up new uploads, with per-event-type presets and global watermark defaults under Settings → Slideshow."
       }
     },
     "customerSurface": {
@@ -1267,6 +1371,74 @@
     },
     "crm": {
       "title": "CRM behaviour"
+    },
+    "accounting": {
+      "title": "Accounting",
+      "subtitle": "Default rates, VAT settings and the proof requirement.",
+      "kmRate": "Mileage rate (CHF / km)",
+      "kmRateHint": "Default applied to mileage expenses; overridable per entry.",
+      "perDiemRate": "Daily allowance (CHF / day)",
+      "perDiemRateHint": "A flat daily allowance booked as an expense (not a client billing rate); overridable per entry.",
+      "requireProof": "Require a proof file on every expense",
+      "vat": {
+        "title": "VAT",
+        "registered": "VAT-registered (charge output VAT + reclaim input VAT)",
+        "registeredHint": "Off = small business / under threshold: no VAT charged, input VAT is a cost (not reclaimable).",
+        "reclaimCountries": "Countries where input VAT is reclaimable",
+        "reclaimCountriesHint": "Typically your domestic country (CH / LI). Costs from other countries are treated as non-reclaimable foreign VAT. Cmd/Ctrl-click to multi-select.",
+        "defaultOutputCode": "Default VAT code for new invoices",
+        "defaultOutputCodeNone": "— none (start at 0%) —",
+        "defaultOutputCodeHint": "New invoices and quotes start with this VAT code selected. Existing documents are unaffected."
+      },
+      "disclaimer": "Rates and VAT/tax treatment are guidance only — verify with your Treuhänder.",
+      "savedToast": "Accounting settings saved.",
+      "profileFields": {
+        "vatLabel": "VAT label (e.g. MwSt., VAT)",
+        "vatLabelHint": "Printed as the VAT-line label on invoice / quote PDFs. Leave blank to use the document language default.",
+        "hourlyRate": "Default hourly rate",
+        "hourlyRatePlaceholder": "e.g. 120.00",
+        "hourlyRateHint": "Billing fallback used when a customer has no own rate (hours logging). In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate."
+      }
+    },
+    "slideshow": {
+      "title": "Slideshow",
+      "subtitle": "Global defaults for the Live Slideshow. Events and event types can override these."
+    },
+    "whatsapp": {
+      "title": "WhatsApp",
+      "subtitle": "Configure Meta Business credentials to deliver the gallery-ready notification via WhatsApp alongside email.",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHint": "From Meta Business → WhatsApp → API Setup. The numeric ID Meta assigns to the phone you registered.",
+      "wabaId": "WABA ID",
+      "wabaIdHint": "WhatsApp Business Account ID. Reference only (the API call uses the Phone Number ID); helpful for auditing.",
+      "accessToken": "Access token",
+      "accessTokenPlaceholder": "EAAB… (system-user token recommended)",
+      "accessTokenHint": "Stored masked as \"********\" on GET. Leave the masked value to keep the existing token; type a new one to replace it.",
+      "templateName": "Template name",
+      "templateNameHint": "Name of the Meta-approved message template. The default `gallery_ready` expects 5 body parameters: customer name, event name, gallery link, password line, expiry date. Approve the template in Meta Business Manager before enabling.",
+      "templateLanguage": "Template language",
+      "templateLanguagePlaceholder": "e.g. en_US, de_DE, ar, pt_BR",
+      "templateLanguageHint": "Meta template language code, exactly as you registered it in Meta Business Manager (`ar`, `en_US`, `de_DE`, `pt_BR`, etc.). Leave empty to fall back to the system default language. Meta returns \"template not found in language\" if this doesn't match a registered template.",
+      "templateParams": "Template parameters",
+      "templateParamsHint": "Pick which built-in values are sent as positional template parameters (slot 1, slot 2, …), and arrange them so they match the order in your Meta-registered template body. Unchecked slots are not sent at all. Default matches the built-in `gallery_ready` 5-parameter shape.",
+      "templateParamsEmpty": "No slots selected — saving will fall back to the default 5-parameter shape.",
+      "templateParamsPreview": "Your template will receive: {{preview}}",
+      "paramMoveUp": "Move up",
+      "paramMoveDown": "Move down",
+      "params": {
+        "customer_name": "Customer name",
+        "event_name": "Event name",
+        "gallery_link": "Gallery link",
+        "password_line": "Password line (🔒-prefixed, empty when no password)",
+        "expiry_date": "Expiry date"
+      },
+      "enabled": "Send WhatsApp notifications",
+      "savedToast": "WhatsApp settings saved.",
+      "testHeading": "Send a test message",
+      "testHelp": "Sends a static template message to the phone number below to verify Meta credentials + template approval. Includes country code (e.g. +49…).",
+      "testSend": "Send test",
+      "testSending": "Sending…",
+      "testSentToast": "Test message sent (id: {{id}})."
     }
   },
   "analytics": {
@@ -1522,6 +1694,8 @@
     "forceColorModeNone": "No force (user choice)",
     "forceColorModeDark": "Force dark",
     "forceColorModeLight": "Force light",
+    "forcedModeBrandingHint": "Light/dark is locked site-wide by the Force control below — the per-theme mode picker is hidden because it would have no effect.",
+    "forcedModeGalleryNote": "A site-wide color lock is active, so this gallery follows the locked light/dark mode. Color and light/dark options are hidden here and can’t be overridden per gallery.",
     "colorGroupSurfaces": "Surfaces",
     "colorGroupSurfacesHelp": "The neutral layers behind your content. Background sits furthest back; Surface and Elevated stack on top.",
     "backgroundColorHelp": "The page itself — body background of every gallery, admin page and CMS page.",
@@ -1723,7 +1897,73 @@
       "categoryHeroUpdated": "Category hero photo updated",
       "publicSiteResetToDefault": "Public site reset to default",
       "cmsPageLogoUploaded": "CMS page logo uploaded: {{slug}}",
-      "adminPasswordResetByAdmin": "Admin password reset by another admin: {{username}}"
+      "adminPasswordResetByAdmin": "Admin password reset by another admin: {{username}}",
+      "contractCreated": "Contract created: {{contractNumber}}",
+      "contractCreatedFromQuote": "Contract created from quote: {{contractNumber}}",
+      "contractUpdated": "Contract updated: {{contractNumber}}",
+      "contractSent": "Contract sent: {{contractNumber}}",
+      "contractResentSigned": "Signed contract resent: {{contractNumber}}",
+      "contractSignedByCustomer": "Contract signed by customer: {{contractNumber}}",
+      "contractSignedPdfUploaded": "Signed contract PDF uploaded: {{contractNumber}}",
+      "contractSignaturesRestamped": "Contract signatures re-stamped: {{contractNumber}}",
+      "contractCancelled": "Contract cancelled: {{contractNumber}}",
+      "contractConvertedToEvent": "Contract converted to event: {{contractNumber}}",
+      "contractConvertedToEmptyEvent": "Contract converted to empty event: {{contractNumber}}",
+      "contractConvertedToInvoices": "Contract converted to invoices: {{contractNumber}}",
+      "contractConvertedToEmptyInvoice": "Contract converted to empty invoice: {{contractNumber}}",
+      "quoteCreated": "Quote created: {{quoteNumber}}",
+      "quoteSent": "Quote sent: {{quoteNumber}}",
+      "quoteUpdated": "Quote updated: {{quoteNumber}}",
+      "quoteAcceptedByAdmin": "Quote accepted: {{quoteNumber}}",
+      "quoteDeclinedByAdmin": "Quote declined: {{quoteNumber}}",
+      "quoteConverted": "Quote converted: {{quoteNumber}}",
+      "quoteConvertedInvoicesOnly": "Quote converted to invoices: {{quoteNumber}}",
+      "invoiceCreated": "Invoice created: {{invoiceNumber}}",
+      "invoiceSent": "Invoice sent: {{invoiceNumber}}",
+      "invoiceScheduled": "Invoice scheduled: {{invoiceNumber}}",
+      "invoiceCancelled": "Invoice cancelled: {{invoiceNumber}}",
+      "invoiceCancelledViaStorno": "Invoice cancelled via Storno: {{invoiceNumber}}",
+      "invoiceReissued": "Invoice reissued: {{invoiceNumber}}",
+      "invoicePaidAdminNotified": "Invoice marked paid: {{invoiceNumber}}",
+      "invoicePaymentCheckRecorded": "Payment-check recorded for invoice: {{invoiceNumber}}",
+      "invoicePaymentCheckSent": "Payment-check sent for invoice: {{invoiceNumber}}",
+      "invoiceReleasedForDelivery": "Invoice released for delivery: {{invoiceNumber}}",
+      "invoiceReminderSent": "Invoice reminder sent: {{invoiceNumber}}",
+      "stornoSent": "Storno sent: {{invoiceNumber}}",
+      "monthlyBillIssued": "Monthly bill issued for customer",
+      "monthlyBillSkippedEmpty": "Monthly bill skipped (no entries)",
+      "monthlyBillTriggeredManually": "Monthly bill triggered manually",
+      "monthlyBillingItemsQueued": "Monthly billing items queued",
+      "installmentPlanUpdated": "Installment plan updated",
+      "expenseCreated": "Expense created",
+      "expenseUpdated": "Expense updated",
+      "expensePaid": "Expense marked paid",
+      "expenseInvoiced": "Expense invoiced",
+      "hourEntryLogged": "Hour entry logged",
+      "hourEntryUpdated": "Hour entry updated",
+      "hourEntryDeleted": "Hour entry deleted",
+      "hourEntryLoggedToMonthlyDraft": "Hour entry logged to monthly draft",
+      "hourEntriesBilled": "Hour entries billed to customer",
+      "incomingInvoiceCaptured": "Incoming invoice captured",
+      "incomingInvoiceCategorized": "Incoming invoice categorised",
+      "incomingInvoiceUpdated": "Incoming invoice updated",
+      "incomingInvoiceRebilled": "Incoming invoice re-billed to customer",
+      "incomingInvoiceSupplierPayment": "Supplier payment recorded",
+      "incomingMailConfigUpdated": "Incoming mail configuration updated",
+      "customerCreatedPassive": "Passive customer created: {{email}}",
+      "adminUserActivated": "Admin user activated: {{username}}",
+      "adminUserDeleted": "Admin user deleted: {{username}}",
+      "adminPasswordReset": "Admin password reset: {{username}}",
+      "bulkArchiveCompleted": "Bulk archive completed: {{count}} events archived",
+      "emailQueueFlushed": "Email queue flushed",
+      "emailResent": "Creation email resent for {{eventName}}",
+      "emailTemplateCreated": "Email template created: {{template_key}}",
+      "eventDuplicated": "Event duplicated from {{source_event_name}}",
+      "feedbackDeleted": "Feedback deleted",
+      "feedbackModerated": "Feedback moderated",
+      "feedbackSettingsUpdated": "Feedback settings updated for {{eventName}}",
+      "wordFilterAdded": "Word filter added: {{word}}",
+      "whatsappConfigUpdated": "WhatsApp configuration updated"
     },
     "notificationToasts": {
       "markedAllRead": "All notifications marked as read",
@@ -1920,7 +2160,66 @@
       "photo_uploaded": "Photo uploaded to {{eventName}}",
       "category_hero_updated": "Category hero photo updated",
       "public_site_reset_to_default": "Public site reset to default",
-      "cms_page_logo_uploaded": "CMS page logo uploaded: {{slug}}"
+      "cms_page_logo_uploaded": "CMS page logo uploaded: {{slug}}",
+      "contract_created": "Contract created: {{contractNumber}}",
+      "contract_created_from_quote": "Contract created from quote: {{contractNumber}}",
+      "contract_updated": "Contract updated: {{contractNumber}}",
+      "contract_sent": "Contract sent: {{contractNumber}}",
+      "contract_resent_signed": "Signed contract resent: {{contractNumber}}",
+      "contract_signed_by_customer": "Contract signed by customer: {{contractNumber}}",
+      "contract_signed_pdf_uploaded": "Signed contract PDF uploaded: {{contractNumber}}",
+      "contract_signatures_restamped": "Contract signatures re-stamped: {{contractNumber}}",
+      "contract_cancelled": "Contract cancelled: {{contractNumber}}",
+      "contract_converted_to_event": "Contract converted to event: {{contractNumber}}",
+      "contract_converted_to_empty_event": "Contract converted to empty event: {{contractNumber}}",
+      "contract_converted_to_invoices": "Contract converted to invoices: {{contractNumber}}",
+      "contract_converted_to_empty_invoice": "Contract converted to empty invoice: {{contractNumber}}",
+      "quote_created": "Quote created: {{quoteNumber}}",
+      "quote_sent": "Quote sent: {{quoteNumber}}",
+      "quote_updated": "Quote updated: {{quoteNumber}}",
+      "quote_accepted_by_admin": "Quote accepted: {{quoteNumber}}",
+      "quote_declined_by_admin": "Quote declined: {{quoteNumber}}",
+      "quote_converted": "Quote converted: {{quoteNumber}}",
+      "quote_converted_invoices_only": "Quote converted to invoices: {{quoteNumber}}",
+      "invoice_created": "Invoice created: {{invoiceNumber}}",
+      "invoice_sent": "Invoice sent: {{invoiceNumber}}",
+      "invoice_scheduled": "Invoice scheduled: {{invoiceNumber}}",
+      "invoice_cancelled": "Invoice cancelled: {{invoiceNumber}}",
+      "invoice_cancelled_via_storno": "Invoice cancelled via Storno: {{invoiceNumber}}",
+      "invoice_reissued": "Invoice reissued: {{invoiceNumber}}",
+      "invoice_paid_admin_notified": "Invoice marked paid: {{invoiceNumber}}",
+      "invoice_payment_check_recorded": "Payment-check recorded for invoice: {{invoiceNumber}}",
+      "invoice_payment_check_sent": "Payment-check sent for invoice: {{invoiceNumber}}",
+      "invoice_released_for_delivery": "Invoice released for delivery: {{invoiceNumber}}",
+      "invoice_reminder_sent": "Invoice reminder sent: {{invoiceNumber}}",
+      "storno_sent": "Storno sent: {{invoiceNumber}}",
+      "monthly_bill_issued": "Monthly bill issued for customer",
+      "monthly_bill_skipped_empty": "Monthly bill skipped (no entries)",
+      "monthly_bill_triggered_manually": "Monthly bill triggered manually",
+      "monthly_billing_items_queued": "Monthly billing items queued",
+      "installment_plan_updated": "Installment plan updated",
+      "expense_created": "Expense created",
+      "expense_updated": "Expense updated",
+      "expense_paid": "Expense marked paid",
+      "expense_invoiced": "Expense invoiced",
+      "hour_entry_logged": "Hour entry logged",
+      "hour_entry_updated": "Hour entry updated",
+      "hour_entry_deleted": "Hour entry deleted",
+      "hour_entry_logged_to_monthly_draft": "Hour entry logged to monthly draft",
+      "hour_entries_billed": "Hour entries billed to customer",
+      "incoming_invoice_captured": "Incoming invoice captured",
+      "incoming_invoice_categorized": "Incoming invoice categorised",
+      "incoming_invoice_updated": "Incoming invoice updated",
+      "incoming_invoice_rebilled": "Incoming invoice re-billed to customer",
+      "incoming_invoice_supplier_payment": "Supplier payment recorded",
+      "incoming_mail_config_updated": "Incoming mail configuration updated",
+      "customer_created_passive": "Passive customer created: {{email}}",
+      "admin_user_activated": "Admin user activated: {{username}}",
+      "admin_user_deleted": "Admin user deleted: {{username}}",
+      "email_queue_flushed": "Email queue flushed",
+      "email_template_created": "Email template created: {{template_key}}",
+      "event_duplicated": "Event duplicated from {{source_event_name}}",
+      "whatsapp_config_updated": "WhatsApp configuration updated"
     }
   },
   "acceptInvitation": {
@@ -2053,6 +2352,55 @@
       "button": "Send queued emails now",
       "success": "Email queue flushed — {{sent}} sent, {{failed}} failed",
       "empty": "No pending emails to send"
+    },
+    "incoming": {
+      "title": "Incoming mail (IMAP)",
+      "subtitle": "A dedicated mailbox polled every minute; attachments land in Accounting → Incoming invoices.",
+      "host": "IMAP Host",
+      "test": "Test connection",
+      "testOk": "Connected to {{folder}} — {{messages}} messages, {{unseen}} unread.",
+      "testFailed": "Connection failed.",
+      "roundTrip": "Round-trip test",
+      "roundTripHint": "Sends a test email via your SMTP settings to this mailbox and confirms it arrives. Save both first.",
+      "roundTripOk": "Round-trip OK — delivered to {{recipient}} in {{seconds}}s.",
+      "roundTripFailed": "Round-trip test failed.",
+      "poll": "Check now",
+      "pollHint": "Check the mailbox now instead of waiting for the 60-second poll. Ingests unread attachments into Incoming invoices.",
+      "pollOk": "Checked mailbox — {{count}} new email(s) ingested.",
+      "pollDisabled": "Incoming mail is turned off — enable it under Settings → Features.",
+      "pollUnconfigured": "Save the incoming mail settings first.",
+      "pollBusy": "A poll is already running — try again in a moment.",
+      "pollFailed": "Mailbox poll failed.",
+      "port": "Port",
+      "security": "Security",
+      "ssl": "SSL/TLS",
+      "plain": "None / STARTTLS",
+      "user": "Username",
+      "pass": "Password",
+      "folder": "Folder",
+      "save": "Save Incoming Mail Settings",
+      "detectFolders": "Detect",
+      "folderHint": "Enter host, username and password, then Detect to list the mailbox folders.",
+      "foldersDetected": "{{count}} folders found.",
+      "noFolders": "No folders returned by the server.",
+      "detectFailed": "Could not detect folders.",
+      "requiredFields": "Host, port and username are required.",
+      "savedToast": "Incoming mail settings saved."
+    },
+    "received": {
+      "tab": "Received emails",
+      "from": "From",
+      "subject": "Subject",
+      "received": "Received",
+      "status": "Status",
+      "empty": "No received emails yet. Enable incoming mail and configure the mailbox.",
+      "inbox": "inbox",
+      "statusValue": {
+        "ingested": "Ingested",
+        "no_attachment": "No attachment",
+        "duplicate": "Duplicate",
+        "error": "Error"
+      }
     },
     "sentEmails": {
       "tab": "Sent emails",
@@ -2219,6 +2567,8 @@
       "slugPreview": "Example URL:",
       "emoji": "Icon",
       "themePreset": "Default Theme",
+      "slideshowPreset": "Slideshow preset",
+      "slideshowPresetHint": "Default slideshow style for new events of this type.",
       "isActive": "Active (visible in event creation)"
     },
     "validation": {
@@ -2832,7 +3182,10 @@
     "onPhoto": "On photo",
     "showAll_one": "Show all {{count}} pending comments",
     "showAll_other": "Show all {{count}} pending comments",
-    "viewAllFeedback": "View all feedback & settings"
+    "viewAllFeedback": "View all feedback & settings",
+    "exportShapeLabel": "Shape",
+    "exportShapeLong": "Per-action (long)",
+    "exportShapePivot": "Per-guest (pivot)"
   },
   "filter": {
     "feedbackFilters": "Feedback Filters",
@@ -2875,6 +3228,86 @@
     "poweredBy": "Powered by PicPeak",
     "devModeHint": "Development Mode: Use email: admin@example.com, password: admin123"
   },
+  "slideshow": {
+    "adminTitle": "Live Slideshow",
+    "adminDescription": "A separate fullscreen link for projectors at live events. It shows all published photos and automatically picks up new uploads while running.",
+    "generateLink": "Generate slideshow link",
+    "linkLabel": "Slideshow link",
+    "linkGenerated": "Slideshow link generated",
+    "linkDisabled": "Slideshow link disabled",
+    "regenerate": "Regenerate",
+    "disable": "Disable",
+    "disableConfirm": "Disable this slideshow link? The current link will stop working.",
+    "intervalLabel": "Display time (sec)",
+    "transitionLabel": "Transition",
+    "transitionSpeedLabel": "Transition speed (ms)",
+    "transition": {
+      "crossfade": "Crossfade",
+      "cut": "Cut",
+      "slide": "Slide",
+      "kenburns": "Ken Burns",
+      "dipwhite": "Dip to white",
+      "dipblack": "Dip to black"
+    },
+    "colorfilterLabel": "Color filter",
+    "colorfilter": {
+      "none": "None",
+      "bw": "Black & White",
+      "sepia": "Sepia",
+      "warm": "Warm",
+      "cool": "Cool",
+      "vignette": "Vignette"
+    },
+    "watermarkToggle": "Show logo watermark",
+    "watermarkDescription": "Overlay a white, semi-transparent logo in a corner (like a TV station ident).",
+    "watermarkSourceLabel": "Logo",
+    "watermarkSource": {
+      "logo": "Light logo",
+      "logo_dark": "Dark-mode logo",
+      "favicon": "Favicon",
+      "event": "Event logo",
+      "notSet": "Not set"
+    },
+    "watermarkPositionLabel": "Position",
+    "watermarkPosition": {
+      "top-left": "Top left",
+      "top-right": "Top right",
+      "bottom-left": "Bottom left",
+      "bottom-right": "Bottom right"
+    },
+    "watermarkOpacityLabel": "Opacity (%)",
+    "watermarkStyleLabel": "Logo style",
+    "watermarkSizeLabel": "Size (% of screen)",
+    "watermarkModeHint": "The logo, position, opacity, style and size are configured under Settings → Slideshow.",
+    "watermarkStyle": {
+      "white": "White (recolor)",
+      "original": "Original colors"
+    },
+    "watermarkMode": {
+      "inherit": "Use global default",
+      "on": "On",
+      "off": "Off"
+    },
+    "globalTitle": "Global slideshow settings",
+    "globalDescription": "Defaults for every slideshow. Events can override the watermark on or off.",
+    "fitLabel": "Image fit",
+    "fit": {
+      "cover": "Fill screen (crop)",
+      "contain": "Black bars (no crop)"
+    },
+    "fitHint": "\"Fill\" crops to fill the screen; \"Black bars\" shows the whole photo — better for portrait images.",
+    "presetTitle": "Default style for new slideshows",
+    "presetHint": "Applied to events created from now on; each event can still override it.",
+    "defaultsSaved": "Slideshow defaults saved",
+    "liveHint": "Changes apply to a running slideshow within a few seconds — no need to regenerate the link.",
+    "saveSettings": "Save slideshow settings",
+    "settingsSaved": "Slideshow settings saved",
+    "start": "Start slideshow",
+    "waiting": "Waiting for photos…",
+    "ended": "Slideshow ended.",
+    "notFound": "This slideshow link is not active.",
+    "startFailed": "Could not start the slideshow. Please try again."
+  },
   "clientAccess": {
     "title": "Client Access",
     "description": "Review photos and manage visibility before the gallery is shared with guests.",
@@ -2907,7 +3340,18 @@
     "exportFiltered": "Export filtered photos",
     "hint": "Select photos or apply filters to export",
     "exportSelected_one": "Export {{count}} selected",
-    "exportSelected_other": "Export {{count}} selected"
+    "exportSelected_other": "Export {{count}} selected",
+    "preview": {
+      "titleTxt": "Lightroom filename list",
+      "titleCsv": "CSV export",
+      "helpTxt": "Paste into Lightroom's filename search. The list is comma-separated with no extension so it matches a catalog that holds RAW files.",
+      "helpCsv": "Paste into a spreadsheet (Google Sheets, Excel, Numbers) — the first row is the column header.",
+      "copyButton": "Copy to clipboard",
+      "copiedShort": "Copied",
+      "copied": "Copied to clipboard.",
+      "copyFailed": "Clipboard write blocked. Select the text and copy manually.",
+      "download": "Download as file"
+    }
   },
   "photoSort": {
     "defaultSort": "Default Photo Sort",
@@ -3160,6 +3604,7 @@
         "rateOverride": "Rate override",
         "note": "Note / description",
         "notePlaceholder": "What was worked on?",
+        "bookToProject": "Book to project",
         "save": "Add entry",
         "needRate": "Set a rate or enter an override to log time."
       },
@@ -3407,6 +3852,7 @@
       "body": "Enable Accounts (or another CRM sub-feature) under Settings → Features to get started."
     },
     "subnav": {
+      "overview": "Overview",
       "accounts": "Accounts",
       "quotes": "Quotes",
       "contracts": "Contracts",
@@ -3415,6 +3861,277 @@
       "bills": "Invoices",
       "taxReport": "Tax",
       "development": "Development"
+    }
+  },
+  "accounting": {
+    "title": "Accounting",
+    "subtitle": "Inbound supplier invoices, expenses and reporting.",
+    "navAriaLabel": "Accounting navigation",
+    "empty": {
+      "title": "No accounting features enabled",
+      "body": "Enable the Tax report (or another accounting sub-feature) under Settings → Features to get started."
+    },
+    "subnav": {
+      "incomingInvoices": "Incoming invoices",
+      "expenses": "Expenses",
+      "taxReport": "Tax",
+      "export": "Treuhänder export",
+      "chartOfAccounts": "Chart of accounts"
+    },
+    "taxTreatment": {
+      "domestic": "Domestic (with VAT)",
+      "reverse_charge_service": "Reverse charge (services)",
+      "foreign_vat_non_reclaimable": "Foreign VAT (non-reclaimable)",
+      "import_goods": "Import of goods"
+    },
+    "disposition": {
+      "rebill": "Re-bill to client",
+      "durchlaufend": "Pass-through",
+      "eigener_aufwand": "Company expense",
+      "duplikat": "Duplicate",
+      "abgelehnt": "Declined",
+      "help": {
+        "rebill": "Your own supplier cost that you invoice on to a client — usually with a markup. Booked as both a cost and re-billed revenue.",
+        "durchlaufend": "An amount you only front on behalf of a client and pass through at the exact figure — no markup, VAT-neutral (durchlaufender Posten). Attach the client to re-bill it at cost.",
+        "eigener_aufwand": "Your own cost, not re-billed to anyone. Pick a category so it lands in the right place in your P&L.",
+        "duplikat": "A duplicate of an invoice you already captured — excluded from the books.",
+        "abgelehnt": "Decline this document — excluded from the books."
+      }
+    },
+    "markup": {
+      "none": "None / from contract",
+      "percent": "Percent",
+      "flat": "Flat"
+    },
+    "inbox": {
+      "captureTitle": "Capture a supplier invoice",
+      "captureBody": "Photograph a paper invoice with your device camera, or upload a PDF / image.",
+      "scanCamera": "Scan with camera",
+      "uploadFile": "Upload file",
+      "capturedToast": "Document captured.",
+      "categorizedToast": "Document categorized.",
+      "triageTitle": "Categorize document",
+      "saveCategorize": "Save",
+      "saveCategorizePay": "Save & mark paid",
+      "categorize": "Categorize",
+      "recategorize": "Re-categorize",
+      "view": "View",
+      "empty": "No documents yet — capture one above.",
+      "untitled": "Untitled document",
+      "noAmount": "amount not entered",
+      "rebillHint": "Creates an editable scheduled invoice on the client. VAT/tax handling is v1 — verify with your Treuhänder.",
+      "previewLoading": "Loading preview…",
+      "previewError": "Preview unavailable — enter the fields manually.",
+      "qrHint": "Showing the last page — the Swiss QR-bill usually sits at the bottom.",
+      "prevPage": "Prev",
+      "nextPage": "Next",
+      "pageOf": "Page {{n}} / {{total}}",
+      "status": {
+        "label": "Status",
+        "unsorted": "New",
+        "categorized": "Categorized",
+        "declined": "Declined",
+        "duplicate": "Duplicate"
+      },
+      "field": {
+        "supplier": "Supplier",
+        "total": "Total",
+        "currency": "Currency",
+        "invoiceDate": "Invoice date",
+        "disposition": "Disposition",
+        "category": "Category",
+        "categoryNone": "— none —",
+        "declineReason": "Reason",
+        "customer": "Client",
+        "eventId": "Event ID (optional)",
+        "markup": "Markup",
+        "reference": "Payment reference",
+        "referenceHint": "QR / ESR reference or message",
+        "note": "Note",
+        "noteHint": "Internal note for this invoice (optional)",
+        "passthroughCustomerHint": "Optional — attach a client to re-bill this passthrough; leave empty to only book it to the event.",
+        "supplierCountry": "Supplier country",
+        "supplierCountryNone": "— unknown —",
+        "supplierCountryHint": "Sets the tax treatment automatically: outside your VAT-reclaim countries → foreign VAT (not reclaimable)."
+      }
+    },
+    "expenseStatus": {
+      "open": "Open",
+      "parked": "Parked",
+      "billed": "Billed",
+      "declined": "Declined"
+    },
+    "paymentMethod": {
+      "bank_transfer": "Bank transfer",
+      "cash": "Cash",
+      "twint": "TWINT",
+      "paypal": "PayPal",
+      "card": "Card",
+      "other": "Other"
+    },
+    "booking": {
+      "label": "Book to",
+      "company": "Company",
+      "event": "Event",
+      "eventId": "Event ID",
+      "inboundHint": "Which event carries this cost in your reports & tax export (Company = general overhead). This is separate from who you re-bill it to."
+    },
+    "incoming": {
+      "triageTitle": "Categorize incoming invoice",
+      "payTitle": "Mark supplier paid",
+      "outstanding": "Outstanding",
+      "markPaid": "Mark paid",
+      "markUnpaid": "Mark unpaid",
+      "confirmPaid": "Mark paid",
+      "paid": "Paid",
+      "paidToast": "Marked as paid.",
+      "categorizedToast": "Categorized.",
+      "categorizedPaidToast": "Categorized and marked paid.",
+      "pendingRebill": "Pending re-bill",
+      "pendingTitle": "Pending re-bills",
+      "pendingBody": "Categorized invoices waiting to be re-billed. Bundle a client’s items into one invoice.",
+      "pendingCount": "{{count}} item",
+      "pendingCount_other": "{{count}} items",
+      "billPending": "Bill these",
+      "bundledToast": "Bundled {{count}} re-bill into one invoice.",
+      "bundledToast_other": "Bundled {{count}} re-bills into one invoice."
+    },
+    "expense": {
+      "kind": "Type",
+      "km": "Kilometres",
+      "days": "Days",
+      "rate": "Rate",
+      "rateDefault": "Default {{rate}} — leave blank to use it",
+      "computed": "Amount",
+      "who": "Paid by / vendor",
+      "whoHint": "e.g. coworker name or shop",
+      "proof": "Proof",
+      "proofRequired": "A proof file is required.",
+      "proofExisting": "A proof file is already attached — upload a new one to replace it.",
+      "viewProof": "Proof"
+    },
+    "expenseKind": {
+      "amount": "Amount",
+      "mileage": "Mileage (km)",
+      "per_diem": "Daily allowance"
+    },
+    "category": {
+      "infrastructure": "Infrastructure & rent",
+      "equipment": "Equipment & hardware",
+      "software": "Software & licenses",
+      "material": "Materials & supplies",
+      "travel": "Travel & expenses",
+      "marketing": "Advertising & marketing",
+      "services": "Services / subcontracting",
+      "insurance": "Insurance & fees",
+      "training": "Training",
+      "other": "Other"
+    },
+    "ledger": {
+      "allStatuses": "All statuses",
+      "allDispositions": "All dispositions",
+      "allKinds": "All types",
+      "empty": "No expenses yet — add one above.",
+      "untitled": "Expense",
+      "invoiceLink": "Invoice",
+      "paid": "Paid",
+      "markPaid": "Mark paid",
+      "markPaidTitle": "Mark supplier paid",
+      "paidDate": "Payment date",
+      "method": "Method",
+      "reference": "Reference (optional)",
+      "confirmPaid": "Mark paid",
+      "paidToast": "Marked as paid.",
+      "unpaidToast": "Marked as not paid.",
+      "addExpense": "Add expense",
+      "addTitle": "Add expense",
+      "editTitle": "Edit expense",
+      "updatedToast": "Expense updated.",
+      "payTitle": "Mark expense paid",
+      "invoiced": "Invoiced",
+      "invoicedToast": "Added to a client invoice.",
+      "invoiceTitle": "Add to client invoice",
+      "invoiceHint": "This creates a billable line on the client’s next scheduled invoice and locks the expense from further edits.",
+      "addToInvoice": "Add to invoice",
+      "locked": "Locked",
+      "lockedHint": "Locked — this expense is on a client invoice.",
+      "description": "Description",
+      "descriptionHint": "e.g. mileage, per-diem, cash receipt",
+      "createdToast": "Expense added."
+    }
+  },
+  "projects": {
+    "title": "Project Overview",
+    "subtitle": "Group events into projects and see every email, document, gallery and hour in one cockpit.",
+    "search": "Search by name or customer…",
+    "empty": "No projects yet. Create one above, or events you already have were grouped automatically.",
+    "notFound": "Project not found",
+    "backToList": "All projects",
+    "noCustomer": "No single customer",
+    "rename": "Rename",
+    "timeline": "Milestones",
+    "eventCount": "{{count}} events",
+    "totalHours": "{{hours}} logged",
+    "create": {
+      "label": "New project name",
+      "placeholder": "e.g. Müller wedding 2026",
+      "button": "Create project"
+    },
+    "col": {
+      "name": "Project",
+      "customer": "Customer",
+      "events": "Events",
+      "value": "Value",
+      "status": "Status",
+      "updated": "Updated"
+    },
+    "picker": {
+      "label": "Project",
+      "none": "No project"
+    },
+    "value": {
+      "label": "Project value",
+      "paid": "paid"
+    },
+    "events": {
+      "title": "Events",
+      "none": "No events grouped under this project yet.",
+      "searchPlaceholder": "Attach an event — search by name…",
+      "attached": "Event attached",
+      "attachFailed": "Could not attach event"
+    },
+    "feed": {
+      "title": "Activity",
+      "empty": "Nothing rolled up to this project yet.",
+      "email": "Email",
+      "quote": "Quote",
+      "contract": "Contract",
+      "invoice": "Invoice",
+      "gallery": "Gallery",
+      "hours": "Hours"
+    },
+    "email": {
+      "preview": "Preview",
+      "resend": "Resend",
+      "sendNow": "Send now",
+      "cancel": "Cancel",
+      "retry": "Retry",
+      "previewTitle": "Email preview",
+      "noPreview": "No stored preview for this email — it was sent before previews were captured.",
+      "reRendered": "Re-rendered from the current template — this email was sent before previews were captured, so it may differ slightly from what the recipient received.",
+      "reRenderedTag": "≈ re-rendered"
+    },
+    "toast": {
+      "created": "Project created",
+      "createFailed": "Could not create project",
+      "saved": "Project saved",
+      "saveFailed": "Save failed",
+      "emailAction": "Done",
+      "emailActionFailed": "Action failed",
+      "previewFailed": "Could not load preview"
+    },
+    "error": {
+      "customerMismatch": "That belongs to a different customer than this project."
     }
   },
   "calendar": {
@@ -3574,6 +4291,83 @@
       }
     }
   },
+  "ledger": {
+    "intro": "Used only to produce the Treuhänder export — picpeak does not keep double-entry books. The seeded chart + VAT codes follow the Swiss/LI KMU-Kontenrahmen; adjust them to match your Treuhänder’s setup.",
+    "settingsSaved": "Mappings saved.",
+    "saveDefaults": "Save mappings",
+    "accountType": {
+      "asset": "Asset",
+      "liability": "Liability",
+      "equity": "Equity",
+      "revenue": "Revenue",
+      "expense": "Expense"
+    },
+    "vatDirection": {
+      "input": "Input (Vorsteuer)",
+      "output": "Output (Umsatzsteuer)"
+    },
+    "defaults": {
+      "title": "Default & system accounts",
+      "none": "— none —",
+      "ledger_account_debitoren": "Accounts receivable (Debitoren)",
+      "ledger_account_kreditoren": "Accounts payable (Kreditoren)",
+      "ledger_account_bank": "Bank",
+      "ledger_account_cash": "Cash",
+      "ledger_account_default_revenue": "Default revenue account",
+      "ledger_account_default_expense": "Default expense account",
+      "ledger_account_mileage": "Mileage account",
+      "ledger_account_per_diem": "Per-diem account",
+      "ledger_account_rebilled_revenue": "Re-billed expenses (revenue)"
+    },
+    "vatMap": {
+      "title": "VAT code by tax treatment (costs)"
+    },
+    "outputVatMap": {
+      "title": "VAT code by revenue rate",
+      "empty": "Add output VAT codes above to configure a code per revenue rate."
+    },
+    "categoryMap": {
+      "title": "Expense category → account"
+    },
+    "accounts": {
+      "title": "Chart of accounts"
+    },
+    "vatCodes": {
+      "title": "VAT codes"
+    },
+    "account": {
+      "addTitle": "Add account",
+      "editTitle": "Edit account",
+      "number": "Account number",
+      "name": "Name",
+      "type": "Type",
+      "confirmDelete": "Delete this account?"
+    },
+    "vat": {
+      "addTitle": "Add VAT code",
+      "editTitle": "Edit VAT code",
+      "code": "Code",
+      "name": "Name",
+      "rate": "Rate %",
+      "direction": "Direction",
+      "account": "VAT account",
+      "noAccount": "— none —",
+      "confirmDelete": "Delete this VAT code?",
+      "legacyRate": "{{rate}}% (not configured)"
+    },
+    "export": {
+      "title": "Treuhänder export",
+      "intro": "Download the collective journal (revenue + costs as accrual postings with account and VAT codes) for import into your Treuhänder’s accounting software.",
+      "format": "Target tool",
+      "format_generic": "Generic (all columns)",
+      "format_banana": "Banana — double-entry",
+      "format_banana_ie": "Banana — income & expense",
+      "format_bexio": "bexio",
+      "download": "Download CSV",
+      "failed": "Export failed.",
+      "disclaimer": "Accrual basis only (document dates) — payments/bank movements are not included. Account + VAT codes follow your Chart-of-accounts mapping. Always review the import with your Treuhänder before filing."
+    }
+  },
   "taxReport": {
     "title": "Tax report",
     "intro": "Period-scoped revenue list with net + VAT breakdown grouped by VAT rate. Cancelled invoices stay visible for audit-trail continuity but are excluded from totals.",
@@ -3589,6 +4383,18 @@
       "currency": "Currency"
     },
     "exportPdf": "Export PDF",
+    "ledgerExport": "Accountant export",
+    "ledgerExportHint": "Bookkeeping entries for your accountant, mapped via your Chart of accounts.",
+    "ledgerExportConfigure": "Configure →",
+    "export": {
+      "reportTitle": "Report",
+      "reportHint": "Readable list — for your own records.",
+      "scopeLabel": "Scope",
+      "scopeAll": "Complete",
+      "scopeIncome": "Income only",
+      "scopeCost": "Cost only",
+      "journalTitle": "Accounting journal"
+    },
     "exportCsv": "Export CSV",
     "exportFailed": "Export failed. Please try again.",
     "errorTitle": "Could not load tax report",
@@ -3599,6 +4405,32 @@
     "grandTotalVat": "Total VAT",
     "grandTotalGross": "Total gross",
     "cancelledFootnote": "{{count}} cancelled invoice(s) — amounts excluded from totals (shown for audit-trail continuity).",
+    "skontoTooltip": "Paid with Skonto",
+    "costsTitle": "Costs (incoming invoices + expenses)",
+    "costsDisclaimer": "This income/expense overview is a guideline for your records (Einnahmen-Ausgaben-Rechnung). VAT reclaimability and the result figure depend on each cost’s tax treatment — verify with your Treuhänder / tax authority before filing.",
+    "summary": {
+      "outgoingTitle": "Outgoing invoices",
+      "title": "Income / costs",
+      "income": "Income",
+      "costs": "Costs",
+      "result": "Result",
+      "vatPayable": "VAT payable (output − input)",
+      "vatUnconfigured": "VAT registration isn’t configured, so VAT payable can’t be computed. Set it under Settings → Accounting."
+    },
+    "cost": {
+      "source": "Type",
+      "sourceIncoming": "Incoming",
+      "sourceExpense": "Expense",
+      "supplier": "Supplier / description",
+      "taxTreatment": "Tax treatment",
+      "company": "Company",
+      "total": "Total costs"
+    },
+    "type": {
+      "outgoing": "Outgoing invoice",
+      "incoming": "Incoming invoice",
+      "expense": "Expense"
+    },
     "col": {
       "date": "Date",
       "invoice": "Invoice",
@@ -3607,7 +4439,12 @@
       "vatRate": "VAT %",
       "net": "Net",
       "vat": "VAT",
-      "total": "Gross"
+      "total": "Gross",
+      "skonto": "Skonto",
+      "type": "Type",
+      "reference": "Reference",
+      "party": "Customer / supplier",
+      "tax": "Tax"
     }
   },
   "quotes": {
@@ -3886,6 +4723,7 @@
   },
   "businessProfile": {
     "savedToast": "Business profile saved.",
+    "movedToAccounting": "The VAT rate, VAT label and default hourly rate now live under Settings → Accounting.",
     "title": "Business profile",
     "subtitle": "Issuer block shown on every quote and invoice PDF.",
     "businessHours": {
@@ -3932,11 +4770,6 @@
       "defaultCurrency": "Default currency",
       "defaultLocale": "Default locale",
       "timezone": "Timezone (IANA)",
-      "vatLabel": "VAT label (e.g. MwSt., VAT)",
-      "vatRateDefault": "Default VAT rate %",
-      "defaultHourlyRate": "Default hourly rate",
-      "defaultHourlyRatePlaceholder": "e.g. 120.00",
-      "defaultHourlyRateHint": "Fallback used when a customer has no own rate. In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate.",
       "defaultQrFormat": "Default invoice QR",
       "footerLine": "PDF footer line"
     },

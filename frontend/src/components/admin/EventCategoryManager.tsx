@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, X, Loader2, Image as ImageIcon, Check } from 'lucide-react';
+import { Plus, X, Loader2, Image as ImageIcon, Check, Download, DownloadCloud } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { categoriesService, type PhotoCategory } from '../../services/categories.service';
 import { photosService } from '../../services/photos.service';
@@ -76,6 +76,25 @@ export const EventCategoryManager: React.FC<EventCategoryManagerProps> = ({ even
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || t('categories.failedToSetCoverPhoto'));
+    },
+  });
+
+  // Toggle per-category download permission (#640). The backend AND's this
+  // with the event-level `allow_downloads`, so disabling at either level
+  // blocks downloads for this category's photos.
+  const downloadToggleMutation = useMutation({
+    mutationFn: ({ category, allow }: { category: PhotoCategory; allow: boolean }) =>
+      categoriesService.updateCategory(category.id, category.name, { allow_downloads: allow }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['event-categories', eventId] });
+      toast.success(
+        variables.allow
+          ? t('categories.downloadsEnabled', 'Downloads enabled for this category')
+          : t('categories.downloadsDisabled', 'Downloads disabled for this category')
+      );
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || t('categories.failedToToggleDownloads', 'Failed to update download permission'));
     },
   });
 
@@ -202,18 +221,49 @@ export const EventCategoryManager: React.FC<EventCategoryManagerProps> = ({ even
                   </button>
                   <span className="text-sm text-neutral-700 dark:text-neutral-300 truncate">{category.name}</span>
                 </div>
-                <button
-                  onClick={() => handleDelete(category)}
-                  className="p-1 text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                  title={t('categories.deleteCategoryTitle')}
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <X className="w-3 h-3" />
-                  )}
-                </button>
+                <div className="flex items-center gap-1">
+                  {/* Per-category downloads toggle (#640). Green DownloadCloud
+                      icon when on, struck-through outline when off. The
+                      event-level `allow_downloads` AND's with this — if the
+                      whole event has downloads off, this toggle is cosmetic. */}
+                  <button
+                    onClick={() => downloadToggleMutation.mutate({
+                      category,
+                      allow: category.allow_downloads === false,
+                    })}
+                    className={`p-1 transition-colors ${
+                      category.allow_downloads === false
+                        ? 'text-neutral-400 dark:text-neutral-500 hover:text-green-600 dark:hover:text-green-400'
+                        : 'text-green-600 dark:text-green-400 hover:text-neutral-400'
+                    }`}
+                    title={
+                      category.allow_downloads === false
+                        ? t('categories.enableDownloadsTitle', 'Click to enable downloads for this category')
+                        : t('categories.disableDownloadsTitle', 'Click to disable downloads for this category')
+                    }
+                    disabled={downloadToggleMutation.isPending}
+                  >
+                    {downloadToggleMutation.isPending ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : category.allow_downloads === false ? (
+                      <Download className="w-3 h-3" />
+                    ) : (
+                      <DownloadCloud className="w-3 h-3" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(category)}
+                    className="p-1 text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                    title={t('categories.deleteCategoryTitle')}
+                    disabled={deleteMutation.isPending}
+                  >
+                    {deleteMutation.isPending ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <X className="w-3 h-3" />
+                    )}
+                  </button>
+                </div>
               </div>
             );
           })}

@@ -22,6 +22,9 @@
 
 let invoiceRowsForRun = [];
 let replacementsRowsForRun = [];
+let inboundRowsForRun = [];
+let expenseRowsForRun = [];
+let costTablesPresent = false;
 let callCount = 0;
 
 function makeChain(initialRows) {
@@ -32,24 +35,35 @@ function makeChain(initialRows) {
     },
     leftJoin: jest.fn(function () { return this; }),
     where: jest.fn(function () { return this; }),
+    whereNot: jest.fn(function () { return this; }),
     whereIn: jest.fn(function () { return this; }),
+    whereNotIn: jest.fn(function () { return this; }),
     whereBetween: jest.fn(function () { return this; }),
+    whereRaw: jest.fn(function () { return this; }),
     orderBy: jest.fn(function () { return this; }),
+    orderByRaw: jest.fn(function () { return this; }),
     select: jest.fn(function () { return Promise.resolve(this._rows); }),
   };
   return c;
 }
 
 const mockDbFn = jest.fn((tableName) => {
-  callCount += 1;
   // Migration 126 added a Skonto aggregate that hits
   // `invoice_payment_log` — route those explicitly to an empty list so
   // the test surface stays focused on the invoices/replacements flow.
   if (tableName === 'invoice_payment_log') return makeChain([]);
-  // First call: main listing. Second call: replacements lookup.
+  // Cost side (#4): incoming invoices + internal expenses.
+  if (tableName === 'inbound_documents') return makeChain(inboundRowsForRun);
+  if (tableName === 'expenses') return makeChain(expenseRowsForRun);
+  // `invoices` is queried for the main listing (call 1) and, when there
+  // are cancelled rows, the replacements lookup (call 2).
+  callCount += 1;
   if (callCount === 1) return makeChain(invoiceRowsForRun);
   return makeChain(replacementsRowsForRun);
 });
+// loadCosts (#4) schema-guards each cost table. Default off so the
+// revenue-only tests are unaffected; cost-side tests flip it on.
+mockDbFn.schema = { hasTable: jest.fn(async () => costTablesPresent) };
 // `.raw()` is used in the .select() column list for the event_name
 // COALESCE (migration 123). The chain's select() ignores its
 // arguments and returns the mocked rows, so the raw() return value
@@ -67,6 +81,9 @@ const { grossUpLateFee, computeReportedAmounts, buildCustomerLabel } = taxReport
 beforeEach(() => {
   invoiceRowsForRun = [];
   replacementsRowsForRun = [];
+  inboundRowsForRun = [];
+  expenseRowsForRun = [];
+  costTablesPresent = false;
   callCount = 0;
   mockDbFn.mockClear();
 });
@@ -259,6 +276,47 @@ describe('getTaxReport', () => {
     ]);
   });
 
+  it('excludes the negative Storno row from totals on a cancel + reissue (PR #636 audit)', async () => {
+    // The real cancel-and-reissue flow produces THREE rows in the period:
+    // the cancelled original, its negative Storno (kind='storno', status='sent'),
+    // and the reissue. Totals must read the reissued amount, not 0.
+    invoiceRowsForRun = [
+      {
+        id: 20, invoice_number: 'R-2026-0020', issue_date: '2026-02-01',
+        currency: 'CHF', status: 'cancelled', kind: 'invoice', vat_rate: 7.7,
+        net_amount_minor: 10000, vat_amount_minor: 770, total_amount_minor: 10770,
+        late_fee_amount_minor: 0, replaces_invoice_id: null,
+        customer_company_name: 'ACME GmbH', event_name: 'Wedding A',
+      },
+      {
+        id: 21, invoice_number: 'R-2026-0020-S', issue_date: '2026-02-02',
+        currency: 'CHF', status: 'sent', kind: 'storno', vat_rate: 7.7,
+        net_amount_minor: -10000, vat_amount_minor: -770, total_amount_minor: -10770,
+        late_fee_amount_minor: 0, replaces_invoice_id: null,
+        customer_company_name: 'ACME GmbH', event_name: 'Wedding A',
+      },
+      {
+        id: 22, invoice_number: 'R-2026-0021', issue_date: '2026-02-03',
+        currency: 'CHF', status: 'paid', kind: 'invoice', vat_rate: 7.7,
+        net_amount_minor: 10000, vat_amount_minor: 770, total_amount_minor: 10770,
+        late_fee_amount_minor: 0, replaces_invoice_id: 20,
+        customer_company_name: 'ACME GmbH', event_name: 'Wedding A',
+      },
+    ];
+    replacementsRowsForRun = [{ replaces_invoice_id: 20, invoice_number: 'R-2026-0021' }];
+
+    const out = await taxReportService.getTaxReport({ from: '2026-01-01', to: '2026-03-31', currency: 'CHF' });
+    expect(out.rows).toHaveLength(3); // all three stay visible for the audit trail
+    // The negative storno must NOT net against the totals (the cancelled
+    // original is already excluded) — the reissued revenue stands.
+    expect(out.grandTotalNet).toBe(10000);
+    expect(out.grandTotalVat).toBe(770);
+    expect(out.grandTotal).toBe(10770);
+    expect(out.totalsByVatRate).toEqual([
+      { vatRate: 7.7, netMinor: 10000, vatMinor: 770, totalMinor: 10770 },
+    ]);
+  });
+
   it('buckets totals by VAT rate (e.g. 7.7 + 8.1 in same period)', async () => {
     invoiceRowsForRun = [
       {
@@ -334,5 +392,181 @@ describe('getTaxReport', () => {
     expect(out.grandTotal).toBe(0);
     expect(out.totalsByVatRate).toEqual([]);
     expect(out.cancelledCount).toBe(0);
+  });
+
+  it('returns an empty cost side + zeroed summary when accounting tables are absent', async () => {
+    invoiceRowsForRun = [
+      {
+        id: 1, invoice_number: 'R-2026-0001', issue_date: '2026-01-15',
+        currency: 'CHF', status: 'paid', vat_rate: 7.7,
+        net_amount_minor: 10000, vat_amount_minor: 770, total_amount_minor: 10770,
+        late_fee_amount_minor: 0, replaces_invoice_id: null,
+        customer_company_name: 'ACME', event_name: 'X',
+      },
+    ];
+    costTablesPresent = false; // no accounting migrations on this DB
+    const out = await taxReportService.getTaxReport({
+      from: '2026-01-01', to: '2026-03-31', currency: 'CHF',
+    });
+    expect(out.costs).toEqual({ rows: [], totalNet: 0, totalVat: 0, totalGross: 0, reclaimableVat: 0 });
+    expect(out.summary).toMatchObject({
+      incomeNetMinor: 10000, incomeVatMinor: 770, incomeGrossMinor: 10770,
+      costNetMinor: 0, costVatMinor: 0, costGrossMinor: 0,
+      resultNetMinor: 10000, resultGrossMinor: 10770,
+      // VAT registration unconfigured in the test DB → refuse to compute payable.
+      vatRegistrationConfigured: false, vatPayableMinor: null,
+    });
+  });
+
+  it('aggregates incoming invoices + expenses into the cost side and nets the result', async () => {
+    invoiceRowsForRun = [
+      {
+        id: 1, invoice_number: 'R-2026-0001', issue_date: '2026-01-15',
+        currency: 'CHF', status: 'paid', vat_rate: 7.7,
+        net_amount_minor: 100000, vat_amount_minor: 7700, total_amount_minor: 107700,
+        late_fee_amount_minor: 0, replaces_invoice_id: null,
+        customer_company_name: 'ACME', event_name: 'Wedding A',
+      },
+    ];
+    costTablesPresent = true;
+    // Incoming supplier invoice: net 20000 + vat 1540 = 21540.
+    inboundRowsForRun = [
+      {
+        id: 5, invoice_date: '2026-01-20', created_at: '2026-01-21 09:00:00',
+        supplier_name: 'Lab AG', description: 'Prints', disposition: 'eigener_aufwand',
+        tax_treatment: 'domestic', status: 'categorized', event_id: 7,
+        net_amount_minor: 20000, vat_amount_minor: 1540, total_amount_minor: 21540,
+        event_name: 'Wedding A',
+      },
+    ];
+    // Internal expense (mileage, no VAT split): only a CHF base amount.
+    expenseRowsForRun = [
+      {
+        id: 9, created_at: '2026-02-01 12:00:00',
+        supplier_name: null, description: 'Travel', disposition: 'eigener_aufwand',
+        tax_treatment: 'domestic', status: 'open', event_id: null,
+        original_currency: null, original_amount_minor: null, chf_amount_minor: 5000,
+        net_amount_minor: null, vat_amount_minor: null, gross_amount_minor: null,
+        event_name: null,
+      },
+    ];
+    const out = await taxReportService.getTaxReport({
+      from: '2026-01-01', to: '2026-03-31', currency: 'CHF',
+    });
+
+    expect(out.costs.rows).toHaveLength(2);
+    // Incoming invoice mapped + booked to the event.
+    const incoming = out.costs.rows.find((r) => r.source === 'incoming');
+    expect(incoming).toMatchObject({
+      supplierLabel: 'Lab AG', eventName: 'Wedding A',
+      netMinor: 20000, vatMinor: 1540, totalMinor: 21540,
+    });
+    // Expense: no net/vat/gross → falls back to the CHF base as total,
+    // and (company-booked) event name blank.
+    const expense = out.costs.rows.find((r) => r.source === 'expense');
+    expect(expense).toMatchObject({
+      eventName: '', netMinor: 5000, vatMinor: 0, totalMinor: 5000,
+    });
+
+    expect(out.costs.totalNet).toBe(25000);
+    expect(out.costs.totalVat).toBe(1540);
+    expect(out.costs.totalGross).toBe(26540);
+
+    // Summary nets income against costs.
+    expect(out.summary).toMatchObject({
+      incomeNetMinor: 100000, incomeVatMinor: 7700, incomeGrossMinor: 107700,
+      costNetMinor: 25000, costVatMinor: 1540, costGrossMinor: 26540,
+      resultNetMinor: 75000, resultGrossMinor: 81160,
+      vatRegistrationConfigured: false, vatPayableMinor: null,
+    });
+  });
+
+  it('excludes declined/duplicate incoming invoices via the query filter (sanity on chain wiring)', async () => {
+    costTablesPresent = true;
+    inboundRowsForRun = []; // the whereNotIn filter is applied in SQL; here we assert empty → zeroed
+    expenseRowsForRun = [];
+    const out = await taxReportService.getTaxReport({
+      from: '2026-01-01', to: '2026-03-31', currency: 'CHF',
+    });
+    expect(out.costs.totalGross).toBe(0);
+    expect(out.summary.costGrossMinor).toBe(0);
+  });
+});
+
+// ----- export scope (income/cost split) --------------------------------
+describe('export scope helpers', () => {
+  const { scopeLedger, normalizeScope } = taxReportService._internal;
+  const ledger = [
+    { type: 'outgoing', reference: 'R-1' },
+    { type: 'incoming', reference: 'IN-1' },
+    { type: 'expense', reference: 'EXP-1' },
+  ];
+
+  it('normalizeScope defaults unknown/empty to "all"', () => {
+    expect(normalizeScope('all')).toBe('all');
+    expect(normalizeScope('income')).toBe('income');
+    expect(normalizeScope('cost')).toBe('cost');
+    expect(normalizeScope('bogus')).toBe('all');
+    expect(normalizeScope(undefined)).toBe('all');
+  });
+
+  it('scopeLedger income keeps only outgoing rows', () => {
+    expect(scopeLedger(ledger, 'income').map((r) => r.type)).toEqual(['outgoing']);
+  });
+
+  it('scopeLedger cost keeps incoming + expense rows', () => {
+    expect(scopeLedger(ledger, 'cost').map((r) => r.type)).toEqual(['incoming', 'expense']);
+  });
+
+  it('scopeLedger all keeps everything; null-safe', () => {
+    expect(scopeLedger(ledger, 'all')).toHaveLength(3);
+    expect(scopeLedger(null, 'income')).toEqual([]);
+  });
+});
+
+describe('renderTaxReportCsv scope', () => {
+  beforeEach(() => {
+    costTablesPresent = true;
+    invoiceRowsForRun = [{
+      id: 1, invoice_number: 'R-2026-0001', issue_date: '2026-01-15',
+      currency: 'CHF', status: 'paid', vat_rate: 8.1,
+      net_amount_minor: 100000, vat_amount_minor: 8100, total_amount_minor: 108100,
+      late_fee_amount_minor: 0, replaces_invoice_id: null,
+      customer_company_name: 'ACME', event_name: 'Wedding A',
+    }];
+    inboundRowsForRun = [{
+      id: 5, invoice_date: '2026-01-20', created_at: '2026-01-21 09:00:00',
+      supplier_name: 'Lab AG', description: 'Prints', disposition: 'eigener_aufwand',
+      tax_treatment: 'domestic', status: 'categorized', event_id: 7,
+      net_amount_minor: 20000, vat_amount_minor: 1620, total_amount_minor: 21620,
+      event_name: 'Wedding A',
+    }];
+  });
+
+  it('income scope keeps the invoice row, drops the supplier cost row', async () => {
+    const { content, filename } = await taxReportService.renderTaxReportCsv({
+      from: '2026-01-01', to: '2026-03-31', currency: 'CHF', scope: 'income',
+    });
+    expect(content).toContain('R-2026-0001');
+    expect(content).not.toContain('Lab AG');
+    expect(filename).toContain('income_');
+  });
+
+  it('cost scope keeps the supplier row, drops the invoice row', async () => {
+    const { content, filename } = await taxReportService.renderTaxReportCsv({
+      from: '2026-01-01', to: '2026-03-31', currency: 'CHF', scope: 'cost',
+    });
+    expect(content).toContain('Lab AG');
+    expect(content).not.toContain('R-2026-0001');
+    expect(filename).toContain('cost_');
+  });
+
+  it('all scope (default) keeps both', async () => {
+    const { content, filename } = await taxReportService.renderTaxReportCsv({
+      from: '2026-01-01', to: '2026-03-31', currency: 'CHF',
+    });
+    expect(content).toContain('R-2026-0001');
+    expect(content).toContain('Lab AG');
+    expect(filename).not.toMatch(/income_|cost_/);
   });
 });

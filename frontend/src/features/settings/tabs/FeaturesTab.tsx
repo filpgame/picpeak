@@ -6,6 +6,8 @@ import {
   Images,
   BellRing,
   MessageSquare,
+  Smartphone,
+  Mailbox,
   CalendarDays,
   FileSignature,
   ScrollText,
@@ -16,6 +18,11 @@ import {
   Briefcase,
   Wrench,
   Calculator,
+  Landmark,
+  ScanLine,
+  Wallet,
+  FolderKanban,
+  MonitorPlay,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../../../components/common';
@@ -110,6 +117,21 @@ export const FeaturesTab: React.FC = () => {
               "Galleries are the foundation of PicPeak and can't be turned off.",
             )}
           />
+
+          <FeatureCard
+            icon={MonitorPlay}
+            title={t('settings.features.slideshow.title', 'Live Slideshow')}
+            description={t(
+              'settings.features.slideshow.description',
+              'A separate fullscreen "Diashow" link per event for projectors at live events — auto-picks-up new uploads, with per-event-type presets and global watermark defaults under Settings → Slideshow.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarHidden
+            sidebarHiddenLabel={sidebarHiddenLabel}
+            enabled={staged.slideshow}
+            onToggle={(next) => setFlag('slideshow', next)}
+          />
         </Section>
 
         {/* Clients (#354 follow-up). Visual grouping for the CRM-area
@@ -157,6 +179,36 @@ export const FeaturesTab: React.FC = () => {
             sidebarHiddenLabel={sidebarHiddenLabel}
             enabled={staged.reminderEmails}
             onToggle={(next) => setFlag('reminderEmails', next)}
+          />
+
+          <FeatureCard
+            icon={Mailbox}
+            title={t('settings.features.incomingMail.title', 'Incoming mail')}
+            description={t(
+              'settings.features.incomingMail.description',
+              'Poll a dedicated mailbox (IMAP) every minute and drop invoice attachments into Accounting → Incoming invoices. Configure the mailbox under Settings → Email.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarHidden
+            sidebarHiddenLabel={sidebarHiddenLabel}
+            enabled={staged.incomingMail}
+            onToggle={(next) => setFlag('incomingMail', next)}
+          />
+
+          <FeatureCard
+            icon={Smartphone}
+            title={t('settings.features.whatsapp.title', 'WhatsApp')}
+            description={t(
+              'settings.features.whatsapp.description',
+              'Deliver the gallery-ready notification via WhatsApp Business API in addition to email. Requires a Meta Business Account, an approved message template, and a customer phone number on the event. Configure credentials under Settings → WhatsApp.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarHidden
+            sidebarHiddenLabel={sidebarHiddenLabel}
+            enabled={staged.whatsapp}
+            onToggle={(next) => setFlag('whatsapp', next)}
           />
 
           <FeatureCard
@@ -260,25 +312,6 @@ export const FeaturesTab: React.FC = () => {
           />
 
           <FeatureCard
-            icon={Calculator}
-            title={t('settings.features.taxReport.title', 'Tax report')}
-            description={t(
-              'settings.features.taxReport.description',
-              'Period-scoped revenue list with net + VAT breakdown grouped by VAT rate. Export as PDF (landscape, company letterhead) or CSV for your accountant. Cancelled invoices stay visible for a gap-free audit trail but are excluded from totals.',
-            )}
-            status="new"
-            statusLabel={statusLabel('new')}
-            sidebarLabel={t('settings.features.taxReport.sidebar', 'Tax')}
-            enabled={staged.taxReport}
-            onToggle={(next) => setFlag('taxReport', next)}
-            disabled={!staged.bills}
-            lockedReason={!staged.bills ? t(
-              'settings.features.taxReport.requiresBills',
-              'Enable Bills first — the tax report reads from your invoices.',
-            ) : undefined}
-          />
-
-          <FeatureCard
             icon={Briefcase}
             title={t('settings.features.hoursLogging.title', 'Hours logging')}
             description={t(
@@ -290,6 +323,103 @@ export const FeaturesTab: React.FC = () => {
             sidebarLabel={t('settings.features.hoursLogging.sidebar', 'Hours')}
             enabled={staged.hoursLogging}
             onToggle={(next) => setFlag('hoursLogging', next)}
+          />
+
+          <FeatureCard
+            icon={FolderKanban}
+            title={t('settings.features.projects.title', 'Projects')}
+            description={t(
+              'settings.features.projects.description',
+              'Admin-only grouping layer above events. Bundle several events under one project and open a 360° Project Overview cockpit — milestone timeline plus a dated feed of every email (with the actual sent preview + resend/cancel/retry actions), quote, contract, invoice, gallery and logged hour. Adds a "book to project" control when logging hours. Customers never see projects.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarLabel={t('settings.features.projects.sidebar', 'Overview')}
+            enabled={staged.projects}
+            onToggle={(next) => setFlag('projects', next)}
+          />
+        </Section>
+
+        {/* Accounting — top-level master + sub-toggles. The Tax export
+            relocated here permanently out of CRM. Sub-toggles are disabled
+            until the Accounting master is on. */}
+        <Section title={t('settings.features.sections.accounting', 'Accounting')}>
+          <FeatureCard
+            icon={Landmark}
+            title={t('settings.features.accounting.title', 'Accounting')}
+            description={t(
+              'settings.features.accounting.description',
+              'A dedicated Accounting area, separate from CRM. Turn this on, then enable the sub-features below (Tax export, Incoming invoices). VAT / tax treatment is guidance only — verify with your Treuhänder before relying on it.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarLabel={t('settings.features.accounting.sidebar', 'Accounting')}
+            enabled={staged.accounting}
+            onToggle={(next) => setFlag('accounting', next)}
+            // Invoices force-enable Accounting (invoice VAT settings live here),
+            // so the master can't be turned off while Bills is on.
+            disabled={staged.bills}
+            lockedReason={staged.bills ? t(
+              'settings.features.accounting.requiredByBills',
+              'On automatically because Invoices is enabled — invoice VAT settings live in the Accounting section.',
+            ) : undefined}
+          />
+
+          <FeatureCard
+            icon={Calculator}
+            title={t('settings.features.taxReport.title', 'Tax export')}
+            description={t(
+              'settings.features.taxReport.description',
+              'Period-scoped revenue list with net + VAT breakdown grouped by VAT rate. Export as PDF (landscape, company letterhead) or CSV for your accountant. Cancelled invoices stay visible for a gap-free audit trail but are excluded from totals.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarLabel={t('settings.features.taxReport.sidebar', 'Tax')}
+            enabled={staged.taxReport}
+            onToggle={(next) => setFlag('taxReport', next)}
+            disabled={!staged.accounting}
+            lockedReason={!staged.accounting ? t(
+              'settings.features.taxReport.requiresAccounting',
+              'Enable Accounting first — Tax export lives in the Accounting section.',
+            ) : undefined}
+          />
+
+          <FeatureCard
+            icon={ScanLine}
+            title={t('settings.features.incomingInvoices.title', 'Incoming invoices')}
+            description={t(
+              'settings.features.incomingInvoices.description',
+              'Capture received supplier invoices (upload or phone/tablet camera), categorize expenses, and re-bill costs to clients on the relevant event with a contract-driven markup.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarLabel={t('settings.features.incomingInvoices.sidebar', 'Incoming')}
+            enabled={staged.incomingInvoices}
+            onToggle={(next) => setFlag('incomingInvoices', next)}
+            disabled={!staged.accounting}
+            lockedReason={!staged.accounting ? t(
+              'settings.features.incomingInvoices.requiresAccounting',
+              'Enable Accounting first — Incoming invoices live in the Accounting section.',
+            ) : undefined}
+          />
+
+          <FeatureCard
+            icon={Wallet}
+            title={t('settings.features.expenses.title', 'Expenses')}
+            description={t(
+              'settings.features.expenses.description',
+              'Internal expenses (mileage, per-diem, cash) booked to an event or the company, with optional proof. Separate from incoming supplier invoices. Configure km / per-diem rates and the proof requirement in the Accounting settings tab.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarLabel={t('settings.features.expenses.sidebar', 'Expenses')}
+            enabled={staged.expenses}
+            onToggle={(next) => setFlag('expenses', next)}
+            disabled={!staged.accounting}
+            lockedReason={!staged.accounting ? t(
+              'settings.features.expenses.requiresAccounting',
+              'Enable Accounting first — Expenses live in the Accounting section.',
+            ) : undefined}
           />
         </Section>
 

@@ -8,9 +8,11 @@
  *   GET /pdf       → landscape A4 PDF, Content-Disposition: attachment
  *   GET /csv       → RFC-4180 CSV, Content-Disposition: attachment
  *
- * Reuses the existing `bills` feature flag + `bills.view` permission.
- * Tax data is just a different lens on invoice data — admins who can
- * read invoices can read the tax report; no new RBAC surface needed.
+ * Gated by the Accounting master flag + the `taxReport` sub-flag
+ * (independent of `bills` — Tax export was moved out of CRM into
+ * Accounting). Still uses the `bills.view` permission: tax data is just
+ * a different lens on invoice data, so admins who can read invoices can
+ * read the tax report; no new RBAC surface needed.
  */
 
 const express = require('express');
@@ -23,19 +25,19 @@ const { db } = require('../database/db');
 
 const router = express.Router();
 
-// The tax report has its own dedicated flag (taxReport) — independent
-// from `bills` so admins can leave it off until they actually need to
-// run the export. The frontend mirrors the dependency rule (bills off
-// → taxReport off) but we re-check both server-side for defence in
-// depth.
+// The tax report now lives under the Accounting master flag and has its
+// own dedicated `taxReport` sub-flag — it is INDEPENDENT of `bills`
+// (Tax export was moved permanently out of CRM into Accounting). The
+// frontend mirrors the dependency rule (accounting off → taxReport off)
+// but we re-check both server-side for defence in depth.
 async function requireTaxReportFlag(req, res, next) {
   try {
-    const rows = await db('feature_flags').whereIn('key', ['bills', 'taxReport']).select('key', 'value');
+    const rows = await db('feature_flags').whereIn('key', ['accounting', 'taxReport']).select('key', 'value');
     const isOn = (row) => row && (row.value === true || row.value === 1 || row.value === '1');
-    const bills      = isOn(rows.find((r) => r.key === 'bills'));
+    const accounting = isOn(rows.find((r) => r.key === 'accounting'));
     const taxReport  = isOn(rows.find((r) => r.key === 'taxReport'));
-    if (!bills) {
-      return res.status(403).json({ error: 'Bills feature is disabled', code: 'BILLS_DISABLED' });
+    if (!accounting) {
+      return res.status(403).json({ error: 'Accounting feature is disabled', code: 'ACCOUNTING_DISABLED' });
     }
     if (!taxReport) {
       return res.status(403).json({ error: 'Tax report feature is disabled', code: 'TAX_REPORT_DISABLED' });
@@ -63,11 +65,15 @@ const QUERY_VALIDATORS = [
 ];
 
 function parseParams(req) {
+  // scope (export only): all | income | cost. Anything else → 'all'.
+  const rawScope = String(req.query.scope || 'all');
+  const scope = ['all', 'income', 'cost'].includes(rawScope) ? rawScope : 'all';
   return {
     from: req.query.from,
     to: req.query.to,
     currency: String(req.query.currency || '').toUpperCase(),
     locale: req.query.locale || undefined,
+    scope,
   };
 }
 
@@ -92,7 +98,8 @@ router.get(
     validateRequest(req);
     const params = parseParams(req);
     const buffer = await taxReportService.renderTaxReportPdf(params);
-    const filename = `tax_report_${params.from}_to_${params.to}_${params.currency}.pdf`;
+    const scopeTag = params.scope && params.scope !== 'all' ? `${params.scope}_` : '';
+    const filename = `tax_report_${scopeTag}${params.from}_to_${params.to}_${params.currency}.pdf`;
     res.set('Content-Type', 'application/pdf');
     res.set('Content-Disposition', `attachment; filename="${filename}"`);
     res.set('Content-Length', String(buffer.length));

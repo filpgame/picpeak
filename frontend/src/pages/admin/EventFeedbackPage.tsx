@@ -41,6 +41,11 @@ export const EventFeedbackPage: React.FC = () => {
     page: 1,
     limit: 20
   });
+  // Export shape selector (#640 #6). 'long' = one row per individual feedback
+  // action (backward-compat, what the existing export has always been).
+  // 'pivot' = one row per (photo, guest) — handier for spreadsheet pivot tables
+  // and per-guest engagement scans, hidden rows excluded.
+  const [exportShape, setExportShape] = useState<'long' | 'pivot'>('long');
 
   // Fetch event details
   const { data: event, isLoading: eventLoading } = useQuery({
@@ -101,23 +106,26 @@ export const EventFeedbackPage: React.FC = () => {
     }
   });
 
-  // Export feedback
+  // Export feedback. Filename carries the shape so multiple exports of the
+  // same event don't overwrite each other in the admin's Downloads folder.
   const handleExport = async (format: 'json' | 'csv') => {
     try {
-      const data = await feedbackService.exportEventFeedback(id!, format);
+      const data = await feedbackService.exportEventFeedback(id!, format, exportShape);
+      const eventSlug = event?.slug || id;
+      const filename = `feedback-${exportShape}-${eventSlug}.${format}`;
       if (format === 'csv') {
         const blob = new Blob([data], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `feedback-${event?.slug || id}.csv`;
+        a.download = filename;
         a.click();
       } else {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `feedback-${event?.slug || id}.json`;
+        a.download = filename;
         a.click();
       }
       toast.success(t('feedback.exported', 'Feedback exported'));
@@ -160,7 +168,23 @@ export const EventFeedbackPage: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-end">
+          {/* Shape selector (#640 #6). Long is the existing per-action shape;
+              pivot is per-(photo, guest) for spreadsheet pivot tables. */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-neutral-500 dark:text-neutral-400" htmlFor="feedback-export-shape">
+              {t('feedback.exportShapeLabel', 'Shape')}
+            </label>
+            <select
+              id="feedback-export-shape"
+              value={exportShape}
+              onChange={(e) => setExportShape(e.target.value as 'long' | 'pivot')}
+              className="text-sm px-2 py-1.5 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800"
+            >
+              <option value="long">{t('feedback.exportShapeLong', 'Per-action (long)')}</option>
+              <option value="pivot">{t('feedback.exportShapePivot', 'Per-guest (pivot)')}</option>
+            </select>
+          </div>
           <Button
             variant="outline"
             size="sm"

@@ -19,6 +19,7 @@ const {
   getRawPublicSiteSettings,
 } = require('../services/publicSiteService');
 const { sanitizeCss } = require('../utils/cssSanitizer');
+const { upsertAppSetting } = require('../utils/appSettings');
 const { clearShareLinkSettingsCache } = require('../services/shareLinkService');
 const { resetSecurityConfigCache } = require('../utils/authSecurity');
 const router = express.Router();
@@ -211,16 +212,7 @@ router.put('/customer-surface', adminAuth, requirePermission('settings.edit'), a
     }
 
     for (const u of updates) {
-      const existing = await db('app_settings').where('setting_key', u.setting_key).first();
-      if (existing) {
-        await db('app_settings').where('setting_key', u.setting_key).update({
-          setting_value: u.setting_value,
-          setting_type: u.setting_type,
-          updated_at: new Date(),
-        });
-      } else {
-        await db('app_settings').insert({ ...u, created_at: new Date(), updated_at: new Date() });
-      }
+      await upsertAppSetting(u.setting_key, u.setting_value, u.setting_type);
     }
 
     // Clear the public-site cache so any consumer relying on it
@@ -231,6 +223,135 @@ router.put('/customer-surface', adminAuth, requirePermission('settings.edit'), a
   } catch (error) {
     console.error('Customer surface settings save error:', error);
     res.status(500).json({ error: 'Failed to save customer surface settings' });
+  }
+});
+
+// Accounting settings (km rate, per-diem rate, require-proof). Read via the
+// generic GET /:type ('accounting'); this is the typed write. Rates are
+// integer minor units; verify legal/tax guidance with a Treuhaender.
+router.put('/accounting', adminAuth, requirePermission('settings.edit'), async (req, res) => {
+  try {
+    const updates = [];
+    const setInt = (key) => {
+      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+        const n = Math.max(0, Math.round(Number(req.body[key]) || 0));
+        updates.push({ setting_key: key, setting_value: JSON.stringify(n), setting_type: 'accounting' });
+      }
+    };
+    setInt('accounting_km_rate_minor');
+    setInt('accounting_per_diem_rate_minor');
+    if (Object.prototype.hasOwnProperty.call(req.body, 'accounting_require_proof')) {
+      updates.push({
+        setting_key: 'accounting_require_proof',
+        setting_value: JSON.stringify(!!req.body.accounting_require_proof),
+        setting_type: 'accounting',
+      });
+    }
+    // VAT registration + reclaim. `registered` drives whether output VAT applies
+    // + whether input VAT is deductible; `reclaim_countries` = the ISO-2 list of
+    // countries whose input VAT can be reclaimed (drives cost tax-treatment +
+    // the report's VAT-payable).
+    if (Object.prototype.hasOwnProperty.call(req.body, 'accounting_vat_registered')) {
+      updates.push({
+        setting_key: 'accounting_vat_registered',
+        setting_value: JSON.stringify(!!req.body.accounting_vat_registered),
+        setting_type: 'accounting',
+      });
+    }
+    // Default OUTPUT VAT code stamped onto NEW invoices/quotes (the editor
+    // seeds its VAT picker from it). Stored as the code string; '' clears it.
+    if (Object.prototype.hasOwnProperty.call(req.body, 'accounting_default_output_vat_code')) {
+      const code = String(req.body.accounting_default_output_vat_code || '').trim().slice(0, 16);
+      updates.push({
+        setting_key: 'accounting_default_output_vat_code',
+        setting_value: JSON.stringify(code),
+        setting_type: 'accounting',
+      });
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'accounting_vat_reclaim_countries')) {
+      const arr = Array.isArray(req.body.accounting_vat_reclaim_countries)
+        ? req.body.accounting_vat_reclaim_countries
+          .map((c) => String(c || '').toUpperCase().trim())
+          .filter((c) => /^[A-Z]{2}$/.test(c))
+        : [];
+      updates.push({
+        setting_key: 'accounting_vat_reclaim_countries',
+        setting_value: JSON.stringify(arr),
+        setting_type: 'accounting',
+      });
+    }
+    for (const u of updates) {
+      await upsertAppSetting(u.setting_key, u.setting_value, u.setting_type);
+    }
+    res.json({ message: 'Accounting settings updated', updated: updates.map((u) => u.setting_key) });
+  } catch (error) {
+    console.error('Accounting settings save error:', error);
+    res.status(500).json({ error: 'Failed to save accounting settings' });
+  }
+});
+
+// Global Live Slideshow defaults (migration 139). The per-event watermark is
+// tri-state (events.show_watermark NULL = inherit these). Read via the generic
+// GET /:type ('slideshow'); this is the typed write.
+router.put('/slideshow', adminAuth, requirePermission('settings.edit'), async (req, res) => {
+  try {
+    const updates = [];
+    const push = (key, value) => updates.push({ setting_key: key, setting_value: JSON.stringify(value), setting_type: 'slideshow' });
+    const has = (k) => Object.prototype.hasOwnProperty.call(req.body, k);
+
+    if (has('slideshow_fit')) {
+      push('slideshow_fit', req.body.slideshow_fit === 'contain' ? 'contain' : 'cover');
+    }
+    // Picpeak-wide display preset (default style new events inherit).
+    if (has('slideshow_interval_ms')) {
+      const n = Math.min(120000, Math.max(1000, Math.round(Number(req.body.slideshow_interval_ms) || 5000)));
+      push('slideshow_interval_ms', n);
+    }
+    if (has('slideshow_transition')) {
+      const allowed = ['crossfade', 'cut', 'slide', 'kenburns', 'dipwhite', 'dipblack'];
+      push('slideshow_transition', allowed.includes(req.body.slideshow_transition) ? req.body.slideshow_transition : 'crossfade');
+    }
+    if (has('slideshow_transition_ms')) {
+      const n = Math.min(5000, Math.max(100, Math.round(Number(req.body.slideshow_transition_ms) || 800)));
+      push('slideshow_transition_ms', n);
+    }
+    if (has('slideshow_colorfilter')) {
+      const allowed = ['none', 'bw', 'sepia', 'warm', 'cool', 'vignette'];
+      push('slideshow_colorfilter', allowed.includes(req.body.slideshow_colorfilter) ? req.body.slideshow_colorfilter : 'none');
+    }
+    if (has('slideshow_watermark_enabled')) push('slideshow_watermark_enabled', !!req.body.slideshow_watermark_enabled);
+    if (has('slideshow_watermark_source')) {
+      const v = ['logo', 'logo_dark', 'favicon', 'event'].includes(req.body.slideshow_watermark_source) ? req.body.slideshow_watermark_source : 'logo';
+      push('slideshow_watermark_source', v);
+    }
+    if (has('slideshow_watermark_position')) {
+      const allowed = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+      const v = allowed.includes(req.body.slideshow_watermark_position) ? req.body.slideshow_watermark_position : 'bottom-right';
+      push('slideshow_watermark_position', v);
+    }
+    if (has('slideshow_watermark_opacity')) {
+      const n = Math.min(100, Math.max(0, Math.round(Number(req.body.slideshow_watermark_opacity) || 0)));
+      push('slideshow_watermark_opacity', n);
+    }
+    if (has('slideshow_watermark_style')) {
+      const v = ['white', 'original'].includes(req.body.slideshow_watermark_style) ? req.body.slideshow_watermark_style : 'white';
+      push('slideshow_watermark_style', v);
+    }
+    if (has('slideshow_watermark_size')) {
+      const n = Math.min(40, Math.max(3, Math.round(Number(req.body.slideshow_watermark_size) || 12)));
+      push('slideshow_watermark_size', n);
+    }
+
+    for (const u of updates) {
+      await upsertAppSetting(u.setting_key, u.setting_value, u.setting_type);
+    }
+    // Drop the slideshow-globals cache so a running projector picks up the
+    // change on its next poll rather than after the 5s TTL.
+    require('../utils/slideshowGlobals').invalidateSlideshowGlobals();
+    res.json({ message: 'Slideshow settings updated', updated: updates.map((u) => u.setting_key) });
+  } catch (error) {
+    console.error('Slideshow settings save error:', error);
+    res.status(500).json({ error: 'Failed to save slideshow settings' });
   }
 });
 

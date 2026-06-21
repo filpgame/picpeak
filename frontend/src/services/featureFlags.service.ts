@@ -8,6 +8,9 @@ export type FeatureKey =
   | 'quotes'
   | 'bills'
   | 'messaging'
+  // Incoming mail (migration 128) — IMAP polling into the incoming-invoices
+  // inbox. Standalone toggle.
+  | 'incomingMail'
   | 'analytics'
   | 'userManagement'
   // Top-level "Clients" section (#354 follow-up). Parent flag that
@@ -41,7 +44,29 @@ export type FeatureKey =
   // upload. Independent of quotes / bills — contracts can be sent on
   // their own. Seeded block bodies are examples only; admins must
   // have their lawyer review before sending. See docs/crm-disclaimers.md.
-  | 'contracts';
+  | 'contracts'
+  // Accounting (migration 122). Top-level MASTER for the Accounting
+  // section (separate from CRM). Its sub-features (tax export, incoming
+  // invoices) require it. Strictly opt-in.
+  | 'accounting'
+  // Incoming invoices (migration 124) — external supplier-invoice capture +
+  // re-bill. Accounting sub-feature; requires `accounting`.
+  | 'incomingInvoices'
+  // Expenses (migration 127) — internal expenses (mileage / per-diem / cash).
+  // Separate Accounting sub-feature; requires `accounting`.
+  | 'expenses'
+  // Projects (migration 120). Admin-only grouping layer above events with the
+  // 360° Project Overview cockpit + the "book to project" hours control. Off
+  // by default; gates the CRM → Overview area entirely.
+  | 'projects'
+  // WhatsApp Business API delivery channel (migration 136, #640D).
+  // Strictly opt-in — requires a Meta Business Account, an approved
+  // message template, and a Meta access token. Independent of email; both
+  // can fire on the same event.
+  | 'whatsapp'
+  // Live Slideshow ("Diashow") — per-event fullscreen kiosk link + presets +
+  // global watermark settings tab. Strictly opt-in; gates all slideshow UI.
+  | 'slideshow';
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 

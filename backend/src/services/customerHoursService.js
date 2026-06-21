@@ -127,9 +127,14 @@ function isEntryLocked(entry, invoice) {
  */
 function buildLineItemFromEntry(entry, rateMinor) {
   const hours = (entry.duration_minutes / 60).toFixed(2);
-  // ISO date input is already YYYY-MM-DD; admin's locale formatting
-  // happens at PDF render time, so keep the entry description portable.
-  const datePart = String(entry.entry_date).slice(0, 10);
+  // Keep the entry description portable (admin's locale formatting happens at
+  // PDF render time). `entry_date` is a `date` column: Postgres hands it back as
+  // a JS Date, SQLite as a 'YYYY-MM-DD' string — so `String(dateObj).slice(0,10)`
+  // would bake "Wed Apr 06" into the invoice line on PG. Normalise via the Date
+  // branch (see feedback_pg_date_columns_serialize).
+  const datePart = entry.entry_date instanceof Date
+    ? entry.entry_date.toISOString().slice(0, 10)
+    : String(entry.entry_date).slice(0, 10);
   const note = (entry.description || '').trim();
   const description = `${datePart} ${entry.start_time}–${entry.end_time} (${hours}h)${note ? ': ' + note : ''}`;
   const qty = Number(hours);
@@ -219,7 +224,14 @@ async function createEntry(customerId, payload, adminId) {
   // if neither override, customer default, nor install default is set.
   resolveEffectiveRate({ hourly_rate_minor_override: override }, customer, installDefaultMinor);
 
-  return await db.transaction(async (trx) => {
+  // logActivity writes via the GLOBAL db; calling it inside the transaction
+  // below deadlocks against the held write lock on a SQLite-backed install (a
+  // second write connection blocks). Stage it here, fire it AFTER commit.
+  // (The monthly/billing paths additionally route through createInvoice, whose
+  // OWN internal logActivity still runs in-trx — that shared root limitation is
+  // tracked in feedback_sqlite_global_write_in_transaction.)
+  let logInfo = null;
+  const result = await db.transaction(async (trx) => {
     const row = {
       customer_account_id: customer.id,
       entry_date: entryDate,
@@ -233,6 +245,21 @@ async function createEntry(customerId, payload, adminId) {
       created_at: new Date(),
       updated_at: new Date(),
     };
+    // Migration 118 — optional "book to project" link. A project belongs to
+    // at most one customer, so reject booking hours onto a project owned by a
+    // DIFFERENT customer (defence-in-depth behind the customer-scoped picker).
+    // Unassigned projects (customer_account_id null) are allowed for anyone.
+    if (payload.projectId !== undefined && await hasColumnCached('customer_hour_entries', 'project_id')) {
+      const projectId = payload.projectId || null;
+      if (projectId && await trx.schema.hasTable('projects')) {
+        const project = await trx('projects').where({ id: projectId }).select('customer_account_id').first();
+        if (!project) throw new AppError('Project not found', 404, 'PROJECT_NOT_FOUND');
+        if (project.customer_account_id != null && project.customer_account_id !== customer.id) {
+          throw new AppError('That project belongs to a different customer', 422, 'PROJECT_CUSTOMER_MISMATCH');
+        }
+      }
+      row.project_id = projectId;
+    }
     const inserted = await trx('customer_hour_entries').insert(row).returning('id');
     const entryId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
 
@@ -253,21 +280,15 @@ async function createEntry(customerId, payload, adminId) {
         billed_at: new Date(),
         updated_at: new Date(),
       });
-      try {
-        await logActivity('hour_entry_logged_to_monthly_draft',
-          { entryId, customerId: customer.id, invoiceId },
-          null, `admin:${adminId}`);
-      } catch (_) {}
+      logInfo = { type: 'hour_entry_logged_to_monthly_draft', meta: { entryId, customerId: customer.id, invoiceId } };
       return { id: entryId, status: 'billed', invoiceId };
     }
 
-    try {
-      await logActivity('hour_entry_logged',
-        { entryId, customerId: customer.id },
-        null, `admin:${adminId}`);
-    } catch (_) {}
+    logInfo = { type: 'hour_entry_logged', meta: { entryId, customerId: customer.id } };
     return { id: entryId, status: 'unbilled' };
   });
+  if (logInfo) { try { await logActivity(logInfo.type, logInfo.meta, null, `admin:${adminId}`); } catch (_) {} }
+  return result;
 }
 
 /**
@@ -278,7 +299,8 @@ async function createEntry(customerId, payload, adminId) {
  * stay accurate.
  */
 async function updateEntry(entryId, payload, adminId) {
-  return await db.transaction(async (trx) => {
+  let logInfo = null; // logged after commit — see createEntry note.
+  const result = await db.transaction(async (trx) => {
     const entry = await trx('customer_hour_entries').where({ id: entryId }).first();
     if (!entry) throw new AppError('Entry not found', 404);
     const invoice = entry.invoice_id
@@ -360,13 +382,11 @@ async function updateEntry(entryId, payload, adminId) {
       updated_at: next.updated_at,
     });
 
-    try {
-      await logActivity('hour_entry_updated',
-        { entryId, customerId: entry.customer_account_id },
-        null, `admin:${adminId}`);
-    } catch (_) {}
+    logInfo = { type: 'hour_entry_updated', meta: { entryId, customerId: entry.customer_account_id } };
     return { id: entryId };
   });
+  if (logInfo) { try { await logActivity(logInfo.type, logInfo.meta, null, `admin:${adminId}`); } catch (_) {} }
+  return result;
 }
 
 /**
@@ -375,7 +395,8 @@ async function updateEntry(entryId, payload, adminId) {
  * recomputes invoice totals before deleting the entry row itself.
  */
 async function deleteEntry(entryId, adminId) {
-  return await db.transaction(async (trx) => {
+  let logInfo = null; // logged after commit — see createEntry note.
+  const result = await db.transaction(async (trx) => {
     const entry = await trx('customer_hour_entries').where({ id: entryId }).first();
     if (!entry) throw new AppError('Entry not found', 404);
     const invoice = entry.invoice_id
@@ -412,13 +433,11 @@ async function deleteEntry(entryId, adminId) {
 
     await trx('customer_hour_entries').where({ id: entryId }).del();
 
-    try {
-      await logActivity('hour_entry_deleted',
-        { entryId, customerId: entry.customer_account_id, hadInvoice: !!entry.invoice_id },
-        null, `admin:${adminId}`);
-    } catch (_) {}
+    logInfo = { type: 'hour_entry_deleted', meta: { entryId, customerId: entry.customer_account_id, hadInvoice: !!entry.invoice_id } };
     return { deleted: true };
   });
+  if (logInfo) { try { await logActivity(logInfo.type, logInfo.meta, null, `admin:${adminId}`); } catch (_) {} }
+  return result;
 }
 
 /**
@@ -439,7 +458,8 @@ async function billUnbilledEntries(customerId, adminId) {
     );
   }
 
-  return await db.transaction(async (trx) => {
+  let logInfo = null; // logged after commit — see createEntry note.
+  const result = await db.transaction(async (trx) => {
     const unbilled = await trx('customer_hour_entries')
       .where({ customer_account_id: customer.id, status: 'unbilled' })
       .orderBy('entry_date', 'asc').orderBy('start_time', 'asc');
@@ -485,14 +505,11 @@ async function billUnbilledEntries(customerId, adminId) {
       });
     }
 
-    try {
-      await logActivity('hour_entries_billed',
-        { customerId: customer.id, invoiceId, entryCount: unbilled.length },
-        null, `admin:${adminId}`);
-    } catch (_) {}
-
+    logInfo = { type: 'hour_entries_billed', meta: { customerId: customer.id, invoiceId, entryCount: unbilled.length } };
     return { invoiceId, entriesBilled: unbilled.length };
   });
+  if (logInfo) { try { await logActivity(logInfo.type, logInfo.meta, null, `admin:${adminId}`); } catch (_) {} }
+  return result;
 }
 
 /**
