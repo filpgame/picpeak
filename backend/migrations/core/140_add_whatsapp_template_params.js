@@ -1,5 +1,5 @@
 /**
- * Migration 138: WhatsApp template parameter selection (#647 follow-up).
+ * Migration 140: WhatsApp template parameter selection (#647 follow-up).
  *
  * Adds a `template_params` column to `whatsapp_configs` that stores an
  * ordered JSON array of slot keys naming which built-in values are sent
@@ -18,8 +18,10 @@
  * Known slot keys (any other keys are ignored): `customer_name`,
  * `event_name`, `gallery_link`, `password_line`, `expiry_date`.
  *
- * Additive + `hasColumn`-guarded. The settling number depends on the
- * merge order with PR #646; flagged for renumber if that lands first.
+ * Slot 140: lands after PR #649 (137 — whatsapp_template_language) and
+ * PR #646 (138 — slideshow_share, 139 — slideshow_styling). Additive +
+ * `hasColumn`-guarded so re-running on an already-migrated DB is a
+ * safe no-op.
  */
 exports.up = async function (knex) {
   if (!(await knex.schema.hasTable('whatsapp_configs'))) return;
