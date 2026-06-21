@@ -234,6 +234,8 @@
       "slugPreview": "Beispiel-URL:",
       "emoji": "Symbol",
       "themePreset": "Standard-Theme",
+      "slideshowPreset": "Diashow-Voreinstellung",
+      "slideshowPresetHint": "Standard-Diashow-Stil für neue Events dieses Typs.",
       "isActive": "Aktiv (sichtbar bei Veranstaltungserstellung)"
     },
     "validation": {
@@ -1766,6 +1768,10 @@
       "whatsapp": {
         "title": "WhatsApp",
         "description": "Liefert die Gallerie-Bereit-Benachrichtigung zusätzlich zur E-Mail über die WhatsApp Business API. Voraussetzung: Meta-Business-Konto, genehmigte Nachrichtenvorlage und eine Kunden-Telefonnummer am Event. Zugangsdaten unter Einstellungen → WhatsApp konfigurieren."
+      },
+      "slideshow": {
+        "title": "Live-Diashow",
+        "description": "Ein separater Vollbild-„Diashow“-Link pro Event für Beamer bei Live-Events – übernimmt neue Uploads automatisch, mit Voreinstellungen je Event-Typ und globalen Wasserzeichen-Vorgaben unter Einstellungen → Diashow."
       }
     },
     "customerSurface": {
@@ -1812,6 +1818,10 @@
         "hourlyRatePlaceholder": "z. B. 120.00",
         "hourlyRateHint": "Verrechnungs-Fallback, wenn ein Kunde keinen eigenen Satz hat (Stundenerfassung). In {{currency}}, in Hauptwährungseinheiten. Leer lassen, um einen Satz pro Kunde oder pro Eintrag zu verlangen."
       }
+    },
+    "slideshow": {
+      "title": "Diashow",
+      "subtitle": "Globale Vorgaben für die Live-Diashow. Events und Event-Typen können diese überschreiben."
     },
     "whatsapp": {
       "title": "WhatsApp",
@@ -3135,6 +3145,86 @@
       "copyFailed": "Zugriff auf die Zwischenablage blockiert. Bitte den Text markieren und manuell kopieren.",
       "download": "Als Datei herunterladen"
     }
+  },
+  "slideshow": {
+    "adminTitle": "Live-Diashow",
+    "adminDescription": "Ein separater Vollbild-Link für Beamer bei Live-Events. Zeigt alle veröffentlichten Fotos und übernimmt neue Uploads automatisch, während die Diashow läuft.",
+    "generateLink": "Diashow-Link erstellen",
+    "linkLabel": "Diashow-Link",
+    "linkGenerated": "Diashow-Link erstellt",
+    "linkDisabled": "Diashow-Link deaktiviert",
+    "regenerate": "Neu erstellen",
+    "disable": "Deaktivieren",
+    "disableConfirm": "Diesen Diashow-Link deaktivieren? Der aktuelle Link funktioniert dann nicht mehr.",
+    "intervalLabel": "Anzeigedauer (Sek.)",
+    "transitionLabel": "Übergang",
+    "transitionSpeedLabel": "Übergangsdauer (ms)",
+    "transition": {
+      "crossfade": "Überblenden",
+      "cut": "Hart schneiden",
+      "slide": "Schieben",
+      "kenburns": "Ken Burns",
+      "dipwhite": "Über Weiß blenden",
+      "dipblack": "Über Schwarz blenden"
+    },
+    "colorfilterLabel": "Farbfilter",
+    "colorfilter": {
+      "none": "Keiner",
+      "bw": "Schwarz-Weiß",
+      "sepia": "Sepia",
+      "warm": "Warm",
+      "cool": "Kühl",
+      "vignette": "Vignette"
+    },
+    "watermarkToggle": "Logo-Wasserzeichen anzeigen",
+    "watermarkDescription": "Blendet ein weißes, halbtransparentes Logo in einer Ecke ein (wie ein Senderlogo im TV).",
+    "watermarkSourceLabel": "Logo",
+    "watermarkSource": {
+      "logo": "Helles Logo",
+      "logo_dark": "Dunkelmodus-Logo",
+      "favicon": "Favicon",
+      "event": "Event-Logo",
+      "notSet": "Nicht gesetzt"
+    },
+    "watermarkPositionLabel": "Position",
+    "watermarkPosition": {
+      "top-left": "Oben links",
+      "top-right": "Oben rechts",
+      "bottom-left": "Unten links",
+      "bottom-right": "Unten rechts"
+    },
+    "watermarkOpacityLabel": "Deckkraft (%)",
+    "watermarkStyleLabel": "Logo-Darstellung",
+    "watermarkSizeLabel": "Größe (% des Bildschirms)",
+    "watermarkModeHint": "Logo, Position, Deckkraft, Darstellung und Größe werden unter Einstellungen → Diashow konfiguriert.",
+    "watermarkStyle": {
+      "white": "Weiß (einfärben)",
+      "original": "Originalfarben"
+    },
+    "watermarkMode": {
+      "inherit": "Globale Vorgabe verwenden",
+      "on": "An",
+      "off": "Aus"
+    },
+    "globalTitle": "Globale Diashow-Einstellungen",
+    "globalDescription": "Vorgaben für jede Diashow. Events können das Wasserzeichen überschreiben (an/aus).",
+    "fitLabel": "Bildanpassung",
+    "fit": {
+      "cover": "Bildschirm füllen (beschneiden)",
+      "contain": "Schwarze Balken (kein Beschnitt)"
+    },
+    "fitHint": "„Füllen“ beschneidet das Bild zum Ausfüllen; „Schwarze Balken“ zeigt das ganze Foto – besser für Hochformat.",
+    "presetTitle": "Standard-Stil für neue Diashows",
+    "presetHint": "Gilt für ab jetzt erstellte Events; jedes Event kann ihn weiterhin überschreiben.",
+    "defaultsSaved": "Diashow-Vorgaben gespeichert",
+    "liveHint": "Änderungen werden in einer laufenden Diashow innerhalb weniger Sekunden übernommen – der Link muss nicht neu erstellt werden.",
+    "saveSettings": "Diashow-Einstellungen speichern",
+    "settingsSaved": "Diashow-Einstellungen gespeichert",
+    "start": "Diashow starten",
+    "waiting": "Warte auf Fotos …",
+    "ended": "Diashow beendet.",
+    "notFound": "Dieser Diashow-Link ist nicht aktiv.",
+    "startFailed": "Diashow konnte nicht gestartet werden. Bitte erneut versuchen."
   },
   "clientAccess": {
     "title": "Kundenzugang",

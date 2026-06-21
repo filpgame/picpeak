@@ -1324,6 +1324,10 @@
       "whatsapp": {
         "title": "WhatsApp",
         "description": "Deliver the gallery-ready notification via WhatsApp Business API in addition to email. Requires a Meta Business Account, an approved message template, and a customer phone number on the event. Configure credentials under Settings → WhatsApp."
+      },
+      "slideshow": {
+        "title": "Live Slideshow",
+        "description": "A separate fullscreen \"Diashow\" link per event for projectors at live events — auto-picks-up new uploads, with per-event-type presets and global watermark defaults under Settings → Slideshow."
       }
     },
     "customerSurface": {
@@ -1370,6 +1374,10 @@
         "hourlyRatePlaceholder": "e.g. 120.00",
         "hourlyRateHint": "Billing fallback used when a customer has no own rate (hours logging). In {{currency}}, major units. Leave blank to require a per-customer or per-entry rate."
       }
+    },
+    "slideshow": {
+      "title": "Slideshow",
+      "subtitle": "Global defaults for the Live Slideshow. Events and event types can override these."
     },
     "whatsapp": {
       "title": "WhatsApp",
@@ -2501,6 +2509,8 @@
       "slugPreview": "Example URL:",
       "emoji": "Icon",
       "themePreset": "Default Theme",
+      "slideshowPreset": "Slideshow preset",
+      "slideshowPresetHint": "Default slideshow style for new events of this type.",
       "isActive": "Active (visible in event creation)"
     },
     "validation": {
@@ -3159,6 +3169,86 @@
     "needHelp": "Need help? Contact",
     "poweredBy": "Powered by PicPeak",
     "devModeHint": "Development Mode: Use email: admin@example.com, password: admin123"
+  },
+  "slideshow": {
+    "adminTitle": "Live Slideshow",
+    "adminDescription": "A separate fullscreen link for projectors at live events. It shows all published photos and automatically picks up new uploads while running.",
+    "generateLink": "Generate slideshow link",
+    "linkLabel": "Slideshow link",
+    "linkGenerated": "Slideshow link generated",
+    "linkDisabled": "Slideshow link disabled",
+    "regenerate": "Regenerate",
+    "disable": "Disable",
+    "disableConfirm": "Disable this slideshow link? The current link will stop working.",
+    "intervalLabel": "Display time (sec)",
+    "transitionLabel": "Transition",
+    "transitionSpeedLabel": "Transition speed (ms)",
+    "transition": {
+      "crossfade": "Crossfade",
+      "cut": "Cut",
+      "slide": "Slide",
+      "kenburns": "Ken Burns",
+      "dipwhite": "Dip to white",
+      "dipblack": "Dip to black"
+    },
+    "colorfilterLabel": "Color filter",
+    "colorfilter": {
+      "none": "None",
+      "bw": "Black & White",
+      "sepia": "Sepia",
+      "warm": "Warm",
+      "cool": "Cool",
+      "vignette": "Vignette"
+    },
+    "watermarkToggle": "Show logo watermark",
+    "watermarkDescription": "Overlay a white, semi-transparent logo in a corner (like a TV station ident).",
+    "watermarkSourceLabel": "Logo",
+    "watermarkSource": {
+      "logo": "Light logo",
+      "logo_dark": "Dark-mode logo",
+      "favicon": "Favicon",
+      "event": "Event logo",
+      "notSet": "Not set"
+    },
+    "watermarkPositionLabel": "Position",
+    "watermarkPosition": {
+      "top-left": "Top left",
+      "top-right": "Top right",
+      "bottom-left": "Bottom left",
+      "bottom-right": "Bottom right"
+    },
+    "watermarkOpacityLabel": "Opacity (%)",
+    "watermarkStyleLabel": "Logo style",
+    "watermarkSizeLabel": "Size (% of screen)",
+    "watermarkModeHint": "The logo, position, opacity, style and size are configured under Settings → Slideshow.",
+    "watermarkStyle": {
+      "white": "White (recolor)",
+      "original": "Original colors"
+    },
+    "watermarkMode": {
+      "inherit": "Use global default",
+      "on": "On",
+      "off": "Off"
+    },
+    "globalTitle": "Global slideshow settings",
+    "globalDescription": "Defaults for every slideshow. Events can override the watermark on or off.",
+    "fitLabel": "Image fit",
+    "fit": {
+      "cover": "Fill screen (crop)",
+      "contain": "Black bars (no crop)"
+    },
+    "fitHint": "\"Fill\" crops to fill the screen; \"Black bars\" shows the whole photo — better for portrait images.",
+    "presetTitle": "Default style for new slideshows",
+    "presetHint": "Applied to events created from now on; each event can still override it.",
+    "defaultsSaved": "Slideshow defaults saved",
+    "liveHint": "Changes apply to a running slideshow within a few seconds — no need to regenerate the link.",
+    "saveSettings": "Save slideshow settings",
+    "settingsSaved": "Slideshow settings saved",
+    "start": "Start slideshow",
+    "waiting": "Waiting for photos…",
+    "ended": "Slideshow ended.",
+    "notFound": "This slideshow link is not active.",
+    "startFailed": "Could not start the slideshow. Please try again."
   },
   "clientAccess": {
     "title": "Client Access",

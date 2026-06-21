@@ -63,7 +63,10 @@ export type FeatureKey =
   // Strictly opt-in — requires a Meta Business Account, an approved
   // message template, and a Meta access token. Independent of email; both
   // can fire on the same event.
-  | 'whatsapp';
+  | 'whatsapp'
+  // Live Slideshow ("Diashow") — per-event fullscreen kiosk link + presets +
+  // global watermark settings tab. Strictly opt-in; gates all slideshow UI.
+  | 'slideshow';
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 

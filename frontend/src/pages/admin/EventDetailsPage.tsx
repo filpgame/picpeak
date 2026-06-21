@@ -62,6 +62,7 @@ import { Button, Input, Card, Loading, MarkdownContent, LocalizedDateInput } fro
 import { EventCategoryManager, AdminPhotoGrid, AdminPhotoViewer, PhotoFilters, PasswordResetModal, PublishGalleryDialog, DuplicateEventDialog, ThemeCustomizerEnhanced, ThemeDisplay, HeroPhotoSelector, FocalPointPicker, PhotoUploadModal, FeedbackSettings, FeedbackModerationPanel, EventRenameDialog, PhotoFilterPanel, PhotoExportMenu, AdminGuestsList } from '../../components/admin';
 import { CustomerAccountPicker } from '../../components/admin/CustomerAccountPicker';
 import { EventReminderOverrideCard } from '../../components/admin/EventReminderOverrideCard';
+import { SlideshowSettingsCard } from '../../components/admin/SlideshowSettingsCard';
 import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
@@ -2157,6 +2158,25 @@ export const EventDetailsPage: React.FC = () => {
               )}
             </div>
           </Card>
+
+          {/* Live Slideshow ("Diashow") link + live display settings (migrations 138/139).
+              Gated behind the `slideshow` feature flag. */}
+          {flags.slideshow && (
+          <SlideshowSettingsCard
+            eventId={event.id}
+            slug={event.slug}
+            isArchived={event.is_archived}
+            initial={{
+              show_share_token: event.show_share_token,
+              show_interval_ms: event.show_interval_ms,
+              show_transition: event.show_transition,
+              show_transition_ms: event.show_transition_ms,
+              show_watermark: event.show_watermark,
+              show_colorfilter: event.show_colorfilter,
+            }}
+            onChanged={() => refetchEvent()}
+          />
+          )}
 
           {/* Pre-event reminder override (migration 143). Hidden when
               the reminderEmails master flag is off — the override here

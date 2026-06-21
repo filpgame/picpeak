@@ -290,6 +290,71 @@ router.put('/accounting', adminAuth, requirePermission('settings.edit'), async (
   }
 });
 
+// Global Live Slideshow defaults (migration 139). The per-event watermark is
+// tri-state (events.show_watermark NULL = inherit these). Read via the generic
+// GET /:type ('slideshow'); this is the typed write.
+router.put('/slideshow', adminAuth, requirePermission('settings.edit'), async (req, res) => {
+  try {
+    const updates = [];
+    const push = (key, value) => updates.push({ setting_key: key, setting_value: JSON.stringify(value), setting_type: 'slideshow' });
+    const has = (k) => Object.prototype.hasOwnProperty.call(req.body, k);
+
+    if (has('slideshow_fit')) {
+      push('slideshow_fit', req.body.slideshow_fit === 'contain' ? 'contain' : 'cover');
+    }
+    // Picpeak-wide display preset (default style new events inherit).
+    if (has('slideshow_interval_ms')) {
+      const n = Math.min(120000, Math.max(1000, Math.round(Number(req.body.slideshow_interval_ms) || 5000)));
+      push('slideshow_interval_ms', n);
+    }
+    if (has('slideshow_transition')) {
+      const allowed = ['crossfade', 'cut', 'slide', 'kenburns', 'dipwhite', 'dipblack'];
+      push('slideshow_transition', allowed.includes(req.body.slideshow_transition) ? req.body.slideshow_transition : 'crossfade');
+    }
+    if (has('slideshow_transition_ms')) {
+      const n = Math.min(5000, Math.max(100, Math.round(Number(req.body.slideshow_transition_ms) || 800)));
+      push('slideshow_transition_ms', n);
+    }
+    if (has('slideshow_colorfilter')) {
+      const allowed = ['none', 'bw', 'sepia', 'warm', 'cool', 'vignette'];
+      push('slideshow_colorfilter', allowed.includes(req.body.slideshow_colorfilter) ? req.body.slideshow_colorfilter : 'none');
+    }
+    if (has('slideshow_watermark_enabled')) push('slideshow_watermark_enabled', !!req.body.slideshow_watermark_enabled);
+    if (has('slideshow_watermark_source')) {
+      const v = ['logo', 'logo_dark', 'favicon', 'event'].includes(req.body.slideshow_watermark_source) ? req.body.slideshow_watermark_source : 'logo';
+      push('slideshow_watermark_source', v);
+    }
+    if (has('slideshow_watermark_position')) {
+      const allowed = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+      const v = allowed.includes(req.body.slideshow_watermark_position) ? req.body.slideshow_watermark_position : 'bottom-right';
+      push('slideshow_watermark_position', v);
+    }
+    if (has('slideshow_watermark_opacity')) {
+      const n = Math.min(100, Math.max(0, Math.round(Number(req.body.slideshow_watermark_opacity) || 0)));
+      push('slideshow_watermark_opacity', n);
+    }
+    if (has('slideshow_watermark_style')) {
+      const v = ['white', 'original'].includes(req.body.slideshow_watermark_style) ? req.body.slideshow_watermark_style : 'white';
+      push('slideshow_watermark_style', v);
+    }
+    if (has('slideshow_watermark_size')) {
+      const n = Math.min(40, Math.max(3, Math.round(Number(req.body.slideshow_watermark_size) || 12)));
+      push('slideshow_watermark_size', n);
+    }
+
+    for (const u of updates) {
+      await upsertAppSetting(u.setting_key, u.setting_value, u.setting_type);
+    }
+    // Drop the slideshow-globals cache so a running projector picks up the
+    // change on its next poll rather than after the 5s TTL.
+    require('../utils/slideshowGlobals').invalidateSlideshowGlobals();
+    res.json({ message: 'Slideshow settings updated', updated: updates.map((u) => u.setting_key) });
+  } catch (error) {
+    console.error('Slideshow settings save error:', error);
+    res.status(500).json({ error: 'Failed to save slideshow settings' });
+  }
+});
+
 // Get settings by type
 router.get('/:type', adminAuth, requirePermission('settings.view'), async (req, res) => {
   try {

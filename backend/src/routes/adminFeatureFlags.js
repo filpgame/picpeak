@@ -84,6 +84,10 @@ const KNOWN_FLAGS = [
   // opt-in — operators must register a Meta-approved template before turning
   // it on. Independent of email; both can fire on the same event.
   'whatsapp',
+  // Live Slideshow ("Diashow") — the per-event fullscreen kiosk link + its
+  // per-event-type presets and global watermark defaults tab. Strictly opt-in;
+  // gates all slideshow admin UI (per-event card, type preset, settings tab).
+  'slideshow',
 ];
 
 // Spec defaults for any flag missing from the DB (e.g. a row added by a
@@ -112,6 +116,7 @@ const DEFAULT_FLAGS = {
   expenses: false,
   projects: false,
   whatsapp: false,
+  slideshow: false,
 };
 
 async function readAllFlags() {
