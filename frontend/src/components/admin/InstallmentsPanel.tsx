@@ -26,10 +26,9 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Plus } from 'lucide-react';
-import { Button, Input } from '../common';
+import { Button, Input, LocalizedDateInput } from '../common';
 import type { PaymentTermInstallment } from '../../services/quotes.service';
 import { useInstallmentDefaults } from '../../hooks/useInstallmentDefaults';
-import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 export type InstallmentPlan = PaymentTermInstallment[];
 
@@ -69,7 +68,6 @@ export const InstallmentsPanel: React.FC<InstallmentsPanelProps> = ({
   value, onChange, onValidityChange, eventDate, disabled,
 }) => {
   const { t } = useTranslation();
-  const { dateInputLang } = useLocalizedDate();
   const defaults = useInstallmentDefaults();
   const [advanced, setAdvanced] = React.useState(false);
 
@@ -179,7 +177,7 @@ export const InstallmentsPanel: React.FC<InstallmentsPanelProps> = ({
 
       {enabled && (
         <>
-          <p className="text-xs text-muted-theme mb-3">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
             {advanced
               ? t('installments.advancedHint',
                 'Pick a trigger (quote accepted, before/after event, on delivery, fixed date) plus offset in days. Triggers re-resolve if the event date later shifts.')
@@ -194,7 +192,7 @@ export const InstallmentsPanel: React.FC<InstallmentsPanelProps> = ({
                 className="grid grid-cols-12 gap-2 items-end p-2 rounded-md bg-neutral-50 dark:bg-neutral-800/40"
               >
                 <div className="col-span-2">
-                  <label className="block text-xs text-muted-theme mb-1">
+                  <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
                     {t('installments.percent', '%')}
                   </label>
                   <Input
@@ -208,7 +206,7 @@ export const InstallmentsPanel: React.FC<InstallmentsPanelProps> = ({
                   />
                 </div>
                 <div className="col-span-4">
-                  <label className="block text-xs text-muted-theme mb-1">
+                  <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
                     {t('installments.label', 'Label')}
                   </label>
                   <Input
@@ -221,21 +219,18 @@ export const InstallmentsPanel: React.FC<InstallmentsPanelProps> = ({
 
                 {!advanced ? (
                   <div className="col-span-5">
-                    <label className="block text-xs text-muted-theme mb-1">
+                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
                       {t('installments.sendOn', 'Send on')}
                     </label>
                     {row.trigger === 'after_delivery' ? (
-                      <div className="text-xs text-muted-theme py-2">
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400 py-2">
                         {t('installments.onDeliveryHint',
                           'On delivery — admin releases manually. Switch to advanced to change.')}
                       </div>
                     ) : (
-                      <Input
-                        type="date"
-                        lang={dateInputLang}
+                      <LocalizedDateInput
                         value={previewDate(row) || ''}
-                        onChange={(e) => {
-                          const next = e.target.value;
+                        onChange={(next) => {
                           if (!next) return;
                           const offset = daysBetween(todayIso(), next);
                           update(idx, { trigger: 'fixed_date', offset_days: offset });
@@ -247,7 +242,7 @@ export const InstallmentsPanel: React.FC<InstallmentsPanelProps> = ({
                 ) : (
                   <>
                     <div className="col-span-3">
-                      <label className="block text-xs text-muted-theme mb-1">
+                      <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
                         {t('installments.trigger', 'Trigger')}
                       </label>
                       <select
@@ -267,7 +262,7 @@ export const InstallmentsPanel: React.FC<InstallmentsPanelProps> = ({
                       </select>
                     </div>
                     <div className="col-span-2">
-                      <label className="block text-xs text-muted-theme mb-1">
+                      <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
                         {t('installments.offsetDays', 'Offset (days)')}
                       </label>
                       <Input

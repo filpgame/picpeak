@@ -134,7 +134,10 @@ jobs:
         platforms: ${{ matrix.platform }}
         labels: ${{ steps.meta-backend.outputs.labels }}
         cache-from: type=gha,scope=backend-${{ env.PLATFORM_PAIR }}
-        cache-to: type=gha,mode=max,scope=backend-${{ env.PLATFORM_PAIR }}
+        # ignore-error: a flaky GitHub Actions cache write ("error writing
+        # layer blob: not_found") must not fail an otherwise-successful build
+        # that already pushed the image.
+        cache-to: type=gha,mode=max,scope=backend-${{ env.PLATFORM_PAIR }},ignore-error=true
         outputs: ${{ steps.push-decision.outputs.push == 'true' && format('type=image,name={0}/{1},push-by-digest=true,name-canonical=true,push=true', env.REGISTRY, env.BACKEND_IMAGE_NAME) || 'type=cacheonly' }}
         build-args: |
           CACHEBUST=${{ github.run_number }}
@@ -360,7 +363,10 @@ jobs:
         platforms: ${{ matrix.platform }}
         labels: ${{ steps.meta-frontend.outputs.labels }}
         cache-from: type=gha,scope=frontend-${{ env.PLATFORM_PAIR }}
-        cache-to: type=gha,mode=max,scope=frontend-${{ env.PLATFORM_PAIR }}
+        # ignore-error: a flaky GitHub Actions cache write ("error writing
+        # layer blob: not_found") must not fail an otherwise-successful build
+        # that already pushed the image.
+        cache-to: type=gha,mode=max,scope=frontend-${{ env.PLATFORM_PAIR }},ignore-error=true
         outputs: ${{ steps.push-decision.outputs.push == 'true' && format('type=image,name={0}/{1},push-by-digest=true,name-canonical=true,push=true', env.REGISTRY, env.FRONTEND_IMAGE_NAME) || 'type=cacheonly' }}
         build-args: |
           CACHEBUST=${{ github.run_number }}

@@ -106,6 +106,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   // unsupported browsers fall through to a regular <a download>.
   const downloadPhotoMutation = useSavePhotoToDevice();
   const currentPhoto = photos[currentIndex];
+  // Per-category download permission (#640). AND'd with the event-level
+  // allowDownloads — disabling at either level hides the download button.
+  // Defaults true for uncategorised photos and pre-migration-135 categories.
+  const photoAllowsDownload =
+    allowDownloads && currentPhoto?.category_allow_downloads !== false;
   
   // DevTools protection - enabled by individual setting OR legacy protection level
   const devToolsEnabled = enableDevtoolsProtection || (useEnhancedProtection && (protectionLevel === 'enhanced' || protectionLevel === 'maximum'));
@@ -171,7 +176,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           break;
         case 'd':
         case 'D':
-          if (allowDownloads) {
+          if (photoAllowsDownload) {
             handleDownload();
           }
           break;
@@ -353,7 +358,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   };
 
   const handleDownload = () => {
-    if (!allowDownloads) return;
+    if (!photoAllowsDownload) return;
     downloadPhotoMutation.mutate({
       slug,
       photoId: currentPhoto.id,
@@ -680,7 +685,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             
             <div className="w-px h-6 bg-white/20 mx-2" />
             
-            {allowDownloads && (
+            {photoAllowsDownload && (
               <button
                 onClick={handleDownload}
                 className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"

@@ -186,12 +186,14 @@ export const BrandingPage: React.FC = () => {
   };
 
   const handleThemeChange = (newTheme: ThemeConfig) => {
-    // Preset configs don't carry a logoUrl, so a preset change inside the
-    // customizer arrives here with newTheme.logoUrl=undefined. Keep the
-    // existing logo instead of wiping branding_logo_url on save (#317).
+    // Preset configs don't carry a logoUrl or customCss, so a preset change
+    // inside the customizer arrives here with those fields undefined. Keep
+    // the existing values instead of wiping the persisted ones on save
+    // (#317 for logoUrl, #645 for customCss).
     const mergedTheme: ThemeConfig = {
       ...newTheme,
-      logoUrl: newTheme.logoUrl ?? currentTheme.logoUrl
+      logoUrl: newTheme.logoUrl ?? currentTheme.logoUrl,
+      customCss: newTheme.customCss ?? currentTheme.customCss
     };
     setCurrentTheme(mergedTheme);
     if (newTheme.logoUrl !== undefined && newTheme.logoUrl !== currentTheme.logoUrl) {
@@ -207,10 +209,20 @@ export const BrandingPage: React.FC = () => {
     // Get the preset theme config
     const preset = GALLERY_THEME_PRESETS[presetName];
     if (preset) {
-      // Preserve the existing logo when switching presets (#317).
-      setCurrentTheme(prev => ({ ...preset.config, logoUrl: prev.logoUrl }));
+      // Preserve the existing logo + custom CSS when switching presets
+      // (#317 for logo, #645 for customCss). Presets define a look; they
+      // shouldn't silently drop the admin's persisted styling extras.
+      setCurrentTheme(prev => ({
+        ...preset.config,
+        logoUrl: prev.logoUrl,
+        customCss: prev.customCss
+      }));
       if (isPreviewMode) {
-        setTheme({ ...preset.config, logoUrl: currentTheme.logoUrl });
+        setTheme({
+          ...preset.config,
+          logoUrl: currentTheme.logoUrl,
+          customCss: currentTheme.customCss
+        });
       }
     }
   };

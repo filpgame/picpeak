@@ -24,6 +24,10 @@ import {
 } from '../../../services/quotes.service';
 import { LineItemsTable, type EditableLineItem } from '../../../components/admin/LineItemsTable';
 import { CustomerPicker } from '../../../components/admin/CustomerPicker';
+import { ProjectSelect } from '../../../components/admin/ProjectSelect';
+import { VatRateSelect } from '../../../components/admin/VatRateSelect';
+import { accountingService } from '../../../services/accounting.service';
+import { vatCodesService } from '../../../services/vatCodes.service';
 import { InstallmentsPanel } from '../../../components/admin/InstallmentsPanel';
 import { customerAdminService } from '../../../services/customerAdmin.service';
 import { userManagementService } from '../../../services/userManagement.service';
@@ -53,12 +57,16 @@ interface FormState {
   paymentNetDaysTemplateId: number | null;
   paymentTimingTemplateId: number | null;
   vatRate: number;
+  /** Migration 130 — snapshot of the chosen output VAT code (null = custom rate). */
+  vatCode: string | null;
   shippingAmount: number;
   introText: string;
   outroText: string;
   internalNotes: string;
   ccPdfEmail: string;
   businessBankAccountId: number | null;
+  /** Migration 121 — optional Project Overview link. */
+  projectId: number | null;
   lineItems: EditableLineItem[];
   // Ad-hoc installments (commit #6). null = use the payment-timing
   // template's installments; array = explicit per-quote override.
@@ -82,12 +90,14 @@ const empty: FormState = {
   paymentNetDaysTemplateId: null,
   paymentTimingTemplateId: null,
   vatRate: 0,
+  vatCode: null,
   shippingAmount: 0,
   introText: '',
   outroText: '',
   internalNotes: '',
   ccPdfEmail: '',
   businessBankAccountId: null,
+  projectId: null,
   lineItems: [],
   installments: null,
 };
@@ -117,12 +127,15 @@ function buildPayload(f: FormState): QuoteCreatePayload {
     // installments on the snapshot. Sent only when populated.
     installments: f.installments && f.installments.length > 0 ? f.installments : undefined,
     vatRate: f.vatRate,
+    vatCode: f.vatCode,
     shippingAmountMinor: toMinor(f.shippingAmount),
     introText: f.introText || undefined,
     outroText: f.outroText || undefined,
     internalNotes: f.internalNotes || undefined,
     ccPdfEmail: f.ccPdfEmail || undefined,
     businessBankAccountId: f.businessBankAccountId || undefined,
+    // Migration 121 — Project Overview link. Send null to clear.
+    projectId: f.projectId ?? null,
     lineItems: f.lineItems.map((li) => ({
       position: li.position,
       quantity: li.quantity,
@@ -178,6 +191,23 @@ export const QuoteEditorPage: React.FC = () => {
       }
     })();
   }, [isEdit, searchParams]);
+
+  // Seed the VAT from the configured default OUTPUT code (Settings →
+  // Accounting) on a brand-new, blank quote — so quotes (and the invoices they
+  // convert to) don't silently start at 0%. Never clobbers a touched value.
+  const { data: acctSettings } = useQuery({ queryKey: ['accounting-settings'], queryFn: () => accountingService.getSettings() });
+  const { data: outputVatCodes } = useQuery({ queryKey: ['vat-codes', 'output'], queryFn: () => vatCodesService.listOutput() });
+  const didSeedVatRef = useRef(false);
+  useEffect(() => {
+    if (isEdit || didSeedVatRef.current) return;
+    const code = acctSettings?.accounting_default_output_vat_code;
+    if (!code || !outputVatCodes) return;
+    const match = outputVatCodes.find((c) => c.code === code);
+    if (!match) return;
+    setForm((prev) => (prev.vatCode || prev.vatRate ? prev : { ...prev, vatRate: Number(match.rate), vatCode: match.code }));
+    didSeedVatRef.current = true;
+  }, [isEdit, acctSettings, outputVatCodes]);
+
   // Customer search + inline-create state now lives inside
   // <CustomerPicker> (migration C.5 extraction).
 
@@ -208,12 +238,14 @@ export const QuoteEditorPage: React.FC = () => {
         paymentNetDaysTemplateId: q.paymentNetDaysTemplateId,
         paymentTimingTemplateId: q.paymentTimingTemplateId,
         vatRate: Number(q.vatRate || 0),
+        vatCode: (q as { vatCode?: string | null }).vatCode ?? null,
         shippingAmount: Number(q.shippingAmountMinor || 0) / 100,
         introText: q.introText || '',
         outroText: q.outroText || '',
         internalNotes: q.internalNotes || '',
         ccPdfEmail: q.ccPdfEmail || '',
         businessBankAccountId: q.businessBankAccountId,
+        projectId: q.projectId ?? null,
         lineItems: existing.lineItems.map((li) => ({
           id: li.id,
           position: li.position,
@@ -389,6 +421,9 @@ export const QuoteEditorPage: React.FC = () => {
       if (err?.response?.data?.code === 'CUSTOMER_FEATURE_DISABLED') {
         toast.error(t('quotes.errors.customerFeatureDisabled',
           'This customer has Quotes disabled. Enable "Quotes" on the customer detail page first.'));
+      } else if (err?.response?.data?.code === 'PROJECT_CUSTOMER_MISMATCH') {
+        toast.error(t('projects.error.customerMismatch',
+          'That project belongs to a different customer than this entry.'));
       } else if (err?.response?.data?.code === 'VALIDATION_ERROR' && Array.isArray(err?.response?.data?.details)) {
         // Show the first field that failed validation so the admin
         // knows what to fix instead of just seeing "Validation failed".
@@ -479,6 +514,15 @@ export const QuoteEditorPage: React.FC = () => {
           }))}
           searchPlaceholder={t('quotes.customerSearch', 'Search customer by email or company…') as string}
         />
+        {/* Project link (renders only when the projects feature is on). */}
+        <div className="mt-3">
+          <ProjectSelect
+            label={t('projects.picker.label', 'Project') as string}
+            value={form.projectId}
+            customerAccountId={form.customerAccountId}
+            onChange={(projectId) => setForm((f) => ({ ...f, projectId }))}
+          />
+        </div>
       </Card>
 
       {/* Section: Event */}
@@ -514,9 +558,11 @@ export const QuoteEditorPage: React.FC = () => {
           onChange={(items) => setForm((f) => ({ ...f, lineItems: items }))}
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-          <Input type="number" step="0.1" label={t('quotes.field.vatRate', 'VAT rate %') as string}
-            value={form.vatRate}
-            onChange={(e) => setForm((f) => ({ ...f, vatRate: Number(e.target.value) }))} />
+          <VatRateSelect
+            label={t('quotes.field.vatRate', 'VAT rate %') as string}
+            rate={form.vatRate}
+            code={form.vatCode}
+            onChange={(rate, code) => setForm((f) => ({ ...f, vatRate: rate, vatCode: code }))} />
           <Input type="number" step="0.01" label={t('quotes.field.shipping', 'Shipping amount') as string}
             value={form.shippingAmount}
             onChange={(e) => setForm((f) => ({ ...f, shippingAmount: Number(e.target.value) }))} />

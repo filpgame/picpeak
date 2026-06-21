@@ -189,9 +189,14 @@ export const settingsService = {
   },
 
   // Get settings by type
-  async getSettingsByType(type: 'branding' | 'theme' | 'general'): Promise<Record<string, any>> {
+  async getSettingsByType(type: 'branding' | 'theme' | 'general' | 'slideshow'): Promise<Record<string, any>> {
     const response = await api.get<Record<string, any>>(`/admin/settings/${type}`);
     return response.data;
+  },
+
+  // Update global Live Slideshow defaults (watermark)
+  async updateSlideshowDefaults(settings: Record<string, unknown>): Promise<void> {
+    await api.put('/admin/settings/slideshow', settings);
   },
 
   // Update branding settings

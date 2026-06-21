@@ -61,7 +61,8 @@ jobs:
           load: true
           tags: picpeak-backend:smoke
           cache-from: type=gha,scope=install-smoke
-          cache-to: type=gha,mode=max,scope=install-smoke
+          # ignore-error: a flaky GHA cache write must not fail the build.
+          cache-to: type=gha,mode=max,scope=install-smoke,ignore-error=true
 
       - name: Create Docker network
         run: docker network create picpeak-smoke

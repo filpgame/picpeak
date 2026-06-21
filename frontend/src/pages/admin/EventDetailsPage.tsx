@@ -60,9 +60,10 @@ import { toast } from 'react-toastify';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 import { Button, Input, Card, Loading, MarkdownContent, LocalizedDateInput } from '../../components/common';
-import { EventCategoryManager, AdminPhotoGrid, AdminPhotoViewer, PhotoFilters, PasswordResetModal, ThemeCustomizerEnhanced, ThemeDisplay, HeroPhotoSelector, FocalPointPicker, PhotoUploadModal, FeedbackSettings, FeedbackModerationPanel, EventRenameDialog, PhotoFilterPanel, PhotoExportMenu, AdminGuestsList } from '../../components/admin';
+import { EventCategoryManager, AdminPhotoGrid, AdminPhotoViewer, PhotoFilters, PasswordResetModal, PublishGalleryDialog, DuplicateEventDialog, ThemeCustomizerEnhanced, ThemeDisplay, HeroPhotoSelector, FocalPointPicker, PhotoUploadModal, FeedbackSettings, FeedbackModerationPanel, EventRenameDialog, PhotoFilterPanel, PhotoExportMenu, AdminGuestsList } from '../../components/admin';
 import { CustomerAccountPicker } from '../../components/admin/CustomerAccountPicker';
 import { EventReminderOverrideCard } from '../../components/admin/EventReminderOverrideCard';
+import { SlideshowSettingsCard } from '../../components/admin/SlideshowSettingsCard';
 import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
@@ -378,6 +379,8 @@ export const EventDetailsPage: React.FC = () => {
   const [resendEmailPassword, setResendEmailPassword] = useState('');
   const [resendEmailLoading, setResendEmailLoading] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<ThemeConfig | null>(null);
   const [currentPresetName, setCurrentPresetName] = useState<string>('default');
@@ -545,16 +548,41 @@ export const EventDetailsPage: React.FC = () => {
     },
   });
 
-  // Publish mutation (Draft mode)
+  // Publish mutation (Draft mode). Accepts the admin-typed password so the
+  // gallery_created email can carry the real plaintext (#627).
   const publishMutation = useMutation({
-    mutationFn: () => eventsService.publishEvent(parseInt(id!)),
+    mutationFn: (password?: string) =>
+      eventsService.publishEvent(parseInt(id!), password ? { password } : undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-event', id] });
       queryClient.invalidateQueries({ queryKey: ['admin-events'] });
       toast.success(t('events.publishSuccess'));
+      setShowPublishDialog(false);
     },
     onError: () => {
       toast.error(t('errors.somethingWentWrong'));
+    },
+  });
+
+  // Duplicate mutation (#626). Backend creates a draft inheriting branding +
+  // behaviour + categories from the source; we navigate to the new event so
+  // the admin can finish configuring + publish.
+  const duplicateMutation = useMutation({
+    mutationFn: (data: {
+      event_name: string;
+      event_date?: string;
+      customer_name?: string;
+      customer_email?: string;
+    }) => eventsService.duplicateEvent(parseInt(id!), data),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-events'] });
+      toast.success(t('events.duplicateDialog.successToast', 'Gallery duplicated.'));
+      setShowDuplicateDialog(false);
+      navigate(`/admin/events/${result.id}`);
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.errors?.[0]?.msg || err?.response?.data?.error;
+      toast.error(msg || t('errors.somethingWentWrong'));
     },
   });
 
@@ -1052,11 +1080,7 @@ export const EventDetailsPage: React.FC = () => {
               variant="primary"
               size="sm"
               leftIcon={<Send className="w-4 h-4" />}
-              onClick={() => {
-                if (confirm(t('events.publishConfirm'))) {
-                  publishMutation.mutate();
-                }
-              }}
+              onClick={() => setShowPublishDialog(true)}
               isLoading={publishMutation.isPending}
             >
               {t('events.publishAndNotify')}
@@ -2161,6 +2185,25 @@ export const EventDetailsPage: React.FC = () => {
             </div>
           </Card>
 
+          {/* Live Slideshow ("Diashow") link + live display settings (migrations 138/139).
+              Gated behind the `slideshow` feature flag. */}
+          {flags.slideshow && (
+          <SlideshowSettingsCard
+            eventId={event.id}
+            slug={event.slug}
+            isArchived={event.is_archived}
+            initial={{
+              show_share_token: event.show_share_token,
+              show_interval_ms: event.show_interval_ms,
+              show_transition: event.show_transition,
+              show_transition_ms: event.show_transition_ms,
+              show_watermark: event.show_watermark,
+              show_colorfilter: event.show_colorfilter,
+            }}
+            onChanged={() => refetchEvent()}
+          />
+          )}
+
           {/* Pre-event reminder override (migration 143). Hidden when
               the reminderEmails master flag is off — the override here
               would never fire since the cron itself no-ops. */}
@@ -2187,11 +2230,7 @@ export const EventDetailsPage: React.FC = () => {
                     <Button
                       variant="primary"
                       leftIcon={<Send className="w-4 h-4" />}
-                      onClick={() => {
-                        if (confirm(t('events.publishConfirm'))) {
-                          publishMutation.mutate();
-                        }
-                      }}
+                      onClick={() => setShowPublishDialog(true)}
                       isLoading={publishMutation.isPending}
                       className="w-full justify-center"
                     >
@@ -2221,6 +2260,17 @@ export const EventDetailsPage: React.FC = () => {
                     </p>
                   </>
                 )}
+                {/* Duplicate (#626) — visible in both draft and live mode.
+                    Creates a new draft inheriting this gallery's config. */}
+                <Button
+                  variant="outline"
+                  leftIcon={<Copy className="w-4 h-4" />}
+                  onClick={() => setShowDuplicateDialog(true)}
+                  isLoading={duplicateMutation.isPending}
+                  className="w-full justify-center"
+                >
+                  {t('events.duplicateEvent', 'Duplicate gallery')}
+                </Button>
               </div>
             </Card>
           )}
@@ -2291,6 +2341,7 @@ export const EventDetailsPage: React.FC = () => {
               <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{t('branding.themeAndStyle')}</h2>
               <ThemeCustomizerEnhanced
                 value={currentTheme || GALLERY_THEME_PRESETS.default.config}
+                forceColorMode={publicSettings?.branding_force_color_mode ?? null}
                 onChange={(theme) => {
                   setCurrentTheme(theme);
                   setEditForm(prev => ({ ...prev, color_theme: JSON.stringify(theme) }));
@@ -2686,6 +2737,35 @@ export const EventDetailsPage: React.FC = () => {
         }}
         onValidate={(newName) => eventsService.validateRename(event.id, newName)}
       />
+
+      {/* Publish Gallery Dialog (#627) — prompts for the password so the
+          gallery_created email carries the real plaintext, not the sentinel. */}
+      {showPublishDialog && (
+        <PublishGalleryDialog
+          eventName={event.event_name}
+          requirePassword={isGalleryPublic(event) ? false : true}
+          customerEmail={event.customer_email}
+          isPublishing={publishMutation.isPending}
+          onConfirm={(password) => publishMutation.mutate(password)}
+          onClose={() => {
+            if (!publishMutation.isPending) setShowPublishDialog(false);
+          }}
+        />
+      )}
+
+      {/* Duplicate Event Dialog (#626) — admin types a new event name/date
+          (+ optional customer); backend clones the source gallery's config
+          and we navigate to the new draft. */}
+      {showDuplicateDialog && (
+        <DuplicateEventDialog
+          sourceEventName={event.event_name}
+          isDuplicating={duplicateMutation.isPending}
+          onConfirm={(data) => duplicateMutation.mutate(data)}
+          onClose={() => {
+            if (!duplicateMutation.isPending) setShowDuplicateDialog(false);
+          }}
+        />
+      )}
 
     </div>
   );

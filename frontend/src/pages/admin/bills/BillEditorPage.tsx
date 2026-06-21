@@ -14,6 +14,9 @@ import { quotesService } from '../../../services/quotes.service';
 import { contractsService } from '../../../services/contracts.service';
 import { businessProfileService } from '../../../services/businessProfile.service';
 import { CustomerPicker } from '../../../components/admin/CustomerPicker';
+import { VatRateSelect } from '../../../components/admin/VatRateSelect';
+import { accountingService } from '../../../services/accounting.service';
+import { vatCodesService } from '../../../services/vatCodes.service';
 import { LineItemsTable, type EditableLineItem } from '../../../components/admin/LineItemsTable';
 import { InstallmentsPanel } from '../../../components/admin/InstallmentsPanel';
 import { customerAdminService } from '../../../services/customerAdmin.service';
@@ -58,6 +61,8 @@ export const BillEditorPage: React.FC = () => {
   // effect; new invoices start as null so they pick up profile.)
   const [qrFormat, setQrFormat] = useState<InvoiceQrFormat | null>(null);
   const [vatRate, setVatRate] = useState(0);
+  // Migration 130 — snapshot of the chosen output VAT code (null = custom rate).
+  const [vatCode, setVatCode] = useState<string | null>(null);
   const [shipping, setShipping] = useState(0);
   const [ccPdfEmail, setCcPdfEmail] = useState('');
   const [lineItems, setLineItems] = useState<EditableLineItem[]>([]);
@@ -137,6 +142,8 @@ export const BillEditorPage: React.FC = () => {
       // it inherits the profile default at render time.
       setQrFormat((inv.qrFormat as InvoiceQrFormat | null) || null);
       setVatRate(Number(inv.vatRate || 0));
+      setVatCode(((inv as { vatCode?: string | null }).vatCode
+        ?? (inv as { totals?: { vatCode?: string | null } }).totals?.vatCode) ?? null);
       setShipping(Number(inv.shippingAmountMinor || 0) / 100);
       setCcPdfEmail(inv.ccPdfEmail || '');
       setPaymentTermTemplateId(inv.paymentTermTemplateId ?? null);
@@ -191,6 +198,23 @@ export const BillEditorPage: React.FC = () => {
     didPrefillCcRef.current = true;
     setCcPdfEmail((cur) => cur || currentAdmin.email);
   }, [currentAdmin?.email, isEdit]);
+
+  // Seed the VAT from the configured default OUTPUT code (Settings →
+  // Accounting) on a brand-new, blank invoice — so new invoices don't silently
+  // start at 0%. Skips edits and conversions (quote/contract bring their own
+  // VAT), and never clobbers a value the admin already touched.
+  const { data: acctSettings } = useQuery({ queryKey: ['accounting-settings'], queryFn: () => accountingService.getSettings() });
+  const { data: outputVatCodes } = useQuery({ queryKey: ['vat-codes', 'output'], queryFn: () => vatCodesService.listOutput() });
+  const didSeedVatRef = useRef(false);
+  useEffect(() => {
+    if (isEdit || didSeedVatRef.current) return;
+    if (searchParams.get('fromContractId') || searchParams.get('fromQuoteId')) return;
+    if (vatCode || vatRate) return;
+    const code = acctSettings?.accounting_default_output_vat_code;
+    if (!code || !outputVatCodes) return;
+    const match = outputVatCodes.find((c) => c.code === code);
+    if (match) { didSeedVatRef.current = true; setVatRate(Number(match.rate)); setVatCode(match.code); }
+  }, [isEdit, searchParams, acctSettings, outputVatCodes, vatCode, vatRate]);
 
   // Pre-fill the customer when the editor is opened from a customer
   // detail page via `?customerAccountId=42`. Runs once on mount, only
@@ -280,6 +304,7 @@ export const BillEditorPage: React.FC = () => {
           const { quote, lineItems: quoteLineItems } = await quotesService.get(contract.sourceQuoteId);
           if (quote.currency) setCurrency(quote.currency);
           if (quote.vatRate != null) setVatRate(Number(quote.vatRate));
+          setVatCode((quote as { vatCode?: string | null }).vatCode ?? null);
           if (quote.shippingAmountMinor != null) {
             setShipping(Number(quote.shippingAmountMinor) / 100);
           }
@@ -373,6 +398,7 @@ export const BillEditorPage: React.FC = () => {
     // which is the same outcome but pollutes the column.
     qrFormat: qrFormat || undefined,
     vatRate,
+    vatCode,
     shippingAmountMinor: toMinor(shipping),
     ccPdfEmail: ccPdfEmail || undefined,
     // Payment-term template id (migration 113). null = no template
@@ -566,8 +592,31 @@ export const BillEditorPage: React.FC = () => {
                 : t('bills.field.dueDateOverrideOff', 'Auto from send date + payment term — tick to set manually')}
             </label>
           </div>
-          <Input type="datetime-local" label={t('bills.field.scheduledSendAt', 'Scheduled send (optional)') as string}
-            value={scheduledSendAt} onChange={(e) => setScheduledSendAt(e.target.value)} />
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('bills.field.scheduledSendAt', 'Scheduled send (optional)')}</label>
+            {/* Localized date + time (honours general_date_format +
+                general_time_format) instead of a native datetime-local, which
+                renders in the browser locale (US date + 12h). Recombined into
+                the "YYYY-MM-DDTHH:MM" the payload + scheduler expect. */}
+            <div className="grid grid-cols-2 gap-3">
+              <LocalizedDateInput
+                value={scheduledSendAt ? scheduledSendAt.slice(0, 10) : ''}
+                onChange={(iso) => {
+                  if (!iso) { setScheduledSendAt(''); return; }
+                  const time = scheduledSendAt.length >= 16 ? scheduledSendAt.slice(11, 16) : '09:00';
+                  setScheduledSendAt(`${iso}T${time}`);
+                }}
+              />
+              <TimeField
+                value={scheduledSendAt.length >= 16 ? scheduledSendAt.slice(11, 16) : ''}
+                onChange={(hhmm) => {
+                  const date = scheduledSendAt ? scheduledSendAt.slice(0, 10) : '';
+                  if (!date) return;
+                  setScheduledSendAt(`${date}T${hhmm || '09:00'}`);
+                }}
+              />
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">{t('bills.field.qrFormat', 'Payment QR format')}</label>
             <select
@@ -628,8 +677,11 @@ export const BillEditorPage: React.FC = () => {
         <LineItemsTable items={lineItems} currency={currency} showDiscount={false}
           vatRate={vatRate / 100} shippingAmount={shipping} onChange={setLineItems} />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-          <Input type="number" step="0.1" label={t('bills.field.vatRate', 'VAT rate %') as string}
-            value={vatRate} onChange={(e) => setVatRate(Number(e.target.value))} />
+          <VatRateSelect
+            label={t('bills.field.vatRate', 'VAT rate %') as string}
+            rate={vatRate}
+            code={vatCode}
+            onChange={(rate, code) => { setVatRate(rate); setVatCode(code); }} />
           <Input type="number" step="0.01" label={t('bills.field.shipping', 'Shipping') as string}
             value={shipping} onChange={(e) => setShipping(Number(e.target.value))} />
           <div>

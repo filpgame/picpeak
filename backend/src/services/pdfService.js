@@ -844,7 +844,9 @@ function drawTotals(doc, ctx, x, y, width) {
   doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).text(formatMinor(totals.shippingAmountMinor, currency, intlLocale), valueX, y, { width: valueCol, align: 'right' });
   y = doc.y + 4;
 
-  doc.font(doc._fonts ? doc._fonts.bold : FONT_BOLD).text(t(locale, 'totals_vat'), labelX, y, { width: labelCol });
+  // Custom VAT label (Settings → Accounting) overrides the per-locale default.
+  const vatLabel = (ctx.issuer && ctx.issuer.vatLabel) || t(locale, 'totals_vat');
+  doc.font(doc._fonts ? doc._fonts.bold : FONT_BOLD).text(vatLabel, labelX, y, { width: labelCol });
   doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).text(`${stripTrailingZeros(totals.vatRate)}%`, rateX, y, { width: rateCol, align: 'right' });
   doc.text(formatMinor(totals.vatAmountMinor, currency, intlLocale), valueX, y, { width: valueCol, align: 'right' });
   y = doc.y + 4;

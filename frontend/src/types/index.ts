@@ -68,6 +68,17 @@ export interface Event {
   // Client access (#172)
   client_access_enabled?: boolean;
   client_share_token?: string;
+  // Live Slideshow / "Diashow" (migration 138). Token-only fullscreen kiosk
+  // link minted on demand; null token = disabled. Settings drive the running
+  // projector and can be changed live.
+  show_share_token?: string | null;
+  show_interval_ms?: number;
+  show_transition?: 'crossfade' | 'cut' | 'slide' | 'kenburns' | 'dipwhite' | 'dipblack';
+  show_transition_ms?: number;
+  // Watermark MODE only (null=inherit global / true / false). The look lives
+  // globally in Settings → Slideshow, not per event.
+  show_watermark?: boolean | null;
+  show_colorfilter?: 'none' | 'bw' | 'sepia' | 'warm' | 'cool' | 'vignette';
   // Default photo sort order
   default_photo_sort?: string;
   // Pre-event reminder override (migration 143)
@@ -113,6 +124,11 @@ export interface Photo {
   category_id?: number | string | null;
   category_name?: string;
   category_slug?: string;
+  // Per-category download permission (#640). Defaults true for uncategorised
+  // photos and for categories that pre-date migration 135. The frontend hides
+  // the lightbox download button when this is false (event-level allow_downloads
+  // also has to be true — they AND together).
+  category_allow_downloads?: boolean;
   size: number;
   uploaded_at: string;
   captured_at?: string; // EXIF capture date (if available)

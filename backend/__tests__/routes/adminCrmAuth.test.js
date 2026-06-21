@@ -72,7 +72,9 @@ describe('admin CRM routes — auth + permission gate', () => {
     // of permissions, so for happy-path tests we flip every CRM flag
     // on. Negative tests (no-token, bad-signature) hit adminAuth
     // first and never reach the flag check, so they're unaffected.
-    const crmFlags = ['quotes', 'bills', 'contracts', 'hoursLogging', 'calendar', 'taxReport', 'clients'];
+    // `accounting` is the master flag the tax-report route now requires
+    // (tax export moved out of CRM into Accounting, independent of bills).
+    const crmFlags = ['quotes', 'bills', 'contracts', 'hoursLogging', 'calendar', 'taxReport', 'clients', 'accounting'];
     for (const key of crmFlags) {
       // eslint-disable-next-line no-await-in-loop
       await db('feature_flags').where({ key }).update({ value: 1 });

@@ -180,6 +180,8 @@ export interface InvoiceCreatePayload {
   installmentLabel?: string;
   installmentTrigger?: string;
   vatRate?: number;
+  /** Migration 130 — snapshot of the chosen output VAT code (null = custom rate). */
+  vatCode?: string | null;
   shippingAmountMinor?: number;
   ccPdfEmail?: string;
   // null = explicitly clear the per-invoice override (back to the
