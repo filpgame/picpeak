@@ -6,6 +6,24 @@ import { api } from '../config/api';
  * string when none is. The PUT silently preserves the stored token if the
  * masked sentinel is sent back unchanged.
  */
+// Slot keys that map to the built-in `message_data` fields the queue
+// processor knows how to substitute. Order = positional `{{N}}` order in the
+// Meta-registered template body. Any other string is dropped server-side.
+export type WhatsAppTemplateParam =
+  | 'customer_name'
+  | 'event_name'
+  | 'gallery_link'
+  | 'password_line'
+  | 'expiry_date';
+
+export const WHATSAPP_TEMPLATE_PARAMS: WhatsAppTemplateParam[] = [
+  'customer_name',
+  'event_name',
+  'gallery_link',
+  'password_line',
+  'expiry_date',
+];
+
 export interface WhatsAppConfig {
   phone_number_id: string;
   waba_id: string;
@@ -16,6 +34,11 @@ export interface WhatsAppConfig {
   // otherwise Meta returns template_not_found_in_language (132001). Empty
   // string falls through to general_default_language.
   template_language: string;
+  // Ordered slot list controlling which built-in values are sent as
+  // positional `{{N}}` parameters to Meta, and in what order (#647
+  // follow-up). Empty (server-side) falls back to the legacy 5-slot
+  // gallery_ready shape so existing installs keep working unchanged.
+  template_params: WhatsAppTemplateParam[];
   enabled: boolean;
 }
 

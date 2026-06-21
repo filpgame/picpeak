@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { Save, Send, Eye, EyeOff } from 'lucide-react';
+import { Save, Send, Eye, EyeOff, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button, Card, CardContent, Input, Loading } from '../../../components/common';
-import { whatsappService } from '../../../services/whatsapp.service';
+import {
+  whatsappService,
+  WHATSAPP_TEMPLATE_PARAMS,
+  type WhatsAppTemplateParam,
+} from '../../../services/whatsapp.service';
 
 /**
  * WhatsApp Business API configuration tab (#640D).
@@ -32,6 +36,9 @@ export const WhatsAppTab: React.FC = () => {
   const [accessToken, setAccessToken] = useState('');
   const [templateName, setTemplateName] = useState('gallery_ready');
   const [templateLanguage, setTemplateLanguage] = useState('');
+  const [templateParams, setTemplateParams] = useState<WhatsAppTemplateParam[]>(
+    [...WHATSAPP_TEMPLATE_PARAMS],
+  );
   const [enabled, setEnabled] = useState(false);
   const [showToken, setShowToken] = useState(false);
   const [testPhone, setTestPhone] = useState('');
@@ -45,9 +52,35 @@ export const WhatsAppTab: React.FC = () => {
       setAccessToken(data.access_token || '');
       setTemplateName(data.template_name || 'gallery_ready');
       setTemplateLanguage(data.template_language || '');
+      // The server always returns a non-empty sanitized array (default 5-slot
+      // shape when the column is empty), so we can take it directly.
+      setTemplateParams(
+        data.template_params && data.template_params.length > 0
+          ? data.template_params
+          : [...WHATSAPP_TEMPLATE_PARAMS],
+      );
       setEnabled(Boolean(data.enabled));
     }
   }, [data]);
+
+  // Toggle inclusion of a slot. When checked we append at the end (highest
+  // {{N}}); when unchecked we drop it from the list. Reordering uses the
+  // up/down buttons below.
+  const toggleParam = (key: WhatsAppTemplateParam) => {
+    setTemplateParams((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
+
+  const moveParam = (idx: number, delta: -1 | 1) => {
+    setTemplateParams((prev) => {
+      const target = idx + delta;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
+  };
 
   const save = useMutation({
     mutationFn: () => whatsappService.updateConfig({
@@ -56,6 +89,7 @@ export const WhatsAppTab: React.FC = () => {
       access_token: accessToken,
       template_name: templateName,
       template_language: templateLanguage,
+      template_params: templateParams,
       enabled,
     }),
     onSuccess: () => {
@@ -192,6 +226,81 @@ export const WhatsAppTab: React.FC = () => {
                 'settings.whatsapp.templateLanguageHint',
                 'Meta template language code, exactly as you registered it in Meta Business Manager (`ar`, `en_US`, `de_DE`, `pt_BR`, etc.). Leave empty to fall back to the system default language. Meta returns "template not found in language" if this doesn\'t match a registered template.',
               )}
+            </p>
+          </div>
+
+          {/* Template parameter selection (#647 follow-up). Reporter's
+              template uses only event_name + gallery_link, but the legacy
+              shape hardcoded a 5-parameter `gallery_ready` payload that Meta
+              rejected with a parameter-count mismatch. This control lets the
+              admin pick which slots to send and in what positional order. */}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              {t('settings.whatsapp.templateParams', 'Template parameters')}
+            </label>
+            <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">
+              {t(
+                'settings.whatsapp.templateParamsHint',
+                'Pick which built-in values are sent as positional template parameters (slot 1, slot 2, …), and arrange them so they match the order in your Meta-registered template body. Unchecked slots are not sent at all. Default matches the built-in `gallery_ready` 5-parameter shape.',
+              )}
+            </p>
+            <ul className="rounded-lg border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700">
+              {WHATSAPP_TEMPLATE_PARAMS.map((slot) => {
+                const idx = templateParams.indexOf(slot);
+                const included = idx >= 0;
+                return (
+                  <li
+                    key={slot}
+                    className="flex items-center gap-3 p-3 bg-white dark:bg-neutral-900"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={included}
+                      onChange={() => toggleParam(slot)}
+                      className="rounded border-neutral-300"
+                      aria-label={t(`settings.whatsapp.params.${slot}`, slot) as string}
+                    />
+                    <span className="flex-1 text-sm text-neutral-800 dark:text-neutral-200">
+                      <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400 mr-2">
+                        {included ? `{{${idx + 1}}}` : '—'}
+                      </span>
+                      {t(`settings.whatsapp.params.${slot}`, slot)}
+                    </span>
+                    {included && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => moveParam(idx, -1)}
+                          disabled={idx === 0}
+                          className="p-1 disabled:opacity-30"
+                          aria-label={t('settings.whatsapp.paramMoveUp', 'Move up') as string}
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveParam(idx, 1)}
+                          disabled={idx === templateParams.length - 1}
+                          className="p-1 disabled:opacity-30"
+                          aria-label={t('settings.whatsapp.paramMoveDown', 'Move down') as string}
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+              {templateParams.length === 0
+                ? t(
+                  'settings.whatsapp.templateParamsEmpty',
+                  'No slots selected — saving will fall back to the default 5-parameter shape.',
+                )
+                : t('settings.whatsapp.templateParamsPreview', 'Your template will receive: {{preview}}', {
+                  preview: templateParams.map((slot, i) => `{{${i + 1}}} = ${slot}`).join(', '),
+                })}
             </p>
           </div>
 

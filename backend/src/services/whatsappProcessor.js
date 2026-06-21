@@ -126,16 +126,50 @@ function formatDate(raw, metaLangCode) {
   }
 }
 
+// Default slot order — matches the operator-registered `gallery_ready`
+// template's 5-parameter shape and preserves pre-#647 behaviour for installs
+// that haven't configured `template_params`.
+const DEFAULT_TEMPLATE_PARAMS = ['customer_name', 'event_name', 'gallery_link', 'password_line', 'expiry_date'];
+const KNOWN_TEMPLATE_PARAMS = new Set(DEFAULT_TEMPLATE_PARAMS);
+
+/**
+ * Parse `whatsapp_configs.template_params` (JSON array string) into a
+ * sanitized slot list. Unknown / non-string / duplicated keys are dropped;
+ * empty / malformed input falls back to the default 5-slot shape so the
+ * legacy `gallery_ready` template keeps working.
+ */
+function parseTemplateParams(raw) {
+  if (!raw) return DEFAULT_TEMPLATE_PARAMS;
+  try {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (!Array.isArray(parsed)) return DEFAULT_TEMPLATE_PARAMS;
+    const seen = new Set();
+    const out = [];
+    for (const k of parsed) {
+      if (typeof k !== 'string') continue;
+      if (!KNOWN_TEMPLATE_PARAMS.has(k)) continue;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(k);
+    }
+    return out.length > 0 ? out : DEFAULT_TEMPLATE_PARAMS;
+  } catch (_) {
+    return DEFAULT_TEMPLATE_PARAMS;
+  }
+}
+
 /**
  * Build the positional body components for the configured template. The
- * default `gallery_ready` template (operator-registered) expects:
- *   {{1}} customer_name
- *   {{2}} event_name
- *   {{3}} gallery_link
- *   {{4}} password line (with localised "🔒 Password:" prefix, or empty)
- *   {{5}} expiry date (or empty)
+ * `params` list controls which built-in values are emitted, and in what
+ * order — so an admin who registered a 2-parameter Meta template with
+ * `{{1}} = event_name, {{2}} = gallery_link` (e.g. #647) configures
+ * `template_params: ["event_name","gallery_link"]` and gets exactly those
+ * two positional values per send.
+ *
+ * Known slot keys: customer_name, event_name, gallery_link, password_line,
+ * expiry_date. Anything else is filtered out by parseTemplateParams.
  */
-function buildComponents(data, metaLang) {
+function buildComponents(data, metaLang, params = DEFAULT_TEMPLATE_PARAMS) {
   const label = PASSWORD_LABELS[metaLang] || PASSWORD_LABELS.en_US;
   const hasRealPassword = data.gallery_password
     && data.gallery_password !== 'No password required'
@@ -143,13 +177,18 @@ function buildComponents(data, metaLang) {
   const passwordLine = hasRealPassword ? `${label}: ${data.gallery_password}` : '';
   const expiryLine = formatDate(data.expiry_date, metaLang);
 
-  return [
-    data.customer_name || '',
-    data.event_name || '',
-    data.gallery_link || '',
-    passwordLine,
-    expiryLine,
-  ];
+  const valueFor = (key) => {
+    switch (key) {
+    case 'customer_name': return data.customer_name || '';
+    case 'event_name':    return data.event_name || '';
+    case 'gallery_link':  return data.gallery_link || '';
+    case 'password_line': return passwordLine;
+    case 'expiry_date':   return expiryLine;
+    default:              return '';
+    }
+  };
+
+  return params.map(valueFor);
 }
 
 async function getWhatsAppConfig() {
@@ -211,6 +250,7 @@ async function processWhatsAppQueue() {
   //   3. en_US — hardcoded last resort.
   const configLanguage = resolveLanguageCode(config.template_language);
   const defaultLanguage = configLanguage || await getSystemDefaultLanguageCode();
+  const params = parseTemplateParams(config.template_params);
 
   let pending;
   try {
@@ -236,7 +276,7 @@ async function processWhatsAppQueue() {
 
       const requestedLang = resolveLanguageCode(data.language);
       const metaLang = requestedLang || defaultLanguage;
-      const components = buildComponents(data, metaLang);
+      const components = buildComponents(data, metaLang, params);
 
       await sendWhatsAppMessage(item.recipient_phone, config, metaLang, components);
 
@@ -291,4 +331,8 @@ module.exports = {
   startWhatsAppQueueProcessor,
   stopWhatsAppQueueProcessor,
   getWhatsAppConfig,
+  // Exported for the admin route's test send + unit tests (#647 follow-up).
+  buildComponents,
+  parseTemplateParams,
+  DEFAULT_TEMPLATE_PARAMS,
 };
