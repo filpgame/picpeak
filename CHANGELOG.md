@@ -5,6 +5,41 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.67.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.66.1-beta.0...v3.67.0-beta.0) (2026-06-21)
+
+
+### Features
+
+* Live Slideshow ("Diashow") — fullscreen, auto-updating projector view for live events ([4356393](https://github.com/the-luap/picpeak/commit/4356393b4433dd6b4147388688766b9464294c89))
+* **slideshow:** add image fit setting (fill vs black bars) ([b5c73e0](https://github.com/the-luap/picpeak/commit/b5c73e05bd41b262f864e8c700b1d38582b3817f))
+* **slideshow:** admin ui for live slideshow ([385b05a](https://github.com/the-luap/picpeak/commit/385b05adcf6a4acb7939e372328a55df7dae5e08))
+* **slideshow:** backend api for live slideshow ([dea5e0f](https://github.com/the-luap/picpeak/commit/dea5e0f8a6421c056868c2d9bea11e5bf1ee106a))
+* **slideshow:** db columns for live slideshow ([1029dd0](https://github.com/the-luap/picpeak/commit/1029dd05bdb9ca0a97ad86100145221850648651))
+* **slideshow:** en/de strings for live slideshow ([cb761ee](https://github.com/the-luap/picpeak/commit/cb761ee621aa553cf210c4224b6cbbf7bf2ef0cb))
+* **slideshow:** gate behind a feature flag + move globals to a Settings tab ([69367b4](https://github.com/the-luap/picpeak/commit/69367b45be1c13d87e73e72da34a1f41a5849dfe))
+* **slideshow:** public fullscreen slideshow viewer ([fd02254](https://github.com/the-luap/picpeak/commit/fd02254f78bd1860780355ebaa68293d58ce18b3))
+
+
+### Bug Fixes
+
+* **slideshow:** deny display-only token on download/upload/feedback (PR [#646](https://github.com/the-luap/picpeak/issues/646) review) ([e36b330](https://github.com/the-luap/picpeak/commit/e36b3309ca66404d189d5b218cc1f0eba925e4c7))
+* **slideshow:** dip-to-white/black no longer flickers the image ([db8388c](https://github.com/the-luap/picpeak/commit/db8388c79e44f5d254d984810bd62bfb11effd0f))
+* **slideshow:** drop updated_at from event writes ([1e40f82](https://github.com/the-luap/picpeak/commit/1e40f8296ca59ff0395f6cc09ee452ab62653cdc))
+* **slideshow:** feature flag is a master kill-switch, not just admin UI ([759784a](https://github.com/the-luap/picpeak/commit/759784a4d1cfe7e67c825293760169ad6904f090))
+* **slideshow:** fill the viewport instead of black bars ([6ec46de](https://github.com/the-luap/picpeak/commit/6ec46de0e7bb821ea4e4a7fc2318792b810c3f36))
+* **slideshow:** read globals from app_settings, not the missing settings table ([0f4388d](https://github.com/the-luap/picpeak/commit/0f4388d68ab85049c46e7af566d35f4fbf6e4d02))
+* **slideshow:** surface backend error in the live slideshow card ([056f938](https://github.com/the-luap/picpeak/commit/056f9381de5dbe90243bea409b587b4910050cbf))
+
+
+### Performance Improvements
+
+* **slideshow:** cache global settings to cut /state DB reads (PR [#646](https://github.com/the-luap/picpeak/issues/646) review) ([a995131](https://github.com/the-luap/picpeak/commit/a995131f4266e112c96c6e8cedd5158995ebe899))
+
+
+### Documentation
+
+* **slideshow:** add Live Slideshow guide + README entries ([16013d1](https://github.com/the-luap/picpeak/commit/16013d1cf9ad82ee052f905f9702feffde7b67eb))
+
 ## [3.66.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.66.0-beta.0...v3.66.1-beta.0) (2026-06-19)
 
 
