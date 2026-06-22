@@ -5,6 +5,15 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.68.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.68.0-beta.0...v3.68.1-beta.0) (2026-06-22)
+
+
+### Bug Fixes
+
+* **gallery:** unbreak password entry in Instagram in-app browser ([#654](https://github.com/the-luap/picpeak/issues/654)) ([6193ab7](https://github.com/the-luap/picpeak/commit/6193ab7f6aafd94b6e2e432ddf170361fd306d4e))
+* **gallery:** unbreak password entry in Instagram in-app browser ([#654](https://github.com/the-luap/picpeak/issues/654)) ([b1bfd48](https://github.com/the-luap/picpeak/commit/b1bfd4838e7104e4f85695e180b20222206073ac))
+* **test:** raise bootCrmDb beforeAll timeout on slideshow suites ([f4b6b89](https://github.com/the-luap/picpeak/commit/f4b6b8941a30a20615cc87627a0663ff6d03c932))
+
 ## [3.68.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.67.1-beta.0...v3.68.0-beta.0) (2026-06-21)
 
 
