@@ -1663,7 +1663,8 @@
         "accounting": "Buchhaltung",
         "insights": "Auswertungen & Zugriff",
         "customers": "Kunden",
-        "clients": "CRM"
+        "clients": "CRM",
+        "automation": "Automatisierung"
       },
       "status": {
         "stable": "stabil",
@@ -1779,6 +1780,11 @@
       "slideshow": {
         "title": "Live-Diashow",
         "description": "Ein separater Vollbild-„Diashow“-Link pro Event für Beamer bei Live-Events – übernimmt neue Uploads automatisch, mit Voreinstellungen je Event-Typ und globalen Wasserzeichen-Vorgaben unter Einstellungen → Diashow."
+      },
+      "workflows": {
+        "title": "Workflows",
+        "description": "Visuelle Automatisierungen auf einer Canvas erstellen – Auslöser, Bedingungen, Verzweigungen, Schleifen und Freigabe-Gates für Admins. Deine Mahnstufen und Buchungsschritte werden zu bearbeitbaren Abläufen. Strikt optional.",
+        "sidebar": "Workflows"
       }
     },
     "customerSurface": {

@@ -1219,7 +1219,8 @@
         "accounting": "Accounting",
         "insights": "Insights & Access",
         "customers": "Customers",
-        "clients": "CRM"
+        "clients": "CRM",
+        "automation": "Automation"
       },
       "status": {
         "stable": "stable",
@@ -1335,6 +1336,11 @@
       "slideshow": {
         "title": "Live Slideshow",
         "description": "A separate fullscreen \"Diashow\" link per event for projectors at live events — auto-picks-up new uploads, with per-event-type presets and global watermark defaults under Settings → Slideshow."
+      },
+      "workflows": {
+        "title": "Workflows",
+        "description": "Build visual automations on a canvas — triggers, conditions, branches, loops and admin approval gates. Your reminder ladder and booking steps become editable flows. Strictly opt-in.",
+        "sidebar": "Workflows"
       }
     },
     "customerSurface": {
