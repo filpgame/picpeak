@@ -36,8 +36,8 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
   src,
   fallbackSrc,
   alt,
-  useWatermark = false,
-  isGallery = false,
+  useWatermark: _useWatermark = false,
+  isGallery: _isGallery = false,
   protectFromDownload,
   slug,
   photoId,
@@ -173,7 +173,7 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
           setImageSrc(primaryUrl);
           setError(false);
         }
-      } catch (err) {
+      } catch (_err) {
         setIsLoading(false);
         if (fallbackSrc && fallbackSrc !== src) {
           try {
@@ -183,7 +183,7 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
               setError(false);
             }
             return;
-          } catch (fallbackError) {
+          } catch (_fallbackError) {
             // Swallow and mark error below
           }
         }

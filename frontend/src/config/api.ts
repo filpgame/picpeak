@@ -48,7 +48,7 @@ api.interceptors.request.use(
           if (config.url.startsWith('http://') || config.url.startsWith('https://')) {
             return new URL(config.url).pathname;
           }
-        } catch (error) {
+        } catch (_error) {
           return config.url;
         }
         return config.url;

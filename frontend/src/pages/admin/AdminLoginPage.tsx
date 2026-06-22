@@ -105,7 +105,7 @@ export const AdminLoginPage: React.FC = () => {
             setLoginSuccess(true);
             return;
           }
-        } catch (sessionError) {
+        } catch (_sessionError) {
           // Ignore secondary failure, we'll surface the original network error
         }
         toast.error(t('adminLogin.networkError'));

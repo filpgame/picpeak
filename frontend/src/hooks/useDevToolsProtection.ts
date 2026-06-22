@@ -112,7 +112,7 @@ export const useDevToolsProtection = (options: UseDevToolsProtectionOptions) => 
     // This will pause execution if DevTools is open
     try {
       debugger;
-    } catch (e) {
+    } catch (_e) {
       // Ignore errors
     }
     
@@ -180,7 +180,7 @@ export const useDevToolsProtection = (options: UseDevToolsProtectionOptions) => 
       if (options.detectionSensitivity === 'high') {
         detectByToString();
       }
-    } catch (error) {
+    } catch (_error) {
       // Silently handle any detection errors
     }
   }, [

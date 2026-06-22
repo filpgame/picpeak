@@ -10,7 +10,7 @@ import { useAdminAuth } from '../../contexts';
 
 export const MandatoryPasswordChangeModal: React.FC = () => {
   const { t } = useTranslation();
-  const { updatePasswordChanged } = useAdminAuth();
+  const { updatePasswordChanged: _updatePasswordChanged } = useAdminAuth();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',

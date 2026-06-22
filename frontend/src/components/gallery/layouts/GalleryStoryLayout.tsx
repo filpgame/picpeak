@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Search, Heart, Menu, LogOut } from 'lucide-react';
+import { Search, Heart, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import type { BaseGalleryLayoutProps } from './BaseGalleryLayout';
@@ -159,7 +159,7 @@ export const GalleryStoryLayout: React.FC<GalleryStoryLayoutProps> = ({
     }
   }, [favorites, slug, savedIdentity, onFeedbackChange]);
 
-  const handleOpenFeedback = useCallback((photo: Photo) => {
+  const _handleOpenFeedback = useCallback((photo: Photo) => {
     setSelectedPhotoForFeedback(photo);
   }, []);
 

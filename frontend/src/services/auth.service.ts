@@ -27,7 +27,7 @@ export const authService = {
   async adminLogout() {
     try {
       await api.post('/auth/logout');
-    } catch (err) {
+    } catch (_err) {
       // Ignore logout errors; fallback to redirect
     } finally {
       window.location.href = '/admin/login';
@@ -64,7 +64,7 @@ export const authService = {
   async galleryLogout(slug?: string | null) {
     try {
       await api.post('/auth/gallery/logout', { slug });
-    } catch (err) {
+    } catch (_err) {
       // Ignore; cookie will naturally expire if removal fails
     }
   },

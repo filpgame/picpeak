@@ -36,7 +36,7 @@ const LEDGER_FORMATS: ExportFormat[] = ['generic', 'banana', 'banana_ie', 'bexio
 
 type PeriodPreset = 'thisYear' | 'lastYear' | 'thisQuarter' | 'lastQuarter' | 'custom';
 
-function isoDate(d: Date): string {
+function _isoDate(d: Date): string {
   // YYYY-MM-DD in local time. Tax reports are user-facing — a Swiss
   // admin asking for "this quarter" means their local Q, not UTC.
   const y = d.getFullYear();

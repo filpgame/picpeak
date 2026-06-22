@@ -107,7 +107,7 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
     try {
       await galleryService.downloadSelectedPhotos(slug, ids);
       analyticsService.trackGalleryEvent('bulk_download', { gallery: slug, photo_count: ids.length });
-    } catch (error) {
+    } catch (_error) {
       toastify.error(t('gallery.downloadError'));
     } finally {
       setSelectedPhotos(new Set());

@@ -129,7 +129,7 @@ export const EventFeedbackPage: React.FC = () => {
         a.click();
       }
       toast.success(t('feedback.exported', 'Feedback exported'));
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('feedback.exportError', 'Failed to export feedback'));
     }
   };

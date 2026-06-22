@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 import { Button, Card, Loading } from '../../components/common';
-import { UpdateNotification } from '../../components/admin/UpdateNotification';
+
 import { CrmOverviewSection } from '../../components/admin/CrmOverviewSection';
 import { useQuery } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';

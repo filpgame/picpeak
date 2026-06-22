@@ -216,7 +216,7 @@ export const EmailConfigPage: React.FC = () => {
       try {
         const config = await emailService.getConfig();
         setSmtpConfig(config);
-      } catch (error) {
+      } catch (_error) {
         // Config might not exist yet
       }
     };
@@ -432,7 +432,7 @@ export const EmailConfigPage: React.FC = () => {
         textContent: preview.body_text
       });
       setShowPreview(true);
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('toast.saveError'));
     }
   };

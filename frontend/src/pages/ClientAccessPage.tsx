@@ -12,7 +12,7 @@ import { buildResourceUrl } from '../utils/url';
 
 export const ClientAccessPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [searchParams] = useSearchParams();
+  const [_searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated, isClient, clientLogin, isLoading: authLoading } = useGalleryAuth();
   const { t } = useTranslation();

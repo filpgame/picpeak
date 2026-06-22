@@ -170,7 +170,7 @@ describe('ProtectedImage', () => {
 
   it('handles image loading errors gracefully', async () => {
     // Track how many times src is set to detect fallback attempts
-    let loadAttempt = 0;
+    let _loadAttempt = 0;
 
     global.Image = class {
       onload: (() => void) | null = null;

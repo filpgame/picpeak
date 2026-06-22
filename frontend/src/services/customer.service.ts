@@ -120,7 +120,7 @@ export const customerService = {
   async logout(): Promise<void> {
     try {
       await api.post('/customer/auth/logout');
-    } catch (e) {
+    } catch (_e) {
       // Logout is best-effort — the cookie clear is what matters and
       // the backend always clears it even on error.
     }

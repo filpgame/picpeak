@@ -95,7 +95,7 @@ export const AdminPhotoViewer: React.FC<AdminPhotoViewerProps> = ({
       }
       
       onPhotoDeleted();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to delete photo');
     } finally {
       setIsDeleting(false);
@@ -106,7 +106,7 @@ export const AdminPhotoViewer: React.FC<AdminPhotoViewerProps> = ({
     try {
       await photosService.downloadPhoto(eventId, currentPhoto.id, currentPhoto.filename);
       toast.success('Download started');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to download photo');
     }
   };
@@ -121,7 +121,7 @@ export const AdminPhotoViewer: React.FC<AdminPhotoViewerProps> = ({
       await queryClient.invalidateQueries({ queryKey: ['admin-event-photos', eventId] });
       // Also trigger the parent's refresh callback
       onPhotoDeleted();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to update category');
     }
   };

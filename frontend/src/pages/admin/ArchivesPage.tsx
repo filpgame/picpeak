@@ -106,7 +106,7 @@ export const ArchivesPage: React.FC = () => {
       toast.info(t('gallery.downloading', { count: 1 }).replace('photo', 'archive'));
       await archiveService.downloadArchive(archive.id, `${archive.slug}-archive.zip`);
       toast.success(t('common.download'));
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('errors.somethingWentWrong'));
     }
   };
