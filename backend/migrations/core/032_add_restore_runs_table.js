@@ -8,44 +8,44 @@ exports.up = async function(knex) {
   const hasRestoreRunsTable = await knex.schema.hasTable('restore_runs');
   if (!hasRestoreRunsTable) {
     await knex.schema.createTable('restore_runs', table => {
-    table.increments('id').primary();
+      table.increments('id').primary();
     
-    // Timing
-    table.timestamp('started_at').notNullable().defaultTo(knex.fn.now());
-    table.timestamp('completed_at');
-    table.integer('duration_seconds');
+      // Timing
+      table.timestamp('started_at').notNullable().defaultTo(knex.fn.now());
+      table.timestamp('completed_at');
+      table.integer('duration_seconds');
     
-    // Status and type
-    table.string('status', 50).notNullable().defaultTo('running');
-    table.string('restore_type', 50).notNullable(); // full, database, files, selective
+      // Status and type
+      table.string('status', 50).notNullable().defaultTo('running');
+      table.string('restore_type', 50).notNullable(); // full, database, files, selective
     
-    // Source information
-    table.string('source', 500).notNullable(); // Backup source path or S3 URL
-    table.string('manifest_path', 500); // Path to manifest file
+      // Source information
+      table.string('source', 500).notNullable(); // Backup source path or S3 URL
+      table.string('manifest_path', 500); // Path to manifest file
     
-    // Results
-    table.text('error_message');
-    table.text('statistics'); // JSON object with detailed statistics
-    table.text('restore_log'); // JSON array of log entries
+      // Results
+      table.text('error_message');
+      table.text('statistics'); // JSON object with detailed statistics
+      table.text('restore_log'); // JSON array of log entries
     
-    // Safety backup
-    table.string('pre_restore_backup_path', 500); // Path to pre-restore safety backup
+      // Safety backup
+      table.string('pre_restore_backup_path', 500); // Path to pre-restore safety backup
     
-    // Flags
-    table.boolean('is_dry_run').defaultTo(false);
-    table.boolean('was_rollback_attempted').defaultTo(false);
-    table.boolean('was_successful').defaultTo(false);
+      // Flags
+      table.boolean('is_dry_run').defaultTo(false);
+      table.boolean('was_rollback_attempted').defaultTo(false);
+      table.boolean('was_successful').defaultTo(false);
     
-    // Operator information
-    table.string('operator_type', 50).defaultTo('manual'); // manual, scheduled, api
-    table.integer('operator_user_id').references('id').inTable('admin_users').onDelete('SET NULL');
-    table.string('operator_ip', 50);
+      // Operator information
+      table.string('operator_type', 50).defaultTo('manual'); // manual, scheduled, api
+      table.integer('operator_user_id').references('id').inTable('admin_users').onDelete('SET NULL');
+      table.string('operator_ip', 50);
     
-    // Metadata
-    table.text('metadata'); // JSON object for additional data
+      // Metadata
+      table.text('metadata'); // JSON object for additional data
     
-    table.index(['status', 'started_at']);
-    table.index(['restore_type', 'started_at']);
+      table.index(['status', 'started_at']);
+      table.index(['restore_type', 'started_at']);
     });
   }
   
@@ -53,25 +53,25 @@ exports.up = async function(knex) {
   const hasRestoreFileOperationsTable = await knex.schema.hasTable('restore_file_operations');
   if (!hasRestoreFileOperationsTable) {
     await knex.schema.createTable('restore_file_operations', table => {
-    table.increments('id').primary();
+      table.increments('id').primary();
     
-    table.integer('restore_run_id').notNullable()
-      .references('id').inTable('restore_runs').onDelete('CASCADE');
+      table.integer('restore_run_id').notNullable()
+        .references('id').inTable('restore_runs').onDelete('CASCADE');
     
-    table.string('file_path', 500).notNullable();
-    table.string('operation', 50).notNullable(); // restore, skip, error
-    table.string('status', 50).notNullable(); // pending, in_progress, completed, failed
+      table.string('file_path', 500).notNullable();
+      table.string('operation', 50).notNullable(); // restore, skip, error
+      table.string('status', 50).notNullable(); // pending, in_progress, completed, failed
     
-    table.bigInteger('file_size');
-    table.string('checksum', 64);
-    table.boolean('checksum_verified').defaultTo(false);
+      table.bigInteger('file_size');
+      table.string('checksum', 64);
+      table.boolean('checksum_verified').defaultTo(false);
     
-    table.text('error_message');
-    table.timestamp('started_at');
-    table.timestamp('completed_at');
+      table.text('error_message');
+      table.timestamp('started_at');
+      table.timestamp('completed_at');
     
-    table.index(['restore_run_id', 'status']);
-    table.index(['file_path']);
+      table.index(['restore_run_id', 'status']);
+      table.index(['file_path']);
     });
   }
   
@@ -79,21 +79,21 @@ exports.up = async function(knex) {
   const hasRestoreValidationResultsTable = await knex.schema.hasTable('restore_validation_results');
   if (!hasRestoreValidationResultsTable) {
     await knex.schema.createTable('restore_validation_results', table => {
-    table.increments('id').primary();
+      table.increments('id').primary();
     
-    table.integer('restore_run_id').notNullable()
-      .references('id').inTable('restore_runs').onDelete('CASCADE');
+      table.integer('restore_run_id').notNullable()
+        .references('id').inTable('restore_runs').onDelete('CASCADE');
     
-    table.string('validation_type', 50).notNullable(); // pre-restore, post-restore
-    table.boolean('is_valid').notNullable();
+      table.string('validation_type', 50).notNullable(); // pre-restore, post-restore
+      table.boolean('is_valid').notNullable();
     
-    table.text('errors'); // JSON array of errors
-    table.text('warnings'); // JSON array of warnings
-    table.text('checksums'); // JSON object with checksum comparisons
+      table.text('errors'); // JSON array of errors
+      table.text('warnings'); // JSON array of warnings
+      table.text('checksums'); // JSON object with checksum comparisons
     
-    table.timestamp('validated_at').notNullable().defaultTo(knex.fn.now());
+      table.timestamp('validated_at').notNullable().defaultTo(knex.fn.now());
     
-    table.index(['restore_run_id', 'validation_type']);
+      table.index(['restore_run_id', 'validation_type']);
     });
   }
   

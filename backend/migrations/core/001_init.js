@@ -85,7 +85,7 @@ Generated on: ${new Date().toISOString()}
         // Try to create directory and write file
         await fs.mkdir(dataDir, { recursive: true });
         await fs.writeFile(setupInfoPath, setupInfo, 'utf8');
-        console.log(`📁 Credentials also saved to: data/ADMIN_CREDENTIALS.txt`);
+        console.log('📁 Credentials also saved to: data/ADMIN_CREDENTIALS.txt');
       } catch (error) {
         // If we can't write the file, that's okay - credentials are shown in console
         console.log('⚠️  Could not save credentials to file (permission denied)');

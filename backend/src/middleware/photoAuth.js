@@ -79,9 +79,9 @@ async function photoAuth(req, res, next) {
           // For both thumbnails and photos with admin token, allow access
           return next();
         }
-    } catch (err) {
+      } catch (err) {
       // Token invalid, fall through to password check
-      logger.warn('JWT verification failed in photoAuth', { error: err.message });
+        logger.warn('JWT verification failed in photoAuth', { error: err.message });
       }
     }
     

@@ -401,17 +401,17 @@ async function runBackup() {
     // Perform backup based on destination type
     let result;
     switch (config.backup_destination_type) {
-      case 'local':
-        result = await performLocalBackup(config, files);
-        break;
-      case 'rsync':
-        result = await performRsyncBackup(config, files);
-        break;
-      case 's3':
-        result = await performS3Backup(config, files);
-        break;
-      default:
-        throw new Error(`Unknown backup destination type: ${config.backup_destination_type}`);
+    case 'local':
+      result = await performLocalBackup(config, files);
+      break;
+    case 'rsync':
+      result = await performRsyncBackup(config, files);
+      break;
+    case 's3':
+      result = await performS3Backup(config, files);
+      break;
+    default:
+      throw new Error(`Unknown backup destination type: ${config.backup_destination_type}`);
     }
     
     // Calculate duration

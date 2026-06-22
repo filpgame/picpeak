@@ -127,7 +127,7 @@ exports.up = async function(knex) {
 <p>Your photographer has triggered a password reset for your customer account.</p>
 <p><a href="{{reset_link}}">Click here to set a new password</a>. This link expires on {{expires_at}}.</p>
 <p>If you didn't expect this, you can ignore the message — your current password will keep working until you click the link.</p>`;
-      const BODY_TEXT = `Your photographer has triggered a password reset for your customer account.\n\nSet a new password: {{reset_link}}\n\nThis link expires on {{expires_at}}.\n\nIf you didn't expect this, you can ignore the message — your current password keeps working until you click the link.`;
+      const BODY_TEXT = 'Your photographer has triggered a password reset for your customer account.\n\nSet a new password: {{reset_link}}\n\nThis link expires on {{expires_at}}.\n\nIf you didn\'t expect this, you can ignore the message — your current password keeps working until you click the link.';
 
       const row = {};
       if ('template_key' in cols) row.template_key = 'customer_password_reset';

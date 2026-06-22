@@ -66,16 +66,16 @@ class PhotoExportService {
     }
 
     switch (format) {
-      case 'txt':
-        return this.exportAsTxt(photos, options);
-      case 'csv':
-        return this.exportAsCsv(photos, options);
-      case 'xmp':
-        return this.exportAsXmpZip(photos, options);
-      case 'json':
-        return this.exportAsJson(photos, eventId, options);
-      default:
-        throw new Error(`Unknown export format: ${format}`);
+    case 'txt':
+      return this.exportAsTxt(photos, options);
+    case 'csv':
+      return this.exportAsCsv(photos, options);
+    case 'xmp':
+      return this.exportAsXmpZip(photos, options);
+    case 'json':
+      return this.exportAsJson(photos, eventId, options);
+    default:
+      throw new Error(`Unknown export format: ${format}`);
     }
   }
 
@@ -106,14 +106,14 @@ class PhotoExportService {
 
     let content;
     switch (separator) {
-      case 'comma':
-        content = filenames.join(',');
-        break;
-      case 'semicolon':
-        content = filenames.join(';');
-        break;
-      default:
-        content = filenames.join('\n');
+    case 'comma':
+      content = filenames.join(',');
+      break;
+    case 'semicolon':
+      content = filenames.join(';');
+      break;
+    default:
+      content = filenames.join('\n');
     }
 
     return {

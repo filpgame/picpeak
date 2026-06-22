@@ -108,7 +108,7 @@ exports.up = async function(knex) {
 <p><a href="{{reset_link}}" class="button">Set a new password</a></p>
 <p>This link expires on {{expires_at}}.</p>
 <p>If you didn't expect this, you can ignore the message — your current password keeps working until you click the link.</p>`,
-        body_text: `Reset your customer account password\n\nYour photographer has triggered a password reset for your customer account.\n\nSet a new password: {{reset_link}}\n\nThis link expires on {{expires_at}}.\n\nIf you didn't expect this, you can ignore the message — your current password keeps working until you click the link.`,
+        body_text: 'Reset your customer account password\n\nYour photographer has triggered a password reset for your customer account.\n\nSet a new password: {{reset_link}}\n\nThis link expires on {{expires_at}}.\n\nIf you didn\'t expect this, you can ignore the message — your current password keeps working until you click the link.',
       },
       de: {
         subject: 'Passwort für dein Kundenkonto zurücksetzen',
@@ -117,7 +117,7 @@ exports.up = async function(knex) {
 <p><a href="{{reset_link}}" class="button">Neues Passwort festlegen</a></p>
 <p>Dieser Link läuft am {{expires_at}} ab.</p>
 <p>Wenn du diese Anfrage nicht erwartet hast, kannst du diese Nachricht ignorieren — dein aktuelles Passwort funktioniert weiter, bis du den Link anklickst.</p>`,
-        body_text: `Passwort für dein Kundenkonto zurücksetzen\n\nDein Fotograf hat einen Passwort-Reset für dein Kundenkonto ausgelöst.\n\nNeues Passwort festlegen: {{reset_link}}\n\nDieser Link läuft am {{expires_at}} ab.\n\nWenn du diese Anfrage nicht erwartet hast, kannst du diese Nachricht ignorieren — dein aktuelles Passwort funktioniert weiter, bis du den Link anklickst.`,
+        body_text: 'Passwort für dein Kundenkonto zurücksetzen\n\nDein Fotograf hat einen Passwort-Reset für dein Kundenkonto ausgelöst.\n\nNeues Passwort festlegen: {{reset_link}}\n\nDieser Link läuft am {{expires_at}} ab.\n\nWenn du diese Anfrage nicht erwartet hast, kannst du diese Nachricht ignorieren — dein aktuelles Passwort funktioniert weiter, bis du den Link anklickst.',
       },
       nl: {
         subject: 'Wachtwoord van uw klantaccount opnieuw instellen',
@@ -126,7 +126,7 @@ exports.up = async function(knex) {
 <p><a href="{{reset_link}}" class="button">Nieuw wachtwoord instellen</a></p>
 <p>Deze link verloopt op {{expires_at}}.</p>
 <p>Heeft u deze aanvraag niet verwacht? U kunt dit bericht negeren — uw huidige wachtwoord blijft werken totdat u op de link klikt.</p>`,
-        body_text: `Wachtwoord opnieuw instellen\n\nUw fotograaf heeft een wachtwoordreset voor uw klantaccount aangevraagd.\n\nNieuw wachtwoord instellen: {{reset_link}}\n\nDeze link verloopt op {{expires_at}}.\n\nHeeft u deze aanvraag niet verwacht? U kunt dit bericht negeren — uw huidige wachtwoord blijft werken totdat u op de link klikt.`,
+        body_text: 'Wachtwoord opnieuw instellen\n\nUw fotograaf heeft een wachtwoordreset voor uw klantaccount aangevraagd.\n\nNieuw wachtwoord instellen: {{reset_link}}\n\nDeze link verloopt op {{expires_at}}.\n\nHeeft u deze aanvraag niet verwacht? U kunt dit bericht negeren — uw huidige wachtwoord blijft werken totdat u op de link klikt.',
       },
       pt: {
         subject: 'Redefina a senha da sua conta de cliente',
@@ -135,7 +135,7 @@ exports.up = async function(knex) {
 <p><a href="{{reset_link}}" class="button">Definir nova senha</a></p>
 <p>Este link expira em {{expires_at}}.</p>
 <p>Se você não esperava esta solicitação, pode ignorar a mensagem — sua senha atual continuará funcionando até você clicar no link.</p>`,
-        body_text: `Redefinir senha\n\nSeu fotógrafo iniciou uma redefinição de senha para sua conta de cliente.\n\nDefinir nova senha: {{reset_link}}\n\nEste link expira em {{expires_at}}.\n\nSe você não esperava esta solicitação, pode ignorar a mensagem — sua senha atual continuará funcionando até você clicar no link.`,
+        body_text: 'Redefinir senha\n\nSeu fotógrafo iniciou uma redefinição de senha para sua conta de cliente.\n\nDefinir nova senha: {{reset_link}}\n\nEste link expira em {{expires_at}}.\n\nSe você não esperava esta solicitação, pode ignorar a mensagem — sua senha atual continuará funcionando até você clicar no link.',
       },
       ru: {
         subject: 'Сброс пароля вашей клиентской учётной записи',
@@ -144,7 +144,7 @@ exports.up = async function(knex) {
 <p><a href="{{reset_link}}" class="button">Задать новый пароль</a></p>
 <p>Срок действия ссылки истекает {{expires_at}}.</p>
 <p>Если вы не ожидали этого письма, можете его проигнорировать — ваш текущий пароль продолжит работать, пока вы не перейдёте по ссылке.</p>`,
-        body_text: `Сброс пароля\n\nВаш фотограф инициировал сброс пароля для вашей клиентской учётной записи.\n\nЗадать новый пароль: {{reset_link}}\n\nСрок действия ссылки истекает {{expires_at}}.\n\nЕсли вы не ожидали этого письма, можете его проигнорировать — ваш текущий пароль продолжит работать, пока вы не перейдёте по ссылке.`,
+        body_text: 'Сброс пароля\n\nВаш фотограф инициировал сброс пароля для вашей клиентской учётной записи.\n\nЗадать новый пароль: {{reset_link}}\n\nСрок действия ссылки истекает {{expires_at}}.\n\nЕсли вы не ожидали этого письма, можете его проигнорировать — ваш текущий пароль продолжит работать, пока вы не перейдёте по ссылке.',
       },
       fr: {
         subject: 'Réinitialisez le mot de passe de votre compte client',
@@ -153,7 +153,7 @@ exports.up = async function(knex) {
 <p><a href="{{reset_link}}" class="button">Définir un nouveau mot de passe</a></p>
 <p>Ce lien expire le {{expires_at}}.</p>
 <p>Si vous n'attendiez pas cette demande, vous pouvez ignorer ce message — votre mot de passe actuel continue de fonctionner jusqu'à ce que vous cliquiez sur le lien.</p>`,
-        body_text: `Réinitialiser le mot de passe\n\nVotre photographe a déclenché une réinitialisation de mot de passe pour votre compte client.\n\nDéfinir un nouveau mot de passe : {{reset_link}}\n\nCe lien expire le {{expires_at}}.\n\nSi vous n'attendiez pas cette demande, vous pouvez ignorer ce message — votre mot de passe actuel continue de fonctionner jusqu'à ce que vous cliquiez sur le lien.`,
+        body_text: 'Réinitialiser le mot de passe\n\nVotre photographe a déclenché une réinitialisation de mot de passe pour votre compte client.\n\nDéfinir un nouveau mot de passe : {{reset_link}}\n\nCe lien expire le {{expires_at}}.\n\nSi vous n\'attendiez pas cette demande, vous pouvez ignorer ce message — votre mot de passe actuel continue de fonctionner jusqu\'à ce que vous cliquiez sur le lien.',
       },
     },
     version_update_test: {
@@ -174,7 +174,7 @@ PicPeak will send a separate notification with release notes and update
 instructions.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">No action is required.
 You may safely delete this message.</p>`,
-        body_text: `This is a test email\n\nYou are receiving this message because an administrator clicked "Send Test Email" on the Update Notifications page of your PicPeak installation.\n\nInstalled version: {{current_version}}\nChannel: {{channel}}\nRecipient address: {{recipient_email}}\n\nIf you can read this email, your SMTP configuration and the recipient list are working correctly. When a real new version becomes available, PicPeak will send a separate notification with release notes and update instructions.\n\nNo action is required. You may safely delete this message.`,
+        body_text: 'This is a test email\n\nYou are receiving this message because an administrator clicked "Send Test Email" on the Update Notifications page of your PicPeak installation.\n\nInstalled version: {{current_version}}\nChannel: {{channel}}\nRecipient address: {{recipient_email}}\n\nIf you can read this email, your SMTP configuration and the recipient list are working correctly. When a real new version becomes available, PicPeak will send a separate notification with release notes and update instructions.\n\nNo action is required. You may safely delete this message.',
       },
       de: {
         subject: '[TEST] PicPeak Update-Benachrichtigung — Konfigurationsprüfung',
@@ -193,7 +193,7 @@ ist, sendet PicPeak eine separate Benachrichtigung mit Versionshinweisen
 und Update-Anweisungen.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Es ist keine Aktion
 erforderlich. Sie können diese Nachricht gefahrlos löschen.</p>`,
-        body_text: `Dies ist eine Test-E-Mail\n\nSie erhalten diese Nachricht, weil ein Administrator auf der Seite „Update-Benachrichtigungen" Ihrer PicPeak-Installation auf „Test-E-Mail senden" geklickt hat.\n\nInstallierte Version: {{current_version}}\nKanal: {{channel}}\nEmpfänger-Adresse: {{recipient_email}}\n\nWenn Sie diese E-Mail lesen können, funktionieren Ihre SMTP-Konfiguration und die Empfängerliste korrekt. Sobald eine echte neue Version verfügbar ist, sendet PicPeak eine separate Benachrichtigung mit Versionshinweisen und Update-Anweisungen.\n\nEs ist keine Aktion erforderlich. Sie können diese Nachricht gefahrlos löschen.`,
+        body_text: 'Dies ist eine Test-E-Mail\n\nSie erhalten diese Nachricht, weil ein Administrator auf der Seite „Update-Benachrichtigungen" Ihrer PicPeak-Installation auf „Test-E-Mail senden" geklickt hat.\n\nInstallierte Version: {{current_version}}\nKanal: {{channel}}\nEmpfänger-Adresse: {{recipient_email}}\n\nWenn Sie diese E-Mail lesen können, funktionieren Ihre SMTP-Konfiguration und die Empfängerliste korrekt. Sobald eine echte neue Version verfügbar ist, sendet PicPeak eine separate Benachrichtigung mit Versionshinweisen und Update-Anweisungen.\n\nEs ist keine Aktion erforderlich. Sie können diese Nachricht gefahrlos löschen.',
       },
       nl: {
         subject: '[TEST] PicPeak-update-melding — configuratiecontrole',
@@ -208,7 +208,7 @@ erforderlich. Sie können diese Nachricht gefahrlos löschen.</p>`,
 </div>
 <p>Als u deze e-mail kunt lezen, werken uw SMTP-configuratie en de ontvangerslijst correct. Wanneer er een echte nieuwe versie beschikbaar komt, stuurt PicPeak een aparte melding met release-notities en update-instructies.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Geen actie vereist. U kunt dit bericht veilig verwijderen.</p>`,
-        body_text: `Dit is een test-e-mail\n\nU ontvangt dit bericht omdat een beheerder op de pagina "Update-meldingen" van uw PicPeak-installatie op "Test-e-mail verzenden" heeft geklikt.\n\nGeïnstalleerde versie: {{current_version}}\nKanaal: {{channel}}\nOntvangeradres: {{recipient_email}}\n\nAls u deze e-mail kunt lezen, werken uw SMTP-configuratie en de ontvangerslijst correct.\n\nGeen actie vereist.`,
+        body_text: 'Dit is een test-e-mail\n\nU ontvangt dit bericht omdat een beheerder op de pagina "Update-meldingen" van uw PicPeak-installatie op "Test-e-mail verzenden" heeft geklikt.\n\nGeïnstalleerde versie: {{current_version}}\nKanaal: {{channel}}\nOntvangeradres: {{recipient_email}}\n\nAls u deze e-mail kunt lezen, werken uw SMTP-configuratie en de ontvangerslijst correct.\n\nGeen actie vereist.',
       },
       pt: {
         subject: '[TESTE] Notificação de atualização do PicPeak — verificação',
@@ -223,7 +223,7 @@ atualização" da sua instalação do PicPeak.</p>
 </div>
 <p>Se você consegue ler este e-mail, sua configuração SMTP e a lista de destinatários estão funcionando corretamente. Quando uma nova versão real estiver disponível, o PicPeak enviará uma notificação separada com notas de versão e instruções de atualização.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Nenhuma ação é necessária. Você pode excluir esta mensagem com segurança.</p>`,
-        body_text: `Este é um e-mail de teste\n\nVocê está recebendo esta mensagem porque um administrador clicou em "Enviar e-mail de teste" na página "Notificações de atualização" da sua instalação do PicPeak.\n\nVersão instalada: {{current_version}}\nCanal: {{channel}}\nEndereço do destinatário: {{recipient_email}}\n\nSe você consegue ler este e-mail, sua configuração SMTP está funcionando corretamente.\n\nNenhuma ação é necessária.`,
+        body_text: 'Este é um e-mail de teste\n\nVocê está recebendo esta mensagem porque um administrador clicou em "Enviar e-mail de teste" na página "Notificações de atualização" da sua instalação do PicPeak.\n\nVersão instalada: {{current_version}}\nCanal: {{channel}}\nEndereço do destinatário: {{recipient_email}}\n\nSe você consegue ler este e-mail, sua configuração SMTP está funcionando corretamente.\n\nNenhuma ação é necessária.',
       },
       ru: {
         subject: '[ТЕСТ] Уведомление об обновлениях PicPeak — проверка',
@@ -238,7 +238,7 @@ atualização" da sua instalação do PicPeak.</p>
 </div>
 <p>Если вы видите это письмо, значит ваша конфигурация SMTP и список получателей работают корректно. Когда станет доступна новая версия, PicPeak отправит отдельное уведомление с примечаниями к выпуску и инструкциями по обновлению.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Никаких действий не требуется. Можете безопасно удалить это сообщение.</p>`,
-        body_text: `Это тестовое письмо\n\nВы получили это сообщение, потому что администратор нажал «Отправить тестовое письмо» на странице «Уведомления об обновлениях» вашей установки PicPeak.\n\nУстановленная версия: {{current_version}}\nКанал: {{channel}}\nАдрес получателя: {{recipient_email}}\n\nЕсли вы видите это письмо, ваша конфигурация SMTP работает корректно.\n\nНикаких действий не требуется.`,
+        body_text: 'Это тестовое письмо\n\nВы получили это сообщение, потому что администратор нажал «Отправить тестовое письмо» на странице «Уведомления об обновлениях» вашей установки PicPeak.\n\nУстановленная версия: {{current_version}}\nКанал: {{channel}}\nАдрес получателя: {{recipient_email}}\n\nЕсли вы видите это письмо, ваша конфигурация SMTP работает корректно.\n\nНикаких действий не требуется.',
       },
       fr: {
         subject: '[TEST] Notification de mise à jour PicPeak — vérification',
@@ -253,7 +253,7 @@ de mise à jour » de votre installation PicPeak.</p>
 </div>
 <p>Si vous pouvez lire cet e-mail, votre configuration SMTP et la liste des destinataires fonctionnent correctement. Lorsqu'une nouvelle version réelle sera disponible, PicPeak enverra une notification distincte avec les notes de version et les instructions de mise à jour.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Aucune action n'est requise. Vous pouvez supprimer ce message en toute sécurité.</p>`,
-        body_text: `Ceci est un e-mail de test\n\nVous recevez ce message parce qu'un administrateur a cliqué sur « Envoyer un e-mail de test » sur la page « Notifications de mise à jour » de votre installation PicPeak.\n\nVersion installée : {{current_version}}\nCanal : {{channel}}\nAdresse du destinataire : {{recipient_email}}\n\nSi vous pouvez lire cet e-mail, votre configuration SMTP fonctionne correctement.\n\nAucune action n'est requise.`,
+        body_text: 'Ceci est un e-mail de test\n\nVous recevez ce message parce qu\'un administrateur a cliqué sur « Envoyer un e-mail de test » sur la page « Notifications de mise à jour » de votre installation PicPeak.\n\nVersion installée : {{current_version}}\nCanal : {{channel}}\nAdresse du destinataire : {{recipient_email}}\n\nSi vous pouvez lire cet e-mail, votre configuration SMTP fonctionne correctement.\n\nAucune action n\'est requise.',
       },
     },
   };

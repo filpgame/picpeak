@@ -1072,12 +1072,12 @@ exports.up = async function (knex) {
       if (client === 'pg' || client === 'postgresql') {
         await knex.raw(
           `CREATE UNIQUE INDEX IF NOT EXISTS ${name} `
-          + `ON invoices (customer_account_id) WHERE is_monthly_draft = TRUE`,
+          + 'ON invoices (customer_account_id) WHERE is_monthly_draft = TRUE',
         );
       } else if (client === 'sqlite3' || client === 'sqlite') {
         await knex.raw(
           `CREATE UNIQUE INDEX IF NOT EXISTS ${name} `
-          + `ON invoices (customer_account_id) WHERE is_monthly_draft = 1`,
+          + 'ON invoices (customer_account_id) WHERE is_monthly_draft = 1',
         );
       }
     }

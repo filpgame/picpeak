@@ -136,8 +136,8 @@ describe('sanitizeForContentDisposition — header-safe ASCII fallback', () => {
 describe('buildContentDisposition — RFC 6266 / RFC 5987 dual form', () => {
   it('emits both filename="..." (ASCII) and filename*=UTF-8\'\'... (unicode) for accented names', () => {
     const header = buildContentDisposition('Ägypten.jpg');
-    expect(header).toContain("filename=\"gypten.jpg\"");
-    expect(header).toContain("filename*=UTF-8''%C3%84gypten.jpg");
+    expect(header).toContain('filename="gypten.jpg"');
+    expect(header).toContain('filename*=UTF-8\'\'%C3%84gypten.jpg');
     expect(header.startsWith('attachment;')).toBe(true);
   });
 

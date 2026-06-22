@@ -17,7 +17,14 @@ module.exports = {
     'linebreak-style': ['error', 'unix'],
     'quotes': ['error', 'single'],
     'semi': ['error', 'always'],
-    'no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }],
-    'no-console': ['warn', { allow: ['warn', 'error'] }]
+    'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-empty': 'warn',
+    'no-undef': 'warn',
+    'no-useless-escape': 'warn',
+    'no-case-declarations': 'warn',
+    'no-inner-declarations': 'warn',
+    'no-control-regex': 'warn',
+    'no-useless-catch': 'warn'
   }
 };

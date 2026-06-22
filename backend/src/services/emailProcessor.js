@@ -742,13 +742,13 @@ async function sendTemplateEmail(to, templateKey, variables) {
         : undefined;
     const attachments = Array.isArray(variables.attachments)
       ? variables.attachments
-          .filter((a) => a && (a.contentPath || a.path || a.content))
-          .map((a) => ({
-            filename: a.filename,
-            path: a.contentPath || a.path,
-            content: a.content,
-            contentType: a.contentType,
-          }))
+        .filter((a) => a && (a.contentPath || a.path || a.content))
+        .map((a) => ({
+          filename: a.filename,
+          path: a.contentPath || a.path,
+          content: a.content,
+          contentType: a.contentType,
+        }))
       : undefined;
 
     // Send email

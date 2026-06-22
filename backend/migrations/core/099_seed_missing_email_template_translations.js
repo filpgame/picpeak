@@ -51,7 +51,7 @@ const TRANSLATIONS = {
 </ul>
 <p>Partagez ce lien et le mot de passe avec vos invités pour qu'ils puissent voir et télécharger les photos.</p>
 {{#if welcome_message}}<p><em>{{welcome_message}}</em></p>{{/if}}`,
-      body_text: `Galerie créée avec succès\n\nBonjour {{host_name}},\n\nVotre galerie photo « {{event_name}} » a été créée avec succès !\n\nLien de la galerie : {{gallery_link}}\nMot de passe : {{gallery_password}}\nExpire le : {{expiry_date}}`,
+      body_text: 'Galerie créée avec succès\n\nBonjour {{host_name}},\n\nVotre galerie photo « {{event_name}} » a été créée avec succès !\n\nLien de la galerie : {{gallery_link}}\nMot de passe : {{gallery_password}}\nExpire le : {{expiry_date}}',
     },
   },
 
@@ -63,7 +63,7 @@ const TRANSLATIONS = {
 <p>Votre galerie photo « {{event_name}} » expire dans {{days_remaining}} jours.</p>
 <p>Après l'expiration, la galerie sera archivée et ne sera plus accessible aux invités.</p>
 <p><a href="{{gallery_link}}">Voir la galerie</a></p>`,
-      body_text: `La galerie expire bientôt\n\nBonjour {{host_name}},\n\nVotre galerie photo « {{event_name}} » expire dans {{days_remaining}} jours.\n\nGalerie : {{gallery_link}}`,
+      body_text: 'La galerie expire bientôt\n\nBonjour {{host_name}},\n\nVotre galerie photo « {{event_name}} » expire dans {{days_remaining}} jours.\n\nGalerie : {{gallery_link}}',
     },
   },
 
@@ -74,7 +74,7 @@ const TRANSLATIONS = {
 <p>Bonjour {{host_name}},</p>
 <p>Votre galerie photo « {{event_name}} » a expiré et a été archivée.</p>
 <p>Les invités ne peuvent plus accéder à la galerie. Contactez votre photographe si vous avez besoin de restaurer l'accès.</p>`,
-      body_text: `Galerie archivée\n\nBonjour {{host_name}},\n\nVotre galerie photo « {{event_name}} » a expiré et a été archivée.`,
+      body_text: 'Galerie archivée\n\nBonjour {{host_name}},\n\nVotre galerie photo « {{event_name}} » a expiré et a été archivée.',
     },
   },
 
@@ -89,7 +89,7 @@ const TRANSLATIONS = {
   <li>Nombre de photos : {{photo_count}}</li>
   <li>Emplacement : {{archive_path}}</li>
 </ul>`,
-      body_text: `Galerie archivée avec succès\n\nLa galerie photo « {{event_name}} » a été archivée.\n\nTaille : {{archive_size}}\nPhotos : {{photo_count}}\nEmplacement : {{archive_path}}`,
+      body_text: 'Galerie archivée avec succès\n\nLa galerie photo « {{event_name}} » a été archivée.\n\nTaille : {{archive_size}}\nPhotos : {{photo_count}}\nEmplacement : {{archive_path}}',
     },
   },
 
@@ -106,7 +106,7 @@ const TRANSLATIONS = {
 <p><a href="{{invitation_link}}" class="button">Account instellen</a></p>
 <p>Deze uitnodiging verloopt op {{expires_at}}.</p>
 <p>Als u deze e-mail niet verwachtte, kunt u deze gerust negeren.</p>`,
-      body_text: `Welkom bij PicPeak\n\nU bent uitgenodigd door {{inviter_name}} om deel te nemen aan PicPeak als {{role_name}}.\n\nStel uw account in: {{invitation_link}}\n\nDeze uitnodiging verloopt op {{expires_at}}.`,
+      body_text: 'Welkom bij PicPeak\n\nU bent uitgenodigd door {{inviter_name}} om deel te nemen aan PicPeak als {{role_name}}.\n\nStel uw account in: {{invitation_link}}\n\nDeze uitnodiging verloopt op {{expires_at}}.',
     },
     pt: {
       subject: 'Você foi convidado para o PicPeak como {{role_name}}',
@@ -116,7 +116,7 @@ const TRANSLATIONS = {
 <p><a href="{{invitation_link}}" class="button">Configurar conta</a></p>
 <p>Este convite expira em {{expires_at}}.</p>
 <p>Se você não esperava este e-mail, pode ignorá-lo com segurança.</p>`,
-      body_text: `Bem-vindo(a) ao PicPeak\n\nVocê foi convidado(a) por {{inviter_name}} para participar do PicPeak como {{role_name}}.\n\nConfigure sua conta: {{invitation_link}}\n\nEste convite expira em {{expires_at}}.`,
+      body_text: 'Bem-vindo(a) ao PicPeak\n\nVocê foi convidado(a) por {{inviter_name}} para participar do PicPeak como {{role_name}}.\n\nConfigure sua conta: {{invitation_link}}\n\nEste convite expira em {{expires_at}}.',
     },
     ru: {
       subject: 'Вас пригласили присоединиться к PicPeak в роли {{role_name}}',
@@ -126,7 +126,7 @@ const TRANSLATIONS = {
 <p><a href="{{invitation_link}}" class="button">Настроить учётную запись</a></p>
 <p>Срок действия приглашения истекает {{expires_at}}.</p>
 <p>Если вы не ожидали этого письма, можете его проигнорировать.</p>`,
-      body_text: `Добро пожаловать в PicPeak\n\n{{inviter_name}} пригласил(а) вас присоединиться к PicPeak в роли {{role_name}}.\n\nНастроить учётную запись: {{invitation_link}}\n\nСрок действия приглашения истекает {{expires_at}}.`,
+      body_text: 'Добро пожаловать в PicPeak\n\n{{inviter_name}} пригласил(а) вас присоединиться к PicPeak в роли {{role_name}}.\n\nНастроить учётную запись: {{invitation_link}}\n\nСрок действия приглашения истекает {{expires_at}}.',
     },
     fr: {
       subject: 'Vous avez été invité(e) à rejoindre PicPeak en tant que {{role_name}}',
@@ -136,7 +136,7 @@ const TRANSLATIONS = {
 <p><a href="{{invitation_link}}" class="button">Configurer le compte</a></p>
 <p>Cette invitation expire le {{expires_at}}.</p>
 <p>Si vous n'attendiez pas cet e-mail, vous pouvez l'ignorer en toute sécurité.</p>`,
-      body_text: `Bienvenue sur PicPeak\n\n{{inviter_name}} vous a invité(e) à rejoindre PicPeak en tant que {{role_name}}.\n\nConfigurer le compte : {{invitation_link}}\n\nCette invitation expire le {{expires_at}}.`,
+      body_text: 'Bienvenue sur PicPeak\n\n{{inviter_name}} vous a invité(e) à rejoindre PicPeak en tant que {{role_name}}.\n\nConfigurer le compte : {{invitation_link}}\n\nCette invitation expire le {{expires_at}}.',
     },
   },
 
@@ -149,7 +149,7 @@ const TRANSLATIONS = {
 <p>Klik op de onderstaande link om een nieuw wachtwoord in te stellen:</p>
 <p><a href="{{reset_link}}" class="button">Nieuw wachtwoord instellen</a></p>
 <p>Deze link verloopt op {{expires_at}}. Heeft u deze actie niet aangevraagd? Neem dan onmiddellijk contact op met uw teambeheerder.</p>`,
-      body_text: `Wachtwoord opnieuw ingesteld\n\nHallo {{admin_name}},\n\nUw PicPeak-administratorwachtwoord is opnieuw ingesteld door {{reset_by}}.\n\nStel een nieuw wachtwoord in: {{reset_link}}\n\nDeze link verloopt op {{expires_at}}.`,
+      body_text: 'Wachtwoord opnieuw ingesteld\n\nHallo {{admin_name}},\n\nUw PicPeak-administratorwachtwoord is opnieuw ingesteld door {{reset_by}}.\n\nStel een nieuw wachtwoord in: {{reset_link}}\n\nDeze link verloopt op {{expires_at}}.',
     },
     pt: {
       subject: 'Sua senha de administrador do PicPeak foi redefinida',
@@ -159,7 +159,7 @@ const TRANSLATIONS = {
 <p>Clique no link abaixo para definir uma nova senha:</p>
 <p><a href="{{reset_link}}" class="button">Definir nova senha</a></p>
 <p>Este link expira em {{expires_at}}. Se você não solicitou esta ação, entre em contato com o administrador da sua equipe imediatamente.</p>`,
-      body_text: `Senha redefinida\n\nOlá {{admin_name}},\n\nSua senha de administrador do PicPeak foi redefinida por {{reset_by}}.\n\nDefinir nova senha: {{reset_link}}\n\nEste link expira em {{expires_at}}.`,
+      body_text: 'Senha redefinida\n\nOlá {{admin_name}},\n\nSua senha de administrador do PicPeak foi redefinida por {{reset_by}}.\n\nDefinir nova senha: {{reset_link}}\n\nEste link expira em {{expires_at}}.',
     },
     ru: {
       subject: 'Ваш пароль администратора PicPeak был сброшен',
@@ -169,7 +169,7 @@ const TRANSLATIONS = {
 <p>Перейдите по ссылке ниже, чтобы задать новый пароль:</p>
 <p><a href="{{reset_link}}" class="button">Задать новый пароль</a></p>
 <p>Срок действия ссылки истекает {{expires_at}}. Если вы не запрашивали это действие, немедленно свяжитесь с администратором вашей команды.</p>`,
-      body_text: `Пароль сброшен\n\nЗдравствуйте, {{admin_name}}!\n\nВаш пароль администратора PicPeak был сброшен пользователем {{reset_by}}.\n\nЗадать новый пароль: {{reset_link}}\n\nСрок действия ссылки истекает {{expires_at}}.`,
+      body_text: 'Пароль сброшен\n\nЗдравствуйте, {{admin_name}}!\n\nВаш пароль администратора PicPeak был сброшен пользователем {{reset_by}}.\n\nЗадать новый пароль: {{reset_link}}\n\nСрок действия ссылки истекает {{expires_at}}.',
     },
     fr: {
       subject: 'Votre mot de passe administrateur PicPeak a été réinitialisé',
@@ -179,7 +179,7 @@ const TRANSLATIONS = {
 <p>Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :</p>
 <p><a href="{{reset_link}}" class="button">Définir un nouveau mot de passe</a></p>
 <p>Ce lien expire le {{expires_at}}. Si vous n'êtes pas à l'origine de cette demande, contactez immédiatement votre administrateur.</p>`,
-      body_text: `Mot de passe réinitialisé\n\nBonjour {{admin_name}},\n\nVotre mot de passe administrateur PicPeak a été réinitialisé par {{reset_by}}.\n\nDéfinir un nouveau mot de passe : {{reset_link}}\n\nCe lien expire le {{expires_at}}.`,
+      body_text: 'Mot de passe réinitialisé\n\nBonjour {{admin_name}},\n\nVotre mot de passe administrateur PicPeak a été réinitialisé par {{reset_by}}.\n\nDéfinir un nouveau mot de passe : {{reset_link}}\n\nCe lien expire le {{expires_at}}.',
     },
   },
 
@@ -198,7 +198,7 @@ const TRANSLATIONS = {
 <p>Deze uitnodiging verloopt op {{expires_at}}. Werkt de link niet? Kopieer hem en plak hem in uw browser:</p>
 <p style="word-break: break-all; font-size: 13px; color: #666;">{{invite_link}}</p>
 <p>Heeft u deze e-mail niet verwacht? U kunt deze gerust negeren.</p>`,
-      body_text: `Welkom bij uw fotogalerijen\n\nU bent uitgenodigd om een klantaccount aan te maken zodat u al uw galerijen op één plek kunt bekijken.\n\nAccount instellen: {{invite_link}}\n\nDeze uitnodiging verloopt op {{expires_at}}.`,
+      body_text: 'Welkom bij uw fotogalerijen\n\nU bent uitgenodigd om een klantaccount aan te maken zodat u al uw galerijen op één plek kunt bekijken.\n\nAccount instellen: {{invite_link}}\n\nDeze uitnodiging verloopt op {{expires_at}}.',
     },
     pt: {
       subject: 'Você foi convidado(a) a acessar suas galerias de fotos',
@@ -210,7 +210,7 @@ const TRANSLATIONS = {
 <p>Este convite expira em {{expires_at}}. Se o link não funcionar, copie e cole-o no navegador:</p>
 <p style="word-break: break-all; font-size: 13px; color: #666;">{{invite_link}}</p>
 <p>Se você não esperava este e-mail, pode ignorá-lo com segurança.</p>`,
-      body_text: `Bem-vindo(a) às suas galerias\n\nVocê foi convidado(a) a criar uma conta de cliente para acessar todas as suas galerias em um só lugar.\n\nConfigurar conta: {{invite_link}}\n\nEste convite expira em {{expires_at}}.`,
+      body_text: 'Bem-vindo(a) às suas galerias\n\nVocê foi convidado(a) a criar uma conta de cliente para acessar todas as suas galerias em um só lugar.\n\nConfigurar conta: {{invite_link}}\n\nEste convite expira em {{expires_at}}.',
     },
     ru: {
       subject: 'Вас пригласили получить доступ к вашим фотогалереям',
@@ -222,7 +222,7 @@ const TRANSLATIONS = {
 <p>Срок действия приглашения истекает {{expires_at}}. Если ссылка не работает, скопируйте её в адресную строку браузера:</p>
 <p style="word-break: break-all; font-size: 13px; color: #666;">{{invite_link}}</p>
 <p>Если вы не ожидали этого письма, можете его проигнорировать.</p>`,
-      body_text: `Добро пожаловать в ваши галереи\n\nВас пригласили создать учётную запись клиента, чтобы видеть все ваши галереи в одном месте.\n\nНастроить учётную запись: {{invite_link}}\n\nСрок действия приглашения истекает {{expires_at}}.`,
+      body_text: 'Добро пожаловать в ваши галереи\n\nВас пригласили создать учётную запись клиента, чтобы видеть все ваши галереи в одном месте.\n\nНастроить учётную запись: {{invite_link}}\n\nСрок действия приглашения истекает {{expires_at}}.',
     },
     fr: {
       subject: 'Vous avez été invité(e) à accéder à vos galeries photo',
@@ -234,7 +234,7 @@ const TRANSLATIONS = {
 <p>Cette invitation expire le {{expires_at}}. Si le lien ne fonctionne pas, copiez-le et collez-le dans votre navigateur :</p>
 <p style="word-break: break-all; font-size: 13px; color: #666;">{{invite_link}}</p>
 <p>Si vous n'attendiez pas cet e-mail, vous pouvez l'ignorer en toute sécurité.</p>`,
-      body_text: `Bienvenue dans vos galeries photo\n\nVous avez été invité(e) à créer un compte client pour accéder à toutes vos galeries en un seul endroit.\n\nConfigurer le compte : {{invite_link}}\n\nCette invitation expire le {{expires_at}}.`,
+      body_text: 'Bienvenue dans vos galeries photo\n\nVous avez été invité(e) à créer un compte client pour accéder à toutes vos galeries en un seul endroit.\n\nConfigurer le compte : {{invite_link}}\n\nCette invitation expire le {{expires_at}}.',
     },
   },
 
@@ -252,7 +252,7 @@ const TRANSLATIONS = {
 <p><a href="{{reset_link}}" class="button">Set a new password</a></p>
 <p>This link expires on {{expires_at}}.</p>
 <p>If you didn't expect this, you can ignore the message — your current password keeps working until you click the link.</p>`,
-      body_text: `Reset your customer account password\n\nYour photographer has triggered a password reset for your customer account.\n\nSet a new password: {{reset_link}}\n\nThis link expires on {{expires_at}}.\n\nIf you didn't expect this, you can ignore the message — your current password keeps working until you click the link.`,
+      body_text: 'Reset your customer account password\n\nYour photographer has triggered a password reset for your customer account.\n\nSet a new password: {{reset_link}}\n\nThis link expires on {{expires_at}}.\n\nIf you didn\'t expect this, you can ignore the message — your current password keeps working until you click the link.',
     },
     de: {
       subject: 'Passwort für dein Kundenkonto zurücksetzen',
@@ -261,7 +261,7 @@ const TRANSLATIONS = {
 <p><a href="{{reset_link}}" class="button">Neues Passwort festlegen</a></p>
 <p>Dieser Link läuft am {{expires_at}} ab.</p>
 <p>Wenn du diese Anfrage nicht erwartet hast, kannst du diese Nachricht ignorieren — dein aktuelles Passwort funktioniert weiter, bis du den Link anklickst.</p>`,
-      body_text: `Passwort für dein Kundenkonto zurücksetzen\n\nDein Fotograf hat einen Passwort-Reset für dein Kundenkonto ausgelöst.\n\nNeues Passwort festlegen: {{reset_link}}\n\nDieser Link läuft am {{expires_at}} ab.\n\nWenn du diese Anfrage nicht erwartet hast, kannst du diese Nachricht ignorieren — dein aktuelles Passwort funktioniert weiter, bis du den Link anklickst.`,
+      body_text: 'Passwort für dein Kundenkonto zurücksetzen\n\nDein Fotograf hat einen Passwort-Reset für dein Kundenkonto ausgelöst.\n\nNeues Passwort festlegen: {{reset_link}}\n\nDieser Link läuft am {{expires_at}} ab.\n\nWenn du diese Anfrage nicht erwartet hast, kannst du diese Nachricht ignorieren — dein aktuelles Passwort funktioniert weiter, bis du den Link anklickst.',
     },
     nl: {
       subject: 'Wachtwoord van uw klantaccount opnieuw instellen',
@@ -270,7 +270,7 @@ const TRANSLATIONS = {
 <p><a href="{{reset_link}}" class="button">Nieuw wachtwoord instellen</a></p>
 <p>Deze link verloopt op {{expires_at}}.</p>
 <p>Heeft u deze aanvraag niet verwacht? U kunt dit bericht negeren — uw huidige wachtwoord blijft werken totdat u op de link klikt.</p>`,
-      body_text: `Wachtwoord opnieuw instellen\n\nUw fotograaf heeft een wachtwoordreset voor uw klantaccount aangevraagd.\n\nNieuw wachtwoord instellen: {{reset_link}}\n\nDeze link verloopt op {{expires_at}}.\n\nHeeft u deze aanvraag niet verwacht? U kunt dit bericht negeren — uw huidige wachtwoord blijft werken totdat u op de link klikt.`,
+      body_text: 'Wachtwoord opnieuw instellen\n\nUw fotograaf heeft een wachtwoordreset voor uw klantaccount aangevraagd.\n\nNieuw wachtwoord instellen: {{reset_link}}\n\nDeze link verloopt op {{expires_at}}.\n\nHeeft u deze aanvraag niet verwacht? U kunt dit bericht negeren — uw huidige wachtwoord blijft werken totdat u op de link klikt.',
     },
     pt: {
       subject: 'Redefina a senha da sua conta de cliente',
@@ -279,7 +279,7 @@ const TRANSLATIONS = {
 <p><a href="{{reset_link}}" class="button">Definir nova senha</a></p>
 <p>Este link expira em {{expires_at}}.</p>
 <p>Se você não esperava esta solicitação, pode ignorar a mensagem — sua senha atual continuará funcionando até você clicar no link.</p>`,
-      body_text: `Redefinir senha\n\nSeu fotógrafo iniciou uma redefinição de senha para sua conta de cliente.\n\nDefinir nova senha: {{reset_link}}\n\nEste link expira em {{expires_at}}.\n\nSe você não esperava esta solicitação, pode ignorar a mensagem — sua senha atual continuará funcionando até você clicar no link.`,
+      body_text: 'Redefinir senha\n\nSeu fotógrafo iniciou uma redefinição de senha para sua conta de cliente.\n\nDefinir nova senha: {{reset_link}}\n\nEste link expira em {{expires_at}}.\n\nSe você não esperava esta solicitação, pode ignorar a mensagem — sua senha atual continuará funcionando até você clicar no link.',
     },
     ru: {
       subject: 'Сброс пароля вашей клиентской учётной записи',
@@ -288,7 +288,7 @@ const TRANSLATIONS = {
 <p><a href="{{reset_link}}" class="button">Задать новый пароль</a></p>
 <p>Срок действия ссылки истекает {{expires_at}}.</p>
 <p>Если вы не ожидали этого письма, можете его проигнорировать — ваш текущий пароль продолжит работать, пока вы не перейдёте по ссылке.</p>`,
-      body_text: `Сброс пароля\n\nВаш фотограф инициировал сброс пароля для вашей клиентской учётной записи.\n\nЗадать новый пароль: {{reset_link}}\n\nСрок действия ссылки истекает {{expires_at}}.\n\nЕсли вы не ожидали этого письма, можете его проигнорировать — ваш текущий пароль продолжит работать, пока вы не перейдёте по ссылке.`,
+      body_text: 'Сброс пароля\n\nВаш фотограф инициировал сброс пароля для вашей клиентской учётной записи.\n\nЗадать новый пароль: {{reset_link}}\n\nСрок действия ссылки истекает {{expires_at}}.\n\nЕсли вы не ожидали этого письма, можете его проигнорировать — ваш текущий пароль продолжит работать, пока вы не перейдёте по ссылке.',
     },
     fr: {
       subject: 'Réinitialisez le mot de passe de votre compte client',
@@ -297,7 +297,7 @@ const TRANSLATIONS = {
 <p><a href="{{reset_link}}" class="button">Définir un nouveau mot de passe</a></p>
 <p>Ce lien expire le {{expires_at}}.</p>
 <p>Si vous n'attendiez pas cette demande, vous pouvez ignorer ce message — votre mot de passe actuel continue de fonctionner jusqu'à ce que vous cliquiez sur le lien.</p>`,
-      body_text: `Réinitialiser le mot de passe\n\nVotre photographe a déclenché une réinitialisation de mot de passe pour votre compte client.\n\nDéfinir un nouveau mot de passe : {{reset_link}}\n\nCe lien expire le {{expires_at}}.\n\nSi vous n'attendiez pas cette demande, vous pouvez ignorer ce message — votre mot de passe actuel continue de fonctionner jusqu'à ce que vous cliquiez sur le lien.`,
+      body_text: 'Réinitialiser le mot de passe\n\nVotre photographe a déclenché une réinitialisation de mot de passe pour votre compte client.\n\nDéfinir un nouveau mot de passe : {{reset_link}}\n\nCe lien expire le {{expires_at}}.\n\nSi vous n\'attendiez pas cette demande, vous pouvez ignorer ce message — votre mot de passe actuel continue de fonctionner jusqu\'à ce que vous cliquiez sur le lien.',
     },
   },
 
@@ -314,7 +314,7 @@ const TRANSLATIONS = {
   <li>Grootte: {{backup_size}}</li>
   <li>Locatie: {{backup_path}}</li>
 </ul>`,
-      body_text: `Database-back-up voltooid\n\nTijdstip: {{completed_at}}\nGrootte: {{backup_size}}\nLocatie: {{backup_path}}`,
+      body_text: 'Database-back-up voltooid\n\nTijdstip: {{completed_at}}\nGrootte: {{backup_size}}\nLocatie: {{backup_path}}',
     },
     pt: {
       subject: '[PicPeak] Backup do banco de dados concluído',
@@ -325,7 +325,7 @@ const TRANSLATIONS = {
   <li>Tamanho: {{backup_size}}</li>
   <li>Localização: {{backup_path}}</li>
 </ul>`,
-      body_text: `Backup do banco de dados concluído\n\nHorário: {{completed_at}}\nTamanho: {{backup_size}}\nLocalização: {{backup_path}}`,
+      body_text: 'Backup do banco de dados concluído\n\nHorário: {{completed_at}}\nTamanho: {{backup_size}}\nLocalização: {{backup_path}}',
     },
     ru: {
       subject: '[PicPeak] Резервная копия БД успешно создана',
@@ -336,7 +336,7 @@ const TRANSLATIONS = {
   <li>Размер: {{backup_size}}</li>
   <li>Расположение: {{backup_path}}</li>
 </ul>`,
-      body_text: `Резервная копия базы данных создана\n\nВремя: {{completed_at}}\nРазмер: {{backup_size}}\nРасположение: {{backup_path}}`,
+      body_text: 'Резервная копия базы данных создана\n\nВремя: {{completed_at}}\nРазмер: {{backup_size}}\nРасположение: {{backup_path}}',
     },
     fr: {
       subject: '[PicPeak] Sauvegarde de la base de données réussie',
@@ -347,7 +347,7 @@ const TRANSLATIONS = {
   <li>Taille : {{backup_size}}</li>
   <li>Emplacement : {{backup_path}}</li>
 </ul>`,
-      body_text: `Sauvegarde de la base de données terminée\n\nHeure : {{completed_at}}\nTaille : {{backup_size}}\nEmplacement : {{backup_path}}`,
+      body_text: 'Sauvegarde de la base de données terminée\n\nHeure : {{completed_at}}\nTaille : {{backup_size}}\nEmplacement : {{backup_path}}',
     },
   },
 
@@ -361,7 +361,7 @@ const TRANSLATIONS = {
   <li>Foutmelding: {{error_message}}</li>
 </ul>
 <p>Controleer de serverlogboeken voor meer details.</p>`,
-      body_text: `Database-back-up mislukt\n\nTijdstip: {{failed_at}}\nFoutmelding: {{error_message}}\n\nControleer de serverlogboeken voor meer details.`,
+      body_text: 'Database-back-up mislukt\n\nTijdstip: {{failed_at}}\nFoutmelding: {{error_message}}\n\nControleer de serverlogboeken voor meer details.',
     },
     pt: {
       subject: '[PicPeak] FALHA no backup do banco de dados',
@@ -372,7 +372,7 @@ const TRANSLATIONS = {
   <li>Erro: {{error_message}}</li>
 </ul>
 <p>Verifique os logs do servidor para mais detalhes.</p>`,
-      body_text: `Falha no backup do banco de dados\n\nHorário: {{failed_at}}\nErro: {{error_message}}\n\nVerifique os logs do servidor.`,
+      body_text: 'Falha no backup do banco de dados\n\nHorário: {{failed_at}}\nErro: {{error_message}}\n\nVerifique os logs do servidor.',
     },
     ru: {
       subject: '[PicPeak] ОШИБКА резервного копирования БД',
@@ -383,7 +383,7 @@ const TRANSLATIONS = {
   <li>Ошибка: {{error_message}}</li>
 </ul>
 <p>Проверьте журналы сервера для получения дополнительной информации.</p>`,
-      body_text: `Ошибка резервного копирования базы данных\n\nВремя: {{failed_at}}\nОшибка: {{error_message}}\n\nПроверьте журналы сервера.`,
+      body_text: 'Ошибка резервного копирования базы данных\n\nВремя: {{failed_at}}\nОшибка: {{error_message}}\n\nПроверьте журналы сервера.',
     },
     fr: {
       subject: '[PicPeak] ÉCHEC de la sauvegarde de la base de données',
@@ -394,7 +394,7 @@ const TRANSLATIONS = {
   <li>Erreur : {{error_message}}</li>
 </ul>
 <p>Consultez les journaux du serveur pour plus de détails.</p>`,
-      body_text: `Échec de la sauvegarde de la base de données\n\nHeure : {{failed_at}}\nErreur : {{error_message}}\n\nConsultez les journaux du serveur.`,
+      body_text: 'Échec de la sauvegarde de la base de données\n\nHeure : {{failed_at}}\nErreur : {{error_message}}\n\nConsultez les journaux du serveur.',
     },
   },
 
@@ -407,7 +407,7 @@ const TRANSLATIONS = {
   <li>Tijdstip: {{completed_at}}</li>
   <li>Herstelpunt: {{source_backup}}</li>
 </ul>`,
-      body_text: `Database-herstel voltooid\n\nTijdstip: {{completed_at}}\nHerstelpunt: {{source_backup}}`,
+      body_text: 'Database-herstel voltooid\n\nTijdstip: {{completed_at}}\nHerstelpunt: {{source_backup}}',
     },
     pt: {
       subject: '[PicPeak] Restauração do banco de dados concluída',
@@ -417,7 +417,7 @@ const TRANSLATIONS = {
   <li>Horário: {{completed_at}}</li>
   <li>Origem: {{source_backup}}</li>
 </ul>`,
-      body_text: `Restauração concluída\n\nHorário: {{completed_at}}\nOrigem: {{source_backup}}`,
+      body_text: 'Restauração concluída\n\nHorário: {{completed_at}}\nOrigem: {{source_backup}}',
     },
     ru: {
       subject: '[PicPeak] Восстановление БД успешно завершено',
@@ -427,7 +427,7 @@ const TRANSLATIONS = {
   <li>Время: {{completed_at}}</li>
   <li>Точка восстановления: {{source_backup}}</li>
 </ul>`,
-      body_text: `Восстановление базы данных завершено\n\nВремя: {{completed_at}}\nТочка восстановления: {{source_backup}}`,
+      body_text: 'Восстановление базы данных завершено\n\nВремя: {{completed_at}}\nТочка восстановления: {{source_backup}}',
     },
     fr: {
       subject: '[PicPeak] Restauration de la base de données réussie',
@@ -437,7 +437,7 @@ const TRANSLATIONS = {
   <li>Heure : {{completed_at}}</li>
   <li>Source : {{source_backup}}</li>
 </ul>`,
-      body_text: `Restauration terminée\n\nHeure : {{completed_at}}\nSource : {{source_backup}}`,
+      body_text: 'Restauration terminée\n\nHeure : {{completed_at}}\nSource : {{source_backup}}',
     },
   },
 
@@ -450,7 +450,7 @@ const TRANSLATIONS = {
   <li>Tijdstip: {{failed_at}}</li>
   <li>Foutmelding: {{error_message}}</li>
 </ul>`,
-      body_text: `Database-herstel mislukt\n\nTijdstip: {{failed_at}}\nFoutmelding: {{error_message}}`,
+      body_text: 'Database-herstel mislukt\n\nTijdstip: {{failed_at}}\nFoutmelding: {{error_message}}',
     },
     pt: {
       subject: '[PicPeak] FALHA na restauração do banco de dados',
@@ -460,7 +460,7 @@ const TRANSLATIONS = {
   <li>Horário: {{failed_at}}</li>
   <li>Erro: {{error_message}}</li>
 </ul>`,
-      body_text: `Falha na restauração\n\nHorário: {{failed_at}}\nErro: {{error_message}}`,
+      body_text: 'Falha na restauração\n\nHorário: {{failed_at}}\nErro: {{error_message}}',
     },
     ru: {
       subject: '[PicPeak] ОШИБКА восстановления БД',
@@ -470,7 +470,7 @@ const TRANSLATIONS = {
   <li>Время: {{failed_at}}</li>
   <li>Ошибка: {{error_message}}</li>
 </ul>`,
-      body_text: `Ошибка восстановления базы данных\n\nВремя: {{failed_at}}\nОшибка: {{error_message}}`,
+      body_text: 'Ошибка восстановления базы данных\n\nВремя: {{failed_at}}\nОшибка: {{error_message}}',
     },
     fr: {
       subject: '[PicPeak] ÉCHEC de la restauration de la base de données',
@@ -480,7 +480,7 @@ const TRANSLATIONS = {
   <li>Heure : {{failed_at}}</li>
   <li>Erreur : {{error_message}}</li>
 </ul>`,
-      body_text: `Échec de la restauration\n\nHeure : {{failed_at}}\nErreur : {{error_message}}`,
+      body_text: 'Échec de la restauration\n\nHeure : {{failed_at}}\nErreur : {{error_message}}',
     },
   },
 
@@ -499,7 +499,7 @@ const TRANSLATIONS = {
   <li>Grootte: {{backup_size}}</li>
   <li>Locatie: {{backup_path}}</li>
 </ul>`,
-      body_text: `Bestandsback-up voltooid\n\nTijdstip: {{completed_at}}\nGrootte: {{backup_size}}\nLocatie: {{backup_path}}`,
+      body_text: 'Bestandsback-up voltooid\n\nTijdstip: {{completed_at}}\nGrootte: {{backup_size}}\nLocatie: {{backup_path}}',
     },
     pt: {
       subject: '[PicPeak] Backup de arquivos concluído',
@@ -510,7 +510,7 @@ const TRANSLATIONS = {
   <li>Tamanho: {{backup_size}}</li>
   <li>Localização: {{backup_path}}</li>
 </ul>`,
-      body_text: `Backup de arquivos concluído\n\nHorário: {{completed_at}}\nTamanho: {{backup_size}}\nLocalização: {{backup_path}}`,
+      body_text: 'Backup de arquivos concluído\n\nHorário: {{completed_at}}\nTamanho: {{backup_size}}\nLocalização: {{backup_path}}',
     },
     ru: {
       subject: '[PicPeak] Резервное копирование файлов завершено',
@@ -521,7 +521,7 @@ const TRANSLATIONS = {
   <li>Размер: {{backup_size}}</li>
   <li>Расположение: {{backup_path}}</li>
 </ul>`,
-      body_text: `Резервное копирование файлов завершено\n\nВремя: {{completed_at}}\nРазмер: {{backup_size}}\nРасположение: {{backup_path}}`,
+      body_text: 'Резервное копирование файлов завершено\n\nВремя: {{completed_at}}\nРазмер: {{backup_size}}\nРасположение: {{backup_path}}',
     },
     fr: {
       subject: '[PicPeak] Sauvegarde des fichiers terminée',
@@ -532,7 +532,7 @@ const TRANSLATIONS = {
   <li>Taille : {{backup_size}}</li>
   <li>Emplacement : {{backup_path}}</li>
 </ul>`,
-      body_text: `Sauvegarde des fichiers terminée\n\nHeure : {{completed_at}}\nTaille : {{backup_size}}\nEmplacement : {{backup_path}}`,
+      body_text: 'Sauvegarde des fichiers terminée\n\nHeure : {{completed_at}}\nTaille : {{backup_size}}\nEmplacement : {{backup_path}}',
     },
   },
 
@@ -545,7 +545,7 @@ const TRANSLATIONS = {
   <li>Tijdstip: {{failed_at}}</li>
   <li>Foutmelding: {{error_message}}</li>
 </ul>`,
-      body_text: `Bestandsback-up mislukt\n\nTijdstip: {{failed_at}}\nFoutmelding: {{error_message}}`,
+      body_text: 'Bestandsback-up mislukt\n\nTijdstip: {{failed_at}}\nFoutmelding: {{error_message}}',
     },
     pt: {
       subject: '[PicPeak] FALHA no backup de arquivos',
@@ -555,7 +555,7 @@ const TRANSLATIONS = {
   <li>Horário: {{failed_at}}</li>
   <li>Erro: {{error_message}}</li>
 </ul>`,
-      body_text: `Falha no backup de arquivos\n\nHorário: {{failed_at}}\nErro: {{error_message}}`,
+      body_text: 'Falha no backup de arquivos\n\nHorário: {{failed_at}}\nErro: {{error_message}}',
     },
     ru: {
       subject: '[PicPeak] ОШИБКА резервного копирования файлов',
@@ -565,7 +565,7 @@ const TRANSLATIONS = {
   <li>Время: {{failed_at}}</li>
   <li>Ошибка: {{error_message}}</li>
 </ul>`,
-      body_text: `Ошибка резервного копирования файлов\n\nВремя: {{failed_at}}\nОшибка: {{error_message}}`,
+      body_text: 'Ошибка резервного копирования файлов\n\nВремя: {{failed_at}}\nОшибка: {{error_message}}',
     },
     fr: {
       subject: '[PicPeak] ÉCHEC de la sauvegarde des fichiers',
@@ -575,7 +575,7 @@ const TRANSLATIONS = {
   <li>Heure : {{failed_at}}</li>
   <li>Erreur : {{error_message}}</li>
 </ul>`,
-      body_text: `Échec de la sauvegarde des fichiers\n\nHeure : {{failed_at}}\nErreur : {{error_message}}`,
+      body_text: 'Échec de la sauvegarde des fichiers\n\nHeure : {{failed_at}}\nErreur : {{error_message}}',
     },
   },
 
@@ -593,7 +593,7 @@ const TRANSLATIONS = {
   <li>Releasekanaal: {{channel}}</li>
 </ul>
 <p><a href="{{release_url}}" class="button">Release-notities bekijken</a></p>`,
-      body_text: `Nieuwe PicPeak-versie beschikbaar\n\nHuidige versie: {{current_version}}\nNieuwe versie: {{new_version}}\nReleasekanaal: {{channel}}\n\nRelease-notities: {{release_url}}`,
+      body_text: 'Nieuwe PicPeak-versie beschikbaar\n\nHuidige versie: {{current_version}}\nNieuwe versie: {{new_version}}\nReleasekanaal: {{channel}}\n\nRelease-notities: {{release_url}}',
     },
     pt: {
       subject: 'Atualização do PicPeak disponível: versão {{new_version}}',
@@ -605,7 +605,7 @@ const TRANSLATIONS = {
   <li>Canal: {{channel}}</li>
 </ul>
 <p><a href="{{release_url}}" class="button">Ver notas da versão</a></p>`,
-      body_text: `Nova versão do PicPeak disponível\n\nVersão atual: {{current_version}}\nNova versão: {{new_version}}\nCanal: {{channel}}\n\nNotas da versão: {{release_url}}`,
+      body_text: 'Nova versão do PicPeak disponível\n\nVersão atual: {{current_version}}\nNova versão: {{new_version}}\nCanal: {{channel}}\n\nNotas da versão: {{release_url}}',
     },
     ru: {
       subject: 'Доступно обновление PicPeak: версия {{new_version}}',
@@ -617,7 +617,7 @@ const TRANSLATIONS = {
   <li>Канал выпуска: {{channel}}</li>
 </ul>
 <p><a href="{{release_url}}" class="button">Посмотреть примечания к выпуску</a></p>`,
-      body_text: `Доступна новая версия PicPeak\n\nТекущая версия: {{current_version}}\nНовая версия: {{new_version}}\nКанал: {{channel}}\n\nПримечания к выпуску: {{release_url}}`,
+      body_text: 'Доступна новая версия PicPeak\n\nТекущая версия: {{current_version}}\nНовая версия: {{new_version}}\nКанал: {{channel}}\n\nПримечания к выпуску: {{release_url}}',
     },
     fr: {
       subject: 'Mise à jour PicPeak disponible : version {{new_version}}',
@@ -629,7 +629,7 @@ const TRANSLATIONS = {
   <li>Canal : {{channel}}</li>
 </ul>
 <p><a href="{{release_url}}" class="button">Voir les notes de version</a></p>`,
-      body_text: `Nouvelle version de PicPeak disponible\n\nVersion actuelle : {{current_version}}\nNouvelle version : {{new_version}}\nCanal : {{channel}}\n\nNotes de version : {{release_url}}`,
+      body_text: 'Nouvelle version de PicPeak disponible\n\nVersion actuelle : {{current_version}}\nNouvelle version : {{new_version}}\nCanal : {{channel}}\n\nNotes de version : {{release_url}}',
     },
   },
 
@@ -659,7 +659,7 @@ PicPeak will send a separate notification with release notes and update
 instructions.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">No action is required.
 You may safely delete this message.</p>`,
-      body_text: `This is a test email\n\nYou are receiving this message because an administrator clicked "Send Test Email" on the Update Notifications page of your PicPeak installation.\n\nInstalled version: {{current_version}}\nChannel: {{channel}}\nRecipient address: {{recipient_email}}\n\nIf you can read this email, your SMTP configuration and the recipient list are working correctly. When a real new version becomes available, PicPeak will send a separate notification with release notes and update instructions.\n\nNo action is required. You may safely delete this message.`,
+      body_text: 'This is a test email\n\nYou are receiving this message because an administrator clicked "Send Test Email" on the Update Notifications page of your PicPeak installation.\n\nInstalled version: {{current_version}}\nChannel: {{channel}}\nRecipient address: {{recipient_email}}\n\nIf you can read this email, your SMTP configuration and the recipient list are working correctly. When a real new version becomes available, PicPeak will send a separate notification with release notes and update instructions.\n\nNo action is required. You may safely delete this message.',
     },
     de: {
       subject: '[TEST] PicPeak Update-Benachrichtigung — Konfigurationsprüfung',
@@ -678,7 +678,7 @@ ist, sendet PicPeak eine separate Benachrichtigung mit Versionshinweisen
 und Update-Anweisungen.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Es ist keine Aktion
 erforderlich. Sie können diese Nachricht gefahrlos löschen.</p>`,
-      body_text: `Dies ist eine Test-E-Mail\n\nSie erhalten diese Nachricht, weil ein Administrator auf der Seite „Update-Benachrichtigungen" Ihrer PicPeak-Installation auf „Test-E-Mail senden" geklickt hat.\n\nInstallierte Version: {{current_version}}\nKanal: {{channel}}\nEmpfänger-Adresse: {{recipient_email}}\n\nWenn Sie diese E-Mail lesen können, funktionieren Ihre SMTP-Konfiguration und die Empfängerliste korrekt. Sobald eine echte neue Version verfügbar ist, sendet PicPeak eine separate Benachrichtigung mit Versionshinweisen und Update-Anweisungen.\n\nEs ist keine Aktion erforderlich. Sie können diese Nachricht gefahrlos löschen.`,
+      body_text: 'Dies ist eine Test-E-Mail\n\nSie erhalten diese Nachricht, weil ein Administrator auf der Seite „Update-Benachrichtigungen" Ihrer PicPeak-Installation auf „Test-E-Mail senden" geklickt hat.\n\nInstallierte Version: {{current_version}}\nKanal: {{channel}}\nEmpfänger-Adresse: {{recipient_email}}\n\nWenn Sie diese E-Mail lesen können, funktionieren Ihre SMTP-Konfiguration und die Empfängerliste korrekt. Sobald eine echte neue Version verfügbar ist, sendet PicPeak eine separate Benachrichtigung mit Versionshinweisen und Update-Anweisungen.\n\nEs ist keine Aktion erforderlich. Sie können diese Nachricht gefahrlos löschen.',
     },
     nl: {
       subject: '[TEST] PicPeak-update-melding — configuratiecontrole',
@@ -693,7 +693,7 @@ erforderlich. Sie können diese Nachricht gefahrlos löschen.</p>`,
 </div>
 <p>Als u deze e-mail kunt lezen, werken uw SMTP-configuratie en de ontvangerslijst correct. Wanneer er een echte nieuwe versie beschikbaar komt, stuurt PicPeak een aparte melding met release-notities en update-instructies.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Geen actie vereist. U kunt dit bericht veilig verwijderen.</p>`,
-      body_text: `Dit is een test-e-mail\n\nU ontvangt dit bericht omdat een beheerder op de pagina "Update-meldingen" van uw PicPeak-installatie op "Test-e-mail verzenden" heeft geklikt.\n\nGeïnstalleerde versie: {{current_version}}\nKanaal: {{channel}}\nOntvangeradres: {{recipient_email}}\n\nAls u deze e-mail kunt lezen, werken uw SMTP-configuratie en de ontvangerslijst correct.\n\nGeen actie vereist.`,
+      body_text: 'Dit is een test-e-mail\n\nU ontvangt dit bericht omdat een beheerder op de pagina "Update-meldingen" van uw PicPeak-installatie op "Test-e-mail verzenden" heeft geklikt.\n\nGeïnstalleerde versie: {{current_version}}\nKanaal: {{channel}}\nOntvangeradres: {{recipient_email}}\n\nAls u deze e-mail kunt lezen, werken uw SMTP-configuratie en de ontvangerslijst correct.\n\nGeen actie vereist.',
     },
     pt: {
       subject: '[TESTE] Notificação de atualização do PicPeak — verificação',
@@ -708,7 +708,7 @@ atualização" da sua instalação do PicPeak.</p>
 </div>
 <p>Se você consegue ler este e-mail, sua configuração SMTP e a lista de destinatários estão funcionando corretamente. Quando uma nova versão real estiver disponível, o PicPeak enviará uma notificação separada com notas de versão e instruções de atualização.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Nenhuma ação é necessária. Você pode excluir esta mensagem com segurança.</p>`,
-      body_text: `Este é um e-mail de teste\n\nVocê está recebendo esta mensagem porque um administrador clicou em "Enviar e-mail de teste" na página "Notificações de atualização" da sua instalação do PicPeak.\n\nVersão instalada: {{current_version}}\nCanal: {{channel}}\nEndereço do destinatário: {{recipient_email}}\n\nSe você consegue ler este e-mail, sua configuração SMTP está funcionando corretamente.\n\nNenhuma ação é necessária.`,
+      body_text: 'Este é um e-mail de teste\n\nVocê está recebendo esta mensagem porque um administrador clicou em "Enviar e-mail de teste" na página "Notificações de atualização" da sua instalação do PicPeak.\n\nVersão instalada: {{current_version}}\nCanal: {{channel}}\nEndereço do destinatário: {{recipient_email}}\n\nSe você consegue ler este e-mail, sua configuração SMTP está funcionando corretamente.\n\nNenhuma ação é necessária.',
     },
     ru: {
       subject: '[ТЕСТ] Уведомление об обновлениях PicPeak — проверка',
@@ -723,7 +723,7 @@ atualização" da sua instalação do PicPeak.</p>
 </div>
 <p>Если вы видите это письмо, значит ваша конфигурация SMTP и список получателей работают корректно. Когда станет доступна новая версия, PicPeak отправит отдельное уведомление с примечаниями к выпуску и инструкциями по обновлению.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Никаких действий не требуется. Можете безопасно удалить это сообщение.</p>`,
-      body_text: `Это тестовое письмо\n\nВы получили это сообщение, потому что администратор нажал «Отправить тестовое письмо» на странице «Уведомления об обновлениях» вашей установки PicPeak.\n\nУстановленная версия: {{current_version}}\nКанал: {{channel}}\nАдрес получателя: {{recipient_email}}\n\nЕсли вы видите это письмо, ваша конфигурация SMTP работает корректно.\n\nНикаких действий не требуется.`,
+      body_text: 'Это тестовое письмо\n\nВы получили это сообщение, потому что администратор нажал «Отправить тестовое письмо» на странице «Уведомления об обновлениях» вашей установки PicPeak.\n\nУстановленная версия: {{current_version}}\nКанал: {{channel}}\nАдрес получателя: {{recipient_email}}\n\nЕсли вы видите это письмо, ваша конфигурация SMTP работает корректно.\n\nНикаких действий не требуется.',
     },
     fr: {
       subject: '[TEST] Notification de mise à jour PicPeak — vérification',
@@ -738,7 +738,7 @@ de mise à jour » de votre installation PicPeak.</p>
 </div>
 <p>Si vous pouvez lire cet e-mail, votre configuration SMTP et la liste des destinataires fonctionnent correctement. Lorsqu'une nouvelle version réelle sera disponible, PicPeak enverra une notification distincte avec les notes de version et les instructions de mise à jour.</p>
 <p style="color: #666; font-size: 13px; margin-top: 30px;">Aucune action n'est requise. Vous pouvez supprimer ce message en toute sécurité.</p>`,
-      body_text: `Ceci est un e-mail de test\n\nVous recevez ce message parce qu'un administrateur a cliqué sur « Envoyer un e-mail de test » sur la page « Notifications de mise à jour » de votre installation PicPeak.\n\nVersion installée : {{current_version}}\nCanal : {{channel}}\nAdresse du destinataire : {{recipient_email}}\n\nSi vous pouvez lire cet e-mail, votre configuration SMTP fonctionne correctement.\n\nAucune action n'est requise.`,
+      body_text: 'Ceci est un e-mail de test\n\nVous recevez ce message parce qu\'un administrateur a cliqué sur « Envoyer un e-mail de test » sur la page « Notifications de mise à jour » de votre installation PicPeak.\n\nVersion installée : {{current_version}}\nCanal : {{channel}}\nAdresse du destinataire : {{recipient_email}}\n\nSi vous pouvez lire cet e-mail, votre configuration SMTP fonctionne correctement.\n\nAucune action n\'est requise.',
     },
   },
 };

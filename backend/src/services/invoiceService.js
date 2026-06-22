@@ -84,20 +84,20 @@ function computeScheduledSendAt(trigger, offsetDays, eventDate, baseDate = new D
   const offset = ensureInt(offsetDays) * ms;
   const eventTs = eventDate ? new Date(eventDate).getTime() : null;
   switch (trigger) {
-    case 'quote_accepted':
-      return new Date(baseDate.getTime() + offset);
-    case 'before_event':
-    case 'after_event':
-      if (!eventTs) return new Date(baseDate.getTime() + offset);
-      return new Date(eventTs + offset);
-    case 'after_delivery':
-      // Treat as event_date + 14 days as a sensible default; admin can
-      // edit the scheduled_send_at on the invoice later.
-      if (!eventTs) return new Date(baseDate.getTime() + 14 * ms + offset);
-      return new Date(eventTs + 14 * ms + offset);
-    case 'fixed_date':
-    default:
-      return new Date(baseDate.getTime() + offset);
+  case 'quote_accepted':
+    return new Date(baseDate.getTime() + offset);
+  case 'before_event':
+  case 'after_event':
+    if (!eventTs) return new Date(baseDate.getTime() + offset);
+    return new Date(eventTs + offset);
+  case 'after_delivery':
+    // Treat as event_date + 14 days as a sensible default; admin can
+    // edit the scheduled_send_at on the invoice later.
+    if (!eventTs) return new Date(baseDate.getTime() + 14 * ms + offset);
+    return new Date(eventTs + 14 * ms + offset);
+  case 'fixed_date':
+  default:
+    return new Date(baseDate.getTime() + offset);
   }
 }
 
@@ -469,35 +469,35 @@ async function listInvoices({ filters = {}, sort = 'issue_desc', page = 1, pageS
     const total = ensureInt(countRow?.total || 0);
 
     switch (sort) {
-      // "Newest" / "Oldest" means newest/oldest by CREATION time, not
-      // by issue_date. Issue_date is admin-controlled (used for tax
-      // accruals, retro-dating, future-dating) so it can drift from
-      // actual chronology — sorting by it makes a just-created invoice
-      // disappear into the middle of the list whenever its issue_date
-      // is set to something other than today. created_at always
-      // reflects when the row landed in the DB. id is the tiebreaker
-      // for rows that share a created_at second.
-      case 'oldest':       query = query.orderBy('invoices.created_at', 'asc').orderBy('invoices.id', 'asc'); break;
-      case 'issue_asc':    query = query.orderBy('invoices.issue_date', 'asc').orderBy('invoices.id', 'asc'); break;
-      case 'issue_desc':   query = query.orderBy('invoices.issue_date', 'desc').orderBy('invoices.id', 'desc'); break;
-      case 'due_asc':      query = query.orderBy('invoices.due_date', 'asc'); break;
-      case 'due_desc':     query = query.orderBy('invoices.due_date', 'desc'); break;
-      case 'value_asc':    query = query.orderBy('invoices.total_amount_minor', 'asc'); break;
-      case 'value_desc':   query = query.orderBy('invoices.total_amount_minor', 'desc'); break;
-      case 'customer_asc':
-        query = query
-          .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) asc')
-          .orderBy('invoices.id', 'desc');
-        break;
-      case 'customer_desc':
-        query = query
-          .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) desc')
-          .orderBy('invoices.id', 'desc');
-        break;
-      case 'newest':
-      default:
-        query = query.orderBy('invoices.created_at', 'desc').orderBy('invoices.id', 'desc');
-        break;
+    // "Newest" / "Oldest" means newest/oldest by CREATION time, not
+    // by issue_date. Issue_date is admin-controlled (used for tax
+    // accruals, retro-dating, future-dating) so it can drift from
+    // actual chronology — sorting by it makes a just-created invoice
+    // disappear into the middle of the list whenever its issue_date
+    // is set to something other than today. created_at always
+    // reflects when the row landed in the DB. id is the tiebreaker
+    // for rows that share a created_at second.
+    case 'oldest':       query = query.orderBy('invoices.created_at', 'asc').orderBy('invoices.id', 'asc'); break;
+    case 'issue_asc':    query = query.orderBy('invoices.issue_date', 'asc').orderBy('invoices.id', 'asc'); break;
+    case 'issue_desc':   query = query.orderBy('invoices.issue_date', 'desc').orderBy('invoices.id', 'desc'); break;
+    case 'due_asc':      query = query.orderBy('invoices.due_date', 'asc'); break;
+    case 'due_desc':     query = query.orderBy('invoices.due_date', 'desc'); break;
+    case 'value_asc':    query = query.orderBy('invoices.total_amount_minor', 'asc'); break;
+    case 'value_desc':   query = query.orderBy('invoices.total_amount_minor', 'desc'); break;
+    case 'customer_asc':
+      query = query
+        .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) asc')
+        .orderBy('invoices.id', 'desc');
+      break;
+    case 'customer_desc':
+      query = query
+        .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) desc')
+        .orderBy('invoices.id', 'desc');
+      break;
+    case 'newest':
+    default:
+      query = query.orderBy('invoices.created_at', 'desc').orderBy('invoices.id', 'desc');
+      break;
     }
 
     const offset = Math.max(0, (page - 1) * pageSize);
@@ -994,11 +994,11 @@ async function createInvoice(payload, adminId, trx = db) {
  * code should reach for the clearer `spawnInstallmentInvoices`.
  */
 async function spawnInstallmentInvoices({ trx, eventId, quoteId, customer, currency, language,
-                                          lineItems, totals, installments, eventDate, adminId,
-                                          ccPdfEmail, netDays,
-                                          eventName, eventTimeStart, eventTimeEnd,
-                                          paymentNetDaysTemplateId, paymentTimingTemplateId,
-                                          paymentTermSnapshot, dealUuid }) {
+  lineItems, totals, installments, eventDate, adminId,
+  ccPdfEmail, netDays,
+  eventName, eventTimeStart, eventTimeEnd,
+  paymentNetDaysTemplateId, paymentTimingTemplateId,
+  paymentTermSnapshot, dealUuid }) {
   // Monthly-billing intercept (migration 128). Quote → invoice
   // conversion for a monthly-mode customer doesn't fan out N
   // installment invoices — the customer pays one consolidated bill
@@ -1352,7 +1352,7 @@ async function replaceReconciliationLine(
   const subtotal = topLineSubtotal != null
     ? topLineSubtotal
     : nonRecon.filter((x) => x.parent_position == null)
-        .reduce((s, x) => s + ensureInt(x.line_total_minor), 0);
+      .reduce((s, x) => s + ensureInt(x.line_total_minor), 0);
   const adjustment = netSlice - subtotal;
   if (adjustment === 0) return;
 
@@ -2344,7 +2344,7 @@ async function sendStorno(stornoId, adminId) {
   // email body — customers' bookkeepers expect to see the pair.
   const originalRow = storno.cancels_invoice_id
     ? await db('invoices').where({ id: storno.cancels_invoice_id })
-        .select('invoice_number', 'issue_date').first()
+      .select('invoice_number', 'issue_date').first()
     : null;
 
   const { to: stornoTo, cc: stornoCc } = resolveBillingRecipients(customer, storno.cc_pdf_email);
