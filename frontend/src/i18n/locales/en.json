@@ -202,6 +202,40 @@
     "workflows": "Workflows",
     "betaTag": "Beta"
   },
+  "workflows": {
+    "title": "Workflows",
+    "subtitle": "Visual automations — triggers, conditions, gates and actions.",
+    "new": "New workflow",
+    "empty": "No workflows yet. Create one to automate your invoicing and booking steps.",
+    "builtin": "built-in",
+    "triggerLabel": "Trigger",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "confirmDelete": "Delete this workflow?",
+    "toast": {
+      "createFailed": "Could not create workflow",
+      "deleted": "Workflow deleted",
+      "deleteFailed": "Could not delete workflow"
+    },
+    "approvals": {
+      "title": "Approvals",
+      "subtitle": "Workflow runs waiting on your confirmation.",
+      "empty": "Nothing waiting for you right now.",
+      "confirm": "Confirm",
+      "deny": "Deny",
+      "recorded": "Response recorded",
+      "defaultPrompt": "A workflow needs your confirmation."
+    },
+    "editor": {
+      "namePlaceholder": "Workflow name",
+      "config": "Config (JSON)",
+      "applyConfig": "Apply config",
+      "configApplied": "Config applied (remember to Save)",
+      "badJson": "Config is not valid JSON",
+      "saved": "Workflow saved",
+      "saveFailed": "Could not save"
+    }
+  },
   "archives": {
     "title": "Archives",
     "subtitle": "Manage archived photo galleries",

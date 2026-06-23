@@ -202,6 +202,40 @@
     "workflows": "Workflows",
     "betaTag": "Beta"
   },
+  "workflows": {
+    "title": "Workflows",
+    "subtitle": "Visuelle Automatisierungen – Auslöser, Bedingungen, Freigaben und Aktionen.",
+    "new": "Neuer Workflow",
+    "empty": "Noch keine Workflows. Erstelle einen, um Rechnungsstellung und Buchungsschritte zu automatisieren.",
+    "builtin": "integriert",
+    "triggerLabel": "Auslöser",
+    "enabled": "Aktiv",
+    "disabled": "Inaktiv",
+    "confirmDelete": "Diesen Workflow löschen?",
+    "toast": {
+      "createFailed": "Workflow konnte nicht erstellt werden",
+      "deleted": "Workflow gelöscht",
+      "deleteFailed": "Workflow konnte nicht gelöscht werden"
+    },
+    "approvals": {
+      "title": "Freigaben",
+      "subtitle": "Workflow-Durchläufe, die auf deine Bestätigung warten.",
+      "empty": "Aktuell wartet nichts auf dich.",
+      "confirm": "Bestätigen",
+      "deny": "Ablehnen",
+      "recorded": "Antwort gespeichert",
+      "defaultPrompt": "Ein Workflow benötigt deine Bestätigung."
+    },
+    "editor": {
+      "namePlaceholder": "Workflow-Name",
+      "config": "Konfiguration (JSON)",
+      "applyConfig": "Konfiguration übernehmen",
+      "configApplied": "Konfiguration übernommen (zum Speichern nicht vergessen)",
+      "badJson": "Konfiguration ist kein gültiges JSON",
+      "saved": "Workflow gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen"
+    }
+  },
   "eventTypes": {
     "title": "Veranstaltungsarten",
     "subtitle": "Veranstaltungsarten und deren Standard-Themes anpassen",
