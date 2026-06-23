@@ -378,6 +378,30 @@ describe('workflow engine', () => {
     expect(runs2.length).toBe(1);
   });
 
+  test('notify_pre_event / sendReminderForEvent sends to an event with a direct email (no CRM account)', async () => {
+    // Regression: the reminder query used events.customer_account_id, which does
+    // not exist — so an event with only customer_email/host_email got no mail.
+    const farFuture = new Date(Date.now() + 365 * 86400000).toISOString();
+    await db('events').insert({
+      event_type: 'wedding', password_hash: 'x', expires_at: farFuture,
+      is_active: true, is_archived: false,
+      slug: 'rem-direct', share_link: 'rem-direct', event_name: 'Direct',
+      event_date: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10),
+      customer_email: 'direct@x.test', // event-level email, NOT a customer_account
+    });
+    const ev = await db('events').where({ slug: 'rem-direct' }).first();
+
+    const res = await require('../../src/services/eventReminderService').sendReminderForEvent(ev.id);
+    expect(res.sent).toBe(1);
+    const mail = await db('email_queue').where({ event_id: ev.id }).first();
+    expect(mail).toBeTruthy();
+    expect(mail.recipient_email).toBe('direct@x.test');
+    // Idempotent: sent_at stamped → a second call is a no-op.
+    const again = await require('../../src/services/eventReminderService').sendReminderForEvent(ev.id);
+    expect(again.sent).toBe(0);
+    expect(again.reason).toBe('already_sent');
+  });
+
   test('isBuiltinFlowActive reflects the built-in ENABLED state (enabled-based mutex)', async () => {
     const { seedBuiltinWorkflowsAtBoot } = require('../../src/services/_workflowSeedBoot');
     await seedBuiltinWorkflowsAtBoot(db, { info() {}, warn() {} });

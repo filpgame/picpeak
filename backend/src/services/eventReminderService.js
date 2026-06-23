@@ -91,11 +91,13 @@ async function resolveTemplateKey(eventType) {
  * Build the variables payload the template engine substitutes. Keep
  * the keys in sync with the seeded template's `variables` JSON.
  */
-function composePayload({ event, customer, daysBefore, businessName }) {
-  const customerName = customer.company_name
-    || [customer.first_name, customer.last_name].filter(Boolean).join(' ')
-    || customer.display_name
-    || customer.email
+function composePayload({ event, recipientEmail, daysBefore, businessName }) {
+  // Recipient identity comes from the EVENT row (events.customer_name /
+  // host_name), not a customer_accounts join — events store the recipient
+  // inline (customer_email / host_email), there is no events.customer_account_id.
+  const customerName = event.customer_name
+    || event.host_name
+    || recipientEmail
     || '';
   // Event date formatted DD.MM.YYYY here for simplicity; the rendered
   // email may further re-locale via the template engine when locale-
@@ -167,40 +169,29 @@ async function runEventReminderPass() {
   const profile = await db('business_profile').where({ id: 1 }).first('company_name');
   const businessName = profile?.company_name || '';
 
-  // Candidate set: events with a customer, event_date in the future,
-  // not yet sent, not disabled per-event. We don't filter on
-  // event_date - days_before <= NOW() in SQL because per-event
-  // override `event_reminder_offset_days` may shift the trigger
-  // window — easier to filter in JS.
+  // Candidate set: active events with a date in the future, not yet sent, not
+  // disabled per-event. Recipient comes from the event row itself (customer_email
+  // / host_email) — events have no customer_account_id. `events.*` so the
+  // customer_email column (newer; absent on very old installs) is read safely.
   const now = new Date();
   const rows = await db('events')
-    .leftJoin('customer_accounts', 'customer_accounts.id', 'events.customer_account_id')
-    .whereNotNull('events.customer_account_id')
     .whereNotNull('events.event_date')
     .where('events.is_active', true)
     .where('events.is_archived', false)
     .where('events.event_reminder_disabled', false)
     .whereNull('events.event_reminder_sent_at')
     .where('events.event_date', '>=', now.toISOString().slice(0, 10))
-    .select(
-      'events.id', 'events.event_name', 'events.event_type', 'events.event_date',
-      'events.event_reminder_offset_days',
-      'events.event_reminder_body_override',
-      'events.customer_account_id',
-      'customer_accounts.email as customer_email',
-      'customer_accounts.first_name as customer_first_name',
-      'customer_accounts.last_name as customer_last_name',
-      'customer_accounts.display_name as customer_display_name',
-      'customer_accounts.company_name as customer_company_name',
-    );
+    .select('events.*');
 
   let sent = 0;
   let skipped = 0;
   for (const row of rows) {
     try {
-      if (!row.customer_email) { skipped += 1; continue; }
-      const offsetDays = Number.isFinite(Number(row.event_reminder_offset_days))
-        ? Number(row.event_reminder_offset_days)
+      const recipientEmail = row.customer_email || row.host_email;
+      if (!recipientEmail) { skipped += 1; continue; }
+      const rawOffset = row.event_reminder_offset_days;
+      const offsetDays = (rawOffset != null && rawOffset !== '' && Number.isFinite(Number(rawOffset)))
+        ? Number(rawOffset)
         : daysBeforeDefault;
       // Trigger window: NOW >= event_date - offset_days.
       const ed = row.event_date instanceof Date ? row.event_date : new Date(row.event_date);
@@ -208,15 +199,8 @@ async function runEventReminderPass() {
       if (now < triggerAt) { skipped += 1; continue; }
 
       const templateKey = await resolveTemplateKey(row.event_type);
-      const customer = {
-        email: row.customer_email,
-        first_name: row.customer_first_name,
-        last_name: row.customer_last_name,
-        display_name: row.customer_display_name,
-        company_name: row.customer_company_name,
-      };
       const payload = composePayload({
-        event: row, customer, daysBefore: offsetDays, businessName,
+        event: row, recipientEmail, daysBefore: offsetDays, businessName,
       });
       // Per-event body override: when present, append as a synthetic
       // `body_override` field. The template engine should branch on it
@@ -228,7 +212,7 @@ async function runEventReminderPass() {
         payload.body_override = row.event_reminder_body_override;
       }
 
-      await emailProcessor.queueEmail(row.id, customer.email, templateKey, payload);
+      await emailProcessor.queueEmail(row.id, recipientEmail, templateKey, payload);
 
       // Stamp sent_at immediately so a same-pass-re-entrancy (or a
       // crash between queueEmail and the update) doesn't double-send
@@ -284,27 +268,19 @@ async function sendReminderForEvent(eventId) {
     logger.error('Event reminder template self-heal failed', { message: err.message });
   }
 
-  const row = await db('events')
-    .leftJoin('customer_accounts', 'customer_accounts.id', 'events.customer_account_id')
-    .where('events.id', eventId)
-    .select(
-      'events.id', 'events.event_name', 'events.event_type', 'events.event_date',
-      'events.is_active', 'events.is_archived',
-      'events.event_reminder_disabled', 'events.event_reminder_offset_days',
-      'events.event_reminder_body_override', 'events.event_reminder_sent_at',
-      'events.customer_account_id',
-      'customer_accounts.email as customer_email',
-      'customer_accounts.first_name as customer_first_name',
-      'customer_accounts.last_name as customer_last_name',
-      'customer_accounts.display_name as customer_display_name',
-      'customer_accounts.company_name as customer_company_name',
-    )
-    .first();
+  // Recipient comes from the event row (customer_email / host_email) — events
+  // have no customer_account_id. `events.*` reads customer_email safely even on
+  // installs predating that column.
+  const row = await db('events').where('id', eventId).select('events.*').first();
 
   if (!row) return { sent: 0, skipped: 1, reason: 'not_found' };
   if (row.event_reminder_disabled) return { sent: 0, skipped: 1, reason: 'disabled' };
   if (row.event_reminder_sent_at) return { sent: 0, skipped: 1, reason: 'already_sent' };
-  if (!row.customer_email) return { sent: 0, skipped: 1, reason: 'no_recipient' };
+  if (row.is_active === false || row.is_active === 0 || row.is_archived === true || row.is_archived === 1) {
+    return { sent: 0, skipped: 1, reason: 'inactive' };
+  }
+  const recipientEmail = row.customer_email || row.host_email;
+  if (!recipientEmail) return { sent: 0, skipped: 1, reason: 'no_recipient' };
 
   const globalDaysBefore = Number(await getAppSetting('crm_event_reminders_days_before'));
   const daysBeforeDefault = Number.isFinite(globalDaysBefore) && globalDaysBefore >= 0
@@ -317,19 +293,12 @@ async function sendReminderForEvent(eventId) {
   const businessName = profile?.company_name || '';
 
   const templateKey = await resolveTemplateKey(row.event_type);
-  const customer = {
-    email: row.customer_email,
-    first_name: row.customer_first_name,
-    last_name: row.customer_last_name,
-    display_name: row.customer_display_name,
-    company_name: row.customer_company_name,
-  };
-  const payload = composePayload({ event: row, customer, daysBefore: offsetDays, businessName });
+  const payload = composePayload({ event: row, recipientEmail, daysBefore: offsetDays, businessName });
   if (row.event_reminder_body_override) payload.body_override = row.event_reminder_body_override;
 
-  await emailProcessor.queueEmail(row.id, customer.email, templateKey, payload);
+  await emailProcessor.queueEmail(row.id, recipientEmail, templateKey, payload);
   await db('events').where({ id: row.id }).update({ event_reminder_sent_at: new Date() });
-  return { sent: 1, skipped: 0 };
+  return { sent: 1, skipped: 0, offsetDays };
 }
 
 module.exports = {
