@@ -63,7 +63,7 @@ function matchFilter(filter, payload) {
   const { field, op = 'eq', value } = filter;
   const actual = payload ? payload[field] : undefined;
   // Strict equality: a filter {value: 0} must NOT match false/''/null (loose ==
-  // conflated them). Numeric payloads vs string config are normalised below.
+  // conflated them). Authors must therefore match the payload's actual type.
   switch (op) {
     case 'neq': return actual !== value;
     case 'truthy': return Boolean(actual);
