@@ -102,6 +102,20 @@ async function actByToken(rawToken, decision) {
   return finalizeApproval(approval, decision, { acted_via: 'email' });
 }
 
+/**
+ * Read-only lookup for the emailed token — used to render the confirm/deny
+ * interstitial WITHOUT mutating state (so email-client prefetchers can't
+ * advance the gate). Never resumes the run.
+ */
+async function peekApproval(rawToken) {
+  const a = await db('workflow_approvals').where({ token_hash: hashToken(rawToken) }).first();
+  if (!a) return { found: false };
+  let prompt = null;
+  try { prompt = (JSON.parse(a.payload || '{}') || {}).prompt || null; } catch (_) { /* ignore */ }
+  const expired = !!(a.expires_at && new Date(a.expires_at).getTime() < Date.now());
+  return { found: true, status: a.status, prompt, expired };
+}
+
 /** Act on an approval from the admin webview inbox. */
 async function actById(id, decision, adminId) {
   const approval = await db('workflow_approvals').where({ id }).first();
@@ -123,4 +137,4 @@ async function listPending(limit = 100) {
     .limit(limit);
 }
 
-module.exports = { hashToken, createApproval, actByToken, actById, listPending };
+module.exports = { hashToken, createApproval, actByToken, actById, listPending, peekApproval };

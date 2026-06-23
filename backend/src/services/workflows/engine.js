@@ -62,12 +62,14 @@ function matchFilter(filter, payload) {
   if (!filter || typeof filter !== 'object') return true;
   const { field, op = 'eq', value } = filter;
   const actual = payload ? payload[field] : undefined;
+  // Strict equality: a filter {value: 0} must NOT match false/''/null (loose ==
+  // conflated them). Numeric payloads vs string config are normalised below.
   switch (op) {
-    case 'neq': return actual != value; // eslint-disable-line eqeqeq
+    case 'neq': return actual !== value;
     case 'truthy': return Boolean(actual);
     case 'falsy': return !actual;
     case 'eq':
-    default: return actual == value; // eslint-disable-line eqeqeq
+    default: return actual === value;
   }
 }
 
@@ -228,7 +230,21 @@ async function resumeRun(runId, { decisionHandle = null } = {}) {
   const run = await db('workflow_runs').where({ id: runId }).first();
   if (!run || run.status !== 'waiting') return;
   const { edges } = await loadGraph(run.workflow_id, run.version);
-  const e = outEdge(edges, run.current_node, decisionHandle);
+  // For a gate decision, the edge MUST match the handle exactly — we cannot fall
+  // back to outEdge's "sole edge" heuristic, or a 'deny' with only a 'confirm'
+  // edge would silently take the confirm path. A missing handle edge is a broken
+  // graph → fail loudly (same posture as unknown nodes) so the lost decision is
+  // visible in run history instead of masquerading as a green 'done'.
+  let e;
+  if (decisionHandle != null) {
+    e = edges.find((x) => x.from_node === run.current_node && (x.from_handle || null) === decisionHandle);
+    if (!e) {
+      await failRun(runId, `gate decision '${decisionHandle}' has no matching edge from node '${run.current_node}'`);
+      return;
+    }
+  } else {
+    e = outEdge(edges, run.current_node, null);
+  }
   const nextKey = e ? e.to_node : null;
   await db('workflow_runs').where({ id: runId }).update({ status: 'running', current_node: nextKey, wake_at: null, updated_at: db.fn.now() });
   if (!nextKey) { await finishRun(runId); return; }
@@ -406,27 +422,6 @@ async function isBuiltinFlowActive(builtinKey) {
 }
 
 /**
- * True when the workflows flag is on AND a built-in flow with this key EXISTS
- * (enabled or not). The legacy automations use this to decide whether the engine
- * OWNS the automation — once the built-in is seeded, the engine is the single
- * switch: the legacy path stands down whether the flow is enabled (the flow
- * sends) or disabled (the admin turned it off → nothing sends). Distinct from
- * isBuiltinFlowActive, which asks whether the flow is currently firing. Fails
- * CLOSED (false) so the legacy path keeps running if the subsystem is down.
- */
-async function isBuiltinFlowPresent(builtinKey) {
-  try {
-    const { isFeatureEnabled } = require('../../middleware/requireFeatureFlag');
-    if (!(await isFeatureEnabled('workflows'))) return false;
-    if (!(await db.schema.hasTable('workflows'))) return false;
-    const wf = await db('workflows').where({ builtin_key: builtinKey }).first();
-    return !!wf;
-  } catch (e) {
-    return false;
-  }
-}
-
-/**
  * Emit `event.date_approaching` for events entering an enabled flow's lead
  * window. This is the trigger source for the pre-event reminder built-in, so it
  * faithfully honours the same per-event controls the legacy eventReminderService
@@ -550,7 +545,6 @@ async function testRun(workflowId, { entityType = null, entityId = null, payload
 module.exports = {
   emitWorkflowEvent,
   isBuiltinFlowActive,
-  isBuiltinFlowPresent,
   runDueWaits,
   emitDueEventReminders,
   recoverStaleRuns,
