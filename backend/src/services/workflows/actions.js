@@ -66,6 +66,19 @@ registry.registerAction('send_email', async (ctx) => {
   return { sent_to: to, recipientClass, respectBusinessHours };
 });
 
+// Fire the existing admin payment-check email (the dunning gate). Delegates to
+// invoiceService.queuePaymentCheckEmail so the proven escalation +
+// Mahngebühr / reminder_level state machine (recordPaymentCheckAction) stays
+// the single source of truth — the workflow only decides WHEN it fires. This
+// is what makes the built-in dunning flow a faithful replacement for the
+// hardcoded ladder (paired with the mutual-exclusion guard in runScheduledTasks).
+registry.registerAction('queue_payment_check', async (ctx) => {
+  const id = ctx.run.entity_id;
+  if (!id) return { skipped: true, reason: 'no invoice entity' };
+  await require('../invoiceService').queuePaymentCheckEmail(id);
+  return { payment_check_queued: id };
+});
+
 // Create/prepare-document actions — registered so flows referencing them are
 // valid; service wiring is a follow-up. Records a skipped step (observable).
 for (const key of DOCUMENT_ACTIONS) {

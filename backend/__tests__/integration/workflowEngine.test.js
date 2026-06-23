@@ -234,7 +234,7 @@ describe('workflow engine', () => {
     expect(again.already).toBe(true);
   });
 
-  test('seeds the invoice-dunning built-in flow (disabled, idempotent)', async () => {
+  test('seeds the invoice-dunning built-in as the delegation graph (v2, disabled)', async () => {
     const { seedBuiltinWorkflowsAtBoot, DUNNING_KEY } = require('../../src/services/_workflowSeedBoot');
     const noopLogger = { info() {}, warn() {} };
     await seedBuiltinWorkflowsAtBoot(db, noopLogger);
@@ -243,13 +243,39 @@ describe('workflow engine', () => {
     expect(wf).toBeTruthy();
     expect(!!wf.is_builtin).toBe(true);
     expect(!!wf.enabled).toBe(false);
+    expect(JSON.parse(wf.trigger_config).seedVersion).toBe(2);
 
-    const nodes = await db('workflow_nodes').where({ workflow_id: wf.id, version: 1 });
+    const nodes = await db('workflow_nodes').where({ workflow_id: wf.id, version: wf.version });
     expect(nodes.filter((n) => n.type === 'trigger')).toHaveLength(1);
-    expect(nodes.length).toBeGreaterThanOrEqual(10);
+    expect(nodes.some((n) => n.type === 'gate')).toBe(false); // payment-check email IS the gate
+    expect(nodes.some((n) => JSON.parse(n.config || '{}').action === 'queue_payment_check')).toBe(true);
 
-    await seedBuiltinWorkflowsAtBoot(db, noopLogger); // idempotent
+    await seedBuiltinWorkflowsAtBoot(db, noopLogger); // idempotent at current seed version
     const all = await db('workflows').where({ builtin_key: DUNNING_KEY });
     expect(all.length).toBe(1);
+  });
+
+  test('re-seeds a disabled, stale built-in but never an enabled one', async () => {
+    const { seedBuiltinWorkflowsAtBoot, DUNNING_KEY } = require('../../src/services/_workflowSeedBoot');
+    const noopLogger = { info() {}, warn() {} };
+
+    // Simulate an older, never-activated seed (v1, with a legacy gate node).
+    const wf = await db('workflows').where({ builtin_key: DUNNING_KEY }).first();
+    await db('workflows').where({ id: wf.id }).update({ enabled: false, trigger_config: JSON.stringify({ seedVersion: 1 }) });
+    await db('workflow_nodes').insert({ workflow_id: wf.id, version: wf.version, node_key: 'legacyGate', type: 'gate', config: '{}', pos_x: 0, pos_y: 0 });
+
+    await seedBuiltinWorkflowsAtBoot(db, noopLogger);
+    const reseeded = await db('workflows').where({ id: wf.id }).first();
+    expect(reseeded.version).toBe(wf.version + 1); // bumped
+    expect(JSON.parse(reseeded.trigger_config).seedVersion).toBe(2);
+    const newNodes = await db('workflow_nodes').where({ workflow_id: wf.id, version: reseeded.version });
+    expect(newNodes.some((n) => n.type === 'gate')).toBe(false); // legacy graph replaced
+
+    // Enabled + stale → must NOT be touched (it's the admin's live flow).
+    await db('workflows').where({ id: wf.id }).update({ enabled: true, trigger_config: JSON.stringify({ seedVersion: 1 }) });
+    const before = await db('workflows').where({ id: wf.id }).first();
+    await seedBuiltinWorkflowsAtBoot(db, noopLogger);
+    const after = await db('workflows').where({ id: wf.id }).first();
+    expect(after.version).toBe(before.version); // unchanged
   });
 });
