@@ -73,14 +73,14 @@ function buildBookingFullGraph() {
     { node_key: 'sendContract', type: 'action', config: { action: 'send_document', document: 'contract', recipient: 'customer' }, pos_x: 320, pos_y: 330 },
     { node_key: 'gateSigned', type: 'gate', config: { label: 'Contract signed?' }, pos_x: 320, pos_y: 440 },
     { node_key: 'prepEvent', type: 'action', config: { action: 'prepare_event' }, pos_x: 320, pos_y: 550 },
-    { node_key: 'waitEvent', type: 'wait', config: { untilVar: 'eventDate' }, pos_x: 320, pos_y: 660 },
-    { node_key: 'prepInvoice', type: 'action', config: { action: 'prepare_invoice' }, pos_x: 320, pos_y: 770 },
-    { node_key: 'reviewInvoice', type: 'gate', config: { label: 'Review invoice before sending' }, pos_x: 320, pos_y: 880 },
+    { node_key: 'prepInvoice', type: 'action', config: { action: 'prepare_invoice' }, pos_x: 320, pos_y: 660 },
+    { node_key: 'reviewInvoice', type: 'gate', config: { label: 'Review invoice (early — dispatch waits for the event)' }, pos_x: 320, pos_y: 770 },
+    { node_key: 'waitEvent', type: 'wait', config: { untilVar: 'eventDate' }, pos_x: 320, pos_y: 880 },
     { node_key: 'sendInvoice', type: 'action', config: { action: 'send_document', document: 'invoice', recipient: 'customer' }, pos_x: 320, pos_y: 990 },
     { node_key: 'done', type: 'action', config: { action: 'noop' }, pos_x: 320, pos_y: 1100 },
     { node_key: 'cancelContract', type: 'action', config: { action: 'noop' }, pos_x: 620, pos_y: 220 },
     { node_key: 'declined', type: 'action', config: { action: 'noop' }, pos_x: 620, pos_y: 440 },
-    { node_key: 'cancelInvoice', type: 'action', config: { action: 'noop' }, pos_x: 620, pos_y: 880 },
+    { node_key: 'cancelInvoice', type: 'action', config: { action: 'noop' }, pos_x: 620, pos_y: 770 },
   ];
   const edges = [
     { from_node: 't', to_node: 'prepContract' },
@@ -90,11 +90,13 @@ function buildBookingFullGraph() {
     { from_node: 'sendContract', to_node: 'gateSigned' },
     { from_node: 'gateSigned', from_handle: 'confirm', to_node: 'prepEvent' },
     { from_node: 'gateSigned', from_handle: 'deny', to_node: 'declined' },
-    { from_node: 'prepEvent', to_node: 'waitEvent' },
-    { from_node: 'waitEvent', to_node: 'prepInvoice' },
+    // Prepare + approve the invoice EARLY (admin can adjust line items now);
+    // then the wait holds dispatch until the event date, and it sends itself.
+    { from_node: 'prepEvent', to_node: 'prepInvoice' },
     { from_node: 'prepInvoice', to_node: 'reviewInvoice' },
-    { from_node: 'reviewInvoice', from_handle: 'confirm', to_node: 'sendInvoice' },
+    { from_node: 'reviewInvoice', from_handle: 'confirm', to_node: 'waitEvent' },
     { from_node: 'reviewInvoice', from_handle: 'deny', to_node: 'cancelInvoice' },
+    { from_node: 'waitEvent', to_node: 'sendInvoice' },
     { from_node: 'sendInvoice', to_node: 'done' },
   ];
   return { nodes, edges };
@@ -108,20 +110,21 @@ function buildBookingSimpleGraph() {
   const nodes = [
     { node_key: 't', type: 'trigger', config: {}, pos_x: 320, pos_y: 0 },
     { node_key: 'prepEvent', type: 'action', config: { action: 'prepare_event' }, pos_x: 320, pos_y: 110 },
-    { node_key: 'waitEvent', type: 'wait', config: { untilVar: 'eventDate' }, pos_x: 320, pos_y: 220 },
-    { node_key: 'prepInvoice', type: 'action', config: { action: 'prepare_invoice' }, pos_x: 320, pos_y: 330 },
-    { node_key: 'reviewInvoice', type: 'gate', config: { label: 'Review invoice before sending' }, pos_x: 320, pos_y: 440 },
+    { node_key: 'prepInvoice', type: 'action', config: { action: 'prepare_invoice' }, pos_x: 320, pos_y: 220 },
+    { node_key: 'reviewInvoice', type: 'gate', config: { label: 'Review invoice (early — dispatch waits for the event)' }, pos_x: 320, pos_y: 330 },
+    { node_key: 'waitEvent', type: 'wait', config: { untilVar: 'eventDate' }, pos_x: 320, pos_y: 440 },
     { node_key: 'sendInvoice', type: 'action', config: { action: 'send_document', document: 'invoice', recipient: 'customer' }, pos_x: 320, pos_y: 550 },
     { node_key: 'done', type: 'action', config: { action: 'noop' }, pos_x: 320, pos_y: 660 },
-    { node_key: 'cancelInvoice', type: 'action', config: { action: 'noop' }, pos_x: 620, pos_y: 440 },
+    { node_key: 'cancelInvoice', type: 'action', config: { action: 'noop' }, pos_x: 620, pos_y: 330 },
   ];
   const edges = [
     { from_node: 't', to_node: 'prepEvent' },
-    { from_node: 'prepEvent', to_node: 'waitEvent' },
-    { from_node: 'waitEvent', to_node: 'prepInvoice' },
+    // Prepare + approve the invoice early; the wait holds dispatch to the event date.
+    { from_node: 'prepEvent', to_node: 'prepInvoice' },
     { from_node: 'prepInvoice', to_node: 'reviewInvoice' },
-    { from_node: 'reviewInvoice', from_handle: 'confirm', to_node: 'sendInvoice' },
+    { from_node: 'reviewInvoice', from_handle: 'confirm', to_node: 'waitEvent' },
     { from_node: 'reviewInvoice', from_handle: 'deny', to_node: 'cancelInvoice' },
+    { from_node: 'waitEvent', to_node: 'sendInvoice' },
     { from_node: 'sendInvoice', to_node: 'done' },
   ];
   return { nodes, edges };
@@ -258,7 +261,7 @@ const BUILTINS = [
   },
   {
     key: 'booking_full',
-    version: 2,
+    version: 3,
     enabled: false,
     name: 'Booking — quote → contract → event → invoice (built-in)',
     trigger_type: 'quote.accepted',
@@ -266,23 +269,25 @@ const BUILTINS = [
     description:
       'On quote acceptance: prepare the contract, let the admin review it (adjust line items / '
       + 'terms) and confirm before it is sent, wait for the admin to confirm it is signed, then '
-      + 'create the event/gallery, wait to the shoot date, prepare the invoice and — after a '
-      + 'second admin review gate — send it. No document is ever sent without an explicit admin '
-      + 'OK. Disabled by default — the document actions are stubs until the booking cutover, so '
-      + 'an enabled run just records observable skipped steps. A starting point to edit.',
+      + 'create the event/gallery and prepare the invoice EARLY so the admin can adjust it. The '
+      + 'admin approves the invoice at the review gate whenever they like; dispatch then waits '
+      + 'until the event date and sends itself. No document is sent without an explicit admin OK. '
+      + 'Disabled by default — the document actions are stubs until the booking cutover, so an '
+      + 'enabled run just records observable skipped steps. A starting point to edit.',
     build: async () => buildBookingFullGraph(),
   },
   {
     key: 'booking_simple',
-    version: 2,
+    version: 3,
     enabled: false,
     name: 'Booking — quote → event → invoice (built-in)',
     trigger_type: 'quote.accepted',
     trigger_config: {},
     description:
-      'The no-contract booking path: on quote acceptance create the event/gallery, wait to the '
-      + 'shoot date, prepare the invoice and — after an admin review gate — send it. Same '
-      + 'review-before-send rule and stub caveat as the full booking flow; disabled by default.',
+      'The no-contract booking path: on quote acceptance create the event/gallery and prepare the '
+      + 'invoice early. The admin approves it at the review gate ahead of time; dispatch then waits '
+      + 'until the event date and sends itself. Same review-before-send rule and stub caveat as the '
+      + 'full booking flow; disabled by default.',
     build: async () => buildBookingSimpleGraph(),
   },
 ];

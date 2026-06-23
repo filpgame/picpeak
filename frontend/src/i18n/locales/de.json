@@ -232,7 +232,10 @@
       "confirm": "Bestätigen",
       "deny": "Ablehnen",
       "recorded": "Antwort gespeichert",
-      "defaultPrompt": "Ein Workflow benötigt deine Bestätigung."
+      "defaultPrompt": "Ein Workflow benötigt deine Bestätigung.",
+      "pendingTitle": "Offene Freigaben",
+      "viewAll": "Alle Freigaben ansehen",
+      "acted": "Erledigt"
     },
     "editor": {
       "namePlaceholder": "Workflow-Name",
@@ -248,6 +251,7 @@
       "saved": "Workflow gespeichert",
       "saveFailed": "Speichern fehlgeschlagen",
       "badJson": "Konfiguration ist kein gültiges JSON",
+      "daysBefore": "Tage vor dem Anlass",
       "showAdvanced": "Erweitert (JSON)",
       "hideAdvanced": "Erweitert ausblenden (JSON)",
       "triggerHint": "Der Auslöser wird oben in der Leiste gesetzt (Wenn …).",

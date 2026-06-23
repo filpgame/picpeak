@@ -130,6 +130,7 @@ export const WorkflowEditorPage: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [name, setName] = useState('');
   const [triggerType, setTriggerType] = useState('invoice.sent');
+  const [triggerConfig, setTriggerConfig] = useState<Record<string, any>>({});
   const [enabled, setEnabled] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [counter, setCounter] = useState(1);
@@ -148,6 +149,7 @@ export const WorkflowEditorPage: React.FC = () => {
   const serializeFlow = () => JSON.stringify({
     name,
     trigger_type: triggerType,
+    trigger_config: triggerConfig,
     enabled,
     nodes: nodes.map((n) => ({
       node_key: n.id, type: (n.data as any).nodeType, config: (n.data as any).config || {},
@@ -166,6 +168,7 @@ export const WorkflowEditorPage: React.FC = () => {
     const tt = p.trigger_type || triggerType;
     if (p.name != null) setName(p.name);
     if (p.trigger_type) setTriggerType(p.trigger_type);
+    if (p.trigger_config && typeof p.trigger_config === 'object') setTriggerConfig(p.trigger_config);
     if (p.enabled != null) setEnabled(!!p.enabled);
     setNodes(p.nodes.map((n: any) => ({
       id: n.node_key, type: 'wf', position: { x: n.pos_x || 0, y: n.pos_y || 0 },
@@ -185,6 +188,7 @@ export const WorkflowEditorPage: React.FC = () => {
     if (!workflow) return;
     setName(workflow.name);
     setTriggerType(workflow.trigger_type);
+    setTriggerConfig((workflow.trigger_config as Record<string, any>) || {});
     setEnabled(workflow.enabled === true || workflow.enabled === 1);
     setNodes(workflow.nodes.map((n) => ({
       id: n.node_key,
@@ -236,6 +240,7 @@ export const WorkflowEditorPage: React.FC = () => {
     mutationFn: () => workflowsService.update(workflowId, {
       name: name.trim() || 'Untitled',
       trigger_type: triggerType,
+      trigger_config: triggerConfig,
       enabled,
       nodes: nodes.map((n) => ({
         node_key: n.id, type: (n.data as any).nodeType, config: (n.data as any).config || {},
@@ -271,6 +276,17 @@ export const WorkflowEditorPage: React.FC = () => {
         >
           {TRIGGERS.map((tr) => <option key={tr} value={tr}>{tr}</option>)}
         </select>
+        {triggerType === 'event.date_approaching' && (
+          <label className="text-sm text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
+            {t('workflows.editor.daysBefore', 'days before event')}
+            <input
+              type="number" min={0} max={365}
+              value={triggerConfig.daysBefore ?? 2}
+              onChange={(e) => setTriggerConfig((c) => ({ ...c, daysBefore: Number(e.target.value) }))}
+              className="w-16 px-2 py-1 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-sm"
+            />
+          </label>
+        )}
         <label className="text-sm text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
           <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
           {t('workflows.enabled', 'Enabled')}

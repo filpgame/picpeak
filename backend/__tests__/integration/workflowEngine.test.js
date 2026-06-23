@@ -315,15 +315,19 @@ describe('workflow engine', () => {
     const fullGateKeys = fullNodes.filter((n) => n.type === 'gate').map((n) => n.node_key);
     expect(fullGateKeys).toEqual(expect.arrayContaining(['reviewContract', 'reviewInvoice']));
     const fullEdges = await db('workflow_edges').where({ workflow_id: bookingFull.id, version: bookingFull.version });
-    // reviewContract --confirm--> sendContract ; reviewInvoice --confirm--> sendInvoice
+    // reviewContract --confirm--> sendContract. The invoice is prepared + approved
+    // EARLY; reviewInvoice --confirm--> waitEvent, and the wait --> sendInvoice, so
+    // dispatch is held until the event date after the admin's early OK.
     expect(fullEdges.some((e) => e.from_node === 'reviewContract' && e.from_handle === 'confirm' && e.to_node === 'sendContract')).toBe(true);
-    expect(fullEdges.some((e) => e.from_node === 'reviewInvoice' && e.from_handle === 'confirm' && e.to_node === 'sendInvoice')).toBe(true);
+    expect(fullEdges.some((e) => e.from_node === 'reviewInvoice' && e.from_handle === 'confirm' && e.to_node === 'waitEvent')).toBe(true);
+    expect(fullEdges.some((e) => e.from_node === 'waitEvent' && e.to_node === 'sendInvoice')).toBe(true);
 
     const bookingSimple = await db('workflows').where({ builtin_key: 'booking_simple' }).first();
     expect(bookingSimple).toBeTruthy();
     expect(bookingSimple.trigger_type).toBe('quote.accepted');
     const simpleEdges = await db('workflow_edges').where({ workflow_id: bookingSimple.id, version: bookingSimple.version });
-    expect(simpleEdges.some((e) => e.from_node === 'reviewInvoice' && e.from_handle === 'confirm' && e.to_node === 'sendInvoice')).toBe(true);
+    expect(simpleEdges.some((e) => e.from_node === 'reviewInvoice' && e.from_handle === 'confirm' && e.to_node === 'waitEvent')).toBe(true);
+    expect(simpleEdges.some((e) => e.from_node === 'waitEvent' && e.to_node === 'sendInvoice')).toBe(true);
 
     const preEvent = await db('workflows').where({ builtin_key: 'pre_event_email' }).first();
     expect(preEvent).toBeTruthy();
@@ -384,6 +388,43 @@ describe('workflow engine', () => {
     const res = await require('../../src/services/eventReminderService').runEventReminderPass();
     expect(res.byWorkflow).toBe(true);
     expect(res.sent).toBe(0);
+  });
+
+  test('admin confirms a gate early; the following wait holds dispatch until its date', async () => {
+    // The booking pattern: prepare → REVIEW GATE → WAIT(event date) → send. The
+    // admin can approve at the gate whenever; the run then parks at the wait and
+    // the scheduler dispatches when the date arrives.
+    const wfId = await makeWorkflow({
+      trigger: 'gatewait.event',
+      nodes: [
+        { key: 'g0', type: 'trigger' },
+        { key: 'g1', type: 'gate', config: { prompt: 'Approve invoice?' } },
+        { key: 'g2', type: 'wait', config: { delayDays: 5 } },
+        { key: 'g3', type: 'action', config: { action: 'noop' } },
+      ],
+      edges: [
+        { from: 'g0', to: 'g1' },
+        { from: 'g1', handle: 'confirm', to: 'g2' },
+        { from: 'g2', to: 'g3' },
+      ],
+    });
+    const [runId] = await engine.emitWorkflowEvent('gatewait.event', { entityType: 'invoice', entityId: 7 });
+    let run = await db('workflow_runs').where({ id: runId }).first();
+    expect(run.status).toBe('waiting');
+    expect(run.current_node).toBe('g1'); // parked at the review gate
+
+    // Admin confirms EARLY (before the wait date).
+    const approval = await db('workflow_approvals').where({ run_id: runId, status: 'pending' }).first();
+    await engine.actById(approval.id, 'confirm');
+    run = await db('workflow_runs').where({ id: runId }).first();
+    expect(run.status).toBe('waiting');
+    expect(run.current_node).toBe('g2'); // now holding at the wait, not yet dispatched
+
+    // Date arrives → scheduler dispatches.
+    await db('workflow_runs').where({ id: runId }).update({ wake_at: new Date(Date.now() - 1000).toISOString() });
+    await engine.runDueWaits();
+    run = await db('workflow_runs').where({ id: runId }).first();
+    expect(run.status).toBe('done');
   });
 
   test('recoverStaleRuns resumes a run orphaned mid-flow (crash recovery)', async () => {

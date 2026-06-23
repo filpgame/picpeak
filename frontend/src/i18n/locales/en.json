@@ -232,7 +232,10 @@
       "confirm": "Confirm",
       "deny": "Deny",
       "recorded": "Response recorded",
-      "defaultPrompt": "A workflow needs your confirmation."
+      "defaultPrompt": "A workflow needs your confirmation.",
+      "pendingTitle": "Pending approvals",
+      "viewAll": "View all approvals",
+      "acted": "Done"
     },
     "editor": {
       "namePlaceholder": "Workflow name",
@@ -248,6 +251,7 @@
       "saved": "Workflow saved",
       "saveFailed": "Could not save",
       "badJson": "Config is not valid JSON",
+      "daysBefore": "days before event",
       "showAdvanced": "Advanced (JSON)",
       "hideAdvanced": "Hide advanced (JSON)",
       "triggerHint": "The trigger is set in the toolbar above (When …).",
