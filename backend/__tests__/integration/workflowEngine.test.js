@@ -239,7 +239,7 @@ describe('workflow engine', () => {
     expect(again.already).toBe(true);
   });
 
-  test('seeds the invoice-dunning built-in as the delegation graph (v5, enabled cutover)', async () => {
+  test('seeds the invoice-dunning built-in as the delegation graph (v6, disabled for first beta)', async () => {
     const { seedBuiltinWorkflowsAtBoot, DUNNING_KEY } = require('../../src/services/_workflowSeedBoot');
     const noopLogger = { info() {}, warn() {} };
     await seedBuiltinWorkflowsAtBoot(db, noopLogger);
@@ -247,8 +247,8 @@ describe('workflow engine', () => {
     const wf = await db('workflows').where({ builtin_key: DUNNING_KEY }).first();
     expect(wf).toBeTruthy();
     expect(!!wf.is_builtin).toBe(true);
-    expect(!!wf.enabled).toBe(true); // cutover: dunning ships live
-    expect(JSON.parse(wf.trigger_config).seedVersion).toBe(5);
+    expect(!!wf.enabled).toBe(false); // first beta: ships disabled; legacy ladder runs until enabled
+    expect(JSON.parse(wf.trigger_config).seedVersion).toBe(6);
 
     const nodes = await db('workflow_nodes').where({ workflow_id: wf.id, version: wf.version });
     expect(nodes.filter((n) => n.type === 'trigger')).toHaveLength(1);
@@ -261,46 +261,48 @@ describe('workflow engine', () => {
     expect(all.length).toBe(1);
   });
 
-  test('re-seeds a disabled, stale built-in but never an enabled one', async () => {
+  test('re-seeds a stale built-in on version bump, but never an admin-owned one', async () => {
     const { seedBuiltinWorkflowsAtBoot, DUNNING_KEY } = require('../../src/services/_workflowSeedBoot');
     const noopLogger = { info() {}, warn() {} };
 
-    // Simulate an older, never-activated seed (v1, with a legacy gate node).
+    // Simulate an older, never-touched seed (v1, with a legacy gate node).
     const wf = await db('workflows').where({ builtin_key: DUNNING_KEY }).first();
-    await db('workflows').where({ id: wf.id }).update({ enabled: false, trigger_config: JSON.stringify({ seedVersion: 1 }) });
+    await db('workflows').where({ id: wf.id }).update({ enabled: true, admin_toggled_at: null, trigger_config: JSON.stringify({ seedVersion: 1 }) });
     await db('workflow_nodes').insert({ workflow_id: wf.id, version: wf.version, node_key: 'legacyGate', type: 'gate', config: '{}', pos_x: 0, pos_y: 0 });
 
     await seedBuiltinWorkflowsAtBoot(db, noopLogger);
     const reseeded = await db('workflows').where({ id: wf.id }).first();
     expect(reseeded.version).toBe(wf.version + 1); // bumped
-    expect(JSON.parse(reseeded.trigger_config).seedVersion).toBe(5);
-    expect(!!reseeded.enabled).toBe(true); // cutover default applied on re-seed
+    expect(JSON.parse(reseeded.trigger_config).seedVersion).toBe(6);
+    expect(!!reseeded.enabled).toBe(false); // seed default re-applied (not admin-owned → flips enabled→disabled)
     const newNodes = await db('workflow_nodes').where({ workflow_id: wf.id, version: reseeded.version });
     expect(newNodes.some((n) => n.type === 'gate')).toBe(false); // legacy graph replaced
 
-    // Enabled + stale → must NOT be touched (it's the admin's live flow).
-    await db('workflows').where({ id: wf.id }).update({ enabled: true, trigger_config: JSON.stringify({ seedVersion: 1 }) });
+    // Admin-owned (admin_toggled_at set) + stale → must NOT be touched.
+    await db('workflows').where({ id: wf.id }).update({ enabled: true, admin_toggled_at: new Date().toISOString(), trigger_config: JSON.stringify({ seedVersion: 1 }) });
     const before = await db('workflows').where({ id: wf.id }).first();
     await seedBuiltinWorkflowsAtBoot(db, noopLogger);
     const after = await db('workflows').where({ id: wf.id }).first();
     expect(after.version).toBe(before.version); // unchanged
+    expect(!!after.enabled).toBe(true); // admin's choice preserved
   });
 
-  test('seeds the gallery, pre-event (enabled cutover) + booking (disabled) built-ins', async () => {
+  test('seeds the gallery, pre-event + booking built-ins (all disabled for first beta)', async () => {
     const { seedBuiltinWorkflowsAtBoot } = require('../../src/services/_workflowSeedBoot');
     await seedBuiltinWorkflowsAtBoot(db, { info() {}, warn() {} });
 
-    // Cutover flows ship ENABLED, delegating to the proven send functions.
+    // First beta: cutover flows ship DISABLED (legacy paths run until enabled);
+    // they delegate to the proven send functions once turned on.
     const expiring = await db('workflows').where({ builtin_key: 'gallery_expiring' }).first();
     expect(expiring).toBeTruthy();
-    expect(!!expiring.enabled).toBe(true);
+    expect(!!expiring.enabled).toBe(false);
     expect(expiring.trigger_type).toBe('gallery.expiring');
     const expiringNodes = await db('workflow_nodes').where({ workflow_id: expiring.id, version: expiring.version });
     expect(expiringNodes.some((n) => JSON.parse(n.config || '{}').action === 'notify_gallery_expiring')).toBe(true);
 
     const expired = await db('workflows').where({ builtin_key: 'gallery_expired' }).first();
     expect(expired).toBeTruthy();
-    expect(!!expired.enabled).toBe(true);
+    expect(!!expired.enabled).toBe(false);
     expect(expired.trigger_type).toBe('gallery.expired');
     const expiredNodes = await db('workflow_nodes').where({ workflow_id: expired.id, version: expired.version });
     expect(expiredNodes.some((n) => JSON.parse(n.config || '{}').action === 'notify_gallery_expired')).toBe(true);
@@ -340,7 +342,7 @@ describe('workflow engine', () => {
 
     const preEvent = await db('workflows').where({ builtin_key: 'pre_event_email' }).first();
     expect(preEvent).toBeTruthy();
-    expect(!!preEvent.enabled).toBe(true); // cutover: pre-event reminder ships live
+    expect(!!preEvent.enabled).toBe(false); // first beta: ships disabled
     expect(preEvent.trigger_type).toBe('event.date_approaching');
     expect(JSON.parse(preEvent.trigger_config).daysBefore).toBe(2); // default when global setting unset
     const preNodes = await db('workflow_nodes').where({ workflow_id: preEvent.id, version: preEvent.version });
@@ -376,27 +378,36 @@ describe('workflow engine', () => {
     expect(runs2.length).toBe(1);
   });
 
-  test('isBuiltinFlowActive reflects the built-in enabled state (cutover guard)', async () => {
+  test('isBuiltinFlowActive reflects the built-in ENABLED state (enabled-based mutex)', async () => {
     const { seedBuiltinWorkflowsAtBoot } = require('../../src/services/_workflowSeedBoot');
     await seedBuiltinWorkflowsAtBoot(db, { info() {}, warn() {} });
-    // Cutover built-ins ship enabled; booking stays disabled; unknown key → false.
-    expect(await engine.isBuiltinFlowActive('gallery_expiring')).toBe(true);
-    expect(await engine.isBuiltinFlowActive('pre_event_email')).toBe(true);
-    expect(await engine.isBuiltinFlowActive('booking_full')).toBe(false);
+    // All built-ins ship disabled → inactive until the admin enables one.
+    expect(await engine.isBuiltinFlowActive('gallery_expiring')).toBe(false);
     expect(await engine.isBuiltinFlowActive('does_not_exist')).toBe(false);
+    // Enable one → now active.
+    await db('workflows').where({ builtin_key: 'gallery_expiring' }).update({ enabled: true });
+    expect(await engine.isBuiltinFlowActive('gallery_expiring')).toBe(true);
+    await db('workflows').where({ builtin_key: 'gallery_expiring' }).update({ enabled: false }); // restore
   });
 
-  test('legacy event-reminder pass stands down when the pre_event_email flow is active', async () => {
+  test('legacy event-reminder pass stands down ONLY when the pre_event_email flow is enabled', async () => {
     const { seedBuiltinWorkflowsAtBoot } = require('../../src/services/_workflowSeedBoot');
-    await seedBuiltinWorkflowsAtBoot(db, { info() {}, warn() {} }); // pre_event_email enabled
-    // Reach the mutual-exclusion guard: the pass returns early on the global
-    // enable check unless the setting is on.
+    await seedBuiltinWorkflowsAtBoot(db, { info() {}, warn() {} }); // pre_event_email seeded DISABLED
+    // crm_event_reminders_enabled must be on to reach the mutex guard.
     await db('app_settings')
       .insert({ setting_key: 'crm_event_reminders_enabled', setting_value: JSON.stringify(true), setting_type: 'boolean' })
       .onConflict('setting_key').merge();
-    const res = await require('../../src/services/eventReminderService').runEventReminderPass();
-    expect(res.byWorkflow).toBe(true);
-    expect(res.sent).toBe(0);
+    const eventReminderService = require('../../src/services/eventReminderService');
+
+    // Flow disabled → guard does NOT fire (legacy pass owns reminders).
+    expect(await engine.isBuiltinFlowActive('pre_event_email')).toBe(false);
+
+    // Flow enabled → the pass stands down before doing any work (byWorkflow).
+    await db('workflows').where({ builtin_key: 'pre_event_email' }).update({ enabled: true });
+    const after = await eventReminderService.runEventReminderPass();
+    expect(after.byWorkflow).toBe(true);
+    expect(after.sent).toBe(0);
+    await db('workflows').where({ builtin_key: 'pre_event_email' }).update({ enabled: false }); // restore
   });
 
   test('targetWorkflowId runs only the selected flow, not every matching one', async () => {
@@ -418,6 +429,28 @@ describe('workflow engine', () => {
     const otherRuns = await db('workflow_runs').where({ workflow_id: other, entity_id: 99 });
     expect(chosenRuns.length).toBe(1); // only the selected flow ran
     expect(otherRuns.length).toBe(0);  // the other matching flow did NOT
+  });
+
+  test('gate decision with no matching edge FAILS the run (not a silent done)', async () => {
+    // Gate has a confirm edge but the deny edge was lost (e.g. a bad import).
+    const wfId = await makeWorkflow({
+      trigger: 'noedge.event', enabled: true,
+      nodes: [
+        { key: 'g0', type: 'trigger' },
+        { key: 'g1', type: 'gate', config: {} },
+        { key: 'g2', type: 'action', config: { action: 'noop' } },
+      ],
+      edges: [
+        { from: 'g0', to: 'g1' },
+        { from: 'g1', handle: 'confirm', to: 'g2' }, // no deny edge
+      ],
+    });
+    const [runId] = await engine.emitWorkflowEvent('noedge.event', { entityType: 'x', entityId: 1 });
+    const approval = await db('workflow_approvals').where({ run_id: runId, status: 'pending' }).first();
+    await engine.actById(approval.id, 'deny'); // deny has no edge
+    const run = await db('workflow_runs').where({ id: runId }).first();
+    expect(run.status).toBe('failed'); // loud failure, not a green 'done'
+    expect(run.error).toMatch(/deny.*no matching edge/i);
   });
 
   test('admin confirms a gate early; the following wait holds dispatch until its date', async () => {

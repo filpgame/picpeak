@@ -64,6 +64,25 @@ describe('admin workflows API', () => {
     expect(res.status).toBe(400);
   });
 
+  test('rejects an unknown node type', async () => {
+    const res = await request(app).post('/api/admin/workflows').set(auth(token))
+      .send({ ...sampleGraph, nodes: [{ node_key: 't', type: 'trigger' }, { node_key: 'x', type: 'actoin' }], edges: [] });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/unknown node type/i);
+  });
+
+  test('refuses to enable a flow that uses an unimplemented action', async () => {
+    const create = await request(app).post('/api/admin/workflows').set(auth(token)).send({
+      name: 'Stub flow', trigger_type: 'quote.accepted', enabled: false,
+      nodes: [{ node_key: 't', type: 'trigger' }, { node_key: 'a', type: 'action', config: { action: 'prepare_invoice' } }],
+      edges: [{ from_node: 't', to_node: 'a' }],
+    });
+    expect(create.status).toBe(201);
+    const res = await request(app).patch(`/api/admin/workflows/${create.body.id}/enabled`).set(auth(token)).send({ enabled: true });
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/not.*implemented|prepare_invoice/i);
+  });
+
   test('get one returns the graph', async () => {
     const res = await request(app).get(`/api/admin/workflows/${createdId}`).set(auth(token));
     expect(res.status).toBe(200);
