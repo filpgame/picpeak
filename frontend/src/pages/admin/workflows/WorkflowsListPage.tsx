@@ -4,14 +4,14 @@
  * workflow" mints a minimal trigger→action graph and opens the editor. A
  * pending-approvals shortcut sits in the header.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
-import { Plus, Workflow as WorkflowIcon, Inbox, Trash2, Pencil } from 'lucide-react';
+import { Plus, Workflow as WorkflowIcon, Inbox, Trash2, Pencil, FlaskConical } from 'lucide-react';
 import { Button, Card, Loading } from '../../../components/common';
-import { workflowsService, type WorkflowSummary, type WorkflowSavePayload } from '../../../services/workflows.service';
+import { workflowsService, type WorkflowSummary, type WorkflowSavePayload, type WorkflowTestResult } from '../../../services/workflows.service';
 
 const NEW_WORKFLOW: WorkflowSavePayload = {
   name: 'New workflow',
@@ -41,6 +41,18 @@ export const WorkflowsListPage: React.FC = () => {
       navigate(`/admin/workflows/${res.id}`);
     },
     onError: (err: any) => toast.error(err?.response?.data?.error || (t('workflows.toast.createFailed', 'Could not create workflow') as string)),
+  });
+
+  const [testTarget, setTestTarget] = useState<WorkflowSummary | null>(null);
+  const [testEntityId, setTestEntityId] = useState('');
+  const [testResult, setTestResult] = useState<WorkflowTestResult | null>(null);
+  const testMutation = useMutation({
+    mutationFn: () => workflowsService.testRun(testTarget!.id, {
+      entityId: testEntityId ? Number(testEntityId) : null,
+      dryRun: true,
+    }),
+    onSuccess: (res) => setTestResult(res),
+    onError: (err: any) => toast.error(err?.response?.data?.error || (t('workflows.test.failed', 'Test run failed') as string)),
   });
 
   const toggleMutation = useMutation({
@@ -112,6 +124,9 @@ export const WorkflowsListPage: React.FC = () => {
                 >
                   {isEnabled(w) ? t('workflows.enabled', 'Enabled') : t('workflows.disabled', 'Disabled')}
                 </button>
+                <Button variant="ghost" size="sm" onClick={() => { setTestResult(null); setTestEntityId(''); setTestTarget(w); }} aria-label={t('workflows.test.title', 'Test run') as string}>
+                  <FlaskConical className="w-4 h-4" />
+                </Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/workflows/${w.id}`)} aria-label={t('common.edit', 'Edit') as string}>
                   <Pencil className="w-4 h-4" />
                 </Button>
@@ -130,6 +145,46 @@ export const WorkflowsListPage: React.FC = () => {
           </ul>
         )}
       </Card>
+
+      {testTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setTestTarget(null)}>
+          <div className="w-full max-w-lg rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('workflows.test.title', 'Test run')} — {testTarget.name}</h2>
+              <button type="button" onClick={() => setTestTarget(null)} aria-label={t('common.close', 'Close') as string} className="text-neutral-500 dark:text-neutral-400">✕</button>
+            </div>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              {t('workflows.test.hint', 'Dry run: walks the whole flow now (waits skipped, gates auto-confirmed) with side effects mocked — no real emails. Optionally give an entity id (e.g. an invoice) so conditions can read it.')}
+            </p>
+            <input
+              value={testEntityId} onChange={(e) => setTestEntityId(e.target.value)}
+              placeholder={t('workflows.test.entityId', 'Entity id (optional, e.g. invoice id)') as string}
+              className="w-full px-2 py-1.5 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-sm"
+            />
+            <Button variant="primary" isLoading={testMutation.isPending} onClick={() => testMutation.mutate()}>
+              {t('workflows.test.run', 'Run dry test')}
+            </Button>
+            {testResult && (
+              <div className="mt-2">
+                <div className="text-sm mb-1 text-neutral-700 dark:text-neutral-300">
+                  {t('workflows.test.result', 'Result')}: <span className="font-medium">{testResult.status}</span>
+                </div>
+                <ol className="text-xs space-y-1 max-h-72 overflow-y-auto">
+                  {testResult.steps.map((s, i) => (
+                    <li key={i} className="flex items-start gap-2 border-b border-neutral-100 dark:border-neutral-800 pb-1">
+                      <span className="text-neutral-400 w-6 shrink-0">{i + 1}.</span>
+                      <span className="font-mono text-neutral-700 dark:text-neutral-300">{s.node_type}:{s.node_key}</span>
+                      <span className="text-neutral-500 dark:text-neutral-400">{s.status}</span>
+                      {s.result && (s.result as any).would ? <span className="text-purple-600 dark:text-purple-400">→ would {String((s.result as any).would)}</span> : null}
+                      {s.error ? <span className="text-red-600 dark:text-red-400">{s.error}</span> : null}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

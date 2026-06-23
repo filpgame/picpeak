@@ -48,6 +48,7 @@ registry.registerCondition('invoice_paid', async (ctx) => {
 // anything else (customer/external) respects the business-hours floor.
 registry.registerAction('send_email', async (ctx) => {
   const cfg = ctx.node.config || {};
+  if (ctx.vars?.__dryRun) return { dryRun: true, would: 'send_email', recipientClass: cfg.recipientClass || cfg.recipient || 'customer', emailType: cfg.emailType || cfg.template };
   const recipientClass = cfg.recipientClass || cfg.recipient || 'customer';
   const isInternal = recipientClass === 'admin' || recipientClass === 'internal';
   const to = cfg.to
@@ -75,6 +76,7 @@ registry.registerAction('send_email', async (ctx) => {
 registry.registerAction('queue_payment_check', async (ctx) => {
   const id = ctx.run.entity_id;
   if (!id) return { skipped: true, reason: 'no invoice entity' };
+  if (ctx.vars?.__dryRun) return { dryRun: true, would: 'queue_payment_check', invoiceId: id };
   await require('../invoiceService').queuePaymentCheckEmail(id);
   return { payment_check_queued: id };
 });
@@ -87,6 +89,7 @@ registry.registerAction('queue_payment_check', async (ctx) => {
 registry.registerAction('escalate_to_collections', async (ctx) => {
   const id = ctx.run.entity_id;
   if (!id) return { skipped: true, reason: 'no invoice entity' };
+  if (ctx.vars?.__dryRun) return { dryRun: true, would: 'escalate_to_collections', invoiceId: id };
   const { db } = ctx;
   const invoice = await db('invoices').where({ id }).first();
   if (!invoice) return { skipped: true, reason: 'invoice not found' };

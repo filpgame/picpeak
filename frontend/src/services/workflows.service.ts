@@ -89,4 +89,23 @@ export const workflowsService = {
   approvals: async (): Promise<WorkflowApproval[]> => (await api.get<WorkflowApproval[]>('/admin/workflows/approvals')).data,
   actApproval: async (id: number, action: 'confirm' | 'deny') =>
     (await api.post(`/admin/workflows/approvals/${id}/${action}`)).data,
+  testRun: async (
+    id: number,
+    body: { entityType?: string | null; entityId?: number | null; payload?: Record<string, unknown>; dryRun?: boolean },
+  ): Promise<WorkflowTestResult> => (await api.post<WorkflowTestResult>(`/admin/workflows/${id}/test-run`, body)).data,
 };
+
+export interface WorkflowTestStep {
+  node_key: string;
+  node_type?: string | null;
+  status: string;
+  result?: Record<string, unknown> | null;
+  error?: string | null;
+}
+
+export interface WorkflowTestResult {
+  runId: number;
+  dryRun: boolean;
+  status: string;
+  steps: WorkflowTestStep[];
+}

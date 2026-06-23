@@ -144,6 +144,14 @@ async function advanceRun(runId) {
           break;
         }
         case 'wait': {
+          // Dry-run (test-fire): don't park — pass straight through so the whole
+          // flow runs in one shot, recording what it WOULD have waited for.
+          if (context.vars.__dryRun) {
+            const e = outEdge(edges, currentKey, null);
+            nextKey = e ? e.to_node : null;
+            await recordStep(runId, node, 'skipped', { dryRun: true, wouldWaitUntil: computeWakeAt(node.config, context.vars) });
+            break;
+          }
           const wakeAt = computeWakeAt(node.config, context.vars);
           await db('workflow_runs').where({ id: runId })
             .update({ status: 'waiting', wake_at: wakeAt, current_node: currentKey, context: JSON.stringify(context) });
@@ -151,6 +159,14 @@ async function advanceRun(runId) {
           return; // paused — scheduler resumes when wake_at passes
         }
         case 'gate': {
+          // Dry-run (test-fire): auto-take the 'confirm' path so the escalation
+          // is exercised end-to-end, without creating an approval / emailing.
+          if (context.vars.__dryRun) {
+            const e = outEdge(edges, currentKey, 'confirm') || outEdge(edges, currentKey, null);
+            nextKey = e ? e.to_node : null;
+            await recordStep(runId, node, 'skipped', { dryRun: true, gateAutoConfirm: true });
+            break;
+          }
           await db('workflow_runs').where({ id: runId })
             .update({ status: 'waiting', wake_at: gateTimeout(node.config), current_node: currentKey, context: JSON.stringify(context) });
           await recordStep(runId, node, 'waiting', { gate: true });
@@ -364,10 +380,40 @@ async function recoverStaleRuns({ staleMs = RECOVERY_STALE_MS, limit = 50 } = {}
   }
 }
 
+/**
+ * Test-fire a workflow on demand (admin testing). Creates a run for the given
+ * entity/payload and starts it. Defaults to dryRun: side-effecting actions are
+ * mocked, waits pass through, and gates auto-take 'confirm' — so the WHOLE flow
+ * runs in one shot and the step log shows exactly what it would do, without
+ * sending real customer mail or charging fees.
+ */
+async function testRun(workflowId, { entityType = null, entityId = null, payload = {}, dryRun = true } = {}) {
+  const wf = await db('workflows').where({ id: workflowId }).first();
+  if (!wf) throw new Error('Workflow not found');
+  const vars = { ...(payload || {}), __test: true };
+  if (dryRun) vars.__dryRun = true;
+  const dedupKey = `test:${workflowId}:${Date.now()}:${Math.round(Math.random() * 1e9)}`;
+  await db('workflow_runs').insert({
+    workflow_id: wf.id,
+    version: wf.version,
+    trigger_event: `test:${wf.trigger_type}`,
+    entity_type: entityType,
+    entity_id: entityId,
+    status: 'pending',
+    context: JSON.stringify({ vars }),
+    dedup_key: dedupKey,
+    updated_at: db.fn.now(),
+  });
+  const row = await db('workflow_runs').where({ dedup_key: dedupKey }).first();
+  await startRun(row.id);
+  return row.id;
+}
+
 module.exports = {
   emitWorkflowEvent,
   runDueWaits,
   recoverStaleRuns,
+  testRun,
   startRun,
   advanceRun,
   resumeRun,

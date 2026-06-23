@@ -96,6 +96,28 @@ router.get('/:id/runs', requirePermission('workflows.view'), async (req, res, ne
   } catch (e) { next(e); }
 });
 
+// Test-fire: run the workflow on demand (default dry-run — side effects mocked,
+// waits skipped, gates auto-confirm) and return the step-by-step log.
+router.post('/:id/test-run', requirePermission('workflows.manage'), async (req, res, next) => {
+  try {
+    const { entityType, entityId, payload, dryRun } = req.body || {};
+    const runId = await workflows.testRun(Number(req.params.id), {
+      entityType: entityType || null,
+      entityId: entityId != null && entityId !== '' ? Number(entityId) : null,
+      payload: payload && typeof payload === 'object' ? payload : {},
+      dryRun: dryRun !== false, // default true (safe)
+    });
+    const run = await db('workflow_runs').where({ id: runId }).first();
+    const steps = await db('workflow_run_steps').where({ run_id: runId }).orderBy('id', 'asc');
+    res.json({
+      runId,
+      dryRun: dryRun !== false,
+      status: run?.status,
+      steps: steps.map((s) => ({ ...s, result: parseJson(s.result, null) })),
+    });
+  } catch (e) { next(e); }
+});
+
 // --- List / get ---
 router.get('/', requirePermission('workflows.view'), async (req, res, next) => {
   try {

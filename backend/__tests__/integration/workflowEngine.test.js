@@ -315,4 +315,32 @@ describe('workflow engine', () => {
     const run = await db('workflow_runs').where({ id: run0.id }).first();
     expect(run.status).toBe('failed');
   });
+
+  test('testRun dry-run walks the whole flow (waits skipped, gate auto-confirmed, actions mocked)', async () => {
+    const wfId = await makeWorkflow({
+      trigger: 'testfire.event',
+      nodes: [
+        { key: 't', type: 'trigger' },
+        { key: 'w', type: 'wait', config: { delayDays: 14 } },
+        { key: 'g', type: 'gate', config: { type: 'payment_confirm' } },
+        { key: 'a', type: 'action', config: { action: 'send_email', recipientClass: 'customer' } },
+        { key: 'end', type: 'action', config: { action: 'noop' } },
+      ],
+      edges: [
+        { from: 't', to: 'w' },
+        { from: 'w', to: 'g' },
+        { from: 'g', handle: 'confirm', to: 'a' },
+        { from: 'g', handle: 'deny', to: 'end' },
+        { from: 'a', to: 'end' },
+      ],
+    });
+    const runId = await engine.testRun(wfId, { dryRun: true });
+    const run = await db('workflow_runs').where({ id: runId }).first();
+    expect(run.status).toBe('done'); // walked to completion — no parking at the wait/gate
+
+    const steps = await db('workflow_run_steps').where({ run_id: runId });
+    expect(steps.find((s) => s.node_key === 'w').status).toBe('skipped'); // wait passed through
+    const emailStep = steps.find((s) => s.node_key === 'a');
+    expect(JSON.parse(emailStep.result).dryRun).toBe(true); // send_email mocked, no real mail
+  });
 });

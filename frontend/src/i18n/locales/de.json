@@ -212,6 +212,14 @@
     "enabled": "Aktiv",
     "disabled": "Inaktiv",
     "confirmDelete": "Diesen Workflow löschen?",
+    "test": {
+      "title": "Testlauf",
+      "hint": "Probelauf: durchläuft den ganzen Ablauf sofort (Wartezeiten übersprungen, Gates automatisch bestätigt), Nebeneffekte werden nur simuliert – keine echten E-Mails. Optional eine Entitäts-ID (z. B. eine Rechnung) angeben, damit Bedingungen sie lesen können.",
+      "entityId": "Entitäts-ID (optional, z. B. Rechnungs-ID)",
+      "run": "Probelauf starten",
+      "result": "Ergebnis",
+      "failed": "Testlauf fehlgeschlagen"
+    },
     "toast": {
       "createFailed": "Workflow konnte nicht erstellt werden",
       "deleted": "Workflow gelöscht",
