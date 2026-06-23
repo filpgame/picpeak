@@ -18,7 +18,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from '@dagrejs/dagre';
-import { ArrowLeft, Save, Trash2, Wand2 } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Wand2, Code } from 'lucide-react';
 import { Button, Loading } from '../../../components/common';
 import { useAdminDarkMode } from '../../../contexts/AdminDarkModeContext';
 import { workflowsService, type WorkflowNodeType } from '../../../services/workflows.service';
@@ -136,6 +136,47 @@ export const WorkflowEditorPage: React.FC = () => {
     setTimeout(() => rfRef.current?.fitView?.({ padding: 0.2, duration: 300 }), 60);
   }, [edges, setNodes]);
 
+  // --- Advanced text mode: the whole flow as JSON (share / LLM round-trip) ---
+  const [textMode, setTextMode] = useState(false);
+  const [text, setText] = useState('');
+  const [textErr, setTextErr] = useState<string | null>(null);
+
+  const serializeFlow = () => JSON.stringify({
+    name,
+    trigger_type: triggerType,
+    enabled,
+    nodes: nodes.map((n) => ({
+      node_key: n.id, type: (n.data as any).nodeType, config: (n.data as any).config || {},
+      pos_x: Math.round(n.position.x), pos_y: Math.round(n.position.y),
+    })),
+    edges: edges.map((e) => ({ from_node: e.source, from_handle: e.sourceHandle || null, to_node: e.target })),
+  }, null, 2);
+
+  const openText = () => { setText(serializeFlow()); setTextErr(null); setTextMode(true); };
+
+  const applyText = () => {
+    let p: any;
+    try { p = JSON.parse(text); } catch (e) { setTextErr(t('workflows.editor.badJson', 'Config is not valid JSON') as string); return; }
+    if (!Array.isArray(p.nodes) || !Array.isArray(p.edges)) { setTextErr(t('workflows.editor.textNeedsArrays', 'Needs "nodes" and "edges" arrays') as string); return; }
+    if (p.nodes.filter((n: any) => n.type === 'trigger').length !== 1) { setTextErr(t('workflows.editor.textNeedsTrigger', 'Needs exactly one trigger node') as string); return; }
+    const tt = p.trigger_type || triggerType;
+    if (p.name != null) setName(p.name);
+    if (p.trigger_type) setTriggerType(p.trigger_type);
+    if (p.enabled != null) setEnabled(!!p.enabled);
+    setNodes(p.nodes.map((n: any) => ({
+      id: n.node_key, type: 'wf', position: { x: n.pos_x || 0, y: n.pos_y || 0 },
+      data: { nodeType: n.type, config: n.config || {}, triggerType: tt },
+    })));
+    setEdges(p.edges.map((e: any, i: number) => ({
+      id: `e${i}`, source: e.from_node, target: e.to_node, sourceHandle: e.from_handle || undefined, label: e.from_handle || undefined,
+    })));
+    setTextErr(null);
+    setTextMode(false);
+    toast.success(t('workflows.editor.textLoaded', 'Loaded — review and Save') as string);
+  };
+
+  const copyText = () => { navigator.clipboard?.writeText(text); toast.success(t('common.copied', 'Copied') as string); };
+
   useEffect(() => {
     if (!workflow) return;
     setName(workflow.name);
@@ -230,13 +271,17 @@ export const WorkflowEditorPage: React.FC = () => {
           <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
           {t('workflows.enabled', 'Enabled')}
         </label>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="outline" onClick={() => (textMode ? setTextMode(false) : openText())} leftIcon={<Code className="w-4 h-4" />}>
+            {textMode ? t('workflows.editor.canvasView', 'Canvas') : t('workflows.editor.textView', 'Text')}
+          </Button>
           <Button variant="primary" isLoading={saveMutation.isPending} onClick={() => saveMutation.mutate()} leftIcon={<Save className="w-4 h-4" />}>
             {t('common.saveChanges', 'Save changes')}
           </Button>
         </div>
       </div>
 
+      {!textMode && (
       <div className="flex flex-wrap items-center gap-2">
         {PALETTE.map((type) => (
           <button
@@ -253,7 +298,25 @@ export const WorkflowEditorPage: React.FC = () => {
           <Wand2 className="w-3.5 h-3.5" /> {t('workflows.editor.cleanUp', 'Clean up layout')}
         </button>
       </div>
+      )}
 
+      {textMode ? (
+        <div className="space-y-2">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            {t('workflows.editor.textHint', 'The whole flow as JSON — copy it to share or hand to an LLM, or paste a flow and load it into the editor. Click “Clean up layout” after importing.')}
+          </p>
+          <textarea
+            value={text} onChange={(e) => setText(e.target.value)} spellCheck={false}
+            className="w-full font-mono text-xs p-2 rounded border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+            style={{ height: '62vh' }}
+          />
+          {textErr && <p className="text-xs text-red-600 dark:text-red-400">{textErr}</p>}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={copyText}>{t('common.copy', 'Copy')}</Button>
+            <Button variant="primary" onClick={applyText}>{t('workflows.editor.loadText', 'Load into editor')}</Button>
+          </div>
+        </div>
+      ) : (
       <div className="flex gap-3" style={{ height: '70vh' }}>
         <div className="flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
           <ReactFlow
@@ -286,6 +349,7 @@ export const WorkflowEditorPage: React.FC = () => {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 };
