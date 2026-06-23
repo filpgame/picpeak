@@ -64,6 +64,7 @@ export interface QuoteSummary {
   eventName: string | null;
   eventDate: string | null;
   eventType: string | null;
+  bookingWorkflowId: number | null;
   totalAmountMinor: number;
   sentAt: string | null;
   acceptedAt: string | null;
@@ -180,6 +181,7 @@ export interface QuoteCreatePayload {
   eventName?: string;
   eventDate?: string;
   eventType?: string | null;
+  bookingWorkflowId?: number | null;
   eventTimeStart?: string;
   eventTimeEnd?: string;
   expectedDurationHours?: number;

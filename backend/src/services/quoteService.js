@@ -587,6 +587,10 @@ async function createQuote(payload, adminId) {
     if (payload.eventType !== undefined && await hasColumnCached('quotes', 'event_type')) {
       row.event_type = payload.eventType ? String(payload.eventType).slice(0, 64) : null;
     }
+    // Migration 147 — the booking workflow this quote runs on acceptance.
+    if (payload.bookingWorkflowId !== undefined && await hasColumnCached('quotes', 'booking_workflow_id')) {
+      row.booking_workflow_id = payload.bookingWorkflowId || null;
+    }
     const inserted = await trx('quotes').insert(row).returning('id');
     const quoteId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
 
@@ -718,6 +722,10 @@ async function updateQuote(id, payload, adminId) {
     // Migration 146 — event type.
     if (Object.prototype.hasOwnProperty.call(payload, 'eventType') && await hasColumnCached('quotes', 'event_type')) {
       updates.event_type = payload.eventType ? String(payload.eventType).slice(0, 64) : null;
+    }
+    // Migration 147 — selected booking workflow.
+    if (Object.prototype.hasOwnProperty.call(payload, 'bookingWorkflowId') && await hasColumnCached('quotes', 'booking_workflow_id')) {
+      updates.booking_workflow_id = payload.bookingWorkflowId || null;
     }
     await trx('quotes').where({ id }).update(updates);
 
@@ -1067,9 +1075,16 @@ async function emitQuoteEvent(quote, status) {
       const c = await db('customer_accounts').where({ id: quote.customer_account_id }).first();
       customerEmail = c?.email || null;
     }
+    // On acceptance, if the admin picked a booking workflow on the quote, run
+    // ONLY that flow (instead of fanning out to every enabled quote.accepted
+    // flow). Other statuses keep the normal fan-out.
+    const targetWorkflowId = (status === 'accepted' && quote.booking_workflow_id)
+      ? quote.booking_workflow_id
+      : null;
     await require('./workflows').emitWorkflowEvent(`quote.${status}`, {
       entityType: 'quote',
       entityId: quote.id,
+      targetWorkflowId,
       payload: {
         quoteId: quote.id,
         quoteNumber: quote.quote_number,
@@ -1077,7 +1092,9 @@ async function emitQuoteEvent(quote, status) {
         customerEmail,
         eventName: quote.event_name || null,
         eventDate: quote.event_date || null,
+        eventType: quote.event_type || null,
         totalMinor: quote.total_amount_minor ?? null,
+        bookingWorkflowId: quote.booking_workflow_id || null,
       },
     });
   } catch (_) { /* best-effort */ }

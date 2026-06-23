@@ -305,6 +305,15 @@ describe('workflow engine', () => {
     const expiredNodes = await db('workflow_nodes').where({ workflow_id: expired.id, version: expired.version });
     expect(expiredNodes.some((n) => JSON.parse(n.config || '{}').action === 'notify_gallery_expired')).toBe(true);
 
+    // Invoice-only booking variant (quote → invoice, no gallery).
+    const invoiceOnly = await db('workflows').where({ builtin_key: 'booking_invoice_only' }).first();
+    expect(invoiceOnly).toBeTruthy();
+    expect(!!invoiceOnly.enabled).toBe(false);
+    expect(invoiceOnly.trigger_type).toBe('quote.accepted');
+    const ioNodes = await db('workflow_nodes').where({ workflow_id: invoiceOnly.id, version: invoiceOnly.version });
+    expect(ioNodes.some((n) => n.type === 'wait')).toBe(false); // no event wait — sends on approval
+    expect(ioNodes.some((n) => JSON.parse(n.config || '{}').action === 'prepare_event')).toBe(false); // no gallery
+
     const bookingFull = await db('workflows').where({ builtin_key: 'booking_full' }).first();
     expect(bookingFull).toBeTruthy();
     expect(!!bookingFull.enabled).toBe(false); // illustrative/stub — stays disabled
@@ -388,6 +397,27 @@ describe('workflow engine', () => {
     const res = await require('../../src/services/eventReminderService').runEventReminderPass();
     expect(res.byWorkflow).toBe(true);
     expect(res.sent).toBe(0);
+  });
+
+  test('targetWorkflowId runs only the selected flow, not every matching one', async () => {
+    // Two enabled flows on the same trigger — the quote picks one.
+    const chosen = await makeWorkflow({
+      trigger: 'pick.event', enabled: true,
+      nodes: [{ key: 'c1', type: 'trigger' }, { key: 'c2', type: 'action', config: { action: 'noop' } }],
+      edges: [{ from: 'c1', to: 'c2' }],
+    });
+    const other = await makeWorkflow({
+      trigger: 'pick.event', enabled: true,
+      nodes: [{ key: 'o1', type: 'trigger' }, { key: 'o2', type: 'action', config: { action: 'noop' } }],
+      edges: [{ from: 'o1', to: 'o2' }],
+    });
+
+    const runIds = await engine.emitWorkflowEvent('pick.event', { entityType: 'quote', entityId: 99, targetWorkflowId: chosen });
+    expect(runIds.length).toBe(1);
+    const chosenRuns = await db('workflow_runs').where({ workflow_id: chosen, entity_id: 99 });
+    const otherRuns = await db('workflow_runs').where({ workflow_id: other, entity_id: 99 });
+    expect(chosenRuns.length).toBe(1); // only the selected flow ran
+    expect(otherRuns.length).toBe(0);  // the other matching flow did NOT
   });
 
   test('admin confirms a gate early; the following wait holds dispatch until its date', async () => {

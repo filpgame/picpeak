@@ -130,6 +130,29 @@ function buildBookingSimpleGraph() {
   return { nodes, edges };
 }
 
+// Booking — quote accepted → prepare invoice → admin review gate → send. No
+// event/gallery and no wait: the invoice goes out as soon as the admin approves
+// it. For shoots billed without a delivered online gallery. Same stub caveat as
+// the other booking flows (prepare_invoice/send_document not yet wired).
+function buildBookingInvoiceOnlyGraph() {
+  const nodes = [
+    { node_key: 't', type: 'trigger', config: {}, pos_x: 320, pos_y: 0 },
+    { node_key: 'prepInvoice', type: 'action', config: { action: 'prepare_invoice' }, pos_x: 320, pos_y: 110 },
+    { node_key: 'reviewInvoice', type: 'gate', config: { label: 'Review invoice before sending' }, pos_x: 320, pos_y: 220 },
+    { node_key: 'sendInvoice', type: 'action', config: { action: 'send_document', document: 'invoice', recipient: 'customer' }, pos_x: 320, pos_y: 330 },
+    { node_key: 'done', type: 'action', config: { action: 'noop' }, pos_x: 320, pos_y: 440 },
+    { node_key: 'cancelInvoice', type: 'action', config: { action: 'noop' }, pos_x: 620, pos_y: 220 },
+  ];
+  const edges = [
+    { from_node: 't', to_node: 'prepInvoice' },
+    { from_node: 'prepInvoice', to_node: 'reviewInvoice' },
+    { from_node: 'reviewInvoice', from_handle: 'confirm', to_node: 'sendInvoice' },
+    { from_node: 'reviewInvoice', from_handle: 'deny', to_node: 'cancelInvoice' },
+    { from_node: 'sendInvoice', to_node: 'done' },
+  ];
+  return { nodes, edges };
+}
+
 // Pre-event reminder — fired by the scheduler at event_date − daysBefore (see
 // emitDueEventReminders). The notify_pre_event action DELEGATES to
 // eventReminderService.sendReminderForEvent, so the email is byte-identical to
@@ -289,6 +312,20 @@ const BUILTINS = [
       + 'until the event date and sends itself. Same review-before-send rule and stub caveat as the '
       + 'full booking flow; disabled by default.',
     build: async () => buildBookingSimpleGraph(),
+  },
+  {
+    key: 'booking_invoice_only',
+    version: 1,
+    enabled: false,
+    name: 'Booking — quote → invoice, no gallery (built-in)',
+    trigger_type: 'quote.accepted',
+    trigger_config: {},
+    description:
+      'For shoots billed without an online gallery: on quote acceptance prepare the invoice, the '
+      + 'admin reviews + approves it, and it is sent right away (no event/gallery, no wait). Pick '
+      + 'this flow per quote via the booking-workflow selector. Same review-before-send rule and '
+      + 'stub caveat as the other booking flows; disabled by default.',
+    build: async () => buildBookingInvoiceOnlyGraph(),
   },
 ];
 

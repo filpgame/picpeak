@@ -240,7 +240,7 @@ async function resumeRun(runId, { decisionHandle = null } = {}) {
  * workflow (idempotent via dedup_key) and starts it. Never throws — safe to
  * call after a caller's commit. Fails CLOSED if the flag system is unavailable.
  */
-async function emitWorkflowEvent(triggerType, { entityType = null, entityId = null, payload = {} } = {}) {
+async function emitWorkflowEvent(triggerType, { entityType = null, entityId = null, payload = {}, targetWorkflowId = null } = {}) {
   try {
     const { isFeatureEnabled } = require('../../middleware/requireFeatureFlag');
     let enabled = false;
@@ -250,7 +250,13 @@ async function emitWorkflowEvent(triggerType, { entityType = null, entityId = nu
     }
     if (!enabled) return [];
 
-    const workflows = await db('workflows').where({ enabled: true, trigger_type: triggerType });
+    // targetWorkflowId restricts the fan-out to a SINGLE chosen flow — used when
+    // the entity explicitly selected which flow to run (e.g. a quote picks its
+    // booking workflow). Still gated on enabled + matching trigger_type, so a
+    // disabled/mismatched selection simply runs nothing.
+    const q = db('workflows').where({ enabled: true, trigger_type: triggerType });
+    if (targetWorkflowId != null) q.where({ id: targetWorkflowId });
+    const workflows = await q;
     const runIds = [];
     for (const wf of workflows) {
       const tcfg = parseJson(wf.trigger_config, {});
