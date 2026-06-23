@@ -73,6 +73,19 @@ export const WorkflowsListPage: React.FC = () => {
   const isEnabled = (w: WorkflowSummary) => w.enabled === true || w.enabled === 1;
   const isBuiltin = (w: WorkflowSummary) => w.is_builtin === true || w.is_builtin === 1;
 
+  // Disabling a built-in reverts to the legacy hardcoded behaviour (it does NOT
+  // stop the automation) — warn so the admin isn't surprised. Enabling is guarded
+  // server-side (a flow using unimplemented actions is refused with a clear error).
+  const toggle = (w: WorkflowSummary) => {
+    const next = !isEnabled(w);
+    if (!next && isBuiltin(w)) {
+      const msg = t('workflows.toggle.confirmDisableBuiltin',
+        'Disabling this built-in reverts to the previous built-in behaviour — it does not turn the automation off. Continue?') as string;
+      if (!window.confirm(msg)) return;
+    }
+    toggleMutation.mutate({ id: w.id, enabled: next });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -117,7 +130,7 @@ export const WorkflowsListPage: React.FC = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => toggleMutation.mutate({ id: w.id, enabled: !isEnabled(w) })}
+                  onClick={() => toggle(w)}
                   className={`text-xs px-2 py-1 rounded-full border ${isEnabled(w)
                     ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700'
                     : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border-neutral-300 dark:border-neutral-600'}`}

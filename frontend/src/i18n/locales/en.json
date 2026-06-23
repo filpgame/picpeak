@@ -212,6 +212,9 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "confirmDelete": "Delete this workflow?",
+    "toggle": {
+      "confirmDisableBuiltin": "Disabling this built-in reverts to the previous built-in behaviour — it does not turn the automation off. Continue?"
+    },
     "test": {
       "title": "Test run",
       "hint": "Dry run: walks the whole flow now (waits skipped, gates auto-confirmed) with side effects mocked — no real emails. Optionally give an entity id (e.g. an invoice) so conditions can read it.",
