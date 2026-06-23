@@ -707,6 +707,7 @@ app.use('/api/admin/contracts',  require('./src/routes/adminContracts'));
 app.use('/api/admin/projects',   require('./src/routes/adminProjects'));
 app.use('/api/admin/calendar',   require('./src/routes/adminCalendar'));
 app.use('/api/admin/deals',      require('./src/routes/adminDeals'));
+app.use('/api/admin/workflows',  require('./src/routes/adminWorkflows'));
 app.use('/api/admin/tax-report', require('./src/routes/adminTaxReport'));
 app.use('/api/admin/expenses',   require('./src/routes/adminExpenses'));
 app.use('/api/admin/ledger',     require('./src/routes/adminLedger'));
