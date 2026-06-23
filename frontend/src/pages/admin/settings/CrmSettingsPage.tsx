@@ -34,6 +34,7 @@ const SETTING_KEYS = [
   'crm_invoices_late_fee_type',
   'crm_invoices_late_fee_minor',
   'crm_invoices_late_fee_percent',
+  'crm_invoices_late_fee_vat_enabled',
   'crm_invoices_late_fee_label',
   'crm_invoices_skonto_business_days',
   'crm_invoices_skonto_percent_default',
@@ -249,6 +250,7 @@ export const CrmSettingsPage: React.FC = () => {
           <p className="font-medium">{t('crmSettings.lateFeeAgb.title', 'Late fees must be itemised in your terms (AGB)')}</p>
           <p className="mt-1">{t('crmSettings.lateFeeAgb.body', 'Vertragliche Pflicht: Sätze wie „Es werden Mahnspesen erhoben“ reichen nicht aus. In den AGB muss die konkrete Gebühr klar beziffert sein (z.B. „CHF 20 ab der 2. Mahnung“). Mit dem Treuhänder prüfen.')}</p>
         </div>
+        {checkbox('crm_invoices_late_fee_vat_enabled', 'Charge VAT on late fees (Switzerland — leave off for DE/AT; no effect if your organisation has no VAT rate)')}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           <Input type="number" min={1} max={365}
             label={t('crmSettings.crm_invoices_reminder_first_days.label', 'First reminder after (days past due)') as string}

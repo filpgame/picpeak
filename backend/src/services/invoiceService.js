@@ -2655,11 +2655,27 @@ async function sendReminder(id, levelOverride, adminId) {
 async function resolvePerReminderFeeMinor(invoice) {
   if ((await getAppSetting('crm_invoices_late_fee_enabled')) === false) return 0;
   const type = (await getAppSetting('crm_invoices_late_fee_type')) || 'flat';
+  let fee;
   if (type === 'percent') {
     const pct = Number(await getAppSetting('crm_invoices_late_fee_percent')) || 0;
-    return Math.max(0, Math.round(Number(invoice.total_amount_minor || 0) * pct / 100));
+    fee = Math.round(Number(invoice.total_amount_minor || 0) * pct / 100);
+  } else {
+    fee = ensureInt(await getAppSetting('crm_invoices_late_fee_minor')) || 2500;
   }
-  return Math.max(0, ensureInt(await getAppSetting('crm_invoices_late_fee_minor')) || 2500);
+  fee = Math.max(0, fee);
+
+  // VAT on the late fee is jurisdiction-dependent (CH: yes; DE/AT: no), so it's
+  // toggle-gated. It also no-ops when the ORG doesn't charge VAT — the org's
+  // default rate (business_profile.vat_rate_default) is 0/unset — so enabling
+  // the toggle on a non-VAT org adds nothing. (The fee amount is treated as net;
+  // VAT is added on top. The tax-report VAT breakdown for the fee is part of the
+  // deferred dunning-document rework.)
+  if ((await getAppSetting('crm_invoices_late_fee_vat_enabled')) === true && fee > 0) {
+    const profile = await db('business_profile').where({ id: 1 }).first('vat_rate_default');
+    const rate = Number(profile?.vat_rate_default) || 0;
+    if (rate > 0) fee += Math.round(fee * rate / 100);
+  }
+  return fee;
 }
 
 async function applyReminder(invoice, lineItems, level, adminId) {

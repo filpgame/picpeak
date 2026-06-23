@@ -19,6 +19,10 @@ exports.up = async function (knex) {
   const seeds = [
     { setting_key: 'crm_invoices_late_fee_type', setting_value: JSON.stringify('flat'), setting_type: 'crm' },
     { setting_key: 'crm_invoices_late_fee_percent', setting_value: JSON.stringify(0), setting_type: 'crm' },
+    // VAT on the late fee is jurisdiction-dependent (CH: yes; DE/AT: no), so it's
+    // a toggle. Default OFF (preserve current no-VAT behaviour). No-op anyway
+    // when the org doesn't charge VAT (business_profile.vat_rate_default = 0).
+    { setting_key: 'crm_invoices_late_fee_vat_enabled', setting_value: JSON.stringify(false), setting_type: 'crm' },
   ];
   for (const s of seeds) {
     const exists = await knex('app_settings').where({ setting_key: s.setting_key }).first();
@@ -29,6 +33,6 @@ exports.up = async function (knex) {
 exports.down = async function (knex) {
   if (!(await knex.schema.hasTable('app_settings'))) return;
   await knex('app_settings')
-    .whereIn('setting_key', ['crm_invoices_late_fee_type', 'crm_invoices_late_fee_percent'])
+    .whereIn('setting_key', ['crm_invoices_late_fee_type', 'crm_invoices_late_fee_percent', 'crm_invoices_late_fee_vat_enabled'])
     .del();
 };
