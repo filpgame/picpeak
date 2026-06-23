@@ -243,12 +243,13 @@ describe('workflow engine', () => {
     expect(wf).toBeTruthy();
     expect(!!wf.is_builtin).toBe(true);
     expect(!!wf.enabled).toBe(false);
-    expect(JSON.parse(wf.trigger_config).seedVersion).toBe(3);
+    expect(JSON.parse(wf.trigger_config).seedVersion).toBe(4);
 
     const nodes = await db('workflow_nodes').where({ workflow_id: wf.id, version: wf.version });
     expect(nodes.filter((n) => n.type === 'trigger')).toHaveLength(1);
     expect(nodes.some((n) => n.type === 'gate')).toBe(false); // payment-check email IS the gate
     expect(nodes.some((n) => JSON.parse(n.config || '{}').action === 'queue_payment_check')).toBe(true);
+    expect(nodes.some((n) => JSON.parse(n.config || '{}').action === 'escalate_to_collections')).toBe(true);
 
     await seedBuiltinWorkflowsAtBoot(db, noopLogger); // idempotent at current seed version
     const all = await db('workflows').where({ builtin_key: DUNNING_KEY });
@@ -267,7 +268,7 @@ describe('workflow engine', () => {
     await seedBuiltinWorkflowsAtBoot(db, noopLogger);
     const reseeded = await db('workflows').where({ id: wf.id }).first();
     expect(reseeded.version).toBe(wf.version + 1); // bumped
-    expect(JSON.parse(reseeded.trigger_config).seedVersion).toBe(3);
+    expect(JSON.parse(reseeded.trigger_config).seedVersion).toBe(4);
     const newNodes = await db('workflow_nodes').where({ workflow_id: wf.id, version: reseeded.version });
     expect(newNodes.some((n) => n.type === 'gate')).toBe(false); // legacy graph replaced
 

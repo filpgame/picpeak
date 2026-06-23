@@ -79,6 +79,59 @@ registry.registerAction('queue_payment_check', async (ctx) => {
   return { payment_check_queued: id };
 });
 
+// After the dunning loop exhausts (e.g. 3 unpaid reminders), consolidate
+// everything collections needs into ONE email to the admin: customer data, the
+// outstanding total (invoice + late fees − paid) and the invoice PDF attached —
+// ready to forward to an Inkasso agency / for Betreibung. Internal mail → sent
+// immediately. Does NOT touch the invoice.
+registry.registerAction('escalate_to_collections', async (ctx) => {
+  const id = ctx.run.entity_id;
+  if (!id) return { skipped: true, reason: 'no invoice entity' };
+  const { db } = ctx;
+  const invoice = await db('invoices').where({ id }).first();
+  if (!invoice) return { skipped: true, reason: 'invoice not found' };
+  const customer = invoice.customer_account_id
+    ? await db('customer_accounts').where({ id: invoice.customer_account_id }).first()
+    : null;
+  const profile = await db('business_profile').where({ id: 1 }).first();
+  const adminEmail = ctx.vars?.adminEmail || profile?.email || null;
+  if (!adminEmail) return { skipped: true, reason: 'no admin email' };
+
+  const currency = invoice.currency || 'CHF';
+  const fmt = (m) => `${currency} ${(Number(m || 0) / 100).toFixed(2)}`;
+  const total = Number(invoice.total_amount_minor || 0);
+  const fee = Number(invoice.late_fee_amount_minor || 0);
+  const paid = Number(invoice.paid_amount_minor || 0);
+  const outstanding = Math.max(0, total + fee - paid);
+  const address = [customer?.address, customer?.postal_code, customer?.city, customer?.country_name]
+    .filter(Boolean).join(', ');
+
+  const attachments = [];
+  try {
+    const fs = require('fs');
+    if (invoice.pdf_path && fs.existsSync(invoice.pdf_path)) {
+      attachments.push({ filename: `${invoice.invoice_number}.pdf`, contentPath: invoice.pdf_path, contentType: 'application/pdf' });
+    }
+  } catch (_) { /* attachment is best-effort */ }
+
+  await require('../emailProcessor').queueEmail(invoice.event_id || null, adminEmail, 'invoice_collections_handoff', {
+    invoice_number: invoice.invoice_number,
+    customer_name: customer?.display_name || customer?.email || '—',
+    customer_email: customer?.email || '',
+    customer_address: address,
+    event_name: invoice.event_name || '',
+    original_amount: fmt(total),
+    late_fee_amount: fee ? fmt(fee) : '',
+    paid_amount: fmt(paid),
+    outstanding_amount: fmt(outstanding),
+    due_date: invoice.due_date ? String(invoice.due_date).slice(0, 10) : '',
+    reminder_level: invoice.reminder_level || 0,
+    attachments,
+  }, { respectBusinessHours: false }); // internal/admin → immediate
+
+  return { collections_handoff_to: adminEmail, outstanding };
+});
+
 // Create/prepare-document actions — registered so flows referencing them are
 // valid; service wiring is a follow-up. Records a skipped step (observable).
 for (const key of DOCUMENT_ACTIONS) {

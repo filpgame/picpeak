@@ -19,8 +19,9 @@ const { getAppSetting } = require('../utils/appSettings');
 
 const DUNNING_KEY = 'invoice_dunning';
 // Bump when the built-in graph changes so a disabled, never-activated copy is
-// re-seeded on boot. v2 = delegation/cutover graph; v3 = 3 reminder loops.
-const SEED_VERSION = 3;
+// re-seeded on boot. v2 = delegation/cutover graph; v3 = 3 reminder loops;
+// v4 = collections handoff after the loop exhausts.
+const SEED_VERSION = 4;
 
 function buildDunningGraph({ firstDays, gapDays, maxReminders }) {
   // Delegation model: the payment-check email IS the admin gate (it drives the
@@ -37,14 +38,16 @@ function buildDunningGraph({ firstDays, gapDays, maxReminders }) {
     { node_key: 'paymentCheck', type: 'action', config: { action: 'queue_payment_check' }, pos_x: 240, pos_y: 550 },
     { node_key: 'waitGap', type: 'wait', config: { delayDays: gapDays }, pos_x: 240, pos_y: 660 },
     { node_key: 'donePaid', type: 'action', config: { action: 'noop' }, pos_x: 520, pos_y: 440 },
-    { node_key: 'doneEnd', type: 'action', config: { action: 'noop' }, pos_x: 520, pos_y: 330 },
+    { node_key: 'collections', type: 'action', config: { action: 'escalate_to_collections' }, pos_x: 520, pos_y: 250 },
+    { node_key: 'doneEnd', type: 'action', config: { action: 'noop' }, pos_x: 760, pos_y: 250 },
   ];
   const edges = [
     { from_node: 't', to_node: 'waitDue' },
     { from_node: 'waitDue', to_node: 'waitGrace' },
     { from_node: 'waitGrace', to_node: 'loop' },
     { from_node: 'loop', from_handle: 'loop', to_node: 'checkPaid' },
-    { from_node: 'loop', from_handle: 'exit', to_node: 'doneEnd' },
+    { from_node: 'loop', from_handle: 'exit', to_node: 'collections' },
+    { from_node: 'collections', to_node: 'doneEnd' },
     { from_node: 'checkPaid', from_handle: 'yes', to_node: 'donePaid' },
     { from_node: 'checkPaid', from_handle: 'no', to_node: 'paymentCheck' },
     { from_node: 'paymentCheck', to_node: 'waitGap' },

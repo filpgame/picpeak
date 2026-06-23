@@ -20,6 +20,7 @@ const lbl = 'block text-xs text-neutral-500 dark:text-neutral-400 mb-1';
 
 const ACTIONS = [
   ['queue_payment_check', 'Send payment-check email (dunning gate)'],
+  ['escalate_to_collections', 'Hand off to collections (email admin)'],
   ['send_email', 'Send email'],
   ['reserve_date', 'Reserve the event date'],
   ['prepare_quote', 'Prepare a quote (draft)'],
