@@ -2642,21 +2642,34 @@ async function sendReminder(id, levelOverride, adminId) {
     throw new AppError(`Cannot remind on status '${invoice.status}'`, 409);
   }
   const newLevel = levelOverride || (invoice.reminder_level + 1);
-  if (newLevel > 2) {
+  if (newLevel > 3) {
     throw new AppError('Reminder level exhausted', 409);
   }
   return await applyReminder(invoice, lineItems, newLevel, adminId);
 }
 
+// Per-reminder Mahngebühr in minor units (0 when disabled). Flat amount OR a
+// percentage of the invoice gross, per crm_invoices_late_fee_type. Charged from
+// the 2nd reminder onwards. ⚠️ A late fee is only enforceable if the concrete
+// amount is stated in the AGB — verify with a Treuhänder (the admin UI says so).
+async function resolvePerReminderFeeMinor(invoice) {
+  if ((await getAppSetting('crm_invoices_late_fee_enabled')) === false) return 0;
+  const type = (await getAppSetting('crm_invoices_late_fee_type')) || 'flat';
+  if (type === 'percent') {
+    const pct = Number(await getAppSetting('crm_invoices_late_fee_percent')) || 0;
+    return Math.max(0, Math.round(Number(invoice.total_amount_minor || 0) * pct / 100));
+  }
+  return Math.max(0, ensureInt(await getAppSetting('crm_invoices_late_fee_minor')) || 2500);
+}
+
 async function applyReminder(invoice, lineItems, level, adminId) {
   const customer = await db('customer_accounts').where({ id: invoice.customer_account_id }).first();
   let lateFeeMinor = invoice.late_fee_amount_minor || 0;
-  if (level === 2) {
-    const enabled = await getAppSetting('crm_invoices_late_fee_enabled');
-    if (enabled !== false) {
-      const fee = ensureInt(await getAppSetting('crm_invoices_late_fee_minor')) || 2500;
-      lateFeeMinor = fee;
-    }
+  if (level >= 2) {
+    const perReminder = await resolvePerReminderFeeMinor(invoice);
+    // One fee per fee-bearing reminder (levels 2..level): 2nd = 1×, 3rd = 2×.
+    // Computed from `level` so re-applying the same level never stacks.
+    lateFeeMinor = (level - 1) * perReminder;
   }
   const newTotal = invoice.total_amount_minor + lateFeeMinor;
 
@@ -2909,10 +2922,9 @@ async function queuePaymentCheckEmail(invoiceId, { skipThrottle = false } = {}) 
   // Determine whether the customer reminder will include a Mahngebühr
   // if the admin selects "Not paid" / "Partial" — surfaced to the
   // email so the admin sees the consequence before clicking.
-  const reminderLateFeeEnabled = (await getAppSetting('crm_invoices_late_fee_enabled')) !== false;
-  const reminderFeeMinor = ensureInt(await getAppSetting('crm_invoices_late_fee_minor')) || 2500;
+  const reminderFeeMinor = await resolvePerReminderFeeMinor(invoice);
   const nextLevel = (invoice.reminder_level || 0) + 1;
-  const willChargeFee = reminderLateFeeEnabled && nextLevel >= 2;
+  const willChargeFee = reminderFeeMinor > 0 && nextLevel >= 2;
 
   const baseUrl = process.env.FRONTEND_URL
     || (await getAppSetting('app_frontend_url'))
@@ -3163,7 +3175,7 @@ async function recordPaymentCheckAction({ token, action, amountMinor, ip, adminI
     const refreshed = await db('invoices').where({ id: invoice.id }).first();
     if (refreshed.status !== 'paid') {
       const nextLevel = (refreshed.reminder_level || 0) + 1;
-      if (nextLevel <= 2) {
+      if (nextLevel <= 3) {
         const lineItems = await db('invoice_line_items')
           .where({ invoice_id: invoice.id }).orderBy('position', 'asc');
         await applyReminder(refreshed, lineItems, nextLevel, adminId);
@@ -3174,7 +3186,7 @@ async function recordPaymentCheckAction({ token, action, amountMinor, ip, adminI
 
   // 'unpaid'
   const nextLevel = (invoice.reminder_level || 0) + 1;
-  if (nextLevel > 2) {
+  if (nextLevel > 3) {
     // Already at max reminder — admin has to take this offline.
     return { applied: 'unpaid', reminderSkipped: 'max_level_reached' };
   }

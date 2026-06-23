@@ -19,8 +19,8 @@ const { getAppSetting } = require('../utils/appSettings');
 
 const DUNNING_KEY = 'invoice_dunning';
 // Bump when the built-in graph changes so a disabled, never-activated copy is
-// re-seeded on boot. v2 = the delegation/cutover graph (payment-check gate).
-const SEED_VERSION = 2;
+// re-seeded on boot. v2 = delegation/cutover graph; v3 = 3 reminder loops.
+const SEED_VERSION = 3;
 
 function buildDunningGraph({ firstDays, gapDays, maxReminders }) {
   // Delegation model: the payment-check email IS the admin gate (it drives the
@@ -83,7 +83,7 @@ async function seedBuiltinWorkflowsAtBoot(db, logger) {
     const firstDays = Number(await getAppSetting('crm_invoices_reminder_first_days')) || 14;
     const secondDays = Number(await getAppSetting('crm_invoices_reminder_second_days')) || 30;
     const gapDays = Math.max(1, secondDays - firstDays);
-    const { nodes, edges } = buildDunningGraph({ firstDays, gapDays, maxReminders: 2 });
+    const { nodes, edges } = buildDunningGraph({ firstDays, gapDays, maxReminders: 3 });
 
     const description = 'Drives overdue dunning through the engine: wait to the due date, then up '
       + 'to two payment-check cycles. Each cycle fires the existing admin confirm-payment email '

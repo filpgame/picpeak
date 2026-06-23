@@ -4898,6 +4898,20 @@
     "crm_invoices_late_fee_minor": {
       "label": "Mahngebühr (Rappen / Cent)"
     },
+    "crm_invoices_late_fee_type": {
+      "label": "Art der Mahngebühr"
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": "Mahngebühr (% der Rechnung)"
+    },
+    "lateFeeType": {
+      "flat": "Fester Betrag (Rappen)",
+      "percent": "Prozentsatz der Rechnung"
+    },
+    "lateFeeAgb": {
+      "title": "Mahngebühren müssen in den AGB stehen",
+      "body": "Vertragliche Pflicht: Sätze wie „Es werden Mahnspesen erhoben“ reichen nicht aus. In den AGB muss die konkrete Gebühr klar beziffert sein (z.B. „CHF 20 ab der 2. Mahnung“). Mit dem Treuhänder prüfen."
+    },
     "crm_invoices_late_fee_label": {
       "label": "Bezeichnung Mahngebühr"
     },

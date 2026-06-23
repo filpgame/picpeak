@@ -31,7 +31,9 @@ const SETTING_KEYS = [
   'crm_invoices_reminder_first_days',
   'crm_invoices_reminder_second_days',
   'crm_invoices_late_fee_enabled',
+  'crm_invoices_late_fee_type',
   'crm_invoices_late_fee_minor',
+  'crm_invoices_late_fee_percent',
   'crm_invoices_late_fee_label',
   'crm_invoices_skonto_business_days',
   'crm_invoices_skonto_percent_default',
@@ -242,7 +244,11 @@ export const CrmSettingsPage: React.FC = () => {
         <h3 className="font-semibold mb-3">{t('crmSettings.section.invoices', 'Invoices')}</h3>
         {checkbox('crm_invoices_qr_enabled', 'Render payment QR on invoice PDFs')}
         {checkbox('crm_invoices_reminders_enabled', 'Send automatic reminders for overdue invoices')}
-        {checkbox('crm_invoices_late_fee_enabled', 'Add a late fee on the second reminder')}
+        {checkbox('crm_invoices_late_fee_enabled', 'Add a late fee (Mahngebühr) on the 2nd and 3rd reminder')}
+        <div className="mt-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200">
+          <p className="font-medium">{t('crmSettings.lateFeeAgb.title', 'Late fees must be itemised in your terms (AGB)')}</p>
+          <p className="mt-1">{t('crmSettings.lateFeeAgb.body', 'Vertragliche Pflicht: Sätze wie „Es werden Mahnspesen erhoben“ reichen nicht aus. In den AGB muss die konkrete Gebühr klar beziffert sein (z.B. „CHF 20 ab der 2. Mahnung“). Mit dem Treuhänder prüfen.')}</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           <Input type="number" min={1} max={365}
             label={t('crmSettings.crm_invoices_reminder_first_days.label', 'First reminder after (days past due)') as string}
@@ -252,10 +258,30 @@ export const CrmSettingsPage: React.FC = () => {
             label={t('crmSettings.crm_invoices_reminder_second_days.label', 'Second reminder after (days past due)') as string}
             value={values.crm_invoices_reminder_second_days ?? 30}
             onChange={(e) => setVal('crm_invoices_reminder_second_days', Number(e.target.value))} />
-          <Input type="number" min={0}
-            label={t('crmSettings.crm_invoices_late_fee_minor.label', 'Late fee (minor units / Rappen)') as string}
-            value={values.crm_invoices_late_fee_minor ?? 0}
-            onChange={(e) => setVal('crm_invoices_late_fee_minor', Number(e.target.value))} />
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              {t('crmSettings.crm_invoices_late_fee_type.label', 'Late fee type')}
+            </label>
+            <select
+              value={values.crm_invoices_late_fee_type ?? 'flat'}
+              onChange={(e) => setVal('crm_invoices_late_fee_type', e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+            >
+              <option value="flat">{t('crmSettings.lateFeeType.flat', 'Flat amount (Rappen)')}</option>
+              <option value="percent">{t('crmSettings.lateFeeType.percent', 'Percentage of invoice')}</option>
+            </select>
+          </div>
+          {(values.crm_invoices_late_fee_type ?? 'flat') === 'percent' ? (
+            <Input type="number" min={0} step="0.01" max={100}
+              label={t('crmSettings.crm_invoices_late_fee_percent.label', 'Late fee (% of invoice)') as string}
+              value={values.crm_invoices_late_fee_percent ?? 0}
+              onChange={(e) => setVal('crm_invoices_late_fee_percent', Number(e.target.value))} />
+          ) : (
+            <Input type="number" min={0}
+              label={t('crmSettings.crm_invoices_late_fee_minor.label', 'Late fee (minor units / Rappen)') as string}
+              value={values.crm_invoices_late_fee_minor ?? 0}
+              onChange={(e) => setVal('crm_invoices_late_fee_minor', Number(e.target.value))} />
+          )}
           <Input
             label={t('crmSettings.crm_invoices_late_fee_label.label', 'Late fee label') as string}
             value={values.crm_invoices_late_fee_label ?? 'Mahngebühr'}

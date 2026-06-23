@@ -4896,6 +4896,20 @@
     "crm_invoices_late_fee_minor": {
       "label": "Late fee (minor units / Rappen)"
     },
+    "crm_invoices_late_fee_type": {
+      "label": "Late fee type"
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": "Late fee (% of invoice)"
+    },
+    "lateFeeType": {
+      "flat": "Flat amount (Rappen)",
+      "percent": "Percentage of invoice"
+    },
+    "lateFeeAgb": {
+      "title": "Late fees must be itemised in your terms (AGB)",
+      "body": "A contractual duty: phrases like “late fees apply” aren't enough. Your terms must state the concrete fee (e.g. “CHF 20 from the 2nd reminder”). Verify with your Treuhänder."
+    },
     "crm_invoices_late_fee_label": {
       "label": "Late fee label"
     },
