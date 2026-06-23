@@ -131,8 +131,11 @@ router.post('/', requirePermission('workflows.manage'), async (req, res, next) =
         name: b.name, description: b.description || null, enabled: !!b.enabled, version: 1,
         trigger_type: b.trigger_type, trigger_config: b.trigger_config ? JSON.stringify(b.trigger_config) : null,
         created_by: req.admin?.id || null,
-      });
-      const newId = ins[0];
+      }).returning('id');
+      // Postgres returns [] without an explicit returning clause, so ins[0]
+      // would be undefined → the child node inserts would violate NOT NULL.
+      // Normalise the {id} (pg) vs bare id (sqlite) shapes.
+      const newId = ins[0]?.id ?? ins[0];
       await writeGraph(trx, newId, 1, b.nodes, b.edges);
       return newId;
     });

@@ -127,8 +127,12 @@ async function seedBuiltinWorkflowsAtBoot(db, logger) {
         trigger_config: JSON.stringify({ seedVersion: SEED_VERSION }),
         is_builtin: true,
         builtin_key: DUNNING_KEY,
-      });
-      await writeGraph(trx, ins[0], 1, nodes, edges);
+      }).returning('id');
+      // Postgres returns [] without `.returning`, so ins[0] would be undefined
+      // and the child node inserts would roll back on NOT NULL. Normalise the
+      // {id} (pg) vs bare-id (sqlite) shapes.
+      const workflowId = ins[0]?.id ?? ins[0];
+      await writeGraph(trx, workflowId, 1, nodes, edges);
     });
 
     booted = true;
