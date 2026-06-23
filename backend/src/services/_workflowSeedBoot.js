@@ -206,16 +206,20 @@ function buildGalleryExpiredGraph() {
 
 // Built-in registry. `version` is the SEED_VERSION — bump when a graph changes
 // (or to re-assert the default `enabled` state) so a never-admin-touched copy is
-// re-seeded on boot. `enabled` is the cutover default: the live automations
-// (dunning, gallery expiry, pre-event) ship ENABLED and their legacy hardcoded
-// paths stand down (isBuiltinFlowActive guards), so behaviour is preserved with
-// zero double-send. Illustrative/stub flows (booking) ship disabled.
-//   invoice_dunning v5 = enabled-by-default cutover (was v4: collections handoff).
+// re-seeded on boot. `enabled` is the seed default.
+//
+// FIRST-BETA POSTURE (review feedback): all built-ins ship DISABLED. The legacy
+// hardcoded paths keep running by default (the mutual-exclusion guards are
+// enabled-based, so they only stand down once the admin ENABLES the matching
+// built-in — a deliberate, per-install cutover). Enabling reverts to legacy.
+// Once the prefetch-safe approval interstitial has soaked in beta, flip the
+// three notification built-ins back to enabled-by-default in a follow-up.
+//   invoice_dunning v6 = ship disabled (was v5 enabled-by-default).
 const BUILTINS = [
   {
     key: DUNNING_KEY,
-    version: 5,
-    enabled: true,
+    version: 6,
+    enabled: false,
     name: 'Invoice dunning (built-in)',
     trigger_type: 'invoice.sent',
     trigger_config: {},
@@ -223,9 +227,9 @@ const BUILTINS = [
       'Drives overdue dunning through the engine: wait to the due date, then up to '
       + 'three payment-check cycles. Each cycle fires the existing admin confirm-payment '
       + 'email (the gate), which applies reminders + Mahngebühr via the proven payment-check '
-      + 'flow; after the cycles exhaust it hands the case to collections. ENABLED by default; '
-      + 'while it is enabled the hardcoded reminder ladder is skipped automatically, so the two '
-      + 'never double-send. Reminder timing is now edited here (no longer in Settings → CRM).',
+      + 'flow; after the cycles exhaust it hands the case to collections. DISABLED by default — '
+      + 'the hardcoded reminder ladder keeps running until you enable this; enabling cuts over to '
+      + 'the engine (the ladder then stands down so the two never double-send), disabling reverts.',
     build: async () => {
       const firstDays = Number(await getAppSetting('crm_invoices_reminder_first_days')) || 14;
       const secondDays = Number(await getAppSetting('crm_invoices_reminder_second_days')) || 30;
@@ -235,50 +239,49 @@ const BUILTINS = [
   },
   {
     key: 'gallery_expiring',
-    version: 1,
-    enabled: true,
+    version: 2,
+    enabled: false,
     name: 'Gallery expiring (built-in)',
     trigger_type: 'gallery.expiring',
     trigger_config: {},
     description:
       'When a gallery is approaching its expiry date, email the customer the expiration warning. '
-      + 'ENABLED by default; it delegates to the same email the hourly expiration checker used to '
-      + 'send, and that legacy email stands down while this flow is on (no double-send). Edit or '
-      + 'extend it here (e.g. add a final-download nudge).',
+      + 'DISABLED by default; the hourly expiration checker keeps sending the warning until you '
+      + 'enable this, which delegates to the identical email and stands the legacy send down. '
+      + 'Edit or extend it here (e.g. add a final-download nudge).',
     build: async () => buildGalleryExpiringGraph(),
   },
   {
     key: 'gallery_expired',
-    version: 1,
-    enabled: true,
+    version: 2,
+    enabled: false,
     name: 'Gallery expired (built-in)',
     trigger_type: 'gallery.expired',
     trigger_config: {},
     description:
       'When a gallery passes its expiry, email the customer (and admin) that it has expired. '
-      + 'ENABLED by default; delegates to the same email the expiration checker used to send, '
-      + 'and that legacy email stands down while this flow is on. The gallery is still archived '
-      + 'automatically regardless of this flow.',
+      + 'DISABLED by default; the expiration checker keeps sending it until you enable this, which '
+      + 'delegates to the identical email and stands the legacy send down. The gallery is still '
+      + 'archived automatically regardless of this flow.',
     build: async () => buildGalleryExpiredGraph(),
   },
   {
     key: 'pre_event_email',
-    version: 2,
-    enabled: true,
+    version: 3,
+    enabled: false,
     name: 'Pre-event reminder (built-in)',
     trigger_type: 'event.date_approaching',
     // daysBefore seeds the scheduler emitter from the current global setting so
-    // upgrades preserve timing; per-event offset overrides still win. This flow
-    // is now the source of truth for the lead time (was Settings → Reminder emails).
+    // enabling preserves timing; per-event offset overrides still win.
     trigger_config: async () => {
       const d = Number(await getAppSetting('crm_event_reminders_days_before'));
       return { daysBefore: Number.isFinite(d) && d >= 0 ? d : 2 };
     },
     description:
-      'A few days before the event date, send the customer the pre-event reminder. ENABLED by '
-      + 'default; the notify_pre_event action delegates to the proven reminder logic (per-type '
-      + 'template, per-event override, send-once), and the legacy reminder pass stands down while '
-      + 'this flow is on. Lead time = daysBefore in the trigger config (seeded from your old '
+      'A few days before the event date, send the customer the pre-event reminder. DISABLED by '
+      + 'default; the legacy reminder pass keeps running until you enable this, which delegates to '
+      + 'the proven reminder logic (per-type template, per-event override, send-once) and stands '
+      + 'the legacy pass down. Lead time = daysBefore in the trigger config (seeded from your old '
       + 'global setting); per-event overrides on the event page still apply.',
     build: async () => buildPreEventEmailGraph(),
   },
@@ -363,14 +366,14 @@ async function seedOneBuiltin(db, logger, def) {
   const existing = await db('workflows').where({ builtin_key: def.key }).first();
 
   if (existing) {
-    // Re-seed only a never-admin-activated copy whose SEED_VERSION moved on. An
-    // already-ENABLED built-in is the admin's live (possibly customised) flow —
-    // never overwrite it. The version bump carries the cutover default (incl.
-    // flipping a still-disabled flow to enabled); the cutover targets flows that
-    // shipped disabled and were never touched, so this leaves admin choices alone.
+    // Never touch a built-in the admin has taken ownership of (enabled/disabled
+    // or edited it) — admin_toggled_at is the sentinel (migration 148). For a
+    // never-touched copy, re-seed on a SEED_VERSION bump and (re-)apply the seed
+    // default `enabled`, so a shipped default flip (e.g. enabled→disabled for
+    // first beta) propagates to installs the admin hasn't customised.
     const storedVersion = Number(parseSeedConfig(existing.trigger_config).seedVersion) || 0;
-    const isEnabled = existing.enabled === true || existing.enabled === 1;
-    if (isEnabled || storedVersion >= def.version) return;
+    const adminOwned = !!existing.admin_toggled_at;
+    if (adminOwned || storedVersion >= def.version) return;
 
     const newVersion = (existing.version || 1) + 1;
     await db.transaction(async (trx) => {

@@ -128,13 +128,13 @@ async function runEventReminderPass() {
     return { scanned: 0, sent: 0, skipped: 0, disabled: true };
   }
 
-  // Mutual exclusion with the workflow engine: once the pre_event_email built-in
-  // is seeded (flag on), the engine OWNS the reminder — it sends via the
-  // notify_pre_event action when the flow is enabled, or nothing when the admin
-  // disabled it. Either way the legacy pass stands down so the two never
-  // double-send. Fails closed → legacy pass keeps running if the subsystem is down.
+  // Mutual exclusion with the workflow engine: the legacy pass stands down only
+  // when the pre_event_email built-in is ENABLED (then the engine sends via the
+  // notify_pre_event action). If the flow is disabled, this legacy pass keeps
+  // running — so the built-ins can ship disabled without going dark, and
+  // disabling a built-in cleanly reverts to the legacy path. Fails closed.
   try {
-    if (await require('./workflows').isBuiltinFlowPresent('pre_event_email')) {
+    if (await require('./workflows').isBuiltinFlowActive('pre_event_email')) {
       return { scanned: 0, sent: 0, skipped: 0, byWorkflow: true };
     }
   } catch (_) { /* workflow subsystem down → keep the legacy pass running */ }

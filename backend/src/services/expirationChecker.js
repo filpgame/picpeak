@@ -26,12 +26,14 @@ async function checkExpirations() {
     // but skip the LEGACY email so the two never double-send. State transitions
     // (is_active=false, archive) always run regardless — they're the expiry
     // mechanic, not the notification.
-    // Existence-based: once the built-in is seeded the engine OWNS the email, so
-    // the legacy send stands down whether the flow is enabled (it sends) or
-    // disabled (admin turned it off). The trigger is still emitted regardless.
-    const { isBuiltinFlowPresent } = require('./workflows');
-    const warningFlowOwns = await isBuiltinFlowPresent('gallery_expiring');
-    const expiredFlowOwns = await isBuiltinFlowPresent('gallery_expired');
+    // Enabled-based mutual exclusion: the legacy email stands down only when the
+    // matching built-in is ENABLED (then its action sends the identical mail). A
+    // disabled built-in leaves the legacy send running — so the flows can ship
+    // disabled without galleries going un-notified, and disabling a flow reverts
+    // to legacy. The trigger is still emitted regardless (for any custom flows).
+    const { isBuiltinFlowActive } = require('./workflows');
+    const warningFlowOwns = await isBuiltinFlowActive('gallery_expiring');
+    const expiredFlowOwns = await isBuiltinFlowActive('gallery_expired');
 
     // Check for events needing warning emails
     // Skip events with null expires_at (they never expire)

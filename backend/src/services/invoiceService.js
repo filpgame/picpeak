@@ -2765,20 +2765,27 @@ async function applyReminder(invoice, lineItems, level, adminId) {
   attachments.push({ filename: `${fresh.invoice_number}_Mahnung.pdf`, contentPath: mahnungPath, contentType: 'application/pdf' });
 
   const { to: reminderTo, cc: reminderCc } = resolveBillingRecipients(customer, invoice.cc_pdf_email);
-  await emailProcessor.queueEmail(invoice.event_id || null, reminderTo, templateKey, {
-    invoice_number: invoice.invoice_number,
-    customer_name: customer.display_name || customer.first_name || customer.email.split('@')[0],
-    total_amount: formatMajor(invoice.total_amount_minor, invoice.currency, locale),
-    new_total_amount: formatMajor(newTotal, invoice.currency, locale),
-    outstanding_amount: formatMajor(outstandingMinor, invoice.currency, locale),
-    paid_amount: formatMajor(invoice.paid_amount_minor, invoice.currency, locale),
-    late_fee_amount: formatMajor(lateFeeGross, invoice.currency, locale),
-    due_date: formatShortDate(invoice.due_date),
-    days_overdue: daysOverdue,
-    cc: reminderCc,
-    attachments,
-  // Dunning reminders are relationship mail — hold to business hours.
-  }, { respectBusinessHours: true });
+  try {
+    await emailProcessor.queueEmail(invoice.event_id || null, reminderTo, templateKey, {
+      invoice_number: invoice.invoice_number,
+      customer_name: customer.display_name || customer.first_name || customer.email.split('@')[0],
+      total_amount: formatMajor(invoice.total_amount_minor, invoice.currency, locale),
+      new_total_amount: formatMajor(newTotal, invoice.currency, locale),
+      outstanding_amount: formatMajor(outstandingMinor, invoice.currency, locale),
+      paid_amount: formatMajor(invoice.paid_amount_minor, invoice.currency, locale),
+      late_fee_amount: formatMajor(lateFeeGross, invoice.currency, locale),
+      due_date: formatShortDate(invoice.due_date),
+      days_overdue: daysOverdue,
+      cc: reminderCc,
+      attachments,
+    // Dunning reminders are relationship mail — hold to business hours.
+    }, { respectBusinessHours: true });
+  } catch (err) {
+    // Don't leave the just-rendered Mahnung PDF orphaned on disk if queueing the
+    // email failed — it would only be reachable via the next reminder anyway.
+    try { fs.unlinkSync(mahnungPath); } catch (_) { /* best-effort cleanup */ }
+    throw err;
+  }
 
   try {
     await logActivity('invoice_reminder_sent', { invoiceId: invoice.id, level, lateFeeMinor: lateFeeGross },
@@ -3447,14 +3454,15 @@ async function runScheduledTasks() {
   // Throttled to one email per 24h per invoice via
   // invoices.last_payment_check_at.
   const remindersEnabled = await getAppSetting('crm_invoices_reminders_enabled');
-  // Mutual exclusion with the workflow engine: once the invoice_dunning built-in
-  // is seeded (flag on), the engine OWNS dunning and is the single switch — it
-  // fires the payment-check emails when the flow is enabled, or nothing when the
-  // admin disabled it. Either way the hardcoded ladder stands down so the two
-  // never double-send. Fails closed → ladder stays on if the subsystem is down.
+  // Mutual exclusion with the workflow engine: the hardcoded ladder stands down
+  // only when the invoice_dunning built-in is ENABLED (then the engine fires the
+  // payment-check emails). A disabled built-in leaves this ladder running — so
+  // the flow can ship disabled without dunning going dark, and disabling the
+  // flow reverts to the ladder. Fails closed → ladder stays on if the subsystem
+  // is down.
   let engineDrivesDunning = false;
   try {
-    engineDrivesDunning = await require('./workflows').isBuiltinFlowPresent('invoice_dunning');
+    engineDrivesDunning = await require('./workflows').isBuiltinFlowActive('invoice_dunning');
   } catch (_) { /* workflows tables absent / flag system down → ladder stays on */ }
   if (remindersEnabled !== false && !engineDrivesDunning) {
     const firstDays  = ensureInt(await getAppSetting('crm_invoices_reminder_first_days')) || 14;
