@@ -233,4 +233,23 @@ describe('workflow engine', () => {
     const again = await engine.actByToken(rawToken, 'confirm');
     expect(again.already).toBe(true);
   });
+
+  test('seeds the invoice-dunning built-in flow (disabled, idempotent)', async () => {
+    const { seedBuiltinWorkflowsAtBoot, DUNNING_KEY } = require('../../src/services/_workflowSeedBoot');
+    const noopLogger = { info() {}, warn() {} };
+    await seedBuiltinWorkflowsAtBoot(db, noopLogger);
+
+    const wf = await db('workflows').where({ builtin_key: DUNNING_KEY }).first();
+    expect(wf).toBeTruthy();
+    expect(!!wf.is_builtin).toBe(true);
+    expect(!!wf.enabled).toBe(false);
+
+    const nodes = await db('workflow_nodes').where({ workflow_id: wf.id, version: 1 });
+    expect(nodes.filter((n) => n.type === 'trigger')).toHaveLength(1);
+    expect(nodes.length).toBeGreaterThanOrEqual(10);
+
+    await seedBuiltinWorkflowsAtBoot(db, noopLogger); // idempotent
+    const all = await db('workflows').where({ builtin_key: DUNNING_KEY });
+    expect(all.length).toBe(1);
+  });
 });

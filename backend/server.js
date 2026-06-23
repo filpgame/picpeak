@@ -897,6 +897,15 @@ async function startServer() {
       logger.warn('restore-settings self-heal failed at boot:', err.message);
     }
 
+    // Seed built-in workflows (the editable invoice-dunning flow). Disabled by
+    // default — live reminder behaviour is unchanged. See _workflowSeedBoot.js.
+    try {
+      const { seedBuiltinWorkflowsAtBoot } = require('./src/services/_workflowSeedBoot');
+      await seedBuiltinWorkflowsAtBoot(db, logger);
+    } catch (err) {
+      logger.warn('built-in workflow seed failed at boot:', err.message);
+    }
+
     // Install-from-backup trigger. If `RESTORE_ON_INSTALL` (or
     // `.txt`) exists in the /backup mount AND the DB is empty, run
     // the restore HERE before any admin UI surfaces. Lets admins
