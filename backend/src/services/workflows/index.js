@@ -12,8 +12,11 @@ const registry = require('./registry');
 // Side-effect import: registers the data-touching action/condition handlers
 // (send_email, invoice_paid, prepare_* document actions) onto the registry.
 require('./actions');
+// Registers the gate_setup action + exposes approval helpers.
+const approvals = require('./approvals');
 
 module.exports = {
   ...engine,
+  ...approvals,
   registry,
 };

@@ -187,4 +187,50 @@ describe('workflow engine', () => {
     expect(await cond(makeCtx({ paid_at: null, status: 'paid' }))).toBe(true);
     expect(await cond(makeCtx({ paid_at: null, status: 'sent', paid_amount_minor: 0, total_amount_minor: 1000 }))).toBe(false);
   });
+
+  test('gate creates a pending approval + admin email, token confirm resumes the run', async () => {
+    await makeWorkflow({
+      trigger: 'approval.event',
+      nodes: [
+        { key: 'a1', type: 'trigger' },
+        { key: 'a2', type: 'gate', config: { type: 'payment_confirm', prompt: 'No payment yet?' } },
+        { key: 'a3', type: 'action', config: { action: 'noop' } }, // confirm path
+        { key: 'a4', type: 'action', config: { action: 'noop' } }, // deny path
+      ],
+      edges: [
+        { from: 'a1', to: 'a2' },
+        { from: 'a2', handle: 'confirm', to: 'a3' },
+        { from: 'a2', handle: 'deny', to: 'a4' },
+      ],
+    });
+    const runIds = await engine.emitWorkflowEvent('approval.event', {
+      entityType: 'invoice', entityId: 42, payload: { adminEmail: 'admin@example.com' },
+    });
+    const runId = runIds[0];
+
+    let run = await db('workflow_runs').where({ id: runId }).first();
+    expect(run.status).toBe('waiting');
+    expect(run.current_node).toBe('a2');
+
+    const approval = await db('workflow_approvals').where({ run_id: runId }).first();
+    expect(approval).toBeTruthy();
+    expect(approval.status).toBe('pending');
+
+    const adminMail = await db('email_queue').where({ recipient_email: 'admin@example.com' }).first();
+    expect(adminMail).toBeTruthy();
+
+    // Extract the raw token from the emailed confirm link and act on it.
+    const data = JSON.parse(adminMail.email_data);
+    const rawToken = data.confirm_url.split('/').slice(-2)[0];
+    const res = await engine.actByToken(rawToken, 'confirm');
+    expect(res.ok).toBe(true);
+    expect(res.status).toBe('confirmed');
+
+    run = await db('workflow_runs').where({ id: runId }).first();
+    expect(run.status).toBe('done');
+
+    // A second click is idempotent (already recorded).
+    const again = await engine.actByToken(rawToken, 'confirm');
+    expect(again.already).toBe(true);
+  });
 });

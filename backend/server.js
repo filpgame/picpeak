@@ -718,6 +718,7 @@ app.use('/api/admin/dev',        require('./src/routes/adminDev'));
 app.use('/api/public/quotes',  require('./src/routes/publicQuotes'));
 app.use('/api/public/contracts', require('./src/routes/publicContracts'));
 app.use('/api/public/payment-check', require('./src/routes/publicPaymentCheck'));
+app.use('/api/public/workflow-approvals', require('./src/routes/publicWorkflowApprovals'));
 app.use('/api/admin/event-types', require('./src/routes/adminEventTypes'));
 app.use('/api/admin/api-tokens', require('./src/routes/adminApiTokens'));
 app.use('/api/admin/webhooks', require('./src/routes/adminWebhooks'));
