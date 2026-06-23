@@ -25,6 +25,7 @@ const LABELS = {
     // under the title that the customer/auditor needs to trace the
     // §14c-defensible reversal.
     storno_title: 'Cancellation invoice',
+    mahnung_title: 'Payment reminder',
     reference_cancels: 'Cancels',
     date: 'Date',
     quote_number: 'Quote',
@@ -154,6 +155,7 @@ const LABELS = {
     quote_number_label: 'Angebotsnummer',
     invoice_number_label: 'Rechnungsnummer',
     storno_title: 'Stornorechnung',
+    mahnung_title: 'Mahnung',
     reference_cancels: 'Storno zu',
     date: 'Datum',
     quote_number: 'Angebot',

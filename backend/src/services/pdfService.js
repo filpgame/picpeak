@@ -1477,6 +1477,10 @@ function renderDocument(type, context) {
       // family — Storni share the invoice renderer surface, only
       // the cosmetic + accounting-sign branches differ.
       const isStorno = type === 'invoice' && ctx.doc.kind === 'storno';
+      // Mahnung (reminder letter) reuses the invoice surface: same line items +
+      // a Mahngebühr row + the new grand total, but a "Mahnung" title and NO
+      // QR (the QR would encode the original amount, not the new total).
+      const isMahnung = type === 'invoice' && ctx.doc.kind === 'mahnung';
 
       // ---- document number (above) + date (below), both right-aligned
       // The number sits directly under the sender address block so the
@@ -1516,7 +1520,9 @@ function renderDocument(type, context) {
         ? t(ctx.locale, 'quote_title')
         : isStorno
           ? t(ctx.locale, 'storno_title')
-          : t(ctx.locale, 'invoice_title');
+          : isMahnung
+            ? t(ctx.locale, 'mahnung_title')
+            : t(ctx.locale, 'invoice_title');
       y = drawTitle(doc, title, leftX, y + 2);
 
       // Mandatory Storno reference line — "Bezug: Storno zu Rechnung
@@ -1700,7 +1706,7 @@ function renderDocument(type, context) {
       // Both append a fresh page; 'none' is a no-op.
       // Suppressed on Stornorechnungen — negative-amount QR codes
       // aren't a defined construct in either spec.
-      if (type === 'invoice' && !isStorno) {
+      if (type === 'invoice' && !isStorno && !isMahnung) {
         if (ctx.qrFormat === 'swiss') {
           appendSwissQrBill(doc, ctx);
         } else if (ctx.qrFormat === 'epc') {

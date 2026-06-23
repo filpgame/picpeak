@@ -1785,11 +1785,10 @@ async function buildInvoiceRenderContext(invoice, lineItems) {
       vatAmountMinor: invoice.vat_amount_minor,
       shippingAmountMinor: invoice.shipping_amount_minor,
       totalAmountMinor: invoice.total_amount_minor,
-      // Mahngebühr surfaced to the totals box (renders a row
-      // between VAT and the grand-total divider) and folded
-      // into the displayed Grand Total when > 0. Reminder
-      // invoices after level 2 carry a non-zero value.
-      lateFeeAmountMinor: invoice.late_fee_amount_minor || 0,
+      // The Mahngebühr is shown on the separate Mahnung document, NEVER on
+      // the (immutable) invoice — so the invoice render always reports 0. The
+      // Mahnung render path (applyReminder) overrides this with the tracked fee.
+      lateFeeAmountMinor: 0,
     },
     doc: {
       // Document type discriminator. `'invoice'` (default) renders
@@ -1803,7 +1802,7 @@ async function buildInvoiceRenderContext(invoice, lineItems) {
       issueDate: invoice.issue_date,
       dueDate: invoice.due_date,
       totalAmountMinor: invoice.total_amount_minor,
-      lateFeeMinor: invoice.late_fee_amount_minor,
+      lateFeeMinor: 0,
       // Reminder level — drives Skonto suppression on second
       // reminders (no early-payment discount once the customer
       // is in dunning).
@@ -2652,7 +2651,8 @@ async function sendReminder(id, levelOverride, adminId) {
 // percentage of the invoice gross, per crm_invoices_late_fee_type. Charged from
 // the 2nd reminder onwards. ⚠️ A late fee is only enforceable if the concrete
 // amount is stated in the AGB — verify with a Treuhänder (the admin UI says so).
-async function resolvePerReminderFeeMinor(invoice) {
+// Net per-reminder Mahngebühr (flat amount or % of invoice gross), 0 disabled.
+async function resolveLateFeeNetMinor(invoice) {
   if ((await getAppSetting('crm_invoices_late_fee_enabled')) === false) return 0;
   const type = (await getAppSetting('crm_invoices_late_fee_type')) || 'flat';
   let fee;
@@ -2662,103 +2662,109 @@ async function resolvePerReminderFeeMinor(invoice) {
   } else {
     fee = ensureInt(await getAppSetting('crm_invoices_late_fee_minor')) || 2500;
   }
-  fee = Math.max(0, fee);
+  return Math.max(0, fee);
+}
 
-  // VAT on the late fee is jurisdiction-dependent (CH: yes; DE/AT: no), so it's
-  // toggle-gated. It also no-ops when the ORG doesn't charge VAT — the org's
-  // default rate (business_profile.vat_rate_default) is 0/unset — so enabling
-  // the toggle on a non-VAT org adds nothing. (The fee amount is treated as net;
-  // VAT is added on top. The tax-report VAT breakdown for the fee is part of the
-  // deferred dunning-document rework.)
-  if ((await getAppSetting('crm_invoices_late_fee_vat_enabled')) === true && fee > 0) {
-    const profile = await db('business_profile').where({ id: 1 }).first('vat_rate_default');
-    const rate = Number(profile?.vat_rate_default) || 0;
-    if (rate > 0) fee += Math.round(fee * rate / 100);
-  }
-  return fee;
+// VAT rate on the fee — jurisdiction-dependent (CH: yes; DE/AT: no), so
+// toggle-gated AND org-VAT-gated: 0 when the org has no default VAT rate, so
+// enabling the toggle on a non-VAT org adds nothing.
+async function resolveLateFeeVatRate() {
+  if ((await getAppSetting('crm_invoices_late_fee_vat_enabled')) !== true) return 0;
+  const profile = await db('business_profile').where({ id: 1 }).first('vat_rate_default');
+  return Number(profile?.vat_rate_default) || 0;
+}
+
+// Gross per-reminder fee (net + VAT) — for the admin payment-check preview.
+async function resolvePerReminderFeeMinor(invoice) {
+  const net = await resolveLateFeeNetMinor(invoice);
+  if (net <= 0) return 0;
+  const rate = await resolveLateFeeVatRate();
+  return rate > 0 ? net + Math.round(net * rate / 100) : net;
 }
 
 async function applyReminder(invoice, lineItems, level, adminId) {
   const customer = await db('customer_accounts').where({ id: invoice.customer_account_id }).first();
-  let lateFeeMinor = invoice.late_fee_amount_minor || 0;
-  if (level >= 2) {
-    const perReminder = await resolvePerReminderFeeMinor(invoice);
-    // One fee per fee-bearing reminder (levels 2..level): 2nd = 1×, 3rd = 2×.
-    // Computed from `level` so re-applying the same level never stacks.
-    lateFeeMinor = (level - 1) * perReminder;
-  }
-  const newTotal = invoice.total_amount_minor + lateFeeMinor;
 
-  await db('invoices').where({ id: invoice.id }).update({
+  // Per fee-bearing reminder (levels 2..level): 2nd = 1×, 3rd = 2×, computed
+  // from `level` so re-applying the same level never stacks. The fee is dunning
+  // STATE on the row (gross + the VAT portion) — it is NOT shown on the
+  // immutable invoice; it appears on the separate Mahnung document below.
+  let lateFeeGross = invoice.late_fee_amount_minor || 0;
+  let lateFeeVat = invoice.late_fee_vat_minor || 0;
+  if (level >= 2) {
+    const net = await resolveLateFeeNetMinor(invoice);
+    const rate = await resolveLateFeeVatRate();
+    const vatPer = rate > 0 ? Math.round(net * rate / 100) : 0;
+    lateFeeGross = (level - 1) * (net + vatPer);
+    lateFeeVat = (level - 1) * vatPer;
+  }
+  const newTotal = Number(invoice.total_amount_minor || 0) + lateFeeGross;
+
+  const update = {
     status: 'overdue',
     reminder_level: level,
     last_reminder_sent_at: new Date(),
-    late_fee_amount_minor: lateFeeMinor,
+    late_fee_amount_minor: lateFeeGross,
     updated_at: new Date(),
-  });
+  };
+  if (await hasColumnCached('invoices', 'late_fee_vat_minor')) update.late_fee_vat_minor = lateFeeVat;
+  await db('invoices').where({ id: invoice.id }).update(update);
 
-  // Re-render PDF so the late fee shows up.
+  // Render the MAHNUNG (reminder letter). The original invoice PDF is left
+  // UNTOUCHED (immutable). The Mahnung reuses the invoice layout via a
+  // 'mahnung' kind: same line items + the Mahngebühr row + the new total, with
+  // a "Mahnung" title and no QR (it would encode the old amount).
   const fresh = await db('invoices').where({ id: invoice.id }).first();
   const ctx = await buildInvoiceRenderContext(fresh, lineItems);
+  ctx.doc.kind = 'mahnung';
+  ctx.doc.reminderLevel = level;
+  ctx.doc.lateFeeMinor = lateFeeGross;
+  ctx.totals.lateFeeAmountMinor = lateFeeGross;
   const buffer = await pdfService.renderInvoiceToBuffer(ctx);
   const fs = require('fs');
   const path = require('path');
   const year = new Date(fresh.issue_date).getFullYear();
-  const root = path.join(process.cwd(), 'storage', 'business-docs', 'invoice', String(year));
+  const root = path.join(process.cwd(), 'storage', 'business-docs', 'mahnung', String(year));
   fs.mkdirSync(root, { recursive: true });
-  const pdfPath = path.join(root, `${fresh.invoice_number}.pdf`);
-  fs.writeFileSync(pdfPath, buffer);
+  const mahnungPath = path.join(root, `${fresh.invoice_number}_mahnung_L${level}.pdf`);
+  fs.writeFileSync(mahnungPath, buffer);
 
-  await db('invoices').where({ id: invoice.id }).update({ pdf_path: pdfPath, updated_at: new Date() });
-
-  // days_overdue floors at 1 — a reminder that fires with "0 days
-  // overdue" reads as broken to the customer ("Why am I getting this
-  // already?"). The scheduler only triggers the row once
-  // due_date <= now - reminder_first_days, so the natural minimum is
-  // the configured threshold; for the manual "Send reminder now"
-  // path the admin's intent is "this customer is late", so 1 is the
-  // sensible lower bound even if the calendar arithmetic disagrees.
+  // days_overdue floors at 1 (a "0 days overdue" reminder reads as broken).
   const rawDaysOverdue = Math.floor((Date.now() - new Date(invoice.due_date).getTime()) / 86400000);
   const daysOverdue = Math.max(1, rawDaysOverdue);
   const templateKey = level === 1 ? 'invoice_reminder_first' : 'invoice_reminder_second';
+  const locale = ctx.locale || invoice.language || 'de';
+  const outstandingMinor = Math.max(0, newTotal - Number(invoice.paid_amount_minor || 0));
 
-  // Outstanding = gross total + late fee − already paid. Reminder
-  // templates use this for the "outstanding is X" line so partial
-  // payments are reflected in the reminder amount.
-  const outstandingMinor = Math.max(0,
-    Number(invoice.total_amount_minor || 0)
-    + Number(lateFeeMinor || 0)
-    - Number(invoice.paid_amount_minor || 0));
+  // Attach the (unchanged) original invoice PDF + the new Mahnung.
+  const attachments = [];
+  if (invoice.pdf_path && fs.existsSync(invoice.pdf_path)) {
+    attachments.push({ filename: `${invoice.invoice_number}.pdf`, contentPath: invoice.pdf_path, contentType: 'application/pdf' });
+  }
+  attachments.push({ filename: `${fresh.invoice_number}_Mahnung.pdf`, contentPath: mahnungPath, contentType: 'application/pdf' });
 
   const { to: reminderTo, cc: reminderCc } = resolveBillingRecipients(customer, invoice.cc_pdf_email);
   await emailProcessor.queueEmail(invoice.event_id || null, reminderTo, templateKey, {
     invoice_number: invoice.invoice_number,
     customer_name: customer.display_name || customer.first_name || customer.email.split('@')[0],
-    total_amount: formatMajor(invoice.total_amount_minor, invoice.currency, ctx.locale),
-    new_total_amount: formatMajor(newTotal, invoice.currency, ctx.locale),
-    outstanding_amount: formatMajor(outstandingMinor, invoice.currency, ctx.locale),
-    paid_amount: formatMajor(invoice.paid_amount_minor, invoice.currency, ctx.locale),
-    late_fee_amount: formatMajor(lateFeeMinor, invoice.currency, ctx.locale),
-    // Format dates as DD.MM.YYYY for the customer-facing email
-    // (matches the quote_sent + invoice_sent templates).
+    total_amount: formatMajor(invoice.total_amount_minor, invoice.currency, locale),
+    new_total_amount: formatMajor(newTotal, invoice.currency, locale),
+    outstanding_amount: formatMajor(outstandingMinor, invoice.currency, locale),
+    paid_amount: formatMajor(invoice.paid_amount_minor, invoice.currency, locale),
+    late_fee_amount: formatMajor(lateFeeGross, invoice.currency, locale),
     due_date: formatShortDate(invoice.due_date),
     days_overdue: daysOverdue,
     cc: reminderCc,
-    attachments: [{
-      filename: `${invoice.invoice_number}.pdf`,
-      contentPath: pdfPath,
-      contentType: 'application/pdf',
-    }],
-  // Dunning reminders are relationship mail — hold to business hours so
-  // the customer isn't pinged overnight (no-op unless hours configured).
+    attachments,
+  // Dunning reminders are relationship mail — hold to business hours.
   }, { respectBusinessHours: true });
 
   try {
-    await logActivity('invoice_reminder_sent', { invoiceId: invoice.id, level, lateFeeMinor },
+    await logActivity('invoice_reminder_sent', { invoiceId: invoice.id, level, lateFeeMinor: lateFeeGross },
       invoice.event_id || null, `admin:${adminId || 'system'}`);
   } catch (_) {}
 
-  return { level, lateFeeMinor };
+  return { level, lateFeeMinor: lateFeeGross };
 }
 
 // ---------------------------------------------------------------------
