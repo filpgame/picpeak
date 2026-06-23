@@ -563,6 +563,11 @@ async function createQuote(payload, adminId) {
     if (payload.vatCode !== undefined && await hasColumnCached('quotes', 'vat_code')) {
       row.vat_code = payload.vatCode ? String(payload.vatCode).slice(0, 16) : null;
     }
+    // Migration 146 — event type (event_types.slug_prefix). Drives the type of
+    // the event the quote converts into, instead of the old hardcoded 'wedding'.
+    if (payload.eventType !== undefined && await hasColumnCached('quotes', 'event_type')) {
+      row.event_type = payload.eventType ? String(payload.eventType).slice(0, 64) : null;
+    }
     const inserted = await trx('quotes').insert(row).returning('id');
     const quoteId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
 
@@ -690,6 +695,10 @@ async function updateQuote(id, payload, adminId) {
     // Migration 130 — VAT code snapshot.
     if (Object.prototype.hasOwnProperty.call(payload, 'vatCode') && await hasColumnCached('quotes', 'vat_code')) {
       updates.vat_code = payload.vatCode ? String(payload.vatCode).slice(0, 16) : null;
+    }
+    // Migration 146 — event type.
+    if (Object.prototype.hasOwnProperty.call(payload, 'eventType') && await hasColumnCached('quotes', 'event_type')) {
+      updates.event_type = payload.eventType ? String(payload.eventType).slice(0, 64) : null;
     }
     await trx('quotes').where({ id }).update(updates);
 
@@ -1482,6 +1491,13 @@ async function convertToEvent(quoteId, adminId, options = {}) {
     const customerEmail = customer.email || `${quote.quote_number.toLowerCase()}@picpeak.local`;
     const adminEmail = adminRow?.email || customer.email || 'admin@picpeak.local';
 
+    // Event type for the new event: the type chosen on the quote (migration 146),
+    // else a configurable org default, else 'wedding' as the last-resort seeded
+    // type. Replaces the old unconditional hardcoded 'wedding'.
+    const eventType = (quote.event_type && String(quote.event_type).trim())
+      || (await getAppSetting('crm_default_event_type'))
+      || 'wedding';
+
     // Each candidate column is paired with the value we'd write. We
     // ask the DB which columns exist and only keep the matching pairs
     // — bullet-proof against schema drift in either direction.
@@ -1496,7 +1512,7 @@ async function convertToEvent(quoteId, adminId, options = {}) {
       customer_email: customerEmail,
       customer_phone: customer.phone,
       admin_email: adminEmail,
-      event_type: 'wedding',
+      event_type: eventType,
       password_hash: placeholder,
       share_link: shareLink,
       share_token: shareLink,
