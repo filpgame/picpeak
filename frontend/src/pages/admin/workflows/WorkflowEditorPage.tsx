@@ -2,9 +2,10 @@
  * Admin → Workflows → canvas editor (React Flow).
  *
  * Drag nodes from the palette, connect handle→handle (branch/gate/loop expose
- * yes/no · confirm/deny · loop/exit handles), click a node to edit its config
- * in the side panel, and Save (writes a new version; in-flight runs keep
- * theirs). The graph maps 1:1 onto workflow_nodes/workflow_edges.
+ * yes/no · confirm/deny · loop/exit handles, labelled on the node), click a
+ * node to edit it in the structured side panel, and Save (writes a new
+ * version; in-flight runs keep theirs). The graph maps 1:1 onto
+ * workflow_nodes/workflow_edges. Honours the admin light/dark theme.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +19,9 @@ import {
 import '@xyflow/react/dist/style.css';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { Button, Loading } from '../../../components/common';
+import { useAdminDarkMode } from '../../../contexts/AdminDarkModeContext';
 import { workflowsService, type WorkflowNodeType } from '../../../services/workflows.service';
+import { NodeConfigPanel } from './NodeConfigPanel';
 
 const PALETTE: WorkflowNodeType[] = ['trigger', 'condition', 'branch', 'loop', 'wait', 'action', 'gate', 'webhook'];
 const TRIGGERS = [
@@ -30,27 +33,57 @@ const COLORS: Record<string, string> = {
   trigger: '#1D9E75', condition: '#BA7517', branch: '#BA7517', loop: '#378ADD',
   wait: '#888780', action: '#534AB7', gate: '#7F77DD', webhook: '#888780',
 };
-
 const SOURCE_HANDLES: Record<string, string[]> = {
   condition: ['yes', 'no'], branch: ['yes', 'no'], gate: ['confirm', 'deny'], loop: ['loop', 'exit'],
 };
 
-function WfNode({ data }: { data: { label: string; nodeType: string } }) {
+const WAIT_ANCHOR_LABEL: Record<string, string> = { dueDate: 'due date', issueDate: 'invoice date', eventDate: 'event date' };
+const ACTION_LABEL: Record<string, string> = {
+  queue_payment_check: 'Send payment-check email', send_email: 'Send email', reserve_date: 'Reserve the date',
+  prepare_quote: 'Prepare quote', prepare_contract: 'Prepare contract', prepare_invoice: 'Prepare invoice',
+  prepare_event: 'Create event', prepare_gallery: 'Create gallery', send_document: 'Send document',
+  webhook: 'Call webhook', noop: 'Do nothing', set_context: 'Set value',
+};
+
+// Human-readable label derived live from a node's type + config.
+function describeNode(type: string, config: any = {}, triggerType?: string): string {
+  const c = config || {};
+  switch (type) {
+    case 'trigger': return triggerType || 'When…';
+    case 'wait':
+      if (c.untilVar) return `Wait until ${WAIT_ANCHOR_LABEL[c.untilVar] || c.untilVar}`;
+      return `Wait ${[c.delayDays && `${c.delayDays}d`, c.delayHours && `${c.delayHours}h`, c.delayMinutes && `${c.delayMinutes}m`].filter(Boolean).join(' ') || '…'}`;
+    case 'condition':
+    case 'branch':
+      if (c.condition === 'invoice_paid') return 'Invoice paid?';
+      if (c.condition === 'expr') return `${c.field || 'field'} ${c.op || ''} ${c.value ?? ''}`.trim();
+      if (c.condition === 'always') return 'Always';
+      if (c.condition === 'never') return 'Never';
+      return c.condition || 'Condition';
+    case 'loop': return `Repeat ≤ ${c.maxIterations ?? 3}×`;
+    case 'action': return ACTION_LABEL[c.action] || c.action || 'Action';
+    case 'gate': return c.prompt ? `Ask: ${String(c.prompt).slice(0, 28)}${String(c.prompt).length > 28 ? '…' : ''}` : 'Admin confirm';
+    case 'webhook': return 'Call webhook';
+    default: return type;
+  }
+}
+
+function WfNode({ data }: { data: any }) {
   const handles = SOURCE_HANDLES[data.nodeType];
   const color = COLORS[data.nodeType] || '#888780';
+  const label = describeNode(data.nodeType, data.config, data.triggerType);
+  const pos = (i: number, n: number) => `${(100 / (n + 1)) * (i + 1)}%`;
   return (
-    <div style={{ borderColor: color }} className="rounded-md border-2 bg-white dark:bg-neutral-900 px-3 py-2 min-w-[140px] text-center shadow-sm">
+    <div style={{ borderColor: color }} className="relative rounded-md border-2 bg-white dark:bg-neutral-900 px-3 pt-2 pb-4 min-w-[152px] text-center shadow-sm">
       {data.nodeType !== 'trigger' && <Handle type="target" position={Position.Top} />}
       <div className="text-[10px] uppercase tracking-wide" style={{ color }}>{data.nodeType}</div>
-      <div className="text-sm text-neutral-900 dark:text-neutral-100">{data.label}</div>
-      {handles ? (
-        handles.map((h, i) => (
-          <Handle key={h} id={h} type="source" position={Position.Bottom} style={{ left: `${(100 / (handles.length + 1)) * (i + 1)}%` }}>
-          </Handle>
-        ))
-      ) : (
-        <Handle type="source" position={Position.Bottom} />
-      )}
+      <div className="text-sm text-neutral-900 dark:text-neutral-100">{label}</div>
+      {handles ? handles.map((h, i) => (
+        <React.Fragment key={h}>
+          <span className="absolute text-[9px] text-neutral-400 dark:text-neutral-500" style={{ bottom: 3, left: pos(i, handles.length), transform: 'translateX(-50%)' }}>{h}</span>
+          <Handle id={h} type="source" position={Position.Bottom} style={{ left: pos(i, handles.length) }} />
+        </React.Fragment>
+      )) : <Handle type="source" position={Position.Bottom} />}
     </div>
   );
 }
@@ -61,6 +94,7 @@ export const WorkflowEditorPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { isDark } = useAdminDarkMode();
   const { id } = useParams<{ id: string }>();
   const workflowId = Number(id);
 
@@ -76,7 +110,6 @@ export const WorkflowEditorPage: React.FC = () => {
   const [triggerType, setTriggerType] = useState('invoice.sent');
   const [enabled, setEnabled] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [configText, setConfigText] = useState('{}');
   const [counter, setCounter] = useState(1);
 
   useEffect(() => {
@@ -88,7 +121,7 @@ export const WorkflowEditorPage: React.FC = () => {
       id: n.node_key,
       type: 'wf',
       position: { x: n.pos_x || 0, y: n.pos_y || 0 },
-      data: { label: n.node_key, nodeType: n.type, config: n.config || {} },
+      data: { nodeType: n.type, config: n.config || {}, triggerType: workflow.trigger_type },
     })));
     setEdges(workflow.edges.map((e, i) => ({
       id: `e${i}`,
@@ -99,30 +132,28 @@ export const WorkflowEditorPage: React.FC = () => {
     })));
   }, [workflow, setNodes, setEdges]);
 
+  // Keep the trigger node's label in sync when the trigger is changed in the toolbar.
+  useEffect(() => {
+    setNodes((nds) => nds.map((n) => (n.data?.nodeType === 'trigger' ? { ...n, data: { ...n.data, triggerType } } : n)));
+  }, [triggerType, setNodes]);
+
   const onConnect = useCallback((c: Connection) => {
     setEdges((eds) => addEdge({ ...c, label: c.sourceHandle || undefined }, eds));
   }, [setEdges]);
 
   const addNode = (type: WorkflowNodeType) => {
-    const key = type === 'trigger' ? 'trigger' : `${type}_${counter}`;
+    const key = type === 'trigger' ? `trigger_${counter}` : `${type}_${counter}`;
     setCounter((c) => c + 1);
     setNodes((nds) => nds.concat({
-      id: key, type: 'wf', position: { x: 120 + Math.random() * 240, y: 120 + Math.random() * 240 },
-      data: { label: key, nodeType: type, config: {} },
+      id: key, type: 'wf', position: { x: 140 + Math.random() * 220, y: 140 + Math.random() * 220 },
+      data: { nodeType: type, config: {}, triggerType },
     }));
   };
 
   const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedId) || null, [nodes, selectedId]);
-  useEffect(() => {
-    if (selectedNode) setConfigText(JSON.stringify((selectedNode.data as any).config || {}, null, 2));
-  }, [selectedNode]);
 
-  const applyConfig = () => {
-    if (!selectedId) return;
-    let parsed: Record<string, unknown>;
-    try { parsed = JSON.parse(configText || '{}'); } catch (e) { toast.error(t('workflows.editor.badJson', 'Config is not valid JSON') as string); return; }
-    setNodes((nds) => nds.map((n) => (n.id === selectedId ? { ...n, data: { ...n.data, config: parsed } } : n)));
-    toast.success(t('workflows.editor.configApplied', 'Config applied (remember to Save)') as string);
+  const updateNodeConfig = (nodeId: string, config: Record<string, unknown>) => {
+    setNodes((nds) => nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, config } } : n)));
   };
 
   const deleteSelected = () => {
@@ -141,9 +172,7 @@ export const WorkflowEditorPage: React.FC = () => {
         node_key: n.id, type: (n.data as any).nodeType, config: (n.data as any).config || {},
         pos_x: Math.round(n.position.x), pos_y: Math.round(n.position.y),
       })),
-      edges: edges.map((e) => ({
-        from_node: e.source, from_handle: e.sourceHandle || null, to_node: e.target,
-      })),
+      edges: edges.map((e) => ({ from_node: e.source, from_handle: e.sourceHandle || null, to_node: e.target })),
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['workflow', workflowId] });
@@ -166,6 +195,7 @@ export const WorkflowEditorPage: React.FC = () => {
           className="px-2 py-1 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
           placeholder={t('workflows.editor.namePlaceholder', 'Workflow name') as string}
         />
+        <label className="text-sm text-neutral-600 dark:text-neutral-400">{t('workflows.editor.when', 'When')}</label>
         <select
           value={triggerType} onChange={(e) => setTriggerType(e.target.value)}
           className="px-2 py-1 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-sm"
@@ -197,6 +227,7 @@ export const WorkflowEditorPage: React.FC = () => {
       <div className="flex gap-3" style={{ height: '70vh' }}>
         <div className="flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
           <ReactFlow
+            colorMode={isDark ? 'dark' : 'light'}
             nodes={nodes} edges={edges} nodeTypes={nodeTypes}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect}
             onNodeClick={(_, n) => setSelectedId(n.id)} fitView
@@ -208,19 +239,20 @@ export const WorkflowEditorPage: React.FC = () => {
         </div>
 
         {selectedNode && (
-          <div className="w-72 rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 space-y-2 bg-white dark:bg-neutral-900">
+          <div className="w-80 rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 space-y-3 bg-white dark:bg-neutral-900 overflow-y-auto">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{(selectedNode.data as any).nodeType} · {selectedNode.id}</div>
+              <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                {(selectedNode.data as any).nodeType} · {selectedNode.id}
+              </div>
               <Button variant="ghost" size="sm" onClick={deleteSelected} aria-label={t('common.delete', 'Delete') as string}>
                 <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
               </Button>
             </div>
-            <label className="block text-xs text-neutral-500 dark:text-neutral-400">{t('workflows.editor.config', 'Config (JSON)')}</label>
-            <textarea
-              value={configText} onChange={(e) => setConfigText(e.target.value)} rows={10}
-              className="w-full text-xs font-mono p-2 rounded border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+            <NodeConfigPanel
+              nodeType={(selectedNode.data as any).nodeType}
+              config={(selectedNode.data as any).config || {}}
+              onChange={(cfg) => updateNodeConfig(selectedNode.id, cfg)}
             />
-            <Button variant="outline" size="sm" onClick={applyConfig}>{t('workflows.editor.applyConfig', 'Apply config')}</Button>
           </div>
         )}
       </div>
