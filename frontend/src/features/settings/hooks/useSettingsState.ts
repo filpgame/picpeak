@@ -50,6 +50,12 @@ export interface AnalyticsSettings {
   umami_url: string;
   umami_website_id: string;
   umami_share_url: string;
+  // API key for Umami's v2 metrics API. Required ONLY for the device
+  // breakdown (#661 Bug C); the rest of the integration (embedded iframe,
+  // tracker script) still works without it. Server masks as `••••••••`
+  // on GET when a value is stored — submit the masked sentinel unchanged
+  // to keep the stored value, or a real key to replace it.
+  umami_api_key: string;
 }
 
 export interface EventSettings {
@@ -129,7 +135,8 @@ export function useSettingsState() {
     umami_enabled: false,
     umami_url: '',
     umami_website_id: '',
-    umami_share_url: ''
+    umami_share_url: '',
+    umami_api_key: ''
   });
 
   // Event creation settings state
@@ -219,7 +226,8 @@ export function useSettingsState() {
         umami_enabled: toBoolean(settings.analytics_umami_enabled, false),
         umami_url: settings.analytics_umami_url || '',
         umami_website_id: settings.analytics_umami_website_id || '',
-        umami_share_url: settings.analytics_umami_share_url || ''
+        umami_share_url: settings.analytics_umami_share_url || '',
+        umami_api_key: settings.analytics_umami_api_key || ''
       });
 
       setEventSettings({
@@ -315,6 +323,10 @@ export function useSettingsState() {
     mutationFn: async () => {
       const settingsData: Record<string, unknown> = {};
       Object.entries(analyticsSettings).forEach(([key, value]) => {
+        // The Umami API key (#661 Bug C) is returned masked as `••••••••`
+        // on GET so it doesn't leak in the response body. Don't re-save
+        // that sentinel — silently preserve whatever's already stored.
+        if (key === 'umami_api_key' && value === '••••••••') return;
         settingsData[`analytics_${key}`] = value;
       });
       return settingsService.updateSettings(settingsData);
