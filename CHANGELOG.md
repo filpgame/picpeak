@@ -5,6 +5,13 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.70.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.69.1-beta.0...v3.70.0-beta.0) (2026-06-23)
+
+
+### Features
+
+* **analytics:** pluggable trackers — Umami + Rybbit + Custom ([#663](https://github.com/the-luap/picpeak/issues/663) Phase 1) ([83461fe](https://github.com/the-luap/picpeak/commit/83461fe5d4d44006482167464d92e70546cf7377))
+
 ## [3.69.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.69.0-beta.0...v3.69.1-beta.0) (2026-06-23)
 
 
