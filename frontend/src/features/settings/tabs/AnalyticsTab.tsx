@@ -85,6 +85,29 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                   {t('settings.analytics.shareUrlHelp')}
                 </p>
               </div>
+
+              {/* Umami API key — only used by the dashboard's device
+                  breakdown today (#661 Bug C). Optional; the rest of the
+                  integration works without it. Masked as •••••••• on GET. */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  {t('settings.analytics.umamiApiKey', 'API key')}
+                </label>
+                <Input
+                  type="password"
+                  value={analyticsSettings.umami_api_key}
+                  onChange={(e) => setAnalyticsSettings(prev => ({ ...prev, umami_api_key: e.target.value }))}
+                  placeholder="api_xxx…"
+                  leftIcon={<Key className="w-5 h-5 text-neutral-400" />}
+                  autoComplete="off"
+                />
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                  {t(
+                    'settings.analytics.umamiApiKeyHelp',
+                    'Optional. Required only for the device-breakdown chart on the Analytics dashboard. Generate in Umami → Settings → Profile → API Keys. Stored masked as •••••••• once saved — leave the masked value to keep the existing key.',
+                  )}
+                </p>
+              </div>
             </>
           )}
 

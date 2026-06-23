@@ -145,6 +145,12 @@ router.get('/', adminAuth, requirePermission('settings.view'), async (req, res) 
     if (settingsObject.security_recaptcha_secret_key) {
       settingsObject.security_recaptcha_secret_key = '••••••••';
     }
+    // Umami v2 API key (#661 Bug C) — read-write secret that authenticates
+    // outbound calls to the operator's Umami instance for the device
+    // breakdown. Masked on GET, same pattern as the recaptcha secret.
+    if (settingsObject.analytics_umami_api_key) {
+      settingsObject.analytics_umami_api_key = '••••••••';
+    }
 
     res.json(settingsObject);
   } catch (error) {
@@ -389,6 +395,12 @@ router.get('/:type', adminAuth, requirePermission('settings.view'), async (req, 
     // Mask sensitive secrets before sending to client
     if (settingsObject.security_recaptcha_secret_key) {
       settingsObject.security_recaptcha_secret_key = '••••••••';
+    }
+    // Umami v2 API key (#661 Bug C) — read-write secret that authenticates
+    // outbound calls to the operator's Umami instance for the device
+    // breakdown. Masked on GET, same pattern as the recaptcha secret.
+    if (settingsObject.analytics_umami_api_key) {
+      settingsObject.analytics_umami_api_key = '••••••••';
     }
 
     res.json(settingsObject);
