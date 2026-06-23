@@ -4961,7 +4961,7 @@
       "label": "Send automatic reminders for overdue invoices"
     },
     "crm_invoices_late_fee_enabled": {
-      "label": "Add a late fee on the second reminder"
+      "label": "Add a late fee on every reminder after the first"
     },
     "crm_quotes_tos_required": {
       "label": "Require customers to tick \"I accept the Terms of Service\" before accepting"

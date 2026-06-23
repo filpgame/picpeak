@@ -269,7 +269,7 @@ export const CrmSettingsPage: React.FC = () => {
           checkbox('crm_invoices_reminders_enabled', 'Send automatic reminders for overdue invoices')
         )}
 
-        {checkbox('crm_invoices_late_fee_enabled', 'Add a late fee (Mahngebühr) on the 2nd and 3rd reminder')}
+        {checkbox('crm_invoices_late_fee_enabled', 'Add a late fee (Mahngebühr) on every reminder after the first')}
         <div className="mt-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200">
           <p className="font-medium">{t('crmSettings.lateFeeAgb.title', 'Late fees must be itemised in your terms (AGB)')}</p>
           <p className="mt-1">{t('crmSettings.lateFeeAgb.body', 'Vertragliche Pflicht: Sätze wie „Es werden Mahnspesen erhoben“ reichen nicht aus. In den AGB muss die konkrete Gebühr klar beziffert sein (z.B. „CHF 20 ab der 2. Mahnung“). Mit dem Treuhänder prüfen.')}</p>

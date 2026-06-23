@@ -4963,7 +4963,7 @@
       "label": "Automatische Mahnungen aktivieren"
     },
     "crm_invoices_late_fee_enabled": {
-      "label": "Mahngebühr aktivieren"
+      "label": "Mahngebühr ab der 2. Mahnung (jede weitere Mahnung)"
     },
     "crm_quotes_tos_required": {
       "label": "Kunden müssen „Ich akzeptiere die AGB“ ankreuzen, bevor sie annehmen können"
