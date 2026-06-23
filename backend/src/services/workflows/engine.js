@@ -186,7 +186,7 @@ async function advanceRun(runId) {
     }
 
     currentKey = nextKey;
-    await db('workflow_runs').where({ id: runId }).update({ current_node: currentKey || null, context: JSON.stringify(context) });
+    await db('workflow_runs').where({ id: runId }).update({ current_node: currentKey || null, context: JSON.stringify(context), updated_at: db.fn.now() });
   }
 
   await finishRun(runId);
@@ -200,7 +200,7 @@ async function startRun(runId) {
   let entry = null;
   for (const n of nodeByKey.values()) { if (n.type === 'trigger') { entry = n; break; } }
   if (!entry) { await failRun(runId, 'no trigger node'); return; }
-  await db('workflow_runs').where({ id: runId }).update({ status: 'running', current_node: entry.node_key });
+  await db('workflow_runs').where({ id: runId }).update({ status: 'running', current_node: entry.node_key, updated_at: db.fn.now() });
   await advanceRun(runId);
 }
 
@@ -214,7 +214,7 @@ async function resumeRun(runId, { decisionHandle = null } = {}) {
   const { edges } = await loadGraph(run.workflow_id, run.version);
   const e = outEdge(edges, run.current_node, decisionHandle);
   const nextKey = e ? e.to_node : null;
-  await db('workflow_runs').where({ id: runId }).update({ status: 'running', current_node: nextKey, wake_at: null });
+  await db('workflow_runs').where({ id: runId }).update({ status: 'running', current_node: nextKey, wake_at: null, updated_at: db.fn.now() });
   if (!nextKey) { await finishRun(runId); return; }
   await advanceRun(runId);
 }
@@ -310,9 +310,64 @@ async function runDueWaits(limit = 100) {
   }
 }
 
+const RECOVERY_STALE_MS = 10 * 60 * 1000; // a 'running' run idle this long = orphaned by a crash
+const MAX_RECOVERY_ATTEMPTS = 5;
+
+/**
+ * Resume runs orphaned by a crash. A run left in 'running'/'pending' has nothing
+ * to resume it (the scheduler only wakes 'waiting'), so this sweep picks up ones
+ * whose heartbeat (updated_at) has gone stale and re-enters them from their
+ * persisted node. Re-entry is at-least-once: the current node may re-execute —
+ * loop counters + the late-fee math are idempotent, so the only residual risk is
+ * a duplicate reminder email. `attempts` caps recovery so a node that reliably
+ * crashes the process is marked failed instead of looping forever. Flag-gated
+ * (fails closed when workflows is off). Called from the scheduler tick + boot.
+ */
+async function recoverStaleRuns({ staleMs = RECOVERY_STALE_MS, limit = 50 } = {}) {
+  try {
+    const { isFeatureEnabled } = require('../../middleware/requireFeatureFlag');
+    let enabled = false;
+    try { enabled = await isFeatureEnabled('workflows'); } catch (e) { return 0; }
+    if (!enabled) return 0;
+    if (!(await db.schema.hasColumn('workflow_runs', 'updated_at'))) return 0;
+
+    const cutoff = new Date(Date.now() - staleMs).toISOString();
+    const stale = await db('workflow_runs')
+      .whereIn('status', ['running', 'pending'])
+      .where('updated_at', '<=', cutoff)
+      .limit(limit);
+
+    let recovered = 0;
+    for (const run of stale) {
+      try {
+        const attempts = Number(run.attempts) || 0;
+        if (attempts >= MAX_RECOVERY_ATTEMPTS) {
+          await failRun(run.id, `abandoned after ${attempts} recovery attempts (suspected crash loop)`);
+          continue;
+        }
+        await db('workflow_runs').where({ id: run.id }).update({ attempts: attempts + 1, updated_at: db.fn.now() });
+        if (!run.current_node) {
+          await startRun(run.id);
+        } else {
+          await db('workflow_runs').where({ id: run.id }).update({ status: 'running', updated_at: db.fn.now() });
+          await advanceRun(run.id);
+        }
+        recovered += 1;
+      } catch (err) {
+        logger.error('[workflow] recovery failed', { runId: run.id, error: err.message });
+      }
+    }
+    return recovered;
+  } catch (e) {
+    logger.error('[workflow] recoverStaleRuns failed', { error: e.message });
+    return 0;
+  }
+}
+
 module.exports = {
   emitWorkflowEvent,
   runDueWaits,
+  recoverStaleRuns,
   startRun,
   advanceRun,
   resumeRun,

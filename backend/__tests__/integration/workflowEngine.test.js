@@ -279,4 +279,40 @@ describe('workflow engine', () => {
     const after = await db('workflows').where({ id: wf.id }).first();
     expect(after.version).toBe(before.version); // unchanged
   });
+
+  test('recoverStaleRuns resumes a run orphaned mid-flow (crash recovery)', async () => {
+    const wfId = await makeWorkflow({
+      trigger: 'recover.event',
+      nodes: [{ key: 'r1', type: 'trigger' }, { key: 'r2', type: 'action', config: { action: 'noop' } }],
+      edges: [{ from: 'r1', to: 'r2' }],
+    });
+    // Simulate a run left 'running' at r2 with a stale heartbeat (crash mid-flow).
+    await db('workflow_runs').insert({
+      workflow_id: wfId, version: 1, trigger_event: 'recover.event', status: 'running', current_node: 'r2',
+      context: JSON.stringify({ vars: {} }), dedup_key: 'recover-1',
+      updated_at: new Date(Date.now() - 3600000).toISOString(),
+    });
+    const run0 = await db('workflow_runs').where({ dedup_key: 'recover-1' }).first();
+    const n = await engine.recoverStaleRuns({ staleMs: 1000 });
+    expect(n).toBeGreaterThanOrEqual(1);
+    const run = await db('workflow_runs').where({ id: run0.id }).first();
+    expect(run.status).toBe('done');
+  });
+
+  test('recoverStaleRuns abandons a crash-looping run after the attempts cap', async () => {
+    const wfId = await makeWorkflow({
+      trigger: 'crashloop.event',
+      nodes: [{ key: 'c1', type: 'trigger' }, { key: 'c2', type: 'action', config: { action: 'noop' } }],
+      edges: [{ from: 'c1', to: 'c2' }],
+    });
+    await db('workflow_runs').insert({
+      workflow_id: wfId, version: 1, trigger_event: 'crashloop.event', status: 'running', current_node: 'c2',
+      context: JSON.stringify({ vars: {} }), dedup_key: 'crash-1', attempts: 5,
+      updated_at: new Date(Date.now() - 3600000).toISOString(),
+    });
+    const run0 = await db('workflow_runs').where({ dedup_key: 'crash-1' }).first();
+    await engine.recoverStaleRuns({ staleMs: 1000 });
+    const run = await db('workflow_runs').where({ id: run0.id }).first();
+    expect(run.status).toBe('failed');
+  });
 });
