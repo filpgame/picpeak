@@ -2039,6 +2039,28 @@ async function sendInvoice(id, adminId) {
   });
 
   try { await logActivity('invoice_sent', { invoiceId: id }, invoice.event_id || null, `admin:${adminId}`); } catch (_) {}
+
+  // Fire the workflow engine's invoice.sent trigger (after the row is updated +
+  // the email queued). Idempotent per invoice id; no-op when the workflows flag
+  // is off. Never throws into the send path.
+  try {
+    await require('./workflows').emitWorkflowEvent('invoice.sent', {
+      entityType: 'invoice',
+      entityId: id,
+      payload: {
+        invoiceId: id,
+        invoiceNumber: invoice.invoice_number,
+        eventId: invoice.event_id || null,
+        customerAccountId: invoice.customer_account_id,
+        customerEmail: invoiceTo,
+        dueDate: invoice.due_date,
+        issueDate: invoice.issue_date,
+        totalMinor: invoice.total_amount_minor,
+        currency: invoice.currency,
+      },
+    });
+  } catch (_) {}
+
   return { sent: true, pdfPath };
 }
 
@@ -2068,7 +2090,7 @@ async function markPaid(id, { amountMinor, paidAt, paymentMethod, reference, not
     ? Math.max(0, ensureInt(invoice.total_amount_minor) - amount)
     : null;
 
-  return await db.transaction(async (trx) => {
+  const markResult = await db.transaction(async (trx) => {
     await trx('invoice_payment_log').insert({
       invoice_id: id,
       amount_minor: amount,
@@ -2145,6 +2167,26 @@ async function markPaid(id, { amountMinor, paidAt, paymentMethod, reference, not
 
     return { paidTotalMinor: total, status: isFull ? 'paid' : invoice.status };
   });
+
+  // Fire invoice.paid for the workflow engine ONLY on the transition into
+  // 'paid' (mirrors the admin-notification guard above). After the commit so a
+  // workflow side effect can never roll back the recorded payment.
+  if (markResult.status === 'paid' && invoice.status !== 'paid') {
+    try {
+      await require('./workflows').emitWorkflowEvent('invoice.paid', {
+        entityType: 'invoice',
+        entityId: id,
+        payload: {
+          invoiceId: id,
+          invoiceNumber: invoice.invoice_number,
+          eventId: invoice.event_id || null,
+          customerAccountId: invoice.customer_account_id,
+          paidTotalMinor: markResult.paidTotalMinor,
+        },
+      });
+    } catch (_) {}
+  }
+  return markResult;
 }
 
 /**

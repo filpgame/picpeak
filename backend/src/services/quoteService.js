@@ -1022,6 +1022,34 @@ async function persistDocPdf(type, doc, buffer) {
  * the same token may flip accept↔decline. After the window expires the
  * response is locked.
  */
+/**
+ * Fire a quote lifecycle event for the workflow engine. Best-effort: resolves
+ * the customer email (so send_email actions have a recipient) and never throws
+ * into the caller. No-op when the workflows flag is off (emit fails closed).
+ */
+async function emitQuoteEvent(quote, status) {
+  try {
+    let customerEmail = null;
+    if (quote.customer_account_id) {
+      const c = await db('customer_accounts').where({ id: quote.customer_account_id }).first();
+      customerEmail = c?.email || null;
+    }
+    await require('./workflows').emitWorkflowEvent(`quote.${status}`, {
+      entityType: 'quote',
+      entityId: quote.id,
+      payload: {
+        quoteId: quote.id,
+        quoteNumber: quote.quote_number,
+        customerAccountId: quote.customer_account_id || null,
+        customerEmail,
+        eventName: quote.event_name || null,
+        eventDate: quote.event_date || null,
+        totalMinor: quote.total_amount_minor ?? null,
+      },
+    });
+  } catch (_) { /* best-effort */ }
+}
+
 async function recordResponse({ token, action, ip, tosAccepted }) {
   if (!['accept', 'decline'].includes(action)) {
     throw new AppError('Invalid action', 400);
@@ -1104,6 +1132,8 @@ async function recordResponse({ token, action, ip, tosAccepted }) {
   try {
     await logActivity(`quote_${newStatus}`, { quoteId: quote.id, token: tokenRow.token }, null, 'customer:public');
   } catch (_) {}
+
+  await emitQuoteEvent(quote, newStatus);
 
   return { status: newStatus, lockedAt: responseLockedAt };
 }
@@ -1202,6 +1232,8 @@ async function adminAcceptQuote(id, adminId) {
     logger.warn('quote_accepted_customer email queue failed', { quoteId: id, err: err.message });
   }
 
+  await emitQuoteEvent(quote, 'accepted');
+
   return { status: 'accepted', lockedAt: responseLockedAt };
 }
 
@@ -1264,6 +1296,8 @@ async function adminDeclineQuote(id, adminId, reason = null) {
   try {
     await logActivity('quote_declined_by_admin', { quoteId: id, reason: cleanReason }, null, `admin:${adminId}`);
   } catch (_) {}
+
+  await emitQuoteEvent(quote, 'declined');
 
   return { status: 'declined', declinedAt: now };
 }
