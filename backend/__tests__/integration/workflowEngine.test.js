@@ -158,4 +158,33 @@ describe('workflow engine', () => {
     run = await db('workflow_runs').where({ id: runId }).first();
     expect(run.status).toBe('done');
   });
+
+  test('send_email queues a customer mail with business-hours routing', async () => {
+    await makeWorkflow({
+      trigger: 'mail.event',
+      nodes: [
+        { key: 'm1', type: 'trigger' },
+        { key: 'm2', type: 'action', config: { action: 'send_email', recipientClass: 'customer', emailType: 'workflow_test' } },
+      ],
+      edges: [{ from: 'm1', to: 'm2' }],
+    });
+    const runIds = await engine.emitWorkflowEvent('mail.event', {
+      entityType: 'invoice', entityId: 3, payload: { customerEmail: 'cust@example.com' },
+    });
+    const run = await db('workflow_runs').where({ id: runIds[0] }).first();
+    expect(run.status).toBe('done');
+    const queued = await db('email_queue').where({ recipient_email: 'cust@example.com' }).first();
+    expect(queued).toBeTruthy();
+    const step = await db('workflow_run_steps').where({ run_id: runIds[0], node_key: 'm2' }).first();
+    expect(JSON.parse(step.result).respectBusinessHours).toBe(true);
+  });
+
+  test('invoice_paid condition reads the entity', async () => {
+    const registry = require('../../src/services/workflows/registry');
+    const cond = registry.getCondition('invoice_paid');
+    const makeCtx = (row) => ({ run: { entity_id: 1 }, db: () => ({ where: () => ({ first: async () => row }) }) });
+    expect(await cond(makeCtx({ paid_at: '2026-01-01', status: 'sent' }))).toBe(true);
+    expect(await cond(makeCtx({ paid_at: null, status: 'paid' }))).toBe(true);
+    expect(await cond(makeCtx({ paid_at: null, status: 'sent', paid_amount_minor: 0, total_amount_minor: 1000 }))).toBe(false);
+  });
 });

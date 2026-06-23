@@ -9,6 +9,9 @@
  */
 const engine = require('./engine');
 const registry = require('./registry');
+// Side-effect import: registers the data-touching action/condition handlers
+// (send_email, invoice_paid, prepare_* document actions) onto the registry.
+require('./actions');
 
 module.exports = {
   ...engine,
