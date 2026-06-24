@@ -255,6 +255,8 @@
       "saveFailed": "Could not save",
       "badJson": "Config is not valid JSON",
       "daysBefore": "days before event",
+      "templateGroup": "Reminder template group",
+      "templateGroupHint": "The exact template is auto-picked per event type within this group: «group»_«eventType» if you authored one, else «group»_default. Blank = event_reminder.",
       "showAdvanced": "Advanced (JSON)",
       "hideAdvanced": "Hide advanced (JSON)",
       "triggerHint": "The trigger is set in the toolbar above (When …).",

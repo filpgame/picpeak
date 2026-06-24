@@ -255,6 +255,8 @@
       "saveFailed": "Speichern fehlgeschlagen",
       "badJson": "Konfiguration ist kein gültiges JSON",
       "daysBefore": "Tage vor dem Anlass",
+      "templateGroup": "Vorlagengruppe für Erinnerungen",
+      "templateGroupHint": "Die genaue Vorlage wird je Anlasstyp innerhalb dieser Gruppe automatisch gewählt: «Gruppe»_«Anlasstyp», falls vorhanden, sonst «Gruppe»_default. Leer = event_reminder.",
       "showAdvanced": "Erweitert (JSON)",
       "hideAdvanced": "Erweitert ausblenden (JSON)",
       "triggerHint": "Der Auslöser wird oben in der Leiste gesetzt (Wenn …).",

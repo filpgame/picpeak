@@ -45,6 +45,7 @@ const SOURCE_HANDLES: Record<string, string[]> = {
 const WAIT_ANCHOR_LABEL: Record<string, string> = { dueDate: 'due date', issueDate: 'invoice date', eventDate: 'event date' };
 const ACTION_LABEL: Record<string, string> = {
   queue_payment_check: 'Send payment-check email', escalate_to_collections: 'Collections handoff', send_email: 'Send email', reserve_date: 'Reserve the date',
+  notify_pre_event: 'Send pre-event reminder', notify_gallery_expiring: 'Send gallery-expiring warning', notify_gallery_expired: 'Send gallery-expired email',
   prepare_quote: 'Prepare quote', prepare_contract: 'Prepare contract', prepare_invoice: 'Prepare invoice',
   prepare_event: 'Create event', prepare_gallery: 'Create gallery', send_document: 'Send document',
   webhook: 'Call webhook', noop: 'Do nothing', set_context: 'Set value',

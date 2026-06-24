@@ -22,6 +22,9 @@ const ACTIONS = [
   ['queue_payment_check', 'Send payment-check email (dunning gate)'],
   ['escalate_to_collections', 'Hand off to collections (email admin)'],
   ['send_email', 'Send email'],
+  ['notify_pre_event', 'Send pre-event reminder'],
+  ['notify_gallery_expiring', 'Send gallery-expiring warning'],
+  ['notify_gallery_expired', 'Send gallery-expired email'],
   ['reserve_date', 'Reserve the event date'],
   ['prepare_quote', 'Prepare a quote (draft)'],
   ['prepare_contract', 'Prepare a contract (draft)'],
@@ -94,6 +97,15 @@ export const NodeConfigPanel: React.FC<Props> = ({ nodeType, config, onChange })
             <input className={field} value={config.emailType || ''} onChange={(e) => set({ emailType: e.target.value })} placeholder="invoice_reminder" />
           </Row>
         </>
+      )}
+
+      {nodeType === 'action' && config.action === 'notify_pre_event' && (
+        <Row label={t('workflows.editor.templateGroup', 'Reminder template group')}>
+          <input className={field} value={config.templateGroup || ''} onChange={(e) => set({ templateGroup: e.target.value })} placeholder="event_reminder" />
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            {t('workflows.editor.templateGroupHint', 'The exact template is auto-picked per event type within this group: «group»_«eventType» if you authored one, else «group»_default. Blank = event_reminder.')}
+          </p>
+        </Row>
       )}
 
       {(nodeType === 'action' || nodeType === 'webhook') && (config.action === 'webhook' || nodeType === 'webhook') && (

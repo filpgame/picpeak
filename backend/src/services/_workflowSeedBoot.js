@@ -161,7 +161,7 @@ function buildBookingInvoiceOnlyGraph() {
 function buildPreEventEmailGraph() {
   const nodes = [
     { node_key: 't', type: 'trigger', config: {}, pos_x: 240, pos_y: 0 },
-    { node_key: 'notify', type: 'action', config: { action: 'notify_pre_event' }, pos_x: 240, pos_y: 110 },
+    { node_key: 'notify', type: 'action', config: { action: 'notify_pre_event', templateGroup: 'event_reminder' }, pos_x: 240, pos_y: 110 },
     { node_key: 'done', type: 'action', config: { action: 'noop' }, pos_x: 240, pos_y: 220 },
   ];
   const edges = [
@@ -267,7 +267,7 @@ const BUILTINS = [
   },
   {
     key: 'pre_event_email',
-    version: 3,
+    version: 4,
     enabled: false,
     name: 'Pre-event reminder (built-in)',
     trigger_type: 'event.date_approaching',

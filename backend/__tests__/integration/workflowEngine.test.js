@@ -402,6 +402,19 @@ describe('workflow engine', () => {
     expect(again.reason).toBe('already_sent');
   });
 
+  test('reminder template resolves per event type within the chosen group, else group default', async () => {
+    const { _internal } = require('../../src/services/eventReminderService');
+    // Per-type template exists within a custom group → used.
+    await db('email_templates').insert({ template_key: 'promo_wedding' });
+    expect(await _internal.resolveTemplateKey('wedding', 'promo')).toBe('promo_wedding');
+    // A type with no authored template (in any group) → the group's default.
+    expect(await _internal.resolveTemplateKey('zzznotype', 'promo')).toBe('promo_default');
+    // Blank group → the default event_reminder group.
+    expect(await _internal.resolveTemplateKey('zzznotype')).toBe('event_reminder_default');
+    // Trailing underscore on the group is tolerated.
+    expect(await _internal.resolveTemplateKey('zzznotype', 'promo_')).toBe('promo_default');
+  });
+
   test('isBuiltinFlowActive reflects the built-in ENABLED state (enabled-based mutex)', async () => {
     const { seedBuiltinWorkflowsAtBoot } = require('../../src/services/_workflowSeedBoot');
     await seedBuiltinWorkflowsAtBoot(db, { info() {}, warn() {} });

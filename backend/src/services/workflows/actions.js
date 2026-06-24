@@ -170,8 +170,12 @@ registry.registerAction('notify_gallery_expired', async (ctx) => {
 registry.registerAction('notify_pre_event', async (ctx) => {
   const id = ctx.run.entity_id;
   if (!id) return { skipped: true, reason: 'no event entity' };
-  if (ctx.vars?.__dryRun) return { dryRun: true, would: 'notify_pre_event', eventId: id };
-  const res = await require('../eventReminderService').sendReminderForEvent(id);
+  // The template GROUP is chosen on THIS block (config.templateGroup, e.g.
+  // 'event_reminder'); the exact template is still auto-picked by event type
+  // within that group. Blank → the default group.
+  const templateGroup = ctx.node.config?.templateGroup || null;
+  if (ctx.vars?.__dryRun) return { dryRun: true, would: 'notify_pre_event', eventId: id, templateGroup };
+  const res = await require('../eventReminderService').sendReminderForEvent(id, { templateGroup });
   return res;
 });
 

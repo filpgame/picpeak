@@ -61,6 +61,7 @@ const logger = require('../utils/logger');
 const { ensureEventReminderTemplatesSeeded } = require('./eventReminderTemplates');
 
 const DEFAULT_DAYS_BEFORE = 2;
+const DEFAULT_TEMPLATE_GROUP = 'event_reminder';
 const TEMPLATE_KEY_DEFAULT = 'event_reminder_default';
 const TEMPLATE_KEY_PREFIX = 'event_reminder_';
 
@@ -71,20 +72,23 @@ const TEMPLATE_KEY_PREFIX = 'event_reminder_';
 let schemaWarnLogged = false;
 
 /**
- * Lookup the most specific available template for an event_type slug.
- * Returns the template_key string. The email_processor handles missing
- * template rows by failing the send; we don't fetch the row body here
- * because emailProcessor.queueEmail does that lookup itself.
+ * Resolve the reminder template within a GROUP (template-key prefix). The group
+ * is chosen on the flow block (defaults to `event_reminder`); within it the pick
+ * is automatic and per-event-type:
+ *   `<group>_<eventType>` if a template exists  →  else  `<group>_default`
+ * So an exact wedding/birthday/… template wins; otherwise the group's catch-all.
+ * emailProcessor handles a missing template row itself, so we only return a key.
  */
-async function resolveTemplateKey(eventType) {
+async function resolveTemplateKey(eventType, group = DEFAULT_TEMPLATE_GROUP) {
+  const g = String(group || DEFAULT_TEMPLATE_GROUP).replace(/_+$/, ''); // tolerate a trailing "_"
   if (eventType) {
-    const perType = `${TEMPLATE_KEY_PREFIX}${eventType}`;
+    const perType = `${g}_${eventType}`;
     const exists = await db('email_templates')
       .where({ template_key: perType })
       .first('id');
     if (exists) return perType;
   }
-  return TEMPLATE_KEY_DEFAULT;
+  return `${g}_default`;
 }
 
 /**
@@ -259,7 +263,7 @@ async function runEventReminderPass() {
  * disabled, already sent, no template-eligible recipient); only DB/queue errors
  * propagate so the caller can surface them.
  */
-async function sendReminderForEvent(eventId) {
+async function sendReminderForEvent(eventId, { templateGroup = null } = {}) {
   const hasCols = await hasColumnCached('events', 'event_reminder_sent_at');
   if (!hasCols) return { sent: 0, skipped: 1, reason: 'schema_not_migrated' };
 
@@ -292,7 +296,9 @@ async function sendReminderForEvent(eventId) {
   const profile = await db('business_profile').where({ id: 1 }).first('company_name');
   const businessName = profile?.company_name || '';
 
-  const templateKey = await resolveTemplateKey(row.event_type);
+  // The flow block chooses the template GROUP (blank → the default group); the
+  // exact template is still auto-picked by event type within that group.
+  const templateKey = await resolveTemplateKey(row.event_type, templateGroup || DEFAULT_TEMPLATE_GROUP);
   const payload = composePayload({ event: row, recipientEmail, daysBefore: offsetDays, businessName });
   if (row.event_reminder_body_override) payload.body_override = row.event_reminder_body_override;
 
