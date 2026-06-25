@@ -199,7 +199,95 @@
     "calendar": "Kalender",
     "clients": "CRM",
     "accounting": "Buchhaltung",
+    "workflows": "Workflows",
     "betaTag": "Beta"
+  },
+  "workflows": {
+    "title": "Workflows",
+    "subtitle": "Visuelle Automatisierungen – Auslöser, Bedingungen, Freigaben und Aktionen.",
+    "new": "Neuer Workflow",
+    "empty": "Noch keine Workflows. Erstelle einen, um Rechnungsstellung und Buchungsschritte zu automatisieren.",
+    "builtin": "integriert",
+    "triggerLabel": "Auslöser",
+    "enabled": "Aktiv",
+    "disabled": "Inaktiv",
+    "confirmDelete": "Diesen Workflow löschen?",
+    "toggle": {
+      "confirmDisableBuiltin": "Das Deaktivieren dieses eingebauten Ablaufs stellt das vorherige Standardverhalten wieder her – die Automatisierung wird dadurch nicht abgeschaltet. Fortfahren?"
+    },
+    "test": {
+      "title": "Testlauf",
+      "hint": "Probelauf: durchläuft den ganzen Ablauf sofort (Wartezeiten übersprungen, Gates automatisch bestätigt), Nebeneffekte werden nur simuliert – keine echten E-Mails. Optional eine Entitäts-ID (z. B. eine Rechnung) angeben, damit Bedingungen sie lesen können.",
+      "entityId": "Entitäts-ID (optional, z. B. Rechnungs-ID)",
+      "run": "Probelauf starten",
+      "result": "Ergebnis",
+      "failed": "Testlauf fehlgeschlagen"
+    },
+    "toast": {
+      "createFailed": "Workflow konnte nicht erstellt werden",
+      "deleted": "Workflow gelöscht",
+      "deleteFailed": "Workflow konnte nicht gelöscht werden"
+    },
+    "approvals": {
+      "title": "Freigaben",
+      "subtitle": "Workflow-Durchläufe, die auf deine Bestätigung warten.",
+      "empty": "Aktuell wartet nichts auf dich.",
+      "confirm": "Bestätigen",
+      "deny": "Ablehnen",
+      "recorded": "Antwort gespeichert",
+      "defaultPrompt": "Ein Workflow benötigt deine Bestätigung.",
+      "pendingTitle": "Offene Freigaben",
+      "viewAll": "Alle Freigaben ansehen",
+      "acted": "Erledigt"
+    },
+    "editor": {
+      "namePlaceholder": "Workflow-Name",
+      "when": "Wenn",
+      "cleanUp": "Layout aufräumen",
+      "textView": "Text",
+      "canvasView": "Canvas",
+      "loadText": "In Editor laden",
+      "textLoaded": "Geladen – prüfen und speichern",
+      "textNeedsArrays": "Benötigt „nodes“- und „edges“-Arrays",
+      "textNeedsTrigger": "Benötigt genau einen Trigger-Knoten",
+      "textHint": "Der gesamte Ablauf als JSON – zum Teilen kopieren oder an ein LLM geben, oder einen Ablauf einfügen und in den Editor laden. Nach dem Import „Layout aufräumen“ klicken.",
+      "saved": "Workflow gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "badJson": "Konfiguration ist kein gültiges JSON",
+      "daysBefore": "Tage vor dem Anlass",
+      "templateGroup": "Vorlagengruppe für Erinnerungen",
+      "templateGroupHint": "Die genaue Vorlage wird je Anlasstyp innerhalb dieser Gruppe automatisch gewählt: «Gruppe»_«Anlasstyp», falls vorhanden, sonst «Gruppe»_default. Leer = event_reminder.",
+      "showAdvanced": "Erweitert (JSON)",
+      "hideAdvanced": "Erweitert ausblenden (JSON)",
+      "triggerHint": "Der Auslöser wird oben in der Leiste gesetzt (Wenn …).",
+      "actionLabel": "Aktion",
+      "recipient": "Empfänger",
+      "recipientCustomer": "Kunde (berücksichtigt Geschäftszeiten)",
+      "recipientAdmin": "Admin (sofort gesendet)",
+      "emailTemplate": "E-Mail-Vorlagenschlüssel",
+      "webhookUrl": "Webhook-URL",
+      "webhookTarget": "Webhook",
+      "webhookNone": "— Konfigurierten Webhook wählen —",
+      "webhookInactive": "(inaktiv)",
+      "webhookHint": "Wird über die Webhook-Pipeline zugestellt (Signatur, Wiederholungen, SSRF-Prüfungen). Endpunkte unter Einstellungen → Webhooks verwalten.",
+      "condition": "Bedingung",
+      "exprField": "Feld",
+      "exprOp": "Operator",
+      "exprValue": "Wert",
+      "conditionHint": "Führt bei „wahr“ zur „yes“-Kante, sonst zur „no“-Kante.",
+      "waitType": "Warten",
+      "waitUntil": "Bis zu einem Datum",
+      "waitDelay": "Feste Verzögerung",
+      "waitAnchor": "Warten bis",
+      "days": "Tage",
+      "hours": "Stunden",
+      "minutes": "Min",
+      "maxIterations": "Höchstens wiederholen (mal)",
+      "gatePrompt": "Frage an den Admin",
+      "gatePromptPh": "z. B. Keine Zahlung erhalten – Mahnung senden?",
+      "gateTimeout": "Automatisch ablaufen nach (Tagen, optional)",
+      "gateHint": "Sendet dem Admin einen Bestätigen/Ablehnen-Link; führt zur „confirm“- oder „deny“-Kante."
+    }
   },
   "eventTypes": {
     "title": "Veranstaltungsarten",
@@ -1683,7 +1771,8 @@
         "accounting": "Buchhaltung",
         "insights": "Auswertungen & Zugriff",
         "customers": "Kunden",
-        "clients": "CRM"
+        "clients": "CRM",
+        "automation": "Automatisierung"
       },
       "status": {
         "stable": "stabil",
@@ -1799,6 +1888,11 @@
       "slideshow": {
         "title": "Live-Diashow",
         "description": "Ein separater Vollbild-„Diashow“-Link pro Event für Beamer bei Live-Events – übernimmt neue Uploads automatisch, mit Voreinstellungen je Event-Typ und globalen Wasserzeichen-Vorgaben unter Einstellungen → Diashow."
+      },
+      "workflows": {
+        "title": "Workflows",
+        "description": "Visuelle Automatisierungen auf einer Canvas erstellen – Auslöser, Bedingungen, Verzweigungen, Schleifen und Freigabe-Gates für Admins. Deine Mahnstufen und Buchungsschritte werden zu bearbeitbaren Abläufen. Strikt optional.",
+        "sidebar": "Workflows"
       }
     },
     "customerSurface": {
@@ -4845,6 +4939,25 @@
     "crm_invoices_late_fee_minor": {
       "label": "Mahngebühr (Rappen / Cent)"
     },
+    "crm_invoices_late_fee_type": {
+      "label": "Art der Mahngebühr"
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": "Mahngebühr (% der Rechnung)"
+    },
+    "lateFeeType": {
+      "flat": "Fester Betrag (Rappen)",
+      "percent": "Prozentsatz der Rechnung"
+    },
+    "lateFeeAgb": {
+      "title": "Mahngebühren müssen in den AGB stehen",
+      "body": "Vertragliche Pflicht: Sätze wie „Es werden Mahnspesen erhoben“ reichen nicht aus. In den AGB muss die konkrete Gebühr klar beziffert sein (z.B. „CHF 20 ab der 2. Mahnung“). Mit dem Treuhänder prüfen."
+    },
+    "dunningMoved": {
+      "title": "Der Mahnrhythmus liegt jetzt in den Workflows",
+      "body": "Wann und wie oft Zahlungserinnerungen für überfällige Rechnungen verschickt werden, wird im Workflow „Rechnungsmahnung“ festgelegt. Die Mahngebühren unten gelten weiterhin.",
+      "link": "Workflows öffnen"
+    },
     "crm_invoices_late_fee_label": {
       "label": "Bezeichnung Mahngebühr"
     },
@@ -4879,7 +4992,7 @@
       "label": "Automatische Mahnungen aktivieren"
     },
     "crm_invoices_late_fee_enabled": {
-      "label": "Mahngebühr aktivieren"
+      "label": "Mahngebühr ab der 2. Mahnung (jede weitere Mahnung)"
     },
     "crm_quotes_tos_required": {
       "label": "Kunden müssen „Ich akzeptiere die AGB“ ankreuzen, bevor sie annehmen können"
@@ -4948,6 +5061,11 @@
   },
   "reminderTemplates": {
     "title": "Erinnerungs-E-Mails vor dem Anlass",
+    "scheduleMoved": {
+      "title": "Der Versandzeitpunkt liegt jetzt in den Workflows",
+      "body": "Ob Erinnerungen vor dem Anlass verschickt werden und wie viele Tage vorher, wird im Workflow „Erinnerung vor dem Anlass“ festgelegt. Auf dieser Seite werden die E-Mail-Vorlagen bearbeitet; anlassspezifische Überschreibungen bleiben auf der jeweiligen Anlass-Detailseite.",
+      "link": "Workflows öffnen"
+    },
     "globalSection": "Globales Verhalten",
     "globalHelp": "Standardmässig aus — aktiviere, um Erinnerungen zu senden. Der unten gesetzte Offset ist der Standard; jeder Anlass kann ihn auf der Detailseite überschreiben.",
     "enableLabel": "Erinnerungs-E-Mails vor dem Anlass senden",
@@ -5144,6 +5262,13 @@
       "eventHelp": "Wird auf den Vertrag übernommen und an jeden daraus erzeugten Anlass / jede Rechnung weitergegeben. Setzen Sie dies, damit Kundenportal und Mahn-E-Mails die richtige Bezeichnung \"Hochzeit Doe / Müller\" anzeigen.",
       "eventName": "Anlassname",
       "eventNamePlaceholder": "z. B. Hochzeit Doe / Müller",
+      "eventType": "Anlasstyp",
+      "eventTypeNone": "— Standard verwenden —",
+      "eventTypeHint": "Wird für den Anlass verwendet, der bei Annahme dieses Angebots erstellt wird.",
+      "bookingWorkflow": "Buchungs-Workflow (bei Annahme)",
+      "bookingWorkflowNone": "— Keiner —",
+      "bookingWorkflowDisabled": "(deaktiviert)",
+      "bookingWorkflowHint": "Der Ablauf, der startet, wenn die Kundin/der Kunde annimmt. „Keiner“ = kein Buchungsablauf. Der Ablauf muss aktiviert sein, um zu starten.",
       "eventSection": "Anlass (optional)",
       "eventTimeEnd": "Ende",
       "eventTimeStart": "Beginn",

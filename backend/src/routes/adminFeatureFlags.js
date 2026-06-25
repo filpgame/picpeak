@@ -88,6 +88,11 @@ const KNOWN_FLAGS = [
   // per-event-type presets and global watermark defaults tab. Strictly opt-in;
   // gates all slideshow admin UI (per-event card, type preset, settings tab).
   'slideshow',
+  // Workflow / automation engine — admin-configurable visual flows (triggers,
+  // conditions, branches, loops, approval gates). Strictly opt-in; master
+  // kill-switch for the Workflows admin area AND the engine's runtime side
+  // effects (no run is created/resumed while off).
+  'workflows',
 ];
 
 // Spec defaults for any flag missing from the DB (e.g. a row added by a
@@ -117,6 +122,7 @@ const DEFAULT_FLAGS = {
   projects: false,
   whatsapp: false,
   slideshow: false,
+  workflows: false,
 };
 
 async function readAllFlags() {

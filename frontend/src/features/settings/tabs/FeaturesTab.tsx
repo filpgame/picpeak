@@ -23,6 +23,7 @@ import {
   Wallet,
   FolderKanban,
   MonitorPlay,
+  Workflow,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../../../components/common';
@@ -131,6 +132,24 @@ export const FeaturesTab: React.FC = () => {
             sidebarHiddenLabel={sidebarHiddenLabel}
             enabled={staged.slideshow}
             onToggle={(next) => setFlag('slideshow', next)}
+          />
+        </Section>
+
+        {/* Automation — the visual workflow engine. Master kill-switch for the
+            Workflows admin area and the runtime; off by default. */}
+        <Section title={t('settings.features.sections.automation', 'Automation')}>
+          <FeatureCard
+            icon={Workflow}
+            title={t('settings.features.workflows.title', 'Workflows')}
+            description={t(
+              'settings.features.workflows.description',
+              'Build visual automations on a canvas — triggers, conditions, branches, loops and admin approval gates. Your reminder ladder and booking steps become editable flows. Strictly opt-in.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarLabel={t('settings.features.workflows.sidebar', 'Workflows')}
+            enabled={staged.workflows}
+            onToggle={(next) => setFlag('workflows', next)}
           />
         </Section>
 

@@ -28,6 +28,9 @@ import { ProjectSelect } from '../../../components/admin/ProjectSelect';
 import { VatRateSelect } from '../../../components/admin/VatRateSelect';
 import { accountingService } from '../../../services/accounting.service';
 import { vatCodesService } from '../../../services/vatCodes.service';
+import { eventTypesService } from '../../../services/eventTypes.service';
+import { workflowsService } from '../../../services/workflows.service';
+import { useFeatureFlags } from '../../../contexts/FeatureFlagsContext';
 import { InstallmentsPanel } from '../../../components/admin/InstallmentsPanel';
 import { customerAdminService } from '../../../services/customerAdmin.service';
 import { userManagementService } from '../../../services/userManagement.service';
@@ -47,6 +50,8 @@ interface FormState {
   validUntil: string;
   eventName: string;
   eventDate: string;
+  eventType: string;
+  bookingWorkflowId: number | null;
   eventTimeStart: string;
   eventTimeEnd: string;
   expectedDurationHours: string;
@@ -83,6 +88,8 @@ const empty: FormState = {
   validUntil: '',
   eventName: '',
   eventDate: '',
+  eventType: '',
+  bookingWorkflowId: null,
   eventTimeStart: '',
   eventTimeEnd: '',
   expectedDurationHours: '',
@@ -115,6 +122,8 @@ function buildPayload(f: FormState): QuoteCreatePayload {
     validUntil: f.validUntil || undefined,
     eventName: f.eventName || undefined,
     eventDate: f.eventDate || undefined,
+    eventType: f.eventType || null,
+    bookingWorkflowId: f.bookingWorkflowId,
     eventTimeStart: f.eventTimeStart || undefined,
     eventTimeEnd: f.eventTimeEnd || undefined,
     expectedDurationHours: f.expectedDurationHours ? Number(f.expectedDurationHours) : undefined,
@@ -197,6 +206,22 @@ export const QuoteEditorPage: React.FC = () => {
   // convert to) don't silently start at 0%. Never clobbers a touched value.
   const { data: acctSettings } = useQuery({ queryKey: ['accounting-settings'], queryFn: () => accountingService.getSettings() });
   const { data: outputVatCodes } = useQuery({ queryKey: ['vat-codes', 'output'], queryFn: () => vatCodesService.listOutput() });
+  // Active event types — drives the event-type dropdown (and the type of the
+  // event this quote converts into).
+  const { data: eventTypes = [] } = useQuery({ queryKey: ['event-types-active'], queryFn: () => eventTypesService.getActiveEventTypes() });
+  // Booking-workflow picker: the flows that run on quote acceptance. Only shown
+  // when the workflow engine is live.
+  const { flags } = useFeatureFlags();
+  const workflowsLive = !!flags.workflows;
+  const { data: allWorkflows = [] } = useQuery({
+    queryKey: ['workflows'],
+    queryFn: () => workflowsService.list(),
+    enabled: workflowsLive,
+  });
+  const bookingWorkflows = useMemo(
+    () => allWorkflows.filter((w) => w.trigger_type === 'quote.accepted'),
+    [allWorkflows],
+  );
   const didSeedVatRef = useRef(false);
   useEffect(() => {
     if (isEdit || didSeedVatRef.current) return;
@@ -231,6 +256,8 @@ export const QuoteEditorPage: React.FC = () => {
         validUntil: q.validUntil || '',
         eventName: q.eventName || '',
         eventDate: q.eventDate || '',
+        eventType: q.eventType || '',
+        bookingWorkflowId: q.bookingWorkflowId ?? null,
         eventTimeStart: q.eventTimeStart || '',
         eventTimeEnd: q.eventTimeEnd || '',
         expectedDurationHours: q.expectedDurationHours?.toString() || '',
@@ -531,6 +558,46 @@ export const QuoteEditorPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Input label={t('quotes.field.eventName', 'Event name') as string} value={form.eventName}
             onChange={(e) => setForm((f) => ({ ...f, eventName: e.target.value }))} />
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              {t('quotes.field.eventType', 'Event type')}
+            </label>
+            <select
+              value={form.eventType}
+              onChange={(e) => setForm((f) => ({ ...f, eventType: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+            >
+              <option value="">{t('quotes.field.eventTypeNone', '— Use default —')}</option>
+              {eventTypes.map((et) => (
+                <option key={et.id} value={et.slug_prefix}>{et.emoji ? `${et.emoji} ` : ''}{et.name}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              {t('quotes.field.eventTypeHint', 'Used for the event created when this quote is accepted.')}
+            </p>
+          </div>
+          {workflowsLive && (
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                {t('quotes.field.bookingWorkflow', 'Booking workflow (on acceptance)')}
+              </label>
+              <select
+                value={form.bookingWorkflowId ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, bookingWorkflowId: e.target.value ? Number(e.target.value) : null }))}
+                className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+              >
+                <option value="">{t('quotes.field.bookingWorkflowNone', '— None —')}</option>
+                {bookingWorkflows.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}{(w.enabled === true || w.enabled === 1) ? '' : ` ${t('quotes.field.bookingWorkflowDisabled', '(disabled)')}`}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                {t('quotes.field.bookingWorkflowHint', 'The flow that runs when the customer accepts. Leave as None to run no booking flow. The flow must be enabled to fire.')}
+              </p>
+            </div>
+          )}
           <LocalizedDateInput label={t('quotes.field.eventDate', 'Event date') as string} value={form.eventDate}
             onChange={(iso) => setForm((f) => ({ ...f, eventDate: iso }))} />
           <TimeField label={t('quotes.field.eventTimeStart', 'Start time') as string} value={form.eventTimeStart}

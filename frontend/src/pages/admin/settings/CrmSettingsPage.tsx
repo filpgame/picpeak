@@ -8,8 +8,9 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Save as SaveIcon } from 'lucide-react';
+import { Save as SaveIcon, Workflow as WorkflowIcon } from 'lucide-react';
 import { Button, Card, Loading, Input } from '../../../components/common';
 import { settingsService } from '../../../services/settings.service';
 import { quotesService } from '../../../services/quotes.service';
@@ -31,7 +32,10 @@ const SETTING_KEYS = [
   'crm_invoices_reminder_first_days',
   'crm_invoices_reminder_second_days',
   'crm_invoices_late_fee_enabled',
+  'crm_invoices_late_fee_type',
   'crm_invoices_late_fee_minor',
+  'crm_invoices_late_fee_percent',
+  'crm_invoices_late_fee_vat_enabled',
   'crm_invoices_late_fee_label',
   'crm_invoices_skonto_business_days',
   'crm_invoices_skonto_percent_default',
@@ -80,6 +84,10 @@ export const CrmSettingsPage: React.FC = () => {
   // invoice-pipeline + revenue tiles, all of which are CRM-money).
   const showQuotes = !!flags.quotes;
   const showInvoices = !!flags.bills;
+  // When the workflow engine is live, reminder TIMING is owned by the Invoice
+  // dunning flow — show a pointer instead of the legacy schedule controls. When
+  // it's off, the legacy reminder ladder still runs, so keep its controls.
+  const workflowsLive = !!flags.workflows;
   const showContracts = !!flags.contracts;
   const showDashboardOverview = !!(flags.quotes || flags.bills);
   const anySection = showQuotes || showInvoices || showContracts || showDashboardOverview;
@@ -241,21 +249,69 @@ export const CrmSettingsPage: React.FC = () => {
       <Card>
         <h3 className="font-semibold mb-3">{t('crmSettings.section.invoices', 'Invoices')}</h3>
         {checkbox('crm_invoices_qr_enabled', 'Render payment QR on invoice PDFs')}
-        {checkbox('crm_invoices_reminders_enabled', 'Send automatic reminders for overdue invoices')}
-        {checkbox('crm_invoices_late_fee_enabled', 'Add a late fee on the second reminder')}
+
+        {/* Reminder TIMING: owned by the Invoice dunning workflow when the
+            engine is live (callout); otherwise the legacy schedule controls. The
+            late-fee math below is configured here in both cases — it's the fee
+            the dunning path applies, not part of the schedule. */}
+        {workflowsLive ? (
+          <div className="mt-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 p-3 text-sm text-blue-800 dark:text-blue-200 flex items-start gap-2">
+            <WorkflowIcon className="w-4 h-4 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium">{t('crmSettings.dunningMoved.title', 'Reminder schedule is now in Workflows')}</p>
+              <p className="mt-1">
+                {t('crmSettings.dunningMoved.body', 'When and how often overdue reminders go out is configured in the “Invoice dunning” workflow. Late-fee amounts below still apply.')}{' '}
+                <Link to="/admin/workflows" className="underline font-medium">{t('crmSettings.dunningMoved.link', 'Open Workflows')}</Link>
+              </p>
+            </div>
+          </div>
+        ) : (
+          checkbox('crm_invoices_reminders_enabled', 'Send automatic reminders for overdue invoices')
+        )}
+
+        {checkbox('crm_invoices_late_fee_enabled', 'Add a late fee (Mahngebühr) on every reminder after the first')}
+        <div className="mt-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200">
+          <p className="font-medium">{t('crmSettings.lateFeeAgb.title', 'Late fees must be itemised in your terms (AGB)')}</p>
+          <p className="mt-1">{t('crmSettings.lateFeeAgb.body', 'Vertragliche Pflicht: Sätze wie „Es werden Mahnspesen erhoben“ reichen nicht aus. In den AGB muss die konkrete Gebühr klar beziffert sein (z.B. „CHF 20 ab der 2. Mahnung“). Mit dem Treuhänder prüfen.')}</p>
+        </div>
+        {checkbox('crm_invoices_late_fee_vat_enabled', 'Charge VAT on late fees (Switzerland — leave off for DE/AT; no effect if your organisation has no VAT rate)')}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-          <Input type="number" min={1} max={365}
-            label={t('crmSettings.crm_invoices_reminder_first_days.label', 'First reminder after (days past due)') as string}
-            value={values.crm_invoices_reminder_first_days ?? 14}
-            onChange={(e) => setVal('crm_invoices_reminder_first_days', Number(e.target.value))} />
-          <Input type="number" min={1} max={365}
-            label={t('crmSettings.crm_invoices_reminder_second_days.label', 'Second reminder after (days past due)') as string}
-            value={values.crm_invoices_reminder_second_days ?? 30}
-            onChange={(e) => setVal('crm_invoices_reminder_second_days', Number(e.target.value))} />
-          <Input type="number" min={0}
-            label={t('crmSettings.crm_invoices_late_fee_minor.label', 'Late fee (minor units / Rappen)') as string}
-            value={values.crm_invoices_late_fee_minor ?? 0}
-            onChange={(e) => setVal('crm_invoices_late_fee_minor', Number(e.target.value))} />
+          {!workflowsLive && (
+            <>
+              <Input type="number" min={1} max={365}
+                label={t('crmSettings.crm_invoices_reminder_first_days.label', 'First reminder after (days past due)') as string}
+                value={values.crm_invoices_reminder_first_days ?? 14}
+                onChange={(e) => setVal('crm_invoices_reminder_first_days', Number(e.target.value))} />
+              <Input type="number" min={1} max={365}
+                label={t('crmSettings.crm_invoices_reminder_second_days.label', 'Second reminder after (days past due)') as string}
+                value={values.crm_invoices_reminder_second_days ?? 30}
+                onChange={(e) => setVal('crm_invoices_reminder_second_days', Number(e.target.value))} />
+            </>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              {t('crmSettings.crm_invoices_late_fee_type.label', 'Late fee type')}
+            </label>
+            <select
+              value={values.crm_invoices_late_fee_type ?? 'flat'}
+              onChange={(e) => setVal('crm_invoices_late_fee_type', e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+            >
+              <option value="flat">{t('crmSettings.lateFeeType.flat', 'Flat amount (Rappen)')}</option>
+              <option value="percent">{t('crmSettings.lateFeeType.percent', 'Percentage of invoice')}</option>
+            </select>
+          </div>
+          {(values.crm_invoices_late_fee_type ?? 'flat') === 'percent' ? (
+            <Input type="number" min={0} step="0.01" max={100}
+              label={t('crmSettings.crm_invoices_late_fee_percent.label', 'Late fee (% of invoice)') as string}
+              value={values.crm_invoices_late_fee_percent ?? 0}
+              onChange={(e) => setVal('crm_invoices_late_fee_percent', Number(e.target.value))} />
+          ) : (
+            <Input type="number" min={0}
+              label={t('crmSettings.crm_invoices_late_fee_minor.label', 'Late fee (minor units / Rappen)') as string}
+              value={values.crm_invoices_late_fee_minor ?? 0}
+              onChange={(e) => setVal('crm_invoices_late_fee_minor', Number(e.target.value))} />
+          )}
           <Input
             label={t('crmSettings.crm_invoices_late_fee_label.label', 'Late fee label') as string}
             value={values.crm_invoices_late_fee_label ?? 'Mahngebühr'}

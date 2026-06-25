@@ -199,7 +199,95 @@
     "calendar": "Calendar",
     "clients": "CRM",
     "accounting": "Accounting",
+    "workflows": "Workflows",
     "betaTag": "Beta"
+  },
+  "workflows": {
+    "title": "Workflows",
+    "subtitle": "Visual automations — triggers, conditions, gates and actions.",
+    "new": "New workflow",
+    "empty": "No workflows yet. Create one to automate your invoicing and booking steps.",
+    "builtin": "built-in",
+    "triggerLabel": "Trigger",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "confirmDelete": "Delete this workflow?",
+    "toggle": {
+      "confirmDisableBuiltin": "Disabling this built-in reverts to the previous built-in behaviour — it does not turn the automation off. Continue?"
+    },
+    "test": {
+      "title": "Test run",
+      "hint": "Dry run: walks the whole flow now (waits skipped, gates auto-confirmed) with side effects mocked — no real emails. Optionally give an entity id (e.g. an invoice) so conditions can read it.",
+      "entityId": "Entity id (optional, e.g. invoice id)",
+      "run": "Run dry test",
+      "result": "Result",
+      "failed": "Test run failed"
+    },
+    "toast": {
+      "createFailed": "Could not create workflow",
+      "deleted": "Workflow deleted",
+      "deleteFailed": "Could not delete workflow"
+    },
+    "approvals": {
+      "title": "Approvals",
+      "subtitle": "Workflow runs waiting on your confirmation.",
+      "empty": "Nothing waiting for you right now.",
+      "confirm": "Confirm",
+      "deny": "Deny",
+      "recorded": "Response recorded",
+      "defaultPrompt": "A workflow needs your confirmation.",
+      "pendingTitle": "Pending approvals",
+      "viewAll": "View all approvals",
+      "acted": "Done"
+    },
+    "editor": {
+      "namePlaceholder": "Workflow name",
+      "when": "When",
+      "cleanUp": "Clean up layout",
+      "textView": "Text",
+      "canvasView": "Canvas",
+      "loadText": "Load into editor",
+      "textLoaded": "Loaded — review and Save",
+      "textNeedsArrays": "Needs \"nodes\" and \"edges\" arrays",
+      "textNeedsTrigger": "Needs exactly one trigger node",
+      "textHint": "The whole flow as JSON — copy it to share or hand to an LLM, or paste a flow and load it into the editor. Click “Clean up layout” after importing.",
+      "saved": "Workflow saved",
+      "saveFailed": "Could not save",
+      "badJson": "Config is not valid JSON",
+      "daysBefore": "days before event",
+      "templateGroup": "Reminder template group",
+      "templateGroupHint": "The exact template is auto-picked per event type within this group: «group»_«eventType» if you authored one, else «group»_default. Blank = event_reminder.",
+      "showAdvanced": "Advanced (JSON)",
+      "hideAdvanced": "Hide advanced (JSON)",
+      "triggerHint": "The trigger is set in the toolbar above (When …).",
+      "actionLabel": "Action",
+      "recipient": "Recipient",
+      "recipientCustomer": "Customer (respects business hours)",
+      "recipientAdmin": "Admin (sent immediately)",
+      "emailTemplate": "Email template key",
+      "webhookUrl": "Webhook URL",
+      "webhookTarget": "Webhook",
+      "webhookNone": "— Select a configured webhook —",
+      "webhookInactive": "(inactive)",
+      "webhookHint": "Delivered via the webhook pipeline (signing, retries, SSRF checks). Manage endpoints in Settings → Webhooks.",
+      "condition": "Condition",
+      "exprField": "Field",
+      "exprOp": "Operator",
+      "exprValue": "Value",
+      "conditionHint": "Routes to the “yes” edge when true, “no” when false.",
+      "waitType": "Wait",
+      "waitUntil": "Until a date",
+      "waitDelay": "A fixed delay",
+      "waitAnchor": "Wait until",
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Min",
+      "maxIterations": "Repeat at most (times)",
+      "gatePrompt": "Question for the admin",
+      "gatePromptPh": "e.g. No payment received — send a reminder?",
+      "gateTimeout": "Auto-expire after (days, optional)",
+      "gateHint": "Emails the admin a confirm/deny link; routes to the “confirm” or “deny” edge."
+    }
   },
   "archives": {
     "title": "Archives",
@@ -1239,7 +1327,8 @@
         "accounting": "Accounting",
         "insights": "Insights & Access",
         "customers": "Customers",
-        "clients": "CRM"
+        "clients": "CRM",
+        "automation": "Automation"
       },
       "status": {
         "stable": "stable",
@@ -1355,6 +1444,11 @@
       "slideshow": {
         "title": "Live Slideshow",
         "description": "A separate fullscreen \"Diashow\" link per event for projectors at live events — auto-picks-up new uploads, with per-event-type presets and global watermark defaults under Settings → Slideshow."
+      },
+      "workflows": {
+        "title": "Workflows",
+        "description": "Build visual automations on a canvas — triggers, conditions, branches, loops and admin approval gates. Your reminder ladder and booking steps become editable flows. Strictly opt-in.",
+        "sidebar": "Workflows"
       }
     },
     "customerSurface": {
@@ -4843,6 +4937,25 @@
     "crm_invoices_late_fee_minor": {
       "label": "Late fee (minor units / Rappen)"
     },
+    "crm_invoices_late_fee_type": {
+      "label": "Late fee type"
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": "Late fee (% of invoice)"
+    },
+    "lateFeeType": {
+      "flat": "Flat amount (Rappen)",
+      "percent": "Percentage of invoice"
+    },
+    "lateFeeAgb": {
+      "title": "Late fees must be itemised in your terms (AGB)",
+      "body": "A contractual duty: phrases like “late fees apply” aren't enough. Your terms must state the concrete fee (e.g. “CHF 20 from the 2nd reminder”). Verify with your Treuhänder."
+    },
+    "dunningMoved": {
+      "title": "Reminder schedule is now in Workflows",
+      "body": "When and how often overdue reminders go out is configured in the “Invoice dunning” workflow. The late-fee amounts below still apply.",
+      "link": "Open Workflows"
+    },
     "crm_invoices_late_fee_label": {
       "label": "Late fee label"
     },
@@ -4877,7 +4990,7 @@
       "label": "Send automatic reminders for overdue invoices"
     },
     "crm_invoices_late_fee_enabled": {
-      "label": "Add a late fee on the second reminder"
+      "label": "Add a late fee on every reminder after the first"
     },
     "crm_quotes_tos_required": {
       "label": "Require customers to tick \"I accept the Terms of Service\" before accepting"
@@ -4946,6 +5059,11 @@
   },
   "reminderTemplates": {
     "title": "Pre-event reminder emails",
+    "scheduleMoved": {
+      "title": "The reminder schedule is now in Workflows",
+      "body": "Whether pre-event reminders are sent, and how many days before the event, is configured in the “Pre-event reminder” workflow. This page edits the email templates; per-event overrides stay on each event’s detail page.",
+      "link": "Open Workflows"
+    },
     "globalSection": "Global behaviour",
     "globalHelp": "Off by default — turn on to start sending pre-event reminders. The offset below is the default; each event can override on its detail page.",
     "enableLabel": "Send pre-event reminder emails",
@@ -5142,6 +5260,13 @@
       "eventHelp": "Snapshotted onto the contract and propagated to any event / invoice generated from it. Set this so the customer portal and dunning emails show the right \"Wedding Doe / Müller\" label.",
       "eventName": "Event name",
       "eventNamePlaceholder": "e.g. Wedding Doe / Müller",
+      "eventType": "Event type",
+      "eventTypeNone": "— Use default —",
+      "eventTypeHint": "Used for the event created when this quote is accepted.",
+      "bookingWorkflow": "Booking workflow (on acceptance)",
+      "bookingWorkflowNone": "— None —",
+      "bookingWorkflowDisabled": "(disabled)",
+      "bookingWorkflowHint": "The flow that runs when the customer accepts. Leave as None to run no booking flow. The flow must be enabled to fire.",
       "eventSection": "Event (optional)",
       "eventTimeEnd": "End",
       "eventTimeStart": "Start",

@@ -305,6 +305,25 @@ async function nextQuoteNumber(trx) {
   return formatNumberInTemplate(format, year, seq);
 }
 
+/**
+ * Resolve the fallback event type for a quote→event conversion when the quote
+ * itself carries none. Never hardcodes a specific slug (any of them, incl.
+ * 'other', can be disabled by the admin): prefer the generic 'other' catch-all
+ * when it's active, else the first active type by display order, and only fall
+ * back to the literal 'other' if the catalog is somehow empty/unreadable.
+ */
+async function resolveDefaultEventType(conn) {
+  const q = conn || db;
+  try {
+    const other = await q('event_types').where({ slug_prefix: 'other', is_active: true }).first('slug_prefix');
+    if (other) return 'other';
+    const firstActive = await q('event_types').where({ is_active: true }).orderBy('display_order', 'asc').first('slug_prefix');
+    return firstActive?.slug_prefix || 'other';
+  } catch (_) {
+    return 'other';
+  }
+}
+
 function ensureCustomerFeatureEnabled(customer, feature) {
   // Global toggle (`customer_feature_quotes_enabled` / `..._bills_enabled`)
   // is checked at the route layer (feature flag); here we only enforce
@@ -563,6 +582,15 @@ async function createQuote(payload, adminId) {
     if (payload.vatCode !== undefined && await hasColumnCached('quotes', 'vat_code')) {
       row.vat_code = payload.vatCode ? String(payload.vatCode).slice(0, 16) : null;
     }
+    // Migration 146 — event type (event_types.slug_prefix). Drives the type of
+    // the event the quote converts into, instead of the old hardcoded 'wedding'.
+    if (payload.eventType !== undefined && await hasColumnCached('quotes', 'event_type')) {
+      row.event_type = payload.eventType ? String(payload.eventType).slice(0, 64) : null;
+    }
+    // Migration 147 — the booking workflow this quote runs on acceptance.
+    if (payload.bookingWorkflowId !== undefined && await hasColumnCached('quotes', 'booking_workflow_id')) {
+      row.booking_workflow_id = payload.bookingWorkflowId || null;
+    }
     const inserted = await trx('quotes').insert(row).returning('id');
     const quoteId = typeof inserted[0] === 'object' ? inserted[0].id : inserted[0];
 
@@ -690,6 +718,14 @@ async function updateQuote(id, payload, adminId) {
     // Migration 130 — VAT code snapshot.
     if (Object.prototype.hasOwnProperty.call(payload, 'vatCode') && await hasColumnCached('quotes', 'vat_code')) {
       updates.vat_code = payload.vatCode ? String(payload.vatCode).slice(0, 16) : null;
+    }
+    // Migration 146 — event type.
+    if (Object.prototype.hasOwnProperty.call(payload, 'eventType') && await hasColumnCached('quotes', 'event_type')) {
+      updates.event_type = payload.eventType ? String(payload.eventType).slice(0, 64) : null;
+    }
+    // Migration 147 — selected booking workflow.
+    if (Object.prototype.hasOwnProperty.call(payload, 'bookingWorkflowId') && await hasColumnCached('quotes', 'booking_workflow_id')) {
+      updates.booking_workflow_id = payload.bookingWorkflowId || null;
     }
     await trx('quotes').where({ id }).update(updates);
 
@@ -981,6 +1017,11 @@ async function sendQuote(id, adminId) {
     await logActivity('quote_sent', { quoteId: id, token }, null, `admin:${adminId}`);
   } catch (_) {}
 
+  // Fire the quote.sent workflow trigger (best-effort; emit is fail-closed when
+  // the workflows flag is off). The accepted/declined emits already exist; this
+  // closes the gap so flows can react to a quote going out.
+  await emitQuoteEvent(quote, 'sent');
+
   logger.info('Quote sent', { adminId, quoteId: id });
   return { token, pdfPath };
 }
@@ -1022,6 +1063,43 @@ async function persistDocPdf(type, doc, buffer) {
  * the same token may flip accept↔decline. After the window expires the
  * response is locked.
  */
+/**
+ * Fire a quote lifecycle event for the workflow engine. Best-effort: resolves
+ * the customer email (so send_email actions have a recipient) and never throws
+ * into the caller. No-op when the workflows flag is off (emit fails closed).
+ */
+async function emitQuoteEvent(quote, status) {
+  try {
+    let customerEmail = null;
+    if (quote.customer_account_id) {
+      const c = await db('customer_accounts').where({ id: quote.customer_account_id }).first();
+      customerEmail = c?.email || null;
+    }
+    // On acceptance, if the admin picked a booking workflow on the quote, run
+    // ONLY that flow (instead of fanning out to every enabled quote.accepted
+    // flow). Other statuses keep the normal fan-out.
+    const targetWorkflowId = (status === 'accepted' && quote.booking_workflow_id)
+      ? quote.booking_workflow_id
+      : null;
+    await require('./workflows').emitWorkflowEvent(`quote.${status}`, {
+      entityType: 'quote',
+      entityId: quote.id,
+      targetWorkflowId,
+      payload: {
+        quoteId: quote.id,
+        quoteNumber: quote.quote_number,
+        customerAccountId: quote.customer_account_id || null,
+        customerEmail,
+        eventName: quote.event_name || null,
+        eventDate: quote.event_date || null,
+        eventType: quote.event_type || null,
+        totalMinor: quote.total_amount_minor ?? null,
+        bookingWorkflowId: quote.booking_workflow_id || null,
+      },
+    });
+  } catch (_) { /* best-effort */ }
+}
+
 async function recordResponse({ token, action, ip, tosAccepted }) {
   if (!['accept', 'decline'].includes(action)) {
     throw new AppError('Invalid action', 400);
@@ -1104,6 +1182,8 @@ async function recordResponse({ token, action, ip, tosAccepted }) {
   try {
     await logActivity(`quote_${newStatus}`, { quoteId: quote.id, token: tokenRow.token }, null, 'customer:public');
   } catch (_) {}
+
+  await emitQuoteEvent(quote, newStatus);
 
   return { status: newStatus, lockedAt: responseLockedAt };
 }
@@ -1202,6 +1282,8 @@ async function adminAcceptQuote(id, adminId) {
     logger.warn('quote_accepted_customer email queue failed', { quoteId: id, err: err.message });
   }
 
+  await emitQuoteEvent(quote, 'accepted');
+
   return { status: 'accepted', lockedAt: responseLockedAt };
 }
 
@@ -1264,6 +1346,8 @@ async function adminDeclineQuote(id, adminId, reason = null) {
   try {
     await logActivity('quote_declined_by_admin', { quoteId: id, reason: cleanReason }, null, `admin:${adminId}`);
   } catch (_) {}
+
+  await emitQuoteEvent(quote, 'declined');
 
   return { status: 'declined', declinedAt: now };
 }
@@ -1443,6 +1527,13 @@ async function convertToEvent(quoteId, adminId, options = {}) {
     const customerEmail = customer.email || `${quote.quote_number.toLowerCase()}@picpeak.local`;
     const adminEmail = adminRow?.email || customer.email || 'admin@picpeak.local';
 
+    // Event type for the new event: the type chosen on the quote (migration 146),
+    // else a configurable org default, else the resolved catch-all (an ACTIVE
+    // type — never a hardcoded slug the admin may have disabled).
+    const eventType = (quote.event_type && String(quote.event_type).trim())
+      || (await getAppSetting('crm_default_event_type'))
+      || (await resolveDefaultEventType(trx));
+
     // Each candidate column is paired with the value we'd write. We
     // ask the DB which columns exist and only keep the matching pairs
     // — bullet-proof against schema drift in either direction.
@@ -1457,7 +1548,7 @@ async function convertToEvent(quoteId, adminId, options = {}) {
       customer_email: customerEmail,
       customer_phone: customer.phone,
       admin_email: adminEmail,
-      event_type: 'wedding',
+      event_type: eventType,
       password_hash: placeholder,
       share_link: shareLink,
       share_token: shareLink,

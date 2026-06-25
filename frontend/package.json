@@ -15,6 +15,7 @@
     "i18n:ci": "i18next-cli extract --ci --dry-run"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@fullcalendar/core": "^6.1.20",
     "@fullcalendar/daygrid": "^6.1.20",
     "@fullcalendar/interaction": "^6.1.20",
@@ -32,6 +33,7 @@
     "@types/dompurify": "^3.0.5",
     "@types/lodash": "^4.17.20",
     "@types/react-google-recaptcha": "^2.1.9",
+    "@xyflow/react": "^12.11.1",
     "axios": "1.15.2",
     "clsx": "^2.0.0",
     "date-fns": "4.1.0",

@@ -707,6 +707,7 @@ app.use('/api/admin/contracts',  require('./src/routes/adminContracts'));
 app.use('/api/admin/projects',   require('./src/routes/adminProjects'));
 app.use('/api/admin/calendar',   require('./src/routes/adminCalendar'));
 app.use('/api/admin/deals',      require('./src/routes/adminDeals'));
+app.use('/api/admin/workflows',  require('./src/routes/adminWorkflows'));
 app.use('/api/admin/tax-report', require('./src/routes/adminTaxReport'));
 app.use('/api/admin/expenses',   require('./src/routes/adminExpenses'));
 app.use('/api/admin/ledger',     require('./src/routes/adminLedger'));
@@ -718,6 +719,7 @@ app.use('/api/admin/dev',        require('./src/routes/adminDev'));
 app.use('/api/public/quotes',  require('./src/routes/publicQuotes'));
 app.use('/api/public/contracts', require('./src/routes/publicContracts'));
 app.use('/api/public/payment-check', require('./src/routes/publicPaymentCheck'));
+app.use('/api/public/workflow-approvals', require('./src/routes/publicWorkflowApprovals'));
 app.use('/api/admin/event-types', require('./src/routes/adminEventTypes'));
 app.use('/api/admin/api-tokens', require('./src/routes/adminApiTokens'));
 app.use('/api/admin/webhooks', require('./src/routes/adminWebhooks'));
@@ -893,6 +895,15 @@ async function startServer() {
       await seedRestoreSettingsAtBoot(db, logger);
     } catch (err) {
       logger.warn('restore-settings self-heal failed at boot:', err.message);
+    }
+
+    // Seed built-in workflows (the editable invoice-dunning flow). Disabled by
+    // default — live reminder behaviour is unchanged. See _workflowSeedBoot.js.
+    try {
+      const { seedBuiltinWorkflowsAtBoot } = require('./src/services/_workflowSeedBoot');
+      await seedBuiltinWorkflowsAtBoot(db, logger);
+    } catch (err) {
+      logger.warn('built-in workflow seed failed at boot:', err.message);
     }
 
     // Install-from-backup trigger. If `RESTORE_ON_INSTALL` (or

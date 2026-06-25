@@ -10,18 +10,24 @@ import {
   HardDrive,
   Image,
   Archive,
-  Heart
+  Heart,
+  Inbox,
+  Check,
+  X
 } from 'lucide-react';
 import { differenceInDays, parseISO } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 import { Button, Card, Loading } from '../../components/common';
 import { UpdateNotification } from '../../components/admin/UpdateNotification';
 import { CrmOverviewSection } from '../../components/admin/CrmOverviewSection';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
 import { adminService, ActivityType } from '../../services/admin.service';
+import { workflowsService } from '../../services/workflows.service';
+import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
 
 interface StatCard {
   title: string;
@@ -70,6 +76,24 @@ export const AdminDashboard: React.FC = () => {
   const { data: expiringEventsData, isLoading: eventsLoading } = useQuery({
     queryKey: ['admin-events-summary', 'expiring'],
     queryFn: () => eventsService.getEvents(1, 5, 'expiring'),
+  });
+
+  // Pending workflow approvals — only when the workflow engine is live. These
+  // are the human-in-the-loop gates (e.g. "review invoice before sending").
+  const { flags } = useFeatureFlags();
+  const qc = useQueryClient();
+  const { data: pendingApprovals } = useQuery({
+    queryKey: ['workflow-approvals'],
+    queryFn: () => workflowsService.approvals(),
+    enabled: !!flags.workflows,
+  });
+  const approvalMutation = useMutation({
+    mutationFn: ({ id, action }: { id: number; action: 'confirm' | 'deny' }) => workflowsService.actApproval(id, action),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['workflow-approvals'] });
+      toast.success(t('workflows.approvals.acted', 'Done') as string);
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.error || (t('common.error', 'Something went wrong') as string)),
   });
 
   const isLoading = statsLoading || eventsLoading;
@@ -241,6 +265,52 @@ export const AdminDashboard: React.FC = () => {
               </button>
             )}
           </Card>
+
+          {/* Pending workflow approvals — the human-in-the-loop gates. Only
+              rendered when the workflow engine is live and something is waiting. */}
+          {!!flags.workflows && pendingApprovals && pendingApprovals.length > 0 && (
+            <Card padding="md" className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('workflows.approvals.pendingTitle', 'Pending approvals')}</h2>
+                <Inbox className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="space-y-3">
+                {pendingApprovals.slice(0, 5).map((a) => {
+                  const prompt = (a.payload as any)?.prompt as string | undefined;
+                  return (
+                    <div key={a.id} className="flex items-center justify-between gap-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-neutral-900 dark:text-neutral-100 truncate">{a.workflow_name}</h3>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400 truncate">
+                          {prompt || a.type}{a.entity_type ? ` · ${a.entity_type} #${a.entity_id}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button variant="primary" size="sm" isLoading={approvalMutation.isPending}
+                          onClick={() => approvalMutation.mutate({ id: a.id, action: 'confirm' })}
+                          leftIcon={<Check className="w-4 h-4" />}>
+                          {t('workflows.approvals.confirm', 'Confirm')}
+                        </Button>
+                        <Button variant="outline" size="sm" isLoading={approvalMutation.isPending}
+                          onClick={() => approvalMutation.mutate({ id: a.id, action: 'deny' })}
+                          leftIcon={<X className="w-4 h-4" />}>
+                          {t('workflows.approvals.deny', 'Deny')}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {pendingApprovals.length > 5 && (
+                <button
+                  onClick={() => navigate('/admin/workflows/approvals')}
+                  className="w-full mt-4 text-sm text-accent hover:opacity-80 font-medium"
+                >
+                  {t('workflows.approvals.viewAll', 'View all approvals')} →
+                </button>
+              )}
+            </Card>
+          )}
         </div>
 
         {/* Recent Activity */}

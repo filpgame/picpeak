@@ -42,6 +42,23 @@ async function runTick() {
   } catch (err) {
     logger.error('Event reminder pass failed', { err: err.message });
   }
+  try {
+    // Resume workflow runs whose wait has elapsed. No-op (fails closed) when
+    // the `workflows` feature flag is off. Independent try/catch so a workflow
+    // failure never suppresses the invoice/reminder jobs above.
+    const wf = require('./workflows');
+    const resumed = await wf.runDueWaits();
+    if (resumed) logger.info('Workflow scheduler: resumed waiting runs', { resumed });
+    // Fire pre-event reminders for events entering an enabled flow's lead window.
+    const preEvent = await wf.emitDueEventReminders();
+    if (preEvent) logger.info('Workflow scheduler: emitted pre-event reminders', { preEvent });
+    // Recover runs orphaned by a crash (stuck in running/pending). Runs on the
+    // boot tick too, so a restart catches anything stranded during downtime.
+    const recovered = await wf.recoverStaleRuns();
+    if (recovered) logger.warn('Workflow scheduler: recovered orphaned runs', { recovered });
+  } catch (err) {
+    logger.error('Workflow resume pass failed', { err: err.message });
+  }
 }
 
 function startInvoiceScheduler() {
