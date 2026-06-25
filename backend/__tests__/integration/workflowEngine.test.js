@@ -460,6 +460,29 @@ describe('workflow engine', () => {
     expect((await webhook(ctx({ webhookId: whId }))).skipped).toBe(true);
   });
 
+  test('pre-event falls back to the assigned customer account when the event has no inline email', async () => {
+    const eventReminderService = require('../../src/services/eventReminderService');
+    const farFuture = new Date(Date.now() + 365 * 86400000).toISOString();
+    const [custId] = await db('customer_accounts').insert({
+      email: 'assigned@x.test', preferred_language: 'en', is_active: true, created_at: new Date(),
+    });
+    // Event with NO inline customer_email / host_email.
+    await db('events').insert({
+      event_type: 'wedding', password_hash: 'x', expires_at: farFuture, is_active: true, is_archived: false,
+      slug: 'rem-assigned', share_link: 'rem-assigned', event_name: 'Assigned',
+      event_date: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10),
+    });
+    const ev = await db('events').where({ slug: 'rem-assigned' }).first();
+    await db('event_customer_assignments').insert({ event_id: ev.id, customer_account_id: custId, assigned_at: new Date() });
+
+    const res = await eventReminderService.sendReminderForEvent(ev.id);
+    expect(res.sent).toBe(1);
+    const mail = await db('email_queue').where({ recipient_email: 'assigned@x.test' }).first();
+    expect(mail).toBeTruthy();
+    // Queued WITHOUT event_id so the resolver uses the customer's preferred_language.
+    expect(mail.event_id == null).toBe(true);
+  });
+
   test('isBuiltinFlowActive reflects the built-in ENABLED state (enabled-based mutex)', async () => {
     const { seedBuiltinWorkflowsAtBoot } = require('../../src/services/_workflowSeedBoot');
     await seedBuiltinWorkflowsAtBoot(db, { info() {}, warn() {} });
