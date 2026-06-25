@@ -415,6 +415,16 @@ describe('workflow engine', () => {
     expect(await _internal.resolveTemplateKey('zzznotype', 'promo_')).toBe('promo_default');
   });
 
+  test('pre-event payload passes the RAW event_date (processor formats it — no "Invalid Date")', async () => {
+    const { _internal } = require('../../src/services/eventReminderService');
+    const p = _internal.composePayload({
+      event: { id: 1, event_name: 'X', event_date: '2026-06-25', customer_name: 'A' },
+      recipientEmail: 'a@x.test', daysBefore: 2, businessName: 'Biz',
+    });
+    expect(p.event_date).toBe('2026-06-25'); // raw, not pre-formatted DD.MM.YYYY
+    expect(p.event_date).not.toMatch(/invalid/i);
+  });
+
   test('webhook action enqueues a delivery for a configured subscription (full pipeline)', async () => {
     const webhook = engine.registry.getAction('webhook');
     expect(typeof webhook).toBe('function'); // registered — no longer a silent no-op

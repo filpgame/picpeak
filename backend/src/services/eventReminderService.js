@@ -103,18 +103,14 @@ function composePayload({ event, recipientEmail, daysBefore, businessName }) {
     || event.host_name
     || recipientEmail
     || '';
-  // Event date formatted DD.MM.YYYY here for simplicity; the rendered
-  // email may further re-locale via the template engine when locale-
-  // aware formatters are introduced.
-  const ed = event.event_date instanceof Date ? event.event_date : new Date(event.event_date);
-  const day = String(ed.getUTCDate()).padStart(2, '0');
-  const month = String(ed.getUTCMonth() + 1).padStart(2, '0');
-  const year = ed.getUTCFullYear();
-  const eventDateFormatted = `${day}.${month}.${year}`;
+  // Pass the RAW event_date — emailProcessor.processTemplate runs it through
+  // formatDate(value, recipientLanguage). Pre-formatting it (e.g. DD.MM.YYYY)
+  // makes the processor's new Date(...) reparse fail → "Invalid Date". Same
+  // contract the expiry mailer uses.
   return {
     customer_name: customerName,
     event_name: event.event_name || `Event #${event.id}`,
-    event_date: eventDateFormatted,
+    event_date: event.event_date || '',
     event_type: event.event_type || '',
     days_before: daysBefore,
     business_name: businessName || '',
