@@ -415,22 +415,39 @@ describe('workflow engine', () => {
     expect(await _internal.resolveTemplateKey('zzznotype', 'promo_')).toBe('promo_default');
   });
 
-  test('webhook action: dry-run, missing url, and SSRF-guarded private/metadata url', async () => {
+  test('webhook action enqueues a delivery for a configured subscription (full pipeline)', async () => {
     const webhook = engine.registry.getAction('webhook');
     expect(typeof webhook).toBe('function'); // registered — no longer a silent no-op
     const ctx = (config, vars = {}) => ({
-      run: { id: 1, workflow_id: 1, version: 1, trigger_event: 't', entity_type: 'x', entity_id: 1 },
+      run: { id: 1, workflow_id: 1, version: 1, trigger_event: 'invoice.sent', entity_type: 'invoice', entity_id: 5 },
       node: { config }, vars, db, logger: { warn() {} },
     });
-    // Dry run never calls out.
-    expect(await webhook(ctx({ url: 'https://example.com/hook' }, { __dryRun: true })))
-      .toMatchObject({ dryRun: true, would: 'webhook' });
-    // No URL → observable skip, not a crash.
+    // No webhook selected → observable skip, not a crash.
     expect(await webhook(ctx({}))).toMatchObject({ skipped: true });
-    // SSRF: cloud-metadata / private target rejected before any request.
-    const r = await webhook(ctx({ url: 'http://169.254.169.254/latest/meta-data' }));
-    expect(r.skipped).toBe(true);
-    expect(r.reason).toMatch(/rejected/i);
+
+    // A configured, active webhook subscription.
+    const [adminId] = await db('admin_users').insert({ username: 'wfhook', email: 'wf@x.test', password_hash: 'x' });
+    const [whId] = await db('webhooks').insert({
+      name: 'Flow hook', url: 'https://example.com/hook', secret: 'whsec_test',
+      events: JSON.stringify([]), active: true, created_by: adminId,
+    });
+
+    // Dry run does not enqueue.
+    expect(await webhook(ctx({ webhookId: whId }, { __dryRun: true }))).toMatchObject({ dryRun: true, would: 'webhook' });
+    expect(await db('webhook_deliveries').where({ webhook_id: whId }).count('id as c').first()).toMatchObject({ c: 0 });
+
+    // Real run → a pending delivery is enqueued for the worker (which does the
+    // signing + SSRF re-validation + retries).
+    const res = await webhook(ctx({ webhookId: whId }));
+    expect(res.webhook_enqueued).toBe(whId);
+    const del = await db('webhook_deliveries').where({ webhook_id: whId }).first();
+    expect(del).toBeTruthy();
+    expect(del.status).toBe('pending');
+    expect(del.event_type).toBe('workflow.invoice.sent');
+
+    // Inactive / missing subscription → skip.
+    await db('webhooks').where({ id: whId }).update({ active: false });
+    expect((await webhook(ctx({ webhookId: whId }))).skipped).toBe(true);
   });
 
   test('isBuiltinFlowActive reflects the built-in ENABLED state (enabled-based mutex)', async () => {

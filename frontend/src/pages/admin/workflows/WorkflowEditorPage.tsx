@@ -20,6 +20,7 @@ import '@xyflow/react/dist/style.css';
 import dagre from '@dagrejs/dagre';
 import { ArrowLeft, Save, Trash2, Wand2, Code } from 'lucide-react';
 import { Button, Loading } from '../../../components/common';
+import { api } from '../../../config/api';
 import { useAdminDarkMode } from '../../../contexts/AdminDarkModeContext';
 import { workflowsService, type WorkflowNodeType } from '../../../services/workflows.service';
 import { NodeConfigPanel } from './NodeConfigPanel';
@@ -125,6 +126,13 @@ export const WorkflowEditorPage: React.FC = () => {
     queryKey: ['workflow', workflowId],
     queryFn: () => workflowsService.get(workflowId),
     enabled: Number.isFinite(workflowId),
+  });
+
+  // Configured webhook subscriptions — the webhook node references one of these
+  // (the delivery then rides the webhook worker pipeline).
+  const { data: webhooks = [] } = useQuery({
+    queryKey: ['admin-webhooks'],
+    queryFn: async () => (await api.get<Array<{ id: number; name: string; active: boolean }>>('/admin/webhooks')).data,
   });
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -366,6 +374,7 @@ export const WorkflowEditorPage: React.FC = () => {
               nodeType={(selectedNode.data as any).nodeType}
               config={(selectedNode.data as any).config || {}}
               onChange={(cfg) => updateNodeConfig(selectedNode.id, cfg)}
+              webhooks={webhooks}
             />
           </div>
         )}

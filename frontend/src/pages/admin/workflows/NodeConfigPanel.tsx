@@ -9,10 +9,13 @@ import { useTranslation } from 'react-i18next';
 
 type Cfg = Record<string, any>;
 
+interface WebhookOption { id: number; name: string; active: boolean }
+
 interface Props {
   nodeType: string;
   config: Cfg;
   onChange: (next: Cfg) => void;
+  webhooks?: WebhookOption[];
 }
 
 const field = 'w-full px-2 py-1.5 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-sm';
@@ -52,7 +55,7 @@ const Row: React.FC<{ label: string; children: React.ReactNode }> = ({ label, ch
   <div><label className={lbl}>{label}</label>{children}</div>
 );
 
-export const NodeConfigPanel: React.FC<Props> = ({ nodeType, config, onChange }) => {
+export const NodeConfigPanel: React.FC<Props> = ({ nodeType, config, onChange, webhooks = [] }) => {
   const { t } = useTranslation();
   const [showJson, setShowJson] = useState(false);
   const [jsonText, setJsonText] = useState(JSON.stringify(config || {}, null, 2));
@@ -109,8 +112,16 @@ export const NodeConfigPanel: React.FC<Props> = ({ nodeType, config, onChange })
       )}
 
       {(nodeType === 'action' || nodeType === 'webhook') && (config.action === 'webhook' || nodeType === 'webhook') && (
-        <Row label={t('workflows.editor.webhookUrl', 'Webhook URL')}>
-          <input className={field} value={config.url || ''} onChange={(e) => set({ url: e.target.value })} placeholder="https://…" />
+        <Row label={t('workflows.editor.webhookTarget', 'Webhook')}>
+          <select className={field} value={config.webhookId ?? ''} onChange={(e) => set({ webhookId: e.target.value ? Number(e.target.value) : undefined })}>
+            <option value="">{t('workflows.editor.webhookNone', '— Select a configured webhook —')}</option>
+            {webhooks.map((w) => (
+              <option key={w.id} value={w.id}>{w.name}{w.active ? '' : ` ${t('workflows.editor.webhookInactive', '(inactive)')}`}</option>
+            ))}
+          </select>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            {t('workflows.editor.webhookHint', 'Delivered via the webhook pipeline (signing, retries, SSRF checks). Manage endpoints in Settings → Webhooks.')}
+          </p>
         </Row>
       )}
 

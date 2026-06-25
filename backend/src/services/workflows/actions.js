@@ -179,25 +179,21 @@ registry.registerAction('notify_pre_event', async (ctx) => {
   return res;
 });
 
-// Call an external webhook (the `webhook` node type + the "Call a webhook"
-// action both resolve here). POSTs the run context to config.url. SSRF-guarded
-// via validateExternalUrl — the same NAT64/private-range protection the webhook
-// delivery worker uses — unless WEBHOOK_ALLOW_PRIVATE_URLS=true (local-dev
-// opt-out). No redirects. Best-effort: a rejected URL / network error records an
-// observable skipped step rather than throwing the run.
+// Call a webhook (the `webhook` node type + the "Call a webhook" action both
+// resolve here). The flow author picks a CONFIGURED webhook subscription
+// (config.webhookId, managed in Settings → Webhooks); this enqueues a real
+// delivery for it, so it rides the same worker pipeline as every other webhook:
+// per-delivery SSRF re-validation (validateExternalUrl / GHSA-wmjx-pc37-272r),
+// HMAC signing with the subscription's secret, retries/backoff, and the audit
+// log — all inherited, nothing reimplemented. Best-effort: an unset / missing /
+// inactive webhook records an observable skipped step.
 registry.registerAction('webhook', async (ctx) => {
-  const url = ctx.node.config?.url;
-  if (!url) return { skipped: true, reason: 'no webhook url configured' };
-  if (ctx.vars?.__dryRun) return { dryRun: true, would: 'webhook', url };
+  const webhookId = ctx.node.config?.webhookId ? Number(ctx.node.config.webhookId) : null;
+  if (!webhookId) return { skipped: true, reason: 'no webhook selected (pick one in Settings → Webhooks)' };
+  if (ctx.vars?.__dryRun) return { dryRun: true, would: 'webhook', webhookId };
 
-  if (process.env.WEBHOOK_ALLOW_PRIVATE_URLS !== 'true') {
-    const { validateExternalUrl } = require('../../utils/networkValidation');
-    const check = validateExternalUrl(url);
-    if (!check.valid) return { skipped: true, reason: `url rejected: ${check.error}` };
-  }
-
-  const axios = require('axios');
-  const body = {
+  const eventType = `workflow.${ctx.run.trigger_event || 'webhook'}`;
+  const res = await require('../webhookService').enqueueForWebhook(webhookId, eventType, {
     workflow: { id: ctx.run.workflow_id, version: ctx.run.version },
     run: {
       id: ctx.run.id,
@@ -206,18 +202,10 @@ registry.registerAction('webhook', async (ctx) => {
       entity_id: ctx.run.entity_id,
     },
     vars: ctx.vars || {},
-  };
-  try {
-    const res = await axios.post(url, body, {
-      headers: { 'Content-Type': 'application/json', 'User-Agent': 'PicPeak-Workflows/1.0', 'X-PicPeak-Event': ctx.run.trigger_event || '' },
-      timeout: parseInt(process.env.WEBHOOK_HTTP_TIMEOUT_MS || '10000', 10),
-      maxRedirects: 0, // no redirects — SSRF + receivers should give a final URL
-      validateStatus: () => true,
-    });
-    return { webhook_posted: url, status: res.status };
-  } catch (err) {
-    return { skipped: true, reason: `webhook request failed: ${err.message}` };
-  }
+  });
+  return res.enqueued
+    ? { webhook_enqueued: res.webhookId, deliveryId: res.deliveryId }
+    : { skipped: true, reason: res.reason };
 });
 
 // Create/prepare-document actions — registered so flows referencing them are
