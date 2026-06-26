@@ -4,7 +4,24 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const { sanitizeDays, addDateRangeCondition } = require('../utils/sqlSecurity');
 const { formatBoolean } = require('../utils/dbCompat');
+const { resolveAdapter } = require('../services/trackers');
+const logger = require('../utils/logger');
 const router = express.Router();
+
+/**
+ * Normalise a value coming back from `DATE(timestamp)` into a YYYY-MM-DD
+ * string. SQLite returns this column as a string already; Postgres' pg
+ * driver auto-converts it to a JavaScript Date object, which broke the
+ * old `dateObj.date === row.date` merge below — every Postgres install saw
+ * an all-zero `chartData[]` even with real traffic (#661 Bug A). Always
+ * normalise before comparing.
+ */
+function normaliseDateKey(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  // Strings might arrive with time component, slice defensively.
+  return String(value).slice(0, 10);
+}
 
 // Get dashboard statistics
 router.get('/stats', adminAuth, requirePermission('analytics.view'), async (req, res) => {
@@ -265,20 +282,25 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
       .where('timestamp', '>=', startDateStr)
       .groupByRaw('DATE(timestamp)');
 
-    // Merge data into dates array
+    // Merge data into dates array. row.date is normalised because Postgres
+    // returns DATE() as a JS Date while SQLite returns a string (#661 Bug A).
+    // Counts come back as strings on Postgres too, so coerce via Number.
     viewsData.forEach(row => {
-      const dateObj = dates.find(d => d.date === row.date);
-      if (dateObj) dateObj.views = row.count;
+      const key = normaliseDateKey(row.date);
+      const dateObj = dates.find(d => d.date === key);
+      if (dateObj) dateObj.views = Number(row.count) || 0;
     });
 
     downloadsData.forEach(row => {
-      const dateObj = dates.find(d => d.date === row.date);
-      if (dateObj) dateObj.downloads = row.count;
+      const key = normaliseDateKey(row.date);
+      const dateObj = dates.find(d => d.date === key);
+      if (dateObj) dateObj.downloads = Number(row.count) || 0;
     });
 
     visitorsData.forEach(row => {
-      const dateObj = dates.find(d => d.date === row.date);
-      if (dateObj) dateObj.uniqueVisitors = row.count;
+      const key = normaliseDateKey(row.date);
+      const dateObj = dates.find(d => d.date === key);
+      if (dateObj) dateObj.uniqueVisitors = Number(row.count) || 0;
     });
 
     // Get top galleries by views with additional metrics
@@ -293,31 +315,60 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
       .orderBy('views', 'desc')
       .limit(5);
 
-    // Get device breakdown (simplified - based on user agent)
-    const deviceData = await db('access_logs')
-      .select(
-        db.raw(`
-          CASE 
-            WHEN user_agent LIKE '%Mobile%' THEN 'mobile'
-            WHEN user_agent LIKE '%Tablet%' OR user_agent LIKE '%iPad%' THEN 'tablet'
-            ELSE 'desktop'
-          END as device_type
-        `),
-        db.raw('COUNT(*) as count')
-      )
-      .where('timestamp', '>=', startDateStr)
-      .groupBy('device_type');
+    // Device breakdown — prefer the operator's analytics tracker (Umami /
+    // Rybbit) when configured (#661 Bug C + #663 Phase 1). The local
+    // access_logs heuristic below produces 0% on installs where guest user
+    // agents don't reliably contain "Mobile" / "Tablet" tokens; the tracker
+    // adapters track devices natively. Falls back to access_logs when no
+    // tracker is configured (provider=none/custom), the upstream call fails,
+    // or the response shape doesn't match what we expect.
+    let devices = { desktop: 0, mobile: 0, tablet: 0 };
+    let devicesSource = 'access_logs';
 
-    const totalDevices = deviceData.reduce((sum, d) => sum + d.count, 0);
-    const devices = {
-      desktop: 0,
-      mobile: 0,
-      tablet: 0
-    };
+    const adapter = await resolveAdapter();
+    if (adapter) {
+      try {
+        const trackerDevices = await adapter.fetchDeviceBreakdown({
+          startMs: startDate.getTime(),
+          endMs: Date.now(),
+        });
+        if (trackerDevices) {
+          devices = trackerDevices;
+          devicesSource = adapter.provider;
+        }
+      } catch (err) {
+        logger.warn(`Analytics: ${adapter.provider} device-breakdown fetch failed; falling back to access_logs`, {
+          error: err.message,
+        });
+      }
+    }
 
-    deviceData.forEach(d => {
-      devices[d.device_type] = Math.round((d.count / totalDevices) * 100);
-    });
+    if (devicesSource === 'access_logs') {
+      // Local heuristic on access_logs user_agent. Coarse — `LIKE` doesn't
+      // cover every UA shape (some Android browsers, embedded webviews, etc.)
+      // — and counts come back as strings on Postgres, hence Number() below.
+      const deviceData = await db('access_logs')
+        .select(
+          db.raw(`
+            CASE
+              WHEN user_agent LIKE '%Mobile%' THEN 'mobile'
+              WHEN user_agent LIKE '%Tablet%' OR user_agent LIKE '%iPad%' THEN 'tablet'
+              ELSE 'desktop'
+            END as device_type
+          `),
+          db.raw('COUNT(*) as count')
+        )
+        .where('timestamp', '>=', startDateStr)
+        .whereNotNull('user_agent')
+        .groupBy('device_type');
+
+      const totalDevices = deviceData.reduce((sum, d) => sum + (Number(d.count) || 0), 0);
+      if (totalDevices > 0) {
+        deviceData.forEach(d => {
+          devices[d.device_type] = Math.round(((Number(d.count) || 0) / totalDevices) * 100);
+        });
+      }
+    }
 
     // Calculate totals for the period (matching /stats logic)
     const totalViews = await db('access_logs')
@@ -341,6 +392,7 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
       chartData: dates,
       topGalleries,
       devices,
+      devicesSource,
       totals: {
         views: totalViews?.count || 0,
         downloads: totalDownloadsCount?.count || 0,

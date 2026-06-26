@@ -327,6 +327,18 @@ export interface AnalyticsData {
     mobile: number;
     tablet: number;
   };
+  // Period totals computed via dedicated COUNT queries on the backend
+  // (#661 Bug A). Postgres returns these as strings, so callers should
+  // coerce via Number() before display. Optional on the type because
+  // older backends (pre-#661) didn't always emit it.
+  totals?: {
+    views: number | string;
+    downloads: number | string;
+    uniqueVisitors: number | string;
+  };
+  // Source of the device breakdown — `umami` when API-key auth succeeded,
+  // `access_logs` for the local user-agent heuristic fallback (#661 Bug C).
+  devicesSource?: 'umami' | 'access_logs';
 }
 
 export const adminService = {
