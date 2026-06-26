@@ -39,19 +39,24 @@ export const PublishGalleryDialog: React.FC<PublishGalleryDialogProps> = ({
   // Someone gets notified if there's an inline email OR an assigned account
   // (the latter via the account "your galleries" email).
   const willNotify = !!customerEmail || assignedCustomerCount > 0;
+  // The password is only collected (and required) on the inline-email path,
+  // because the gallery_created email carries it. With no inline email the field
+  // is hidden and the existing hash is kept — so don't gate submit on it, or a
+  // password-protected gallery without an email could never be published.
+  const needsPassword = requirePassword && !!customerEmail;
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
   const handleSubmit = () => {
-    if (requirePassword) {
+    if (needsPassword) {
       if (!password || password.trim().length < 6) {
         setError(t('events.publishDialog.errorMinLength', 'Password must be at least 6 characters long.'));
         return;
       }
     }
     setError(undefined);
-    onConfirm(requirePassword ? password : undefined);
+    onConfirm(needsPassword ? password : undefined);
   };
 
   return (
@@ -92,7 +97,7 @@ export const PublishGalleryDialog: React.FC<PublishGalleryDialogProps> = ({
                 })}
         </p>
 
-        {requirePassword && customerEmail && (
+        {needsPassword && (
           <div className="space-y-3 mb-4">
             <Input
               type={showPassword ? 'text' : 'password'}
