@@ -5,6 +5,15 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.5.1-beta.0](https://github.com/filpgame/picpeak/compare/v4.5.0-beta.0...v4.5.1-beta.0) (2026-06-27)
+
+
+### Bug Fixes
+
+* **ci:** resolve i18n and frontend test job failures ([#29](https://github.com/filpgame/picpeak/issues/29)) ([e0392b0](https://github.com/filpgame/picpeak/commit/e0392b07f719d9aaa6f02815f0dda7c736710143))
+* **i18n:** add 1635 missing pt keys from en ([#28](https://github.com/filpgame/picpeak/issues/28)) ([a04bd79](https://github.com/filpgame/picpeak/commit/a04bd7926c67179343265165768594ddfb5fab8f))
+* **lint:** resolve all @typescript-eslint/no-unused-vars warnings in frontend ([9cfb6f6](https://github.com/filpgame/picpeak/commit/9cfb6f62a55f23040d603a1f785aa6bd3852ed1b))
+
 ## [4.5.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.4.1-beta.0...v4.5.0-beta.0) (2026-06-21)
 
 
