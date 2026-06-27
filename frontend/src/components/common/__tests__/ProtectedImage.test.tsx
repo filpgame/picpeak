@@ -169,9 +169,6 @@ describe('ProtectedImage', () => {
   });
 
   it('handles image loading errors gracefully', async () => {
-    // Track how many times src is set to detect fallback attempts
-    let _loadAttempt = 0;
-
     global.Image = class {
       onload: (() => void) | null = null;
       onerror: (() => void) | null = null;
@@ -186,7 +183,6 @@ describe('ProtectedImage', () => {
       get src() { return this._src; }
       set src(value: string) {
         this._src = value;
-        loadAttempt++;
         setTimeout(() => {
           if (this.onerror) this.onerror();
         }, 10);

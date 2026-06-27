@@ -71,7 +71,23 @@
     "confirmCancelInvitation": {
       "title": "Cancel Invitation",
       "message": "Are you sure you want to cancel the invitation for {{email}}?"
-    }
+    },
+    "userActivated": "User reactivated successfully",
+    "activateUserError": "Failed to reactivate user",
+    "userDeleted": "User deleted successfully",
+    "deleteUserError": "Failed to delete user",
+    "activateUser": "Reactivate user",
+    "deleteUser": "Delete user permanently",
+    "confirmActivate": {
+      "title": "Reactivate user?",
+      "message": "Reactivate {{name}}? They will be able to log in again immediately."
+    },
+    "confirmDelete": {
+      "title": "Delete user permanently?",
+      "message": "Permanently delete {{name}}? This cannot be undone. Their pending invitations and API tokens will be removed; records they created elsewhere will be kept but de-attributed."
+    },
+    "activate": "Reactivate",
+    "delete": "Delete permanently"
   },
   "systemHealth": {
     "title": "System health",
@@ -138,8 +154,6 @@
     "collapse": "Collapse",
     "expand": "Expand",
     "submitting": "Submitting...",
-    "copy": "Copy",
-    "copied": "Copied!",
     "applying": "Applying...",
     "done": "Done",
     "retry": "Retry",
@@ -152,7 +166,13 @@
     "duplicate": "Duplicate",
     "showAll": "Show all",
     "confirm": "Confirm",
-    "show": "Show"
+    "show": "Show",
+    "menu": "Menu",
+    "saved": "Saved.",
+    "deleted": "Deleted.",
+    "actions": "Actions",
+    "searching": "Searching…",
+    "language": "Language"
   },
   "upload": {
     "photoCategory": "Photo Category",
@@ -189,16 +209,8 @@
     "events": "Events",
     "archives": "Archives",
     "settings": "Settings",
-    "systemHealth": "System health",
-    "eventTypes": "Event Types",
-    "branding": "Branding",
-    "emailSettings": "Email Settings",
-    "backup": "Backup & Restore",
-    "cmsPages": "CMS Pages",
     "users": "Users",
-    "calendar": "Calendar",
     "clients": "CRM",
-    "accounting": "Accounting",
     "betaTag": "Beta"
   },
   "archives": {
@@ -502,7 +514,9 @@
       "toastError": "Failed to reset password",
       "toastCopied": "Password copied to clipboard",
       "errorMinLength": "Password must be at least 6 characters",
-      "errorMismatch": "Passwords do not match"
+      "errorMismatch": "Passwords do not match",
+      "hide": "Hide",
+      "show": "Show"
     },
     "themeAndStyle": "Theme & Style",
     "galleryExpiration": "Gallery Expiration",
@@ -572,7 +586,6 @@
     "expired": "Expired",
     "draft": "Draft",
     "publishAndNotify": "Publish & Notify Client",
-    "publishConfirm": "This will make the gallery accessible and send the notification email to the client. Continue?",
     "publishSuccess": "Gallery published and client notified!",
     "publishDialog": {
       "title": "Publish gallery",
@@ -717,12 +730,26 @@
       "mode_custom": "Custom override for this event",
       "mode_off": "Off (hide for this event)",
       "placeholder": "Markdown content (e.g. **Special offer:** [book your next session](https://example.com))",
-      "preview": "Preview"
+      "preview": "Preview",
+      "mode_managed": "events.promoBanner.mode_managed",
+      "mode_reference": "events.promoBanner.mode_reference"
     },
     "ogShare": {
       "title": "Use hero photo as social-share preview",
       "help": "When this gallery URL is shared on WhatsApp, Facebook, Slack, etc., the link preview will show the hero photo above. The thumbnail is fetched unauthenticated by link-preview crawlers — anyone with the URL effectively makes this image public. Off by default; pick a hero you are comfortable surfacing publicly before enabling.",
       "heroRequired": "Pick a hero photo above first — this option uses it as the WhatsApp / Facebook / Slack preview image."
+    },
+    "resendEmailPasswordLabel": "Gallery password (optional)",
+    "resendEmailPasswordPlaceholder": "Enter password to include in email",
+    "resendEmailPasswordHint": "If left blank, the email will say the password is not shown for security reasons.",
+    "sendEmail": "Send email",
+    "customerPicker": {
+      "help": "Customers added here can log in at /customer/login and view this gallery without entering the per-event password.",
+      "label": "Customer accounts",
+      "removeAria": "Remove {{name}}",
+      "placeholder": "Search by email, name, or company",
+      "searching": "Searching…",
+      "noResults": "No matches. Invite this customer from Clients → Accounts first."
     }
   },
   "settings": {
@@ -766,7 +793,11 @@
       "accountEmailRequired": "Email address is required",
       "accountEmailInvalid": "Enter a valid email address",
       "accountSaveButton": "Save account details",
-      "accountSaveSuccess": "Account details updated"
+      "accountSaveSuccess": "Account details updated",
+      "timeFormat": "Time format",
+      "timeFormat24h": "24-hour (14:30)",
+      "timeFormat12h": "12-hour (2:30 PM)",
+      "timeFormatHelp": "Controls how times render across admin views, customer-facing pages, and PDFs. Storage stays 24-hour (HH:mm); only the display switches."
     },
     "publicSite": {
       "badge": "Public Landing",
@@ -1095,7 +1126,6 @@
     },
     "groups": {
       "general": "General",
-      "display": "Display",
       "privacySecurity": "Privacy & Security",
       "integrations": "Integrations",
       "system": "System",
@@ -1236,7 +1266,6 @@
         "sales": "Sales",
         "accounting": "Accounting",
         "insights": "Insights & Access",
-        "customers": "Customers",
         "clients": "CRM"
       },
       "status": {
@@ -1288,7 +1317,6 @@
         "title": "Tax export",
         "description": "Period-scoped revenue list with net + VAT breakdown grouped by VAT rate. Export as PDF (landscape, company letterhead) or CSV for your accountant. Cancelled invoices stay visible for a gap-free audit trail but are excluded from totals.",
         "sidebar": "Tax",
-        "requiresBills": "Enable Bills first — the tax report reads from your invoices.",
         "requiresAccounting": "Enable Accounting first — Tax export lives in the Accounting section."
       },
       "accounting": {
@@ -1323,8 +1351,7 @@
         "description": "Persistent customer logins. Recurring clients see all their assigned galleries from one place — no per-event passwords. Customers log in at /customer/login and you manage them under CRM → Accounts."
       },
       "clients": {
-        "title": "CRM",
-        "description": "Master switch for the CRM sidebar section. Off hides the section and every sub-feature below regardless of their individual toggles — re-enable to restore them to whatever you set last."
+        "title": "CRM"
       },
       "contracts": {
         "title": "Contracts",
@@ -1636,7 +1663,6 @@
     "pdfFontFamily": "Body font",
     "pdfFontFamilyDefault": "Use Helvetica (default)",
     "pdfFontFamilyMissing": "missing",
-    "pdfFontSavedToast": "PDF font saved.",
     "heroPlaceholderText": "Your event's hero photo will appear here",
     "whiteLabel": "White Label",
     "hidePoweredBy": "Hide \"Powered by PicPeak\" branding",
@@ -1651,10 +1677,6 @@
     "logoMaxHeight": "Maximum Height (pixels)",
     "logoMaxHeightHelp": "Set a custom maximum height for the logo (20-200 pixels)",
     "logoPosition": "Logo Position in Header",
-    "positionLeft": "Left",
-    "positionCenter": "Center",
-    "positionRight": "Right",
-    "positionSidepanel": "Sidebar",
     "positionSidepanelHelp": "The logo appears in the admin sidebar instead of the header. When the sidebar is collapsed, the favicon is shown.",
     "logoDisplayMode": "Display Mode",
     "logoOnly": "Logo Only",
@@ -1761,7 +1783,21 @@
       "alignment": "Alignment",
       "alignLeft": "Left",
       "alignCenter": "Center (default — matches footer)",
-      "alignRight": "Right"
+      "alignRight": "Right",
+      "title": "Gallery Promotional Banner",
+      "help": "Markdown shown above or below the gallery footer (e.g. seasonal offer, print discount). Per-event overrides take priority.",
+      "position": "Position",
+      "aboveFooter": "Above footer",
+      "belowFooter": "Below footer",
+      "content": "Content (markdown)",
+      "placeholder": "**Spring offer**: 20% off prints with code SPRING — see the [print shop](https://example.com).",
+      "markdownHelp": "Bold, italic, links, lists, and headings supported. HTML is stripped.",
+      "preview": "Preview"
+    },
+    "socialMedia": {
+      "title": "Social Media",
+      "help": "Add URLs to render social-media icons in the gallery footer. Leave a field empty to hide that icon.",
+      "whatsappHelp": "A wa.me URL or a phone number with country code (will be converted)."
     }
   },
   "admin": {
@@ -1782,31 +1818,11 @@
       "checking": "Checking..."
     },
     "updates": {
-      "available": "Update Available",
-      "newVersion": "Version {{version}} is available",
-      "currentVersion": "Current: {{version}}",
-      "channel": "Channel: {{channel}}",
-      "channelStable": "Stable",
-      "channelBeta": "Beta",
       "beta": "BETA",
-      "viewReleaseNotes": "View Release Notes",
       "updateAvailableShort": "v{{version}} available",
-      "upToDate": "You're up to date",
-      "updateNow": "Update Now",
-      "updateDialog": {
-        "title": "Update PicPeak",
-        "detectedEnv": "Detected Environment",
-        "beforeUpdating": "Before updating:",
-        "updateCommands": "Update Commands:",
-        "afterUpdating": "After updating:",
-        "copyAllCommands": "Copy All Commands",
-        "completeChecklist": "Complete the checklist before updating",
-        "error": "Failed to load update instructions"
-      },
       "card": {
         "title": "Application Version",
         "upToDate": "Up to date",
-        "updateAvailable": "Update available",
         "updateTo": "Update to {{version}}",
         "checkAgain": "Check again",
         "lastChecked": "Last checked: {{time}}",
@@ -1819,7 +1835,20 @@
         "downloadCombinedLog": "Download combined.log",
         "downloadErrorLog": "Download error.log",
         "retry": "Retry"
-      }
+      },
+      "viewDetails": "View release notes and upgrade instructions",
+      "copyFailed": "Could not copy to clipboard",
+      "modalTitle": "Update available",
+      "modalSubtitle": "v{{current}} → v{{latest}}",
+      "howToUpgrade": "How to upgrade",
+      "detectedEnv": "Detected environment: {{env}}",
+      "copyCommand": "Copy command",
+      "releaseNotes": "Release notes",
+      "changelogError": "Could not load release notes. Check the release pages directly on GitHub.",
+      "noReleases": "No release notes available.",
+      "viewOnGitHub": "View on GitHub",
+      "noNotes": "No release notes provided.",
+      "dismissUntilNext": "Dismiss until next version"
     },
     "notifications": "Notifications",
     "markAllRead": "Mark all read",
@@ -1891,79 +1920,14 @@
       "eventPublished": "Event published: {{eventName}}",
       "eventLogoUploaded": "Event logo uploaded for {{eventName}}",
       "eventLogoRemoved": "Event logo removed for {{eventName}}",
-      "bulkDeleteCompleted": "Bulk delete completed: {{count}} events removed",
       "photoReplaced": "Photo replaced in {{eventName}}",
       "photoUploaded": "Photo uploaded to {{eventName}}",
       "categoryHeroUpdated": "Category hero photo updated",
       "publicSiteResetToDefault": "Public site reset to default",
       "cmsPageLogoUploaded": "CMS page logo uploaded: {{slug}}",
       "adminPasswordResetByAdmin": "Admin password reset by another admin: {{username}}",
-      "contractCreated": "Contract created: {{contractNumber}}",
-      "contractCreatedFromQuote": "Contract created from quote: {{contractNumber}}",
-      "contractUpdated": "Contract updated: {{contractNumber}}",
-      "contractSent": "Contract sent: {{contractNumber}}",
-      "contractResentSigned": "Signed contract resent: {{contractNumber}}",
-      "contractSignedByCustomer": "Contract signed by customer: {{contractNumber}}",
-      "contractSignedPdfUploaded": "Signed contract PDF uploaded: {{contractNumber}}",
-      "contractSignaturesRestamped": "Contract signatures re-stamped: {{contractNumber}}",
-      "contractCancelled": "Contract cancelled: {{contractNumber}}",
-      "contractConvertedToEvent": "Contract converted to event: {{contractNumber}}",
-      "contractConvertedToEmptyEvent": "Contract converted to empty event: {{contractNumber}}",
-      "contractConvertedToInvoices": "Contract converted to invoices: {{contractNumber}}",
-      "contractConvertedToEmptyInvoice": "Contract converted to empty invoice: {{contractNumber}}",
-      "quoteCreated": "Quote created: {{quoteNumber}}",
-      "quoteSent": "Quote sent: {{quoteNumber}}",
-      "quoteUpdated": "Quote updated: {{quoteNumber}}",
-      "quoteAcceptedByAdmin": "Quote accepted: {{quoteNumber}}",
-      "quoteDeclinedByAdmin": "Quote declined: {{quoteNumber}}",
-      "quoteConverted": "Quote converted: {{quoteNumber}}",
-      "quoteConvertedInvoicesOnly": "Quote converted to invoices: {{quoteNumber}}",
-      "invoiceCreated": "Invoice created: {{invoiceNumber}}",
-      "invoiceSent": "Invoice sent: {{invoiceNumber}}",
-      "invoiceScheduled": "Invoice scheduled: {{invoiceNumber}}",
-      "invoiceCancelled": "Invoice cancelled: {{invoiceNumber}}",
-      "invoiceCancelledViaStorno": "Invoice cancelled via Storno: {{invoiceNumber}}",
-      "invoiceReissued": "Invoice reissued: {{invoiceNumber}}",
-      "invoicePaidAdminNotified": "Invoice marked paid: {{invoiceNumber}}",
-      "invoicePaymentCheckRecorded": "Payment-check recorded for invoice: {{invoiceNumber}}",
-      "invoicePaymentCheckSent": "Payment-check sent for invoice: {{invoiceNumber}}",
-      "invoiceReleasedForDelivery": "Invoice released for delivery: {{invoiceNumber}}",
-      "invoiceReminderSent": "Invoice reminder sent: {{invoiceNumber}}",
-      "stornoSent": "Storno sent: {{invoiceNumber}}",
-      "monthlyBillIssued": "Monthly bill issued for customer",
-      "monthlyBillSkippedEmpty": "Monthly bill skipped (no entries)",
-      "monthlyBillTriggeredManually": "Monthly bill triggered manually",
-      "monthlyBillingItemsQueued": "Monthly billing items queued",
-      "installmentPlanUpdated": "Installment plan updated",
-      "expenseCreated": "Expense created",
-      "expenseUpdated": "Expense updated",
-      "expensePaid": "Expense marked paid",
-      "expenseInvoiced": "Expense invoiced",
-      "hourEntryLogged": "Hour entry logged",
-      "hourEntryUpdated": "Hour entry updated",
-      "hourEntryDeleted": "Hour entry deleted",
-      "hourEntryLoggedToMonthlyDraft": "Hour entry logged to monthly draft",
-      "hourEntriesBilled": "Hour entries billed to customer",
-      "incomingInvoiceCaptured": "Incoming invoice captured",
-      "incomingInvoiceCategorized": "Incoming invoice categorised",
-      "incomingInvoiceUpdated": "Incoming invoice updated",
-      "incomingInvoiceRebilled": "Incoming invoice re-billed to customer",
-      "incomingInvoiceSupplierPayment": "Supplier payment recorded",
-      "incomingMailConfigUpdated": "Incoming mail configuration updated",
-      "customerCreatedPassive": "Passive customer created: {{email}}",
-      "adminUserActivated": "Admin user activated: {{username}}",
-      "adminUserDeleted": "Admin user deleted: {{username}}",
-      "adminPasswordReset": "Admin password reset: {{username}}",
-      "bulkArchiveCompleted": "Bulk archive completed: {{count}} events archived",
-      "emailQueueFlushed": "Email queue flushed",
-      "emailResent": "Creation email resent for {{eventName}}",
-      "emailTemplateCreated": "Email template created: {{template_key}}",
-      "eventDuplicated": "Event duplicated from {{source_event_name}}",
-      "feedbackDeleted": "Feedback deleted",
-      "feedbackModerated": "Feedback moderated",
-      "feedbackSettingsUpdated": "Feedback settings updated for {{eventName}}",
-      "wordFilterAdded": "Word filter added: {{word}}",
-      "whatsappConfigUpdated": "WhatsApp configuration updated"
+      "bulkDeleteCompleted_one": "admin.notificationMessages.bulkDeleteCompleted",
+      "bulkDeleteCompleted_other": "admin.notificationMessages.bulkDeleteCompleted"
     },
     "notificationToasts": {
       "markedAllRead": "All notifications marked as read",
@@ -2121,7 +2085,6 @@
       "unknown": "Unknown activity",
       "feature_enabled": "{{label}} enabled",
       "feature_disabled": "{{label}} disabled",
-      "feature_flags_summary": "{{count}} features updated: {{summary}}",
       "feature_flags_noop": "Feature flags reviewed (no changes)",
       "customer_login": "Customer logged in: {{email}}",
       "customer_invitation_created": "Customer invitation sent to {{email}}",
@@ -2161,66 +2124,13 @@
       "category_hero_updated": "Category hero photo updated",
       "public_site_reset_to_default": "Public site reset to default",
       "cms_page_logo_uploaded": "CMS page logo uploaded: {{slug}}",
-      "contract_created": "Contract created: {{contractNumber}}",
-      "contract_created_from_quote": "Contract created from quote: {{contractNumber}}",
-      "contract_updated": "Contract updated: {{contractNumber}}",
-      "contract_sent": "Contract sent: {{contractNumber}}",
-      "contract_resent_signed": "Signed contract resent: {{contractNumber}}",
-      "contract_signed_by_customer": "Contract signed by customer: {{contractNumber}}",
-      "contract_signed_pdf_uploaded": "Signed contract PDF uploaded: {{contractNumber}}",
-      "contract_signatures_restamped": "Contract signatures re-stamped: {{contractNumber}}",
-      "contract_cancelled": "Contract cancelled: {{contractNumber}}",
-      "contract_converted_to_event": "Contract converted to event: {{contractNumber}}",
-      "contract_converted_to_empty_event": "Contract converted to empty event: {{contractNumber}}",
-      "contract_converted_to_invoices": "Contract converted to invoices: {{contractNumber}}",
-      "contract_converted_to_empty_invoice": "Contract converted to empty invoice: {{contractNumber}}",
-      "quote_created": "Quote created: {{quoteNumber}}",
-      "quote_sent": "Quote sent: {{quoteNumber}}",
-      "quote_updated": "Quote updated: {{quoteNumber}}",
-      "quote_accepted_by_admin": "Quote accepted: {{quoteNumber}}",
-      "quote_declined_by_admin": "Quote declined: {{quoteNumber}}",
-      "quote_converted": "Quote converted: {{quoteNumber}}",
-      "quote_converted_invoices_only": "Quote converted to invoices: {{quoteNumber}}",
-      "invoice_created": "Invoice created: {{invoiceNumber}}",
-      "invoice_sent": "Invoice sent: {{invoiceNumber}}",
-      "invoice_scheduled": "Invoice scheduled: {{invoiceNumber}}",
-      "invoice_cancelled": "Invoice cancelled: {{invoiceNumber}}",
-      "invoice_cancelled_via_storno": "Invoice cancelled via Storno: {{invoiceNumber}}",
-      "invoice_reissued": "Invoice reissued: {{invoiceNumber}}",
-      "invoice_paid_admin_notified": "Invoice marked paid: {{invoiceNumber}}",
-      "invoice_payment_check_recorded": "Payment-check recorded for invoice: {{invoiceNumber}}",
-      "invoice_payment_check_sent": "Payment-check sent for invoice: {{invoiceNumber}}",
-      "invoice_released_for_delivery": "Invoice released for delivery: {{invoiceNumber}}",
-      "invoice_reminder_sent": "Invoice reminder sent: {{invoiceNumber}}",
-      "storno_sent": "Storno sent: {{invoiceNumber}}",
-      "monthly_bill_issued": "Monthly bill issued for customer",
-      "monthly_bill_skipped_empty": "Monthly bill skipped (no entries)",
-      "monthly_bill_triggered_manually": "Monthly bill triggered manually",
-      "monthly_billing_items_queued": "Monthly billing items queued",
-      "installment_plan_updated": "Installment plan updated",
-      "expense_created": "Expense created",
-      "expense_updated": "Expense updated",
-      "expense_paid": "Expense marked paid",
-      "expense_invoiced": "Expense invoiced",
-      "hour_entry_logged": "Hour entry logged",
-      "hour_entry_updated": "Hour entry updated",
-      "hour_entry_deleted": "Hour entry deleted",
-      "hour_entry_logged_to_monthly_draft": "Hour entry logged to monthly draft",
-      "hour_entries_billed": "Hour entries billed to customer",
-      "incoming_invoice_captured": "Incoming invoice captured",
-      "incoming_invoice_categorized": "Incoming invoice categorised",
-      "incoming_invoice_updated": "Incoming invoice updated",
-      "incoming_invoice_rebilled": "Incoming invoice re-billed to customer",
-      "incoming_invoice_supplier_payment": "Supplier payment recorded",
-      "incoming_mail_config_updated": "Incoming mail configuration updated",
-      "customer_created_passive": "Passive customer created: {{email}}",
-      "admin_user_activated": "Admin user activated: {{username}}",
-      "admin_user_deleted": "Admin user deleted: {{username}}",
-      "email_queue_flushed": "Email queue flushed",
-      "email_template_created": "Email template created: {{template_key}}",
-      "event_duplicated": "Event duplicated from {{source_event_name}}",
-      "whatsapp_config_updated": "WhatsApp configuration updated"
-    }
+      "feature_flags_summary_one": "{{count}} features updated: {{summary}}",
+      "feature_flags_summary_other": "{{count}} features updated: {{summary}}",
+      "feature_flags_updated": "admin.activities.feature_flags_updated"
+    },
+    "viewReleaseNotes": "View release notes on GitHub",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar"
   },
   "acceptInvitation": {
     "title": "Accept Invitation",
@@ -2300,7 +2210,6 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "expirationRange": "Expiration must be between 1 and 365 days",
     "required": "This field is required",
-    "expirationRequired": "Expiration date is required.",
     "eventDateRequired": "Event date is required.",
     "passwordTooSimple": "Password cannot be just numbers. Consider using a date format like \"04.07.2025\""
   },
@@ -2366,7 +2275,6 @@
       "roundTripFailed": "Round-trip test failed.",
       "poll": "Check now",
       "pollHint": "Check the mailbox now instead of waiting for the 60-second poll. Ingests unread attachments into Incoming invoices.",
-      "pollOk": "Checked mailbox — {{count}} new email(s) ingested.",
       "pollDisabled": "Incoming mail is turned off — enable it under Settings → Features.",
       "pollUnconfigured": "Save the incoming mail settings first.",
       "pollBusy": "A poll is already running — try again in a moment.",
@@ -2381,11 +2289,14 @@
       "save": "Save Incoming Mail Settings",
       "detectFolders": "Detect",
       "folderHint": "Enter host, username and password, then Detect to list the mailbox folders.",
-      "foldersDetected": "{{count}} folders found.",
       "noFolders": "No folders returned by the server.",
       "detectFailed": "Could not detect folders.",
       "requiredFields": "Host, port and username are required.",
-      "savedToast": "Incoming mail settings saved."
+      "savedToast": "Incoming mail settings saved.",
+      "pollOk_one": "Checked mailbox — {{count}} new email(s) ingested.",
+      "pollOk_other": "Checked mailbox — {{count}} new email(s) ingested.",
+      "foldersDetected_one": "{{count}} folders found.",
+      "foldersDetected_other": "{{count}} folders found."
     },
     "received": {
       "tab": "Received emails",
@@ -2394,13 +2305,7 @@
       "received": "Received",
       "status": "Status",
       "empty": "No received emails yet. Enable incoming mail and configure the mailbox.",
-      "inbox": "inbox",
-      "statusValue": {
-        "ingested": "Ingested",
-        "no_attachment": "No attachment",
-        "duplicate": "Duplicate",
-        "error": "Error"
-      }
+      "inbox": "inbox"
     },
     "sentEmails": {
       "tab": "Sent emails",
@@ -2410,8 +2315,6 @@
       "from": "From",
       "to": "To",
       "empty": "No emails match these filters.",
-      "retries": "{{count}} retries",
-      "pagination": "Page {{page}} of {{total}} · {{count}} emails",
       "status": {
         "pending": "Pending",
         "sent": "Sent",
@@ -2424,7 +2327,11 @@
         "created": "Queued",
         "sent": "Sent",
         "event": "Event"
-      }
+      },
+      "retries_one": "{{count}} retries",
+      "retries_other": "{{count}} retries",
+      "pagination_one": "Page {{page}} of {{total}} · {{count}} emails",
+      "pagination_other": "Page {{page}} of {{total}} · {{count}} emails"
     },
     "commonSmtpSettings": "Common SMTP Settings:",
     "editTemplate": "Edit Template",
@@ -2488,20 +2395,11 @@
     "buttonTextColor": "Button text",
     "buttonTextColorHelp": "Text colour on filled buttons. Should contrast cleanly against the Primary colour. No Branding equivalent — usually white.",
     "categories": {
-      "core": "Core",
-      "customers": "Customers",
-      "calendar": "Calendar",
-      "quotes": "Quotes",
-      "contracts": "Contracts",
-      "billing": "Billing"
+      "core": "Core"
     },
     "featureOff": "Feature off",
     "featureOffTooltip": "The feature this template belongs to is currently disabled. You can still edit the template — it will be used once the feature is re-enabled.",
     "subcategories": {
-      "gallery": "Galleries",
-      "admin": "Admin accounts",
-      "backup": "Backup & restore",
-      "system": "System updates",
       "other": "Other"
     }
   },
@@ -2532,7 +2430,9 @@
     "noLogo": "no override",
     "replaceLogo": "Replace Logo",
     "uploadLogo": "Upload Logo",
-    "clearLogo": "Use site default"
+    "clearLogo": "Use site default",
+    "showInFooter": "Show in gallery footer",
+    "showInFooterHelp": "When off, this page is hidden from the public gallery footer. The page itself remains accessible at its direct URL."
   },
   "eventTypes": {
     "title": "Event Types",
@@ -2567,8 +2467,6 @@
       "slugPreview": "Example URL:",
       "emoji": "Icon",
       "themePreset": "Default Theme",
-      "slideshowPreset": "Slideshow preset",
-      "slideshowPresetHint": "Default slideshow style for new events of this type.",
       "isActive": "Active (visible in event creation)"
     },
     "validation": {
@@ -2735,6 +2633,15 @@
         "good": "Good",
         "warning": "Warning",
         "critical": "Critical"
+      },
+      "lastSuccessful": "Last successful backup",
+      "lastAttempt": "Last attempt",
+      "zombieRuns_one": "{{count}} backup(s) running >30min — may have crashed without completing",
+      "zombieRuns_other": "{{count}} backup(s) running >30min — may have crashed without completing",
+      "status": {
+        "completed": "backup.dashboard.status.completed",
+        "failed": "backup.dashboard.status.failed",
+        "running": "backup.dashboard.status.running"
       }
     },
     "configuration": {
@@ -2885,7 +2792,15 @@
         "encrypted": "Encrypted Backup",
         "encryptedMessage": "You'll need to provide the encryption passphrase to restore this backup.",
         "enterPassphrase": "Enter encryption passphrase",
-        "at": "at"
+        "at": "at",
+        "filesOnlyHint": "This backup has no database dump — restoring it will NOT recover the database (CRM data, customers, quotes, invoices, contracts will be empty after restore).",
+        "filesOnlyBadge": "No DB",
+        "corruptHint": "The manifest file is unreadable — the backup may be incomplete or damaged.",
+        "corruptBadge": "Corrupt",
+        "filesOnlyWarning": {
+          "title": "Selected backup has no database dump",
+          "message": "Restoring this backup will recover files (photos, PDFs) but the database — including admin users, customers, quotes, invoices, contracts, and settings — will NOT come back. Pick a different backup if you have one with a database dump, or proceed only if files-only is what you want."
+        }
       },
       "restoreTypes": {
         "full": {
@@ -2960,7 +2875,12 @@
           "title": "Restore Completed Successfully",
           "message": "Your data has been restored. Please verify everything is working correctly.",
           "verifyIntegrity": "Verify document integrity now"
-        }
+        },
+        "failedSubtitle": "Restore failed — see error below. Destination has been rolled back to its pre-restore state.",
+        "idle": "No restore in progress.",
+        "errorTitle": "Restore did not complete",
+        "errorUnknown": "No error message recorded.",
+        "rolledBack": "Pre-restore safety backup was used to roll back. Destination is in its pre-restore state — safe to retry once the issue above is resolved."
       },
       "actions": {
         "back": "Back",
@@ -3393,7 +3313,6 @@
       "networkError": "Could not reach the server. Please try again.",
       "generalError": "Login failed. Please try again.",
       "acceptedToast": "Account ready — please log in.",
-      "adminHint": "Looking for the admin panel? Visit /admin/login.",
       "emailPlaceholder": "you@example.com",
       "passwordPlaceholder": "Your password",
       "needHelp": "Need help?",
@@ -3404,7 +3323,6 @@
       "invalidToken": "This invitation link is invalid or has expired. Please contact your photographer for a new invitation.",
       "emailWillBe": "Your account email will be ",
       "invitedBy": ", invited by ",
-      "name": "Your name",
       "nameRequired": "Please enter your name",
       "password": "Choose a password",
       "confirm": "Confirm password",
@@ -3444,29 +3362,14 @@
       "downloadStarted": "Download started for {{name}}",
       "downloadError": "Could not start the download. Please try again.",
       "sortLabel": "Sort by",
-      "sortNewest": "Newest first",
-      "sortOldest": "Oldest first",
-      "sortName": "By name",
       "open": "Open"
     },
-    "layout": {
-      "greeting": "Hi, {{name}}"
-    },
     "nav": {
-      "galleries": "Galleries",
-      "calendar": "Calendar",
-      "quotes": "Quotes",
-      "bills": "Invoices",
-      "profile": "Profile",
       "soon": "Soon",
       "new": "New"
     },
     "comingSoon": {
       "tag": "Coming soon"
-    },
-    "calendar": {
-      "title": "Calendar",
-      "body": "Upcoming sessions, gallery delivery dates, and other shoot-related events will land here. We'll let you know when it's ready."
     },
     "quotes": {
       "title": "Quotes",
@@ -3494,9 +3397,6 @@
         "outstanding": "Outstanding",
         "lateFee": "Late fee"
       },
-      "filter": {
-        "outstanding": "Outstanding (sent + overdue)"
-      },
       "kind": {
         "storno": "Cancellation invoice"
       },
@@ -3506,15 +3406,13 @@
     "sort": {
       "label": "Sort",
       "newest": "Newest first",
-      "oldest": "Oldest first",
-      "priceDesc": "Price (high to low)",
-      "priceAsc": "Price (low to high)"
+      "oldest": "Oldest first"
     },
     "filter": {
       "label": "Filter",
-      "all": "All",
-      "countAll": "{{count}} total",
-      "countFiltered": "{{visible}} of {{total}}"
+      "countFiltered": "{{visible}} of {{total}}",
+      "countAll_one": "{{count}} total",
+      "countAll_other": "{{count}} total"
     },
     "profile": {
       "title": "Customer profile",
@@ -3581,11 +3479,24 @@
       "successToast": "Password updated. Please log in.",
       "invalidSubmission": "Could not update your password.",
       "generalError": "Could not update your password. Please try again."
+    },
+    "contracts": {
+      "title": "Contracts",
+      "disabled": "This feature is currently disabled for your account.",
+      "loadError": "Could not load contracts.",
+      "subtitle": "Every contract your photographer has sent you. Open the signing link on awaiting-signature contracts, or download the signed PDF once both parties have signed.",
+      "empty": "No contracts yet.",
+      "popupBlocked": "Allow pop-ups for this site to download the contract PDF.",
+      "issued": "Issued",
+      "signedByYou": "Signed by you",
+      "counterSigned": "Counter-signed",
+      "openSign": "Open & sign",
+      "downloadSigned": "Download signed PDF",
+      "download": "Download PDF"
     }
   },
   "customers": {
     "field": {
-      "featureHoursLogging": "Hours logging",
       "hourlyRate": "Default hourly rate",
       "hourlyRateHint": "Major units (e.g. 150.00 for {{currency}} 150). Leave blank to require a per-entry override on every block."
     },
@@ -3623,7 +3534,6 @@
         "billedOn": "Billed: {{number}}"
       },
       "billButton": "Create draft invoice",
-      "unbilledCount": "{{count}} unbilled entries totaling {{total}}",
       "empty": "No entries logged yet.",
       "confirmDelete": "Delete this entry? If it has been billed onto a draft, the matching invoice line will also be removed.",
       "locked": "Locked: invoice already armed for send",
@@ -3645,7 +3555,9 @@
       "error": {
         "noRate": "No hourly rate set for this customer. Enter a rate override, set a rate on the customer, or configure an install-wide default in Settings.",
         "createFailed": "Failed to log entry"
-      }
+      },
+      "unbilledCount_one": "{{count}} unbilled entries totaling {{total}}",
+      "unbilledCount_other": "{{count}} unbilled entries totaling {{total}}"
     },
     "create": {
       "openButton": "Create passive customer",
@@ -3701,16 +3613,7 @@
     "invite": {
       "button": "Invite customer",
       "title": "Invite a customer",
-      "description": "They will receive an email with a link to set up their account. Once they have accepted, you can assign them to events.",
-      "email": "Email",
-      "submit": "Send invitation",
-      "success": "Invitation sent",
-      "error": "Could not send invitation.",
-      "conflict": "A customer with this email already exists or has a pending invitation.",
-      "invalidEmail": "Please enter a valid email",
-      "showPrefill": "+ Add contact details (optional)",
-      "hidePrefill": "− Hide contact details",
-      "prefillHint": "Anything you fill in will be pre-populated on the customer's sign-up page — they can still edit it."
+      "description": "They will receive an email with a link to set up their account. Once they have accepted, you can assign them to events."
     },
     "invitations": {
       "empty": "No pending invitations.",
@@ -3750,7 +3653,6 @@
       "preferredLanguage": "Preferred language",
       "preferredLanguageHint": "Drives portal UI and quote/invoice PDF locale. New customers default to the business-profile language ({{lang}}); override here per customer.",
       "salutation": "Salutation",
-      "salutationNone": "—",
       "firstName": "First name",
       "lastName": "Last name",
       "displayName": "Display name",
@@ -3763,9 +3665,7 @@
       "postalCode": "Postal code",
       "city": "City",
       "state": "State / region",
-      "countryCode": "Country (ISO 2)",
       "country": "Country",
-      "countryName": "Country (full name)",
       "notesHint": "Visible only to admins. Never shown to the customer.",
       "featuresSection": "Customer features",
       "featuresHint": "Per-customer overrides for the customer-surface tabs. The global toggles in Settings → Customer Surface are the master switch — when global is OFF nobody sees the tab, regardless of what you set here. Defaults are ON, so flip a switch OFF to hide a tab for this specific customer.",
@@ -3783,7 +3683,8 @@
       "noContracts": "No contracts for this customer yet.",
       "billsSection": "Invoices",
       "noBills": "No invoices for this customer yet.",
-      "manageEvents": "Manage galleries"
+      "manageEvents": "Manage galleries",
+      "companyName": "Company name"
     },
     "billing": {
       "section": "Billing cadence",
@@ -3837,10 +3738,12 @@
       "save": "Save assignments",
       "saved": "Assignments updated",
       "savedDiff": "Assignments updated: {{parts}}",
-      "addedN": "{{count}} added",
-      "removedN": "{{count}} removed",
       "error": "Could not update assignments",
-      "clearSearchAria": "Clear search"
+      "clearSearchAria": "Clear search",
+      "addedN_one": "{{count}} added",
+      "addedN_other": "{{count}} added",
+      "removedN_one": "{{count}} removed",
+      "removedN_other": "{{count}} removed"
     }
   },
   "clients": {
@@ -3859,7 +3762,6 @@
       "hours": "Hours",
       "calendar": "Calendar",
       "bills": "Invoices",
-      "taxReport": "Tax",
       "development": "Development"
     }
   },
@@ -3874,9 +3776,7 @@
     "subnav": {
       "incomingInvoices": "Incoming invoices",
       "expenses": "Expenses",
-      "taxReport": "Tax",
-      "export": "Treuhänder export",
-      "chartOfAccounts": "Chart of accounts"
+      "taxReport": "Tax"
     },
     "taxTreatment": {
       "domestic": "Domestic (with VAT)",
@@ -3909,8 +3809,6 @@
       "scanCamera": "Scan with camera",
       "uploadFile": "Upload file",
       "capturedToast": "Document captured.",
-      "categorizedToast": "Document categorized.",
-      "triageTitle": "Categorize document",
       "saveCategorize": "Save",
       "saveCategorizePay": "Save & mark paid",
       "categorize": "Categorize",
@@ -3919,7 +3817,6 @@
       "empty": "No documents yet — capture one above.",
       "untitled": "Untitled document",
       "noAmount": "amount not entered",
-      "rebillHint": "Creates an editable scheduled invoice on the client. VAT/tax handling is v1 — verify with your Treuhänder.",
       "previewLoading": "Loading preview…",
       "previewError": "Preview unavailable — enter the fields manually.",
       "qrHint": "Showing the last page — the Swiss QR-bill usually sits at the bottom.",
@@ -3941,9 +3838,7 @@
         "disposition": "Disposition",
         "category": "Category",
         "categoryNone": "— none —",
-        "declineReason": "Reason",
         "customer": "Client",
-        "eventId": "Event ID (optional)",
         "markup": "Markup",
         "reference": "Payment reference",
         "referenceHint": "QR / ESR reference or message",
@@ -3954,12 +3849,6 @@
         "supplierCountryNone": "— unknown —",
         "supplierCountryHint": "Sets the tax treatment automatically: outside your VAT-reclaim countries → foreign VAT (not reclaimable)."
       }
-    },
-    "expenseStatus": {
-      "open": "Open",
-      "parked": "Parked",
-      "billed": "Billed",
-      "declined": "Declined"
     },
     "paymentMethod": {
       "bank_transfer": "Bank transfer",
@@ -3973,7 +3862,6 @@
       "label": "Book to",
       "company": "Company",
       "event": "Event",
-      "eventId": "Event ID",
       "inboundHint": "Which event carries this cost in your reports & tax export (Company = general overhead). This is separate from who you re-bill it to."
     },
     "incoming": {
@@ -3990,11 +3878,11 @@
       "pendingRebill": "Pending re-bill",
       "pendingTitle": "Pending re-bills",
       "pendingBody": "Categorized invoices waiting to be re-billed. Bundle a client’s items into one invoice.",
-      "pendingCount": "{{count}} item",
       "pendingCount_other": "{{count}} items",
       "billPending": "Bill these",
-      "bundledToast": "Bundled {{count}} re-bill into one invoice.",
-      "bundledToast_other": "Bundled {{count}} re-bills into one invoice."
+      "bundledToast_other": "Bundled {{count}} re-bills into one invoice.",
+      "bundledToast_one": "Bundled {{count}} re-bill(s) into one invoice.",
+      "pendingCount_one": "{{count}} item(s)"
     },
     "expense": {
       "kind": "Type",
@@ -4028,21 +3916,16 @@
       "other": "Other"
     },
     "ledger": {
-      "allStatuses": "All statuses",
-      "allDispositions": "All dispositions",
       "allKinds": "All types",
       "empty": "No expenses yet — add one above.",
       "untitled": "Expense",
-      "invoiceLink": "Invoice",
       "paid": "Paid",
       "markPaid": "Mark paid",
-      "markPaidTitle": "Mark supplier paid",
       "paidDate": "Payment date",
       "method": "Method",
       "reference": "Reference (optional)",
       "confirmPaid": "Mark paid",
       "paidToast": "Marked as paid.",
-      "unpaidToast": "Marked as not paid.",
       "addExpense": "Add expense",
       "addTitle": "Add expense",
       "editTitle": "Edit expense",
@@ -4056,7 +3939,6 @@
       "locked": "Locked",
       "lockedHint": "Locked — this expense is on a client invoice.",
       "description": "Description",
-      "descriptionHint": "e.g. mileage, per-diem, cash receipt",
       "createdToast": "Expense added."
     }
   },
@@ -4070,7 +3952,6 @@
     "noCustomer": "No single customer",
     "rename": "Rename",
     "timeline": "Milestones",
-    "eventCount": "{{count}} events",
     "totalHours": "{{hours}} logged",
     "create": {
       "label": "New project name",
@@ -4132,7 +4013,9 @@
     },
     "error": {
       "customerMismatch": "That belongs to a different customer than this project."
-    }
+    },
+    "eventCount_one": "{{count}} events",
+    "eventCount_other": "{{count}} events"
   },
   "calendar": {
     "pageTitle": "Calendar",
@@ -4175,15 +4058,14 @@
       "featureOffToast": "Hour logging is disabled.",
       "lockedTooltip": "Already billed — Storno the invoice to edit.",
       "noDescription": "No description.",
-      "untitledCustomer": "Hours"
+      "untitledCustomer": "Hours",
+      "customerLoggingDisabled": "This customer has hour logging disabled. Enable it on the customer's detail page to log hours."
     }
   },
   "hoursLogging": {
     "title": "Hours logging",
     "subtitle": "Pick a customer and log billable time blocks. Entries flow into the next monthly bill or are billed on demand for per-event customers.",
     "pickCustomer": "Customer",
-    "pickPlaceholder": "— Select customer —",
-    "emptyList": "No customers have hours logging enabled yet. Flip \"Hours logging\" on a customer's detail page first.",
     "searchPlaceholder": "Search by email or company…",
     "customerLoggingDisabled": "This customer has hour logging disabled. Enable it on the customer's detail page to log hours.",
     "openHours": {
@@ -4222,73 +4104,7 @@
       "send": "Send to me",
       "sending": "Queuing…",
       "sentToast": "Queued to {{to}}.",
-      "empty": "No CRM email templates found — run migrations to seed them.",
-      "label": {
-        "quote_sent": {
-          "title": "Quote sent (to customer)",
-          "description": "Fires when a quote is sent — includes the PDF attachment + accept/decline links."
-        },
-        "quote_accepted_customer": {
-          "title": "Quote accepted — customer confirmation",
-          "description": "Sent to the customer after they (or the admin on their behalf) accept the quote. Includes PDF."
-        },
-        "quote_accepted_admin": {
-          "title": "Quote accepted — admin notification",
-          "description": "Notifies the admin that a quote was accepted by the customer."
-        },
-        "quote_declined_admin": {
-          "title": "Quote declined — admin notification",
-          "description": "Notifies the admin that a quote was declined by the customer."
-        },
-        "invoice_sent": {
-          "title": "Invoice sent (to customer)",
-          "description": "Fires when an invoice is sent — includes the PDF attachment."
-        },
-        "invoice_reminder_first": {
-          "title": "Invoice reminder — first",
-          "description": "First reminder to the customer. No late fee yet."
-        },
-        "invoice_reminder_second": {
-          "title": "Invoice reminder — second (with Mahngebühr)",
-          "description": "Second reminder with the late fee surcharge added."
-        },
-        "invoice_payment_check_admin": {
-          "title": "Payment-check (admin)",
-          "description": "Admin email with the three signed-token action buttons."
-        },
-        "contract_sent": {
-          "title": "Contract sent (to customer)",
-          "description": "Admin → customer send with the unsigned contract PDF attached."
-        },
-        "contract_signed_admin_notification": {
-          "title": "Contract signed — admin notification",
-          "description": "Customer-signed ping back to the admin. No attachment."
-        },
-        "contract_fully_signed": {
-          "title": "Contract fully signed (dual-party)",
-          "description": "Dual-party send once both signatures are in. Stamped contract PDF attached."
-        },
-        "event_reminder_default": {
-          "title": "Event reminder — default (catch-all)",
-          "description": "Pre-event nudge used when no per-category template matches."
-        },
-        "event_reminder_wedding": {
-          "title": "Event reminder — wedding",
-          "description": "Pre-event nudge for events with event_type=wedding."
-        },
-        "event_reminder_birthday": {
-          "title": "Event reminder — birthday",
-          "description": "Pre-event nudge for events with event_type=birthday."
-        },
-        "event_reminder_corporate": {
-          "title": "Event reminder — corporate",
-          "description": "Pre-event nudge for events with event_type=corporate."
-        },
-        "event_reminder_other": {
-          "title": "Event reminder — other",
-          "description": "Pre-event nudge for events with event_type=other."
-        }
-      }
+      "empty": "No CRM email templates found — run migrations to seed them."
     }
   },
   "ledger": {
@@ -4317,7 +4133,9 @@
       "ledger_account_default_expense": "Default expense account",
       "ledger_account_mileage": "Mileage account",
       "ledger_account_per_diem": "Per-diem account",
-      "ledger_account_rebilled_revenue": "Re-billed expenses (revenue)"
+      "ledger_account_rebilled_revenue": "Re-billed expenses (revenue)",
+      "ledger_vat_map": "ledger.defaults.ledger_vat_map",
+      "ledger_output_vat_map": "ledger.defaults.ledger_output_vat_map"
     },
     "vatMap": {
       "title": "VAT code by tax treatment (costs)"
@@ -4356,16 +4174,11 @@
       "legacyRate": "{{rate}}% (not configured)"
     },
     "export": {
-      "title": "Treuhänder export",
-      "intro": "Download the collective journal (revenue + costs as accrual postings with account and VAT codes) for import into your Treuhänder’s accounting software.",
       "format": "Target tool",
       "format_generic": "Generic (all columns)",
       "format_banana": "Banana — double-entry",
       "format_banana_ie": "Banana — income & expense",
-      "format_bexio": "bexio",
-      "download": "Download CSV",
-      "failed": "Export failed.",
-      "disclaimer": "Accrual basis only (document dates) — payments/bank movements are not included. Account + VAT codes follow your Chart-of-accounts mapping. Always review the import with your Treuhänder before filing."
+      "format_bexio": "bexio"
     }
   },
   "taxReport": {
@@ -4404,9 +4217,7 @@
     "grandTotalNet": "Total net",
     "grandTotalVat": "Total VAT",
     "grandTotalGross": "Total gross",
-    "cancelledFootnote": "{{count}} cancelled invoice(s) — amounts excluded from totals (shown for audit-trail continuity).",
     "skontoTooltip": "Paid with Skonto",
-    "costsTitle": "Costs (incoming invoices + expenses)",
     "costsDisclaimer": "This income/expense overview is a guideline for your records (Einnahmen-Ausgaben-Rechnung). VAT reclaimability and the result figure depend on each cost’s tax treatment — verify with your Treuhänder / tax authority before filing.",
     "summary": {
       "outgoingTitle": "Outgoing invoices",
@@ -4418,13 +4229,7 @@
       "vatUnconfigured": "VAT registration isn’t configured, so VAT payable can’t be computed. Set it under Settings → Accounting."
     },
     "cost": {
-      "source": "Type",
-      "sourceIncoming": "Incoming",
-      "sourceExpense": "Expense",
-      "supplier": "Supplier / description",
-      "taxTreatment": "Tax treatment",
-      "company": "Company",
-      "total": "Total costs"
+      "company": "Company"
     },
     "type": {
       "outgoing": "Outgoing invoice",
@@ -4433,10 +4238,7 @@
     },
     "col": {
       "date": "Date",
-      "invoice": "Invoice",
-      "customer": "Customer",
       "event": "Event",
-      "vatRate": "VAT %",
       "net": "Net",
       "vat": "VAT",
       "total": "Gross",
@@ -4445,7 +4247,10 @@
       "reference": "Reference",
       "party": "Customer / supplier",
       "tax": "Tax"
-    }
+    },
+    "cancelledFootnote_one": "{{count}} cancelled invoice(s) — amounts excluded from totals (shown for audit-trail continuity).",
+    "cancelledFootnote_other": "{{count}} cancelled invoice(s) — amounts excluded from totals (shown for audit-trail continuity).",
+    "costsErrorTitle": "Costs could not be loaded"
   },
   "quotes": {
     "errors": {
@@ -4479,7 +4284,6 @@
       "vatRate": "VAT rate %",
       "shipping": "Shipping amount",
       "currency": "Currency",
-      "selectPaymentTerm": "— Select payment terms —",
       "paymentNetDays": "Net days",
       "paymentTiming": "Payment schedule",
       "selectNetDays": "— Select net days —",
@@ -4510,13 +4314,6 @@
     "title": "Quotes",
     "subtitle": "Send, track and convert quotes into events.",
     "searchPlaceholder": "Search by number, customer, event…",
-    "sort": {
-      "newest": "Newest first",
-      "oldest": "Oldest first",
-      "customerAsc": "Customer A→Z",
-      "valueAsc": "Value low→high",
-      "valueDesc": "Value high→low"
-    },
     "empty": "No quotes yet.",
     "table": {
       "customer": "Customer",
@@ -4525,7 +4322,6 @@
       "total": "Total",
       "status": "Status"
     },
-    "pagination": "Page {{page}} of {{total}} · {{count}} quotes",
     "status": {
       "draft": "Draft",
       "sent": "Sent",
@@ -4540,7 +4336,20 @@
       "after_event": "after event",
       "after_delivery": "after delivery",
       "fixed_date": "on fixed date"
-    }
+    },
+    "pagination_one": "Page {{page}} of {{total}} · {{count}} quotes",
+    "pagination_other": "Page {{page}} of {{total}} · {{count}} quotes",
+    "confirmConvertToInvoice": "Convert this quote into invoice(s) only? No gallery / event will be created.",
+    "convertedToInvoiceToast_one": "{{count}} invoice(s) created from this quote",
+    "convertedToInvoiceToast_other": "{{count}} invoice(s) created from this quote",
+    "confirmConvertToContract": "Draft a contract from this quote? The customer + admin will both sign before event / invoice creation.",
+    "contractAlreadyLinkedToast": "A contract was already drafted from this quote.",
+    "convertedToContractToast": "Contract drafted from this quote.",
+    "confirmAcceptOnBehalf": "Mark this quote as accepted on behalf of the customer? Use only when they have verbally agreed (e.g. on the phone).",
+    "acceptedOnBehalfToast": "Quote marked as accepted.",
+    "acceptOnBehalf": "Accept on behalf",
+    "convertToInvoice": "Convert to invoice only",
+    "convertToContract": "Convert to contract"
   },
   "crm": {
     "lineItems": {
@@ -4564,6 +4373,9 @@
       "detailsPlaceholder": "Optional notes — fine print, package inclusions, conditions…",
       "autoTotaledHint": "Total auto-computed from sub-items below",
       "autoTotaledNote": "= sum of sub-items"
+    },
+    "customerPicker": {
+      "search": "Search customer by email or company…"
     }
   },
   "bills": {
@@ -4571,14 +4383,6 @@
     "subtitle": "Schedule, send, track payments and chase late invoices.",
     "new": "New invoice",
     "searchPlaceholder": "Search by number or customer…",
-    "sort": {
-      "newest": "Newest first",
-      "dueAsc": "Due soon first",
-      "dueDesc": "Due latest first",
-      "customerAsc": "Customer A→Z",
-      "valueAsc": "Value low→high",
-      "valueDesc": "Value high→low"
-    },
     "filter": {
       "unpaidOnly": "Unpaid only"
     },
@@ -4604,7 +4408,6 @@
     "monthlyDraftBadge": "Monthly draft — ships via the customer's cadence day or \"Trigger invoice now\"",
     "confirmReminder": "Send a reminder now?",
     "reminderToast": "Reminder sent.",
-    "confirmCancel": "Cancel this invoice?",
     "confirmCancelDraft": "Cancel this draft invoice? No document goes out.",
     "confirmCancelIssued": "A Stornorechnung will be generated and emailed to the customer immediately. This cannot be undone. Continue?",
     "cancelledToast": "Invoice cancelled.",
@@ -4642,7 +4445,6 @@
       "shipping": "Shipping",
       "currency": "Currency",
       "ccPdfEmail": "CC PDF to (extra recipient)",
-      "sourceQuote": "From quote",
       "businessBankAccount": "Payment account",
       "bankAccountProfileDefault": "Use business profile default for {{currency}}",
       "bankAccountDefaultBadge": "(default)",
@@ -4665,7 +4467,7 @@
       "ccPdfPickFromAdmins": "Pick from admins:",
       "paymentTermHelp": "Net days + Skonto for this invoice. Leave blank to inherit from the source quote or the global CRM defaults.",
       "skontoDisabled": "Disable Skonto for this invoice (suppresses the early-payment-discount block on the PDF and the \"Paid with Skonto\" buttons in the admin email / record-payment dialog).",
-      "sourceContract": "From contract"
+      "status": "Status"
     },
     "import": "Import historical",
     "importTitle": "Import historical invoice",
@@ -4771,7 +4573,22 @@
       "defaultLocale": "Default locale",
       "timezone": "Timezone (IANA)",
       "defaultQrFormat": "Default invoice QR",
-      "footerLine": "PDF footer line"
+      "footerLine": "PDF footer line",
+      "timezoneSystemDefault": "System default",
+      "pdfLogoHeight": "PDF logo height (pt, 24-200)",
+      "pdfFoldingMarks": "Folding marks on PDF page edge",
+      "pdfShowLogo": "Show logo in PDF letterhead",
+      "pdfShowLogoHelp": "When off, the logo image is suppressed on every PDF even if a logo is uploaded.",
+      "pdfShowCompanyName": "Show company name in PDF letterhead",
+      "pdfShowCompanyNameHelp": "When off, the company-name line is suppressed (useful if the logo is a wordmark already containing the name).",
+      "pdfCompanyNameInline": "Render company name inline with address",
+      "pdfCompanyNameInlineHelp": "When on, the company name appears as a plain line directly above the street address (same size + weight). When off, it renders as a bold title under the logo.",
+      "pdfQuoteShowNetDays": "Show net payment days on quote PDFs",
+      "pdfQuoteShowNetDaysHelp": "When on, quote PDFs include the \"X days from invoice date.\" line in the payment conditions block. Invoices always show this row regardless.",
+      "pdfQuoteShowSkonto": "Show Skonto / early-payment discount on quote PDFs",
+      "pdfQuoteShowSkontoHelp": "When on, quote PDFs include the Skonto offer and the \"Amount with discount\" line. Invoices always show these regardless.",
+      "pdfLogoUpload": "PDF letterhead logo (PNG, JPEG, or SVG)",
+      "pdfLogoUploadHelp": "Used on every quote and invoice PDF. SVG is accepted and rasterised to PNG automatically. When empty, the renderer falls back to the global Branding logo."
     },
     "qrFormat": {
       "none": "None",
@@ -4789,7 +4606,21 @@
       "makeDefault": "Make default",
       "confirmDelete": "Remove this bank account?"
     },
-    "noBanks": "No bank accounts configured yet."
+    "noBanks": "No bank accounts configured yet.",
+    "foldingMarks": {
+      "none": "None",
+      "half": "Half (148.5mm) — for C5 envelopes",
+      "third": "Thirds (105 + 210mm) — for DL / DIN long envelopes",
+      "both": "All three marks"
+    },
+    "qrDisclaimer": {
+      "title": "QR-bill / bank data — verify before going live",
+      "body": "Picpeak is open source. We render the QR code and IBAN block from the values you typed — we don't validate them. Print a test invoice and scan it with your bank's app before sending real invoices. We are not responsible for any mistakes that come from sending an invoice with bad data on it."
+    },
+    "logoUploadedToast": "PDF logo uploaded.",
+    "logoConfirmClear": "Remove the PDF logo? The renderer will fall back to the Branding logo if one is set.",
+    "logoClearedToast": "PDF logo removed.",
+    "bankUpdatedToast": "Bank account updated."
   },
   "crmSettings": {
     "savedToast": "CRM settings saved.",
@@ -4865,24 +4696,6 @@
     "crm_invoices_number_format": {
       "label": "Invoice number format"
     },
-    "crm_quotes_pdf_attachment_enabled": {
-      "label": "Attach quote PDF to email"
-    },
-    "crm_quotes_skonto_enabled": {
-      "label": "Allow early-payment discount (Skonto) on quotes"
-    },
-    "crm_invoices_qr_enabled": {
-      "label": "Render payment QR on invoice PDFs"
-    },
-    "crm_invoices_reminders_enabled": {
-      "label": "Send automatic reminders for overdue invoices"
-    },
-    "crm_invoices_late_fee_enabled": {
-      "label": "Add a late fee on the second reminder"
-    },
-    "crm_quotes_tos_required": {
-      "label": "Require customers to tick \"I accept the Terms of Service\" before accepting"
-    },
     "crm_quotes_tos_url": {
       "label": "Terms of Service URL (optional)"
     },
@@ -4890,17 +4703,7 @@
       "label": "Inline Terms text shown on the quote page",
       "placeholder": "Paste the contract terms here. Plain text. Leave empty to only show the checkbox + URL."
     },
-    "crm_contracts_pdf_attachment_enabled": {
-      "label": "Attach contract PDF to email"
-    },
-    "crm_contracts_require_drawn_signature": {
-      "label": "Require drawn signature (typed name alone is not enough)"
-    },
-    "crm_contracts_allow_pdf_upload": {
-      "label": "Allow customer to upload a wet-signed PDF"
-    },
     "crm_contracts_store_ip": {
-      "label": "Store signer's IP address (recommended — corroborating evidence in civil disputes)",
       "help": "When off, the customer's and admin's IP at signing time is NOT recorded into the contract row or the public sign-page audit confirmation. Per GDPR data-minimisation principle some operators prefer this — but IP is corroborating identity evidence if the contract is challenged, so we recommend keeping it on."
     },
     "crm_contracts_default_valid_days": {
@@ -4909,18 +4712,6 @@
     "crm_contracts_number_format": {
       "label": "Contract number format",
       "help": "Supported tokens: {YEAR}, {MONTH}, {SEQ:04d}. Example: LBM-C-{YEAR}-{SEQ:04d} → LBM-C-2026-0001."
-    },
-    "crm_overview_show_revenue": {
-      "label": "Revenue tiles (30 / 90 / 365 days)"
-    },
-    "crm_overview_show_outstanding": {
-      "label": "Outstanding payments tile"
-    },
-    "crm_overview_show_quotes": {
-      "label": "Quotes pipeline (per-status)"
-    },
-    "crm_overview_show_invoices": {
-      "label": "Invoices pipeline (per-status)"
     }
   },
   "quoteResponse": {
@@ -4943,7 +4734,13 @@
     "changeWithin": "You can change your response until {{at}}.",
     "intro": "Please accept or decline this quote:",
     "accept": "Accept quote",
-    "decline": "Decline"
+    "decline": "Decline",
+    "tosRequiredError": "Please tick \"I accept the Terms of Service\" before accepting the quote, or click Decline to refuse.",
+    "submitting": "Recording your response…",
+    "tosCheckbox": "I have read and accept the Terms of Service.",
+    "tosLink": "Read the full Terms",
+    "preselectAcceptHint": "You followed the \"Accept\" link from the email — click the button below to confirm.",
+    "preselectDeclineHint": "You followed the \"Decline\" link from the email — click the button below to confirm."
   },
   "reminderTemplates": {
     "title": "Pre-event reminder emails",
@@ -5047,7 +4844,19 @@
       "cancelled": "Cancelled"
     },
     "list": {
-      "new": "New contract"
+      "new": "New contract",
+      "blocksLibrary": "Block library",
+      "searchPlaceholder": "Search by number, title or customer…",
+      "empty": "No contracts yet.",
+      "table": {
+        "number": "Number",
+        "customer": "Customer",
+        "title": "Title",
+        "issueDate": "Issued",
+        "status": "Status"
+      },
+      "pagination_one": "Page {{page}} of {{total}} · {{count}} contracts",
+      "pagination_other": "Page {{page}} of {{total}} · {{count}} contracts"
     },
     "detail": {
       "previewPdf": "Preview PDF",
@@ -5087,7 +4896,6 @@
       "convertToInvoice": "Convert to invoice only",
       "convertedToEvent": "Converted to event",
       "convertedToEventToast": "Contract converted to event #{{id}}",
-      "convertedToInvoiceToast": "{{count}} invoice(s) created from this contract",
       "countersignError": "Counter-sign failed",
       "countersignHelp": "Type your name AND draw your signature below — both are stamped onto the re-rendered PDF. IP and timestamp are recorded for audit.",
       "countersignSignaturePrompt": "Draw your signature",
@@ -5129,7 +4937,9 @@
       "signedNamePlaceholder": "Your full name",
       "uploadError": "Upload failed",
       "uploadSigned": "Upload signed PDF",
-      "uploadedToast": "Signed PDF uploaded."
+      "uploadedToast": "Signed PDF uploaded.",
+      "convertedToInvoiceToast_one": "{{count}} invoice(s) created from this contract",
+      "convertedToInvoiceToast_other": "{{count}} invoice(s) created from this contract"
     },
     "editor": {
       "back": "Back to list",
@@ -5167,6 +4977,141 @@
       "titleNew": "New contract",
       "titlePlaceholder": "e.g. Wedding contract Doe / Müller",
       "validUntil": "Sign by (optional)"
+    },
+    "blocks": {
+      "createdToast": "Block created.",
+      "createError": "Create failed",
+      "updatedToast": "Block updated.",
+      "updateError": "Update failed",
+      "deletedToast": "Block deleted.",
+      "deleteError": "Delete failed",
+      "back": "Back to contracts",
+      "title": "Contract block library",
+      "hideInactive": "Hide inactive",
+      "disclaimerTitle": "Examples only — have your lawyer review",
+      "disclaimerBody": "The seeded \"System\" blocks are written by the picpeak maintainer, not by a lawyer. They are intended as starting points only — review and adapt every block you intend to send with your own lawyer. Edits to system blocks are persisted; replace the seeded body text with the lawyer-reviewed version in place.",
+      "sidebarHeading": "Blocks",
+      "new": "New block",
+      "systemBadge": "System",
+      "empty": "No blocks yet.",
+      "selectPrompt": "Select a block on the left or create a new one to start editing.",
+      "dialog": {
+        "createTitle": "New block",
+        "editTitle": "Edit block",
+        "name": "Name",
+        "section": "Section",
+        "description": "Description (admin hint)",
+        "body": "Body",
+        "placeholderHint": "You can use {{customer_name}}, {{event_name}}, {{event_date}}, {{net_days}}, {{skonto_percent}}, {{skonto_within_days}}, {{cancellation_30d_percent}}, {{currency}}, {{issuer_company_name}}, {{issuer_address}}, {{contract_number}}, {{source_quote_number}} as placeholders — substituted when the contract is rendered."
+      },
+      "active": "Active",
+      "inactive": "Inactive",
+      "deleteConfirm": "Delete this block?",
+      "delete": "Delete",
+      "save": "Save",
+      "noTranslation": "No translation yet",
+      "quoteLineItems": {
+        "calloutTitle": "Auto-generated table follows the body",
+        "calloutBody": "When this block is included in a contract that was created from a quote, the PDF inserts a real table of the source quote's line items (#, Description, Qty, Unit, Total) immediately after the body text above. Sub-items render indented with a ↳ marker. Contracts without a source quote skip the table and render only the body.",
+        "previewExample": "Example rendered output:"
+      }
+    }
+  },
+  "paymentCheck": {
+    "missingToken": "Missing token",
+    "alreadyUsed": "This link has already been used (action: {{action}}). If you need to record another payment, open the invoice in admin.",
+    "expired": "This link has expired. Open the invoice in admin to record the payment manually.",
+    "loadError": "Could not load invoice. The link may be invalid.",
+    "partialInvalid": "Enter a positive amount.",
+    "partialTooHigh": "Amount cannot exceed the outstanding total ({{max}}).",
+    "submitError": "Could not record action.",
+    "title": "Confirm payment",
+    "subtitle": "Select what was received for this invoice. The choice is logged and the appropriate reminder is queued automatically.",
+    "field": {
+      "invoice": "Invoice",
+      "customer": "Customer",
+      "issued": "Issued",
+      "due": "Due",
+      "total": "Total",
+      "outstanding": "Outstanding",
+      "paid": "Already paid",
+      "lateFee": "Late fee"
+    },
+    "action": {
+      "paidFull": "Paid in full",
+      "paidFullHelp": "Mark the entire outstanding amount ({{amount}}) as received. No reminder is sent.",
+      "paidSkonto": "Paid with Skonto",
+      "paidSkontoHelp": "Customer settled within the Skonto window. Record {{amount}} ({{percent}}% discount) as paid.",
+      "partial": "Partially paid",
+      "partialHelp": "Log the amount received, then queue the customer reminder for the remainder.",
+      "partialAmount": "Amount received",
+      "partialMax": "Max: {{max}}",
+      "unpaid": "Not paid yet",
+      "unpaidHelp": "Nothing received. The customer reminder will be queued{{fee}}.",
+      "unpaidWithFee": " (with late fee at second reminder)"
+    },
+    "submitting": "Recording…",
+    "submit": "Confirm",
+    "result": {
+      "title": "Action recorded",
+      "paid": "Invoice {{n}} marked as paid in full.",
+      "paidSkonto": "Invoice {{n}} marked as paid with Skonto applied.",
+      "partial": "Partial payment logged for invoice {{n}}. Customer reminder queued for the remainder.",
+      "unpaidMax": "Recorded as unpaid. Maximum reminder level already reached — handle this customer offline.",
+      "unpaid": "Recorded as unpaid. Customer reminder queued (level {{lvl}}).",
+      "close": "You can close this tab."
+    }
+  },
+  "publicContract": {
+    "errorAccept": "Please tick the acceptance box.",
+    "errorName": "Please enter your name.",
+    "errorSignatureRequired": "A drawn signature is required for this contract.",
+    "notFoundTitle": "Contract not available",
+    "notFoundBody": "This signing link is invalid or expired. Please contact the sender.",
+    "fallbackTitle": "Contract",
+    "signed": {
+      "title": "Thank you — the contract is signed.",
+      "by": "Signed by",
+      "counterBy": "Counter-signed by",
+      "auditTitle": "Signing audit trail",
+      "auditBody": "For your records. Save or screenshot this — the SHA-256 hash lets you prove later that the PDF you downloaded is exactly what we issued (re-hash the file you have and compare).",
+      "contractNumber": "Contract",
+      "signedAt": "Signed at",
+      "ipAddress": "IP at signing",
+      "counterSignedAt": "Counter-signed at",
+      "signedSha": "Signed PDF SHA-256",
+      "unsignedSha": "Original PDF SHA-256"
+    },
+    "downloadSigned": "Download signed PDF",
+    "download": "Download PDF",
+    "signTitle": "Sign this contract",
+    "nameField": "Your full name",
+    "signaturePromptRequired": "Draw your signature",
+    "signaturePrompt": "Draw your signature (optional)",
+    "clearSignature": "Clear",
+    "acceptCheckbox": "I have read this contract and agree to be bound by its terms.",
+    "submit": "Sign contract",
+    "uploadAlternative": "Or upload a wet-signed PDF",
+    "uploadHint": "Sign the printed contract by hand, scan it, and upload the PDF here.",
+    "uploadButton": "Upload signed PDF"
+  },
+  "crmOverview": {
+    "title": "CRM overview",
+    "loadError": "Could not load CRM stats. Check that you have bills.view or quotes.view permission and that the backend is on the latest build.",
+    "revenue": {
+      "month": "Revenue · last 30 days",
+      "quarter": "Revenue · last 90 days",
+      "year": "Revenue · last 365 days"
+    },
+    "outstanding": "Outstanding payments",
+    "outstandingSub_one": "{{count}} invoice(s) unpaid",
+    "outstandingSub_other": "{{count}} invoice(s) unpaid",
+    "quotes": {
+      "title": "Quotes"
+    },
+    "viewAll": "View all",
+    "invoices": {
+      "title": "Invoices"
     }
   }
 }
