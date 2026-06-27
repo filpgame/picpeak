@@ -71,7 +71,23 @@
     "confirmCancelInvitation": {
       "title": "Cancelar Convite",
       "message": "Tem certeza que deseja cancelar o convite para {{email}}?"
-    }
+    },
+    "userActivated": "",
+    "activateUserError": "",
+    "userDeleted": "",
+    "deleteUserError": "",
+    "activateUser": "",
+    "deleteUser": "",
+    "confirmActivate": {
+      "title": "",
+      "message": ""
+    },
+    "confirmDelete": {
+      "title": "",
+      "message": ""
+    },
+    "activate": "",
+    "delete": ""
   },
   "systemHealth": {
     "title": "Saúde do sistema",
@@ -138,8 +154,6 @@
     "collapse": "Recolher",
     "expand": "Expandir",
     "submitting": "A enviar…",
-    "copy": "Copiar",
-    "copied": "Copiado!",
     "applying": "A aplicar…",
     "done": "Concluído",
     "retry": "Tentar novamente",
@@ -152,7 +166,13 @@
     "duplicate": "Duplicar",
     "showAll": "Mostrar tudo",
     "confirm": "Confirmar",
-    "show": "Mostrar"
+    "show": "Mostrar",
+    "menu": "",
+    "saved": "",
+    "deleted": "",
+    "actions": "",
+    "searching": "",
+    "language": ""
   },
   "upload": {
     "photoCategory": "Categoria da Foto",
@@ -192,16 +212,8 @@
     "events": "Eventos",
     "archives": "Arquivos",
     "settings": "Configurações",
-    "systemHealth": "Saúde do sistema",
-    "eventTypes": "Tipos de evento",
-    "branding": "Identidade visual",
-    "emailSettings": "Configurações de e-mail",
-    "backup": "Backup e Restauração",
-    "cmsPages": "Páginas CMS",
     "users": "Utilizadores",
-    "calendar": "Calendário",
     "clients": "Clientes",
-    "accounting": "Contabilidade",
     "betaTag": "Beta"
   },
   "archives": {
@@ -510,7 +522,9 @@
       "toastError": "Falha ao redefinir senha",
       "toastCopied": "Senha copiada para a área de transferência",
       "errorMinLength": "A senha deve ter pelo menos 6 caracteres",
-      "errorMismatch": "As senhas não coincidem"
+      "errorMismatch": "As senhas não coincidem",
+      "hide": "",
+      "show": ""
     },
     "themeAndStyle": "Tema e Estilo",
     "galleryExpiration": "Expiração da Galeria",
@@ -580,7 +594,6 @@
     "expired": "Expirado",
     "draft": "Rascunho",
     "publishAndNotify": "Publicar e notificar cliente",
-    "publishConfirm": "Isso tornará a galeria acessível e enviará o e-mail de notificação ao cliente. Continuar?",
     "publishSuccess": "Galeria publicada e cliente notificado!",
     "publishDialog": {
       "title": "Publicar galeria",
@@ -730,7 +743,9 @@
       "mode_custom": "Personalizado para este evento",
       "mode_off": "Desligado (ocultar neste evento)",
       "placeholder": "Conteúdo em Markdown (ex.: **Oferta especial:** [agende sua próxima sessão](https://example.com))",
-      "preview": "Pré-visualização"
+      "preview": "Pré-visualização",
+      "mode_managed": "",
+      "mode_reference": ""
     },
     "ogShare": {
       "title": "Usar a foto principal como visualização ao compartilhar",
@@ -743,7 +758,15 @@
     "sendEmail": "Enviar e-mail",
     "bulkArchiveSuccess_many": "{{count}} eventos arquivados com sucesso",
     "daysLeft_many": "({{count}} dias restantes)",
-    "eventsSelected_many": "{{count}} eventos selecionados"
+    "eventsSelected_many": "{{count}} eventos selecionados",
+    "customerPicker": {
+      "help": "",
+      "label": "",
+      "removeAria": "",
+      "placeholder": "",
+      "searching": "",
+      "noResults": ""
+    }
   },
   "settings": {
     "title": "Configurações do Sistema",
@@ -786,7 +809,11 @@
       "accountEmailRequired": "E-mail é obrigatório",
       "accountEmailInvalid": "Insira um e-mail válido",
       "accountSaveButton": "Salvar detalhes da conta",
-      "accountSaveSuccess": "Detalhes da conta atualizados"
+      "accountSaveSuccess": "Detalhes da conta atualizados",
+      "timeFormat": "",
+      "timeFormat24h": "",
+      "timeFormat12h": "",
+      "timeFormatHelp": ""
     },
     "publicSite": {
       "badge": "Landing Page",
@@ -1116,7 +1143,6 @@
     },
     "groups": {
       "general": "Geral",
-      "display": "Apresentação",
       "privacySecurity": "Privacidade e Segurança",
       "integrations": "Integrações",
       "system": "Sistema",
@@ -1198,7 +1224,8 @@
       "createError": "Falha ao criar webhook",
       "updateError": "Falha ao atualizar webhook",
       "deletedToast": "Webhook excluído",
-      "deleteError": "Falha ao excluir webhook"
+      "deleteError": "Falha ao excluir webhook",
+      "eventsSubscribed_many": ""
     },
     "sectionLabel": "Secção de configurações",
     "navAriaLabel": "Navegação de configurações",
@@ -1257,7 +1284,6 @@
         "sales": "Vendas",
         "accounting": "Contabilidade",
         "insights": "Análises & Acesso",
-        "customers": "Clientes",
         "clients": "Clientes"
       },
       "status": {
@@ -1309,7 +1335,6 @@
         "title": "Exportação fiscal",
         "description": "Lista de receitas por período com detalhamento líquido + IVA agrupado por taxa de IVA. Exporte como PDF (paisagem, papel timbrado da empresa) ou CSV para o seu contador. Faturas canceladas permanecem visíveis para uma trilha de auditoria sem lacunas, mas são excluídas dos totais.",
         "sidebar": "Impostos",
-        "requiresBills": "Habilite Faturas primeiro — o relatório fiscal lê das suas faturas.",
         "requiresAccounting": "Habilite Contabilidade primeiro — a Exportação fiscal fica na seção Contabilidade."
       },
       "accounting": {
@@ -1344,8 +1369,7 @@
         "description": "Logins persistentes para clientes. Clientes recorrentes veem todas as galerias atribuídas em um só lugar — sem senhas por evento. Os clientes entram em /customer/login e você os gerencia em Clientes → Contas."
       },
       "clients": {
-        "title": "Clientes",
-        "description": "Chave principal da seção Clientes na barra lateral. Desligado oculta a seção e todas as sub-funcionalidades independentemente dos seus controles individuais — reativar restaura o estado anterior."
+        "title": "Clientes"
       },
       "contracts": {
         "title": "Contratos",
@@ -1657,7 +1681,6 @@
     "pdfFontFamily": "Fonte do corpo",
     "pdfFontFamilyDefault": "Usar Helvetica (padrão)",
     "pdfFontFamilyMissing": "ausente",
-    "pdfFontSavedToast": "Fonte do PDF salva.",
     "heroPlaceholderText": "A foto de destaque do seu evento aparecerá aqui",
     "whiteLabel": "White Label",
     "hidePoweredBy": "Ocultar selo \"Powered by PicPeak\"",
@@ -1672,10 +1695,6 @@
     "logoMaxHeight": "Altura Máxima (pixels)",
     "logoMaxHeightHelp": "Define uma altura máxima para a logo (20-200 px)",
     "logoPosition": "Posição da Logo no Cabeçalho",
-    "positionLeft": "Esquerda",
-    "positionCenter": "Centro",
-    "positionRight": "Direita",
-    "positionSidepanel": "Barra lateral",
     "positionSidepanelHelp": "A logo aparece na barra lateral do admin em vez do cabeçalho. Quando a barra lateral está recolhida, o favicon é exibido.",
     "logoDisplayMode": "Modo de Exibição",
     "logoOnly": "Apenas Logo",
@@ -1782,7 +1801,21 @@
       "alignment": "Alinhamento",
       "alignLeft": "Esquerda",
       "alignCenter": "Centro (padrão — igual ao rodapé)",
-      "alignRight": "Direita"
+      "alignRight": "Direita",
+      "title": "",
+      "help": "",
+      "position": "",
+      "aboveFooter": "",
+      "belowFooter": "",
+      "content": "",
+      "placeholder": "",
+      "markdownHelp": "",
+      "preview": ""
+    },
+    "socialMedia": {
+      "title": "",
+      "help": "",
+      "whatsappHelp": ""
     }
   },
   "admin": {
@@ -1803,31 +1836,11 @@
       "checking": "Verificando..."
     },
     "updates": {
-      "available": "Atualização Disponível",
-      "newVersion": "Versão {{version}} disponível",
-      "currentVersion": "Atual: {{version}}",
-      "channel": "Canal: {{channel}}",
-      "channelStable": "Estável",
-      "channelBeta": "Beta",
       "beta": "BETA",
-      "viewReleaseNotes": "Ver Notas de Lançamento",
       "updateAvailableShort": "v{{version}} disponível",
-      "upToDate": "Sistema atualizado",
-      "updateNow": "Atualizar Agora",
-      "updateDialog": {
-        "title": "Atualizar PicPeak",
-        "detectedEnv": "Ambiente Detectado",
-        "beforeUpdating": "Antes de atualizar:",
-        "updateCommands": "Comandos de Atualização:",
-        "afterUpdating": "Após atualizar:",
-        "copyAllCommands": "Copiar Todos os Comandos",
-        "completeChecklist": "Complete a lista antes de atualizar",
-        "error": "Falha ao carregar instruções de atualização"
-      },
       "card": {
         "title": "Versão da aplicação",
         "upToDate": "Atualizado",
-        "updateAvailable": "Atualização disponível",
         "updateTo": "Atualizar para {{version}}",
         "checkAgain": "Verificar novamente",
         "lastChecked": "Última verificação: {{time}}",
@@ -1840,7 +1853,20 @@
         "downloadCombinedLog": "Transferir combined.log",
         "downloadErrorLog": "Transferir error.log",
         "retry": "Tentar novamente"
-      }
+      },
+      "viewDetails": "",
+      "copyFailed": "",
+      "modalTitle": "",
+      "modalSubtitle": "",
+      "howToUpgrade": "",
+      "detectedEnv": "",
+      "copyCommand": "",
+      "releaseNotes": "",
+      "changelogError": "",
+      "noReleases": "",
+      "viewOnGitHub": "",
+      "noNotes": "",
+      "dismissUntilNext": ""
     },
     "notifications": "Notificações",
     "markAllRead": "Marcar tudo como lido",
@@ -1912,82 +1938,18 @@
       "eventPublished": "Evento publicado: {{eventName}}",
       "eventLogoUploaded": "Logotipo do evento carregado para {{eventName}}",
       "eventLogoRemoved": "Logotipo do evento removido de {{eventName}}",
-      "bulkDeleteCompleted": "Exclusão em massa concluída: {{count}} eventos removidos",
       "photoReplaced": "Foto substituída em {{eventName}}",
       "photoUploaded": "Foto carregada em {{eventName}}",
       "categoryHeroUpdated": "Foto principal da categoria atualizada",
       "publicSiteResetToDefault": "Site público redefinido ao padrão",
       "cmsPageLogoUploaded": "Logotipo da página CMS carregado: {{slug}}",
       "adminPasswordResetByAdmin": "Senha de admin redefinida por outro admin: {{username}}",
-      "contractCreated": "Contrato criado: {{contractNumber}}",
-      "contractCreatedFromQuote": "Contrato criado a partir do orçamento: {{contractNumber}}",
-      "contractUpdated": "Contrato atualizado: {{contractNumber}}",
-      "contractSent": "Contrato enviado: {{contractNumber}}",
-      "contractResentSigned": "Contrato assinado reenviado: {{contractNumber}}",
-      "contractSignedByCustomer": "Contrato assinado pelo cliente: {{contractNumber}}",
-      "contractSignedPdfUploaded": "PDF de contrato assinado enviado: {{contractNumber}}",
-      "contractSignaturesRestamped": "Assinaturas do contrato recarimbadas: {{contractNumber}}",
-      "contractCancelled": "Contrato cancelado: {{contractNumber}}",
-      "contractConvertedToEvent": "Contrato convertido em evento: {{contractNumber}}",
-      "contractConvertedToEmptyEvent": "Contrato convertido em evento vazio: {{contractNumber}}",
-      "contractConvertedToInvoices": "Contrato convertido em faturas: {{contractNumber}}",
-      "contractConvertedToEmptyInvoice": "Contrato convertido em fatura vazia: {{contractNumber}}",
-      "quoteCreated": "Orçamento criado: {{quoteNumber}}",
-      "quoteSent": "Orçamento enviado: {{quoteNumber}}",
-      "quoteUpdated": "Orçamento atualizado: {{quoteNumber}}",
-      "quoteAcceptedByAdmin": "Orçamento aceito: {{quoteNumber}}",
-      "quoteDeclinedByAdmin": "Orçamento recusado: {{quoteNumber}}",
-      "quoteConverted": "Orçamento convertido: {{quoteNumber}}",
-      "quoteConvertedInvoicesOnly": "Orçamento convertido em faturas: {{quoteNumber}}",
-      "invoiceCreated": "Fatura criada: {{invoiceNumber}}",
-      "invoiceSent": "Fatura enviada: {{invoiceNumber}}",
-      "invoiceScheduled": "Fatura agendada: {{invoiceNumber}}",
-      "invoiceCancelled": "Fatura cancelada: {{invoiceNumber}}",
-      "invoiceCancelledViaStorno": "Fatura cancelada via Storno: {{invoiceNumber}}",
-      "invoiceReissued": "Fatura reemitida: {{invoiceNumber}}",
-      "invoicePaidAdminNotified": "Fatura marcada como paga: {{invoiceNumber}}",
-      "invoicePaymentCheckRecorded": "Verificação de pagamento registrada para a fatura: {{invoiceNumber}}",
-      "invoicePaymentCheckSent": "Verificação de pagamento enviada para a fatura: {{invoiceNumber}}",
-      "invoiceReleasedForDelivery": "Fatura liberada para entrega: {{invoiceNumber}}",
-      "invoiceReminderSent": "Lembrete de fatura enviado: {{invoiceNumber}}",
-      "stornoSent": "Storno enviado: {{invoiceNumber}}",
-      "monthlyBillIssued": "Fatura mensal emitida para o cliente",
-      "monthlyBillSkippedEmpty": "Fatura mensal ignorada (sem entradas)",
-      "monthlyBillTriggeredManually": "Fatura mensal disparada manualmente",
-      "monthlyBillingItemsQueued": "Itens de faturamento mensal na fila",
-      "installmentPlanUpdated": "Plano de parcelamento atualizado",
-      "expenseCreated": "Despesa criada",
-      "expenseUpdated": "Despesa atualizada",
-      "expensePaid": "Despesa marcada como paga",
-      "expenseInvoiced": "Despesa faturada",
-      "hourEntryLogged": "Entrada de horas registrada",
-      "hourEntryUpdated": "Entrada de horas atualizada",
-      "hourEntryDeleted": "Entrada de horas excluída",
-      "hourEntryLoggedToMonthlyDraft": "Entrada de horas registrada no rascunho mensal",
-      "hourEntriesBilled": "Entradas de horas faturadas ao cliente",
-      "incomingInvoiceCaptured": "Fatura recebida capturada",
-      "incomingInvoiceCategorized": "Fatura recebida categorizada",
-      "incomingInvoiceUpdated": "Fatura recebida atualizada",
-      "incomingInvoiceRebilled": "Fatura recebida re-faturada ao cliente",
-      "incomingInvoiceSupplierPayment": "Pagamento a fornecedor registrado",
-      "incomingMailConfigUpdated": "Configuração de correio recebido atualizada",
-      "customerCreatedPassive": "Cliente passivo criado: {{email}}",
-      "adminUserActivated": "Usuário administrador ativado: {{username}}",
-      "adminUserDeleted": "Usuário administrador excluído: {{username}}",
-      "adminPasswordReset": "Senha de administrador redefinida: {{username}}",
-      "bulkArchiveCompleted": "Arquivamento em lote concluído: {{count}} eventos arquivados",
-      "emailQueueFlushed": "Fila de e-mails esvaziada",
-      "emailResent": "E-mail de criação reenviado para {{eventName}}",
-      "emailTemplateCreated": "Modelo de e-mail criado: {{template_key}}",
-      "eventDuplicated": "Evento duplicado a partir de {{source_event_name}}",
-      "feedbackDeleted": "Feedback excluído",
-      "feedbackModerated": "Feedback moderado",
-      "feedbackSettingsUpdated": "Configurações de feedback atualizadas para {{eventName}}",
-      "wordFilterAdded": "Filtro de palavras adicionado: {{word}}",
-      "whatsappConfigUpdated": "Configuração do WhatsApp atualizada",
       "photosUploaded_many": "{{count}} fotos enviadas para \"{{eventName}}\"",
       "photosBulkDeleted_many": "{{count}} fotos eliminadas de \"{{eventName}}\"",
-      "bulkDownload_many": "{{count}} fotos descarregadas de \"{{eventName}}\""
+      "bulkDownload_many": "{{count}} fotos descarregadas de \"{{eventName}}\"",
+      "bulkDeleteCompleted_many": "",
+      "bulkDeleteCompleted_one": "",
+      "bulkDeleteCompleted_other": ""
     },
     "notificationToasts": {
       "markedAllRead": "Todas as notificações marcadas como lidas",
@@ -2148,7 +2110,6 @@
       "unknown": "Atividade desconhecida",
       "feature_enabled": "{{label}} ativada",
       "feature_disabled": "{{label}} desativada",
-      "feature_flags_summary": "{{count}} funcionalidades atualizadas: {{summary}}",
       "feature_flags_noop": "Sinalizadores revisados (sem alterações)",
       "customer_login": "Cliente entrou: {{email}}",
       "customer_invitation_created": "Convite de cliente enviado para {{email}}",
@@ -2188,68 +2149,16 @@
       "category_hero_updated": "Foto principal da categoria atualizada",
       "public_site_reset_to_default": "Site público redefinido ao padrão",
       "cms_page_logo_uploaded": "Logotipo da página CMS carregado: {{slug}}",
-      "contract_created": "Contrato criado: {{contractNumber}}",
-      "contract_created_from_quote": "Contrato criado a partir do orçamento: {{contractNumber}}",
-      "contract_updated": "Contrato atualizado: {{contractNumber}}",
-      "contract_sent": "Contrato enviado: {{contractNumber}}",
-      "contract_resent_signed": "Contrato assinado reenviado: {{contractNumber}}",
-      "contract_signed_by_customer": "Contrato assinado pelo cliente: {{contractNumber}}",
-      "contract_signed_pdf_uploaded": "PDF de contrato assinado enviado: {{contractNumber}}",
-      "contract_signatures_restamped": "Assinaturas do contrato recarimbadas: {{contractNumber}}",
-      "contract_cancelled": "Contrato cancelado: {{contractNumber}}",
-      "contract_converted_to_event": "Contrato convertido em evento: {{contractNumber}}",
-      "contract_converted_to_empty_event": "Contrato convertido em evento vazio: {{contractNumber}}",
-      "contract_converted_to_invoices": "Contrato convertido em faturas: {{contractNumber}}",
-      "contract_converted_to_empty_invoice": "Contrato convertido em fatura vazia: {{contractNumber}}",
-      "quote_created": "Orçamento criado: {{quoteNumber}}",
-      "quote_sent": "Orçamento enviado: {{quoteNumber}}",
-      "quote_updated": "Orçamento atualizado: {{quoteNumber}}",
-      "quote_accepted_by_admin": "Orçamento aceito: {{quoteNumber}}",
-      "quote_declined_by_admin": "Orçamento recusado: {{quoteNumber}}",
-      "quote_converted": "Orçamento convertido: {{quoteNumber}}",
-      "quote_converted_invoices_only": "Orçamento convertido em faturas: {{quoteNumber}}",
-      "invoice_created": "Fatura criada: {{invoiceNumber}}",
-      "invoice_sent": "Fatura enviada: {{invoiceNumber}}",
-      "invoice_scheduled": "Fatura agendada: {{invoiceNumber}}",
-      "invoice_cancelled": "Fatura cancelada: {{invoiceNumber}}",
-      "invoice_cancelled_via_storno": "Fatura cancelada via Storno: {{invoiceNumber}}",
-      "invoice_reissued": "Fatura reemitida: {{invoiceNumber}}",
-      "invoice_paid_admin_notified": "Fatura marcada como paga: {{invoiceNumber}}",
-      "invoice_payment_check_recorded": "Verificação de pagamento registrada para a fatura: {{invoiceNumber}}",
-      "invoice_payment_check_sent": "Verificação de pagamento enviada para a fatura: {{invoiceNumber}}",
-      "invoice_released_for_delivery": "Fatura liberada para entrega: {{invoiceNumber}}",
-      "invoice_reminder_sent": "Lembrete de fatura enviado: {{invoiceNumber}}",
-      "storno_sent": "Storno enviado: {{invoiceNumber}}",
-      "monthly_bill_issued": "Fatura mensal emitida para o cliente",
-      "monthly_bill_skipped_empty": "Fatura mensal ignorada (sem entradas)",
-      "monthly_bill_triggered_manually": "Fatura mensal disparada manualmente",
-      "monthly_billing_items_queued": "Itens de faturamento mensal na fila",
-      "installment_plan_updated": "Plano de parcelamento atualizado",
-      "expense_created": "Despesa criada",
-      "expense_updated": "Despesa atualizada",
-      "expense_paid": "Despesa marcada como paga",
-      "expense_invoiced": "Despesa faturada",
-      "hour_entry_logged": "Entrada de horas registrada",
-      "hour_entry_updated": "Entrada de horas atualizada",
-      "hour_entry_deleted": "Entrada de horas excluída",
-      "hour_entry_logged_to_monthly_draft": "Entrada de horas registrada no rascunho mensal",
-      "hour_entries_billed": "Entradas de horas faturadas ao cliente",
-      "incoming_invoice_captured": "Fatura recebida capturada",
-      "incoming_invoice_categorized": "Fatura recebida categorizada",
-      "incoming_invoice_updated": "Fatura recebida atualizada",
-      "incoming_invoice_rebilled": "Fatura recebida re-faturada ao cliente",
-      "incoming_invoice_supplier_payment": "Pagamento a fornecedor registrado",
-      "incoming_mail_config_updated": "Configuração de correio recebido atualizada",
-      "customer_created_passive": "Cliente passivo criado: {{email}}",
-      "admin_user_activated": "Usuário administrador ativado: {{username}}",
-      "admin_user_deleted": "Usuário administrador excluído: {{username}}",
-      "email_queue_flushed": "Fila de e-mails esvaziada",
-      "email_template_created": "Modelo de e-mail criado: {{template_key}}",
-      "event_duplicated": "Evento duplicado a partir de {{source_event_name}}",
-      "whatsapp_config_updated": "Configuração do WhatsApp atualizada"
+      "feature_flags_summary_many": "",
+      "feature_flags_summary_one": "",
+      "feature_flags_summary_other": "",
+      "feature_flags_updated": ""
     },
     "daysLeft_many": "{{count}} dias restantes",
-    "viewAllExpiringEvents_many": "Ver todos os {{count}} eventos a expirar"
+    "viewAllExpiringEvents_many": "Ver todos os {{count}} eventos a expirar",
+    "viewReleaseNotes": "",
+    "expandSidebar": "",
+    "collapseSidebar": ""
   },
   "acceptInvitation": {
     "title": "Aceitar Convite",
@@ -2329,7 +2238,6 @@
     "passwordsDoNotMatch": "As senhas não coincidem",
     "expirationRange": "A expiração deve ser entre 1 e 365 dias",
     "required": "Este campo é obrigatório",
-    "expirationRequired": "A data de expiração é obrigatória.",
     "eventDateRequired": "A data do evento é obrigatória",
     "passwordTooSimple": "A senha não pode ser apenas números. Considere um formato como \"04.07.2025\""
   },
@@ -2395,7 +2303,6 @@
       "roundTripFailed": "Falha no teste de ida e volta.",
       "poll": "Verificar agora",
       "pollHint": "Verifique a caixa de correio agora em vez de esperar a consulta de 60 segundos. Importa anexos não lidos para Faturas recebidas.",
-      "pollOk": "Caixa de correio verificada — {{count}} novo(s) e-mail(s) importado(s).",
       "pollDisabled": "O correio recebido está desativado — habilite em Configurações → Recursos.",
       "pollUnconfigured": "Salve primeiro as configurações de correio recebido.",
       "pollBusy": "Uma consulta já está em andamento — tente novamente em instantes.",
@@ -2410,11 +2317,16 @@
       "save": "Salvar configurações de correio recebido",
       "detectFolders": "Detectar",
       "folderHint": "Insira servidor, nome de usuário e senha, depois Detectar para listar as pastas da caixa de correio.",
-      "foldersDetected": "{{count}} pastas encontradas.",
       "noFolders": "Nenhuma pasta retornada pelo servidor.",
       "detectFailed": "Não foi possível detectar as pastas.",
       "requiredFields": "Servidor, porta e nome de usuário são obrigatórios.",
-      "savedToast": "Configurações de correio recebido salvas."
+      "savedToast": "Configurações de correio recebido salvas.",
+      "pollOk_many": "",
+      "pollOk_one": "",
+      "pollOk_other": "",
+      "foldersDetected_many": "",
+      "foldersDetected_one": "",
+      "foldersDetected_other": ""
     },
     "received": {
       "tab": "E-mails recebidos",
@@ -2423,13 +2335,7 @@
       "received": "Recebido",
       "status": "Status",
       "empty": "Nenhum e-mail recebido ainda. Habilite o correio recebido e configure a caixa de correio.",
-      "inbox": "caixa de entrada",
-      "statusValue": {
-        "ingested": "Importado",
-        "no_attachment": "Sem anexo",
-        "duplicate": "Duplicado",
-        "error": "Erro"
-      }
+      "inbox": "caixa de entrada"
     },
     "sentEmails": {
       "tab": "E-mails enviados",
@@ -2439,8 +2345,6 @@
       "from": "De",
       "to": "Para",
       "empty": "Nenhum e-mail corresponde a estes filtros.",
-      "retries": "{{count}} tentativas",
-      "pagination": "Página {{page}} de {{total}} · {{count}} e-mails",
       "status": {
         "pending": "Pendente",
         "sent": "Enviado",
@@ -2453,7 +2357,13 @@
         "created": "Na fila",
         "sent": "Enviado",
         "event": "Evento"
-      }
+      },
+      "retries_many": "",
+      "retries_one": "",
+      "retries_other": "",
+      "pagination_many": "",
+      "pagination_one": "",
+      "pagination_other": ""
     },
     "commonSmtpSettings": "Configurações SMTP comuns:",
     "editTemplate": "Editar Modelo",
@@ -2517,20 +2427,11 @@
     "buttonTextColor": "Texto dos botões",
     "buttonTextColorHelp": "Cor do texto em botões preenchidos. Deve contrastar bem com a cor primária. Geralmente branco.",
     "categories": {
-      "core": "Principal",
-      "customers": "Clientes",
-      "calendar": "Calendário",
-      "quotes": "Orçamentos",
-      "contracts": "Contratos",
-      "billing": "Faturamento"
+      "core": "Principal"
     },
     "featureOff": "Recurso desativado",
     "featureOffTooltip": "O recurso ao qual este modelo pertence está atualmente desativado. Você ainda pode editar o modelo — ele será usado assim que o recurso for reativado.",
     "subcategories": {
-      "gallery": "Galerias",
-      "admin": "Contas de administrador",
-      "backup": "Backup & restauração",
-      "system": "Atualizações do sistema",
       "other": "Outros"
     }
   },
@@ -2561,7 +2462,9 @@
     "noLogo": "sem substituição",
     "replaceLogo": "Substituir logótipo",
     "uploadLogo": "Enviar logótipo",
-    "clearLogo": "Usar padrão do site"
+    "clearLogo": "Usar padrão do site",
+    "showInFooter": "",
+    "showInFooterHelp": ""
   },
   "eventTypes": {
     "title": "Tipos de Evento",
@@ -2596,8 +2499,6 @@
       "slugPreview": "Exemplo de URL:",
       "emoji": "Ícone",
       "themePreset": "Tema Padrão",
-      "slideshowPreset": "Predefinição de apresentação",
-      "slideshowPresetHint": "Estilo de apresentação padrão para novos eventos deste tipo.",
       "isActive": "Ativo (visível na criação de eventos)"
     },
     "validation": {
@@ -2764,6 +2665,16 @@
         "good": "Bom",
         "warning": "Aviso",
         "critical": "Crítico"
+      },
+      "lastSuccessful": "",
+      "lastAttempt": "",
+      "zombieRuns_many": "",
+      "zombieRuns_one": "",
+      "zombieRuns_other": "",
+      "status": {
+        "completed": "",
+        "failed": "",
+        "running": ""
       }
     },
     "configuration": {
@@ -2914,7 +2825,15 @@
         "encrypted": "Backup Criptografado",
         "encryptedMessage": "Você precisará da frase de senha para restaurar este backup.",
         "enterPassphrase": "Digite a frase de senha da criptografia",
-        "at": "em"
+        "at": "em",
+        "filesOnlyHint": "",
+        "filesOnlyBadge": "",
+        "corruptHint": "",
+        "corruptBadge": "",
+        "filesOnlyWarning": {
+          "title": "",
+          "message": ""
+        }
       },
       "restoreTypes": {
         "full": {
@@ -2989,7 +2908,12 @@
           "title": "Restauração Concluída com Sucesso",
           "message": "Seus dados foram restaurados. Verifique se tudo está funcionando corretamente.",
           "verifyIntegrity": "Verificar integridade dos documentos agora"
-        }
+        },
+        "failedSubtitle": "",
+        "idle": "",
+        "errorTitle": "",
+        "errorUnknown": "",
+        "rolledBack": ""
       },
       "actions": {
         "back": "Voltar",
@@ -3430,7 +3354,6 @@
       "networkError": "Não foi possível acessar o servidor. Tente novamente.",
       "generalError": "Falha no login. Tente novamente.",
       "acceptedToast": "Conta pronta — faça login.",
-      "adminHint": "Procurando o painel de administração? Acesse /admin/login.",
       "emailPlaceholder": "voce@exemplo.com",
       "passwordPlaceholder": "Sua senha",
       "needHelp": "Precisa de ajuda?",
@@ -3441,7 +3364,6 @@
       "invalidToken": "Este link de convite é inválido ou expirou. Peça um novo convite ao seu fotógrafo.",
       "emailWillBe": "Seu e-mail de conta será ",
       "invitedBy": ", convidado por ",
-      "name": "Seu nome",
       "nameRequired": "Informe seu nome",
       "password": "Escolha uma senha",
       "confirm": "Confirmar senha",
@@ -3481,29 +3403,14 @@
       "downloadStarted": "Download iniciado para {{name}}",
       "downloadError": "Não foi possível iniciar o download. Tente novamente.",
       "sortLabel": "Ordenar por",
-      "sortNewest": "Mais recentes",
-      "sortOldest": "Mais antigos",
-      "sortName": "Por nome",
       "open": "Abrir"
     },
-    "layout": {
-      "greeting": "Olá, {{name}}"
-    },
     "nav": {
-      "galleries": "Galerias",
-      "calendar": "Calendário",
-      "quotes": "Orçamentos",
-      "bills": "Faturas",
-      "profile": "Perfil",
       "soon": "Em breve",
       "new": "Novo"
     },
     "comingSoon": {
       "tag": "Em breve"
-    },
-    "calendar": {
-      "title": "Calendário",
-      "body": "Próximas sessões, datas de entrega de galerias e outros eventos relacionados a sessões aparecerão aqui. Avisaremos quando estiver pronto."
     },
     "quotes": {
       "title": "Orçamentos",
@@ -3514,8 +3421,7 @@
       "noEventName": "—",
       "openToRespond": "Aberto para resposta",
       "viewPdf": "Ver PDF",
-      "popupBlocked": "Permita pop-ups para este site para ver o PDF do orçamento.",
-      "body": "Revise e aceite orçamentos para sessões futuras em um só lugar. Ainda estamos construindo — por enquanto, seu fotógrafo continuará enviando orçamentos da maneira habitual."
+      "popupBlocked": "Permita pop-ups para este site para ver o PDF do orçamento."
     },
     "bills": {
       "title": "Faturas",
@@ -3532,28 +3438,23 @@
         "outstanding": "Em aberto",
         "lateFee": "Multa por atraso"
       },
-      "filter": {
-        "outstanding": "Em aberto (enviadas + vencidas)"
-      },
       "kind": {
         "storno": "Fatura de cancelamento"
       },
       "cancelsLabel": "Cancela a fatura",
-      "cancelledByLabel": "Cancelada por fatura de cancelamento",
-      "body": "Faturas e histórico de pagamentos das suas sessões estarão disponíveis aqui. Enviaremos um e-mail quando estiver no ar."
+      "cancelledByLabel": "Cancelada por fatura de cancelamento"
     },
     "sort": {
       "label": "Ordenar",
       "newest": "Mais recentes primeiro",
-      "oldest": "Mais antigas primeiro",
-      "priceDesc": "Preço (do maior para o menor)",
-      "priceAsc": "Preço (do menor para o maior)"
+      "oldest": "Mais antigas primeiro"
     },
     "filter": {
       "label": "Filtrar",
-      "all": "Todos",
-      "countAll": "{{count}} no total",
-      "countFiltered": "{{visible}} de {{total}}"
+      "countFiltered": "{{visible}} de {{total}}",
+      "countAll_many": "",
+      "countAll_one": "",
+      "countAll_other": ""
     },
     "profile": {
       "title": "Perfil do cliente",
@@ -3620,11 +3521,24 @@
       "successToast": "Senha atualizada. Faça login.",
       "invalidSubmission": "Não foi possível atualizar sua senha.",
       "generalError": "Não foi possível atualizar sua senha. Tente novamente."
+    },
+    "contracts": {
+      "title": "",
+      "disabled": "",
+      "loadError": "",
+      "subtitle": "",
+      "empty": "",
+      "popupBlocked": "",
+      "issued": "",
+      "signedByYou": "",
+      "counterSigned": "",
+      "openSign": "",
+      "downloadSigned": "",
+      "download": ""
     }
   },
   "customers": {
     "field": {
-      "featureHoursLogging": "Registro de horas",
       "hourlyRate": "Taxa horária padrão",
       "hourlyRateHint": "Unidades principais (ex.: 150.00 para {{currency}} 150). Deixe em branco para exigir uma substituição por entrada em cada bloco."
     },
@@ -3662,7 +3576,6 @@
         "billedOn": "Faturada: {{number}}"
       },
       "billButton": "Criar fatura em rascunho",
-      "unbilledCount": "{{count}} entradas não faturadas totalizando {{total}}",
       "empty": "Nenhuma entrada registrada ainda.",
       "confirmDelete": "Excluir esta entrada? Se ela foi faturada em um rascunho, a linha de fatura correspondente também será removida.",
       "locked": "Bloqueada: fatura já preparada para envio",
@@ -3684,7 +3597,10 @@
       "error": {
         "noRate": "Nenhuma taxa horária definida para este cliente. Insira uma substituição de taxa, defina uma taxa no cliente ou configure um padrão para toda a instalação em Configurações.",
         "createFailed": "Falha ao registrar a entrada"
-      }
+      },
+      "unbilledCount_many": "",
+      "unbilledCount_one": "",
+      "unbilledCount_other": ""
     },
     "create": {
       "openButton": "Criar cliente passivo",
@@ -3740,16 +3656,7 @@
     "invite": {
       "button": "Convidar cliente",
       "title": "Convidar um cliente",
-      "description": "Eles receberão um e-mail com um link para configurar a conta. Após aceitarem, você pode atribuí-los a eventos.",
-      "email": "E-mail",
-      "submit": "Enviar convite",
-      "success": "Convite enviado",
-      "error": "Não foi possível enviar o convite.",
-      "conflict": "Já existe um cliente com este e-mail ou um convite pendente.",
-      "invalidEmail": "Informe um e-mail válido",
-      "showPrefill": "+ Adicionar detalhes de contato (opcional)",
-      "hidePrefill": "− Ocultar detalhes de contato",
-      "prefillHint": "Qualquer dado preenchido será pré-preenchido na página de cadastro do cliente — ele ainda pode editá-lo."
+      "description": "Eles receberão um e-mail com um link para configurar a conta. Após aceitarem, você pode atribuí-los a eventos."
     },
     "invitations": {
       "empty": "Nenhum convite pendente.",
@@ -3789,7 +3696,6 @@
       "preferredLanguage": "Idioma preferido",
       "preferredLanguageHint": "Define a interface do portal e o idioma dos PDFs de orçamento/fatura. Novos clientes assumem o idioma do perfil da empresa ({{lang}}); substitua aqui por cliente.",
       "salutation": "Saudação",
-      "salutationNone": "—",
       "firstName": "Nome",
       "lastName": "Sobrenome",
       "displayName": "Nome de exibição",
@@ -3802,9 +3708,7 @@
       "postalCode": "CEP",
       "city": "Cidade",
       "state": "Estado / região",
-      "countryCode": "País (ISO 2)",
       "country": "País",
-      "countryName": "País (nome completo)",
       "notesHint": "Visível apenas para administradores. Nunca mostrado ao cliente.",
       "featuresSection": "Funções do cliente",
       "featuresHint": "Substituições por cliente para as abas do portal. Os toggles globais em Configurações → Recursos são a chave principal — quando o global está DESLIGADO ninguém vê a aba, independente do que você definir aqui. Os padrões são LIGADOS; desligue um para ocultar uma aba para este cliente específico.",
@@ -3822,7 +3726,8 @@
       "noContracts": "Nenhum contrato para este cliente ainda.",
       "billsSection": "Faturas",
       "noBills": "Nenhuma fatura para este cliente ainda.",
-      "manageEvents": "Gerenciar galerias"
+      "manageEvents": "Gerenciar galerias",
+      "companyName": ""
     },
     "billing": {
       "section": "Cadência de faturamento",
@@ -3876,10 +3781,14 @@
       "save": "Salvar atribuições",
       "saved": "Atribuições atualizadas",
       "savedDiff": "Atribuições atualizadas: {{parts}}",
-      "addedN": "{{count}} adicionada(s)",
-      "removedN": "{{count}} removida(s)",
       "error": "Não foi possível atualizar as atribuições",
-      "clearSearchAria": "Limpar pesquisa"
+      "clearSearchAria": "Limpar pesquisa",
+      "addedN_many": "",
+      "addedN_one": "",
+      "addedN_other": "",
+      "removedN_many": "",
+      "removedN_one": "",
+      "removedN_other": ""
     }
   },
   "clients": {
@@ -3898,7 +3807,6 @@
       "hours": "Horas",
       "calendar": "Calendário",
       "bills": "Faturas",
-      "taxReport": "Fiscal",
       "development": "Desenvolvimento"
     }
   },
@@ -3913,9 +3821,7 @@
     "subnav": {
       "incomingInvoices": "Faturas recebidas",
       "expenses": "Despesas",
-      "taxReport": "Impostos",
-      "export": "Exportação para o Treuhänder",
-      "chartOfAccounts": "Plano de contas"
+      "taxReport": "Impostos"
     },
     "taxTreatment": {
       "domestic": "Nacional (com IVA)",
@@ -3948,8 +3854,6 @@
       "scanCamera": "Escanear com a câmera",
       "uploadFile": "Enviar arquivo",
       "capturedToast": "Documento capturado.",
-      "categorizedToast": "Documento categorizado.",
-      "triageTitle": "Categorizar documento",
       "saveCategorize": "Salvar",
       "saveCategorizePay": "Salvar e marcar como pago",
       "categorize": "Categorizar",
@@ -3958,7 +3862,6 @@
       "empty": "Nenhum documento ainda — capture um acima.",
       "untitled": "Documento sem título",
       "noAmount": "valor não informado",
-      "rebillHint": "Cria uma fatura agendada editável no cliente. O tratamento de IVA/impostos é v1 — verifique com o seu Treuhänder.",
       "previewLoading": "Carregando pré-visualização…",
       "previewError": "Pré-visualização indisponível — insira os campos manualmente.",
       "qrHint": "Mostrando a última página — a fatura QR suíça geralmente fica na parte inferior.",
@@ -3980,9 +3883,7 @@
         "disposition": "Disposição",
         "category": "Categoria",
         "categoryNone": "— nenhuma —",
-        "declineReason": "Motivo",
         "customer": "Cliente",
-        "eventId": "ID do evento (opcional)",
         "markup": "Margem",
         "reference": "Referência de pagamento",
         "referenceHint": "Referência QR / ESR ou mensagem",
@@ -3993,12 +3894,6 @@
         "supplierCountryNone": "— desconhecido —",
         "supplierCountryHint": "Define o tratamento fiscal automaticamente: fora dos seus países de recuperação de IVA → IVA estrangeiro (não recuperável)."
       }
-    },
-    "expenseStatus": {
-      "open": "Aberta",
-      "parked": "Estacionada",
-      "billed": "Faturada",
-      "declined": "Recusada"
     },
     "paymentMethod": {
       "bank_transfer": "Transferência bancária",
@@ -4012,7 +3907,6 @@
       "label": "Lançar em",
       "company": "Empresa",
       "event": "Evento",
-      "eventId": "ID do evento",
       "inboundHint": "Qual evento carrega este custo nos seus relatórios e exportação fiscal (Empresa = despesa geral). Isto é separado de para quem você o re-fatura."
     },
     "incoming": {
@@ -4029,11 +3923,13 @@
       "pendingRebill": "Re-faturamento pendente",
       "pendingTitle": "Re-faturamentos pendentes",
       "pendingBody": "Faturas categorizadas aguardando re-faturamento. Agrupe os itens de um cliente em uma única fatura.",
-      "pendingCount": "{{count}} item",
       "pendingCount_other": "{{count}} itens",
       "billPending": "Faturar estes",
-      "bundledToast": "{{count}} re-faturamento agrupado em uma fatura.",
-      "bundledToast_other": "{{count}} re-faturamentos agrupados em uma fatura."
+      "bundledToast_other": "{{count}} re-faturamentos agrupados em uma fatura.",
+      "bundledToast_many": "",
+      "bundledToast_one": "",
+      "pendingCount_many": "",
+      "pendingCount_one": ""
     },
     "expense": {
       "kind": "Tipo",
@@ -4067,21 +3963,16 @@
       "other": "Outro"
     },
     "ledger": {
-      "allStatuses": "Todos os status",
-      "allDispositions": "Todas as disposições",
       "allKinds": "Todos os tipos",
       "empty": "Nenhuma despesa ainda — adicione uma acima.",
       "untitled": "Despesa",
-      "invoiceLink": "Fatura",
       "paid": "Paga",
       "markPaid": "Marcar como paga",
-      "markPaidTitle": "Marcar fornecedor como pago",
       "paidDate": "Data de pagamento",
       "method": "Método",
       "reference": "Referência (opcional)",
       "confirmPaid": "Marcar como paga",
       "paidToast": "Marcado como pago.",
-      "unpaidToast": "Marcado como não pago.",
       "addExpense": "Adicionar despesa",
       "addTitle": "Adicionar despesa",
       "editTitle": "Editar despesa",
@@ -4095,7 +3986,6 @@
       "locked": "Bloqueada",
       "lockedHint": "Bloqueada — esta despesa está em uma fatura de cliente.",
       "description": "Descrição",
-      "descriptionHint": "ex.: quilometragem, diária, recibo em dinheiro",
       "createdToast": "Despesa adicionada."
     }
   },
@@ -4109,7 +3999,6 @@
     "noCustomer": "Nenhum cliente único",
     "rename": "Renomear",
     "timeline": "Marcos",
-    "eventCount": "{{count}} eventos",
     "totalHours": "{{hours}} registradas",
     "create": {
       "label": "Nome do novo projeto",
@@ -4171,7 +4060,10 @@
     },
     "error": {
       "customerMismatch": "Isso pertence a um cliente diferente deste projeto."
-    }
+    },
+    "eventCount_many": "",
+    "eventCount_one": "",
+    "eventCount_other": ""
   },
   "calendar": {
     "pageTitle": "Calendário",
@@ -4214,15 +4106,14 @@
       "featureOffToast": "O registro de horas está desabilitado.",
       "lockedTooltip": "Já faturada — faça o Storno da fatura para editar.",
       "noDescription": "Sem descrição.",
-      "untitledCustomer": "Horas"
+      "untitledCustomer": "Horas",
+      "customerLoggingDisabled": ""
     }
   },
   "hoursLogging": {
     "title": "Registro de horas",
     "subtitle": "Escolha um cliente e registre blocos de tempo faturáveis. As entradas fluem para a próxima fatura mensal ou são faturadas sob demanda para clientes por evento.",
     "pickCustomer": "Cliente",
-    "pickPlaceholder": "— Selecionar cliente —",
-    "emptyList": "Nenhum cliente tem o registro de horas habilitado ainda. Ative \"Registro de horas\" na página de detalhes de um cliente primeiro.",
     "searchPlaceholder": "Buscar por e-mail ou empresa…",
     "customerLoggingDisabled": "Este cliente tem o registro de horas desabilitado. Habilite-o na página de detalhes do cliente para registrar horas.",
     "openHours": {
@@ -4232,7 +4123,8 @@
       "entryLine_one": "{{count}} entrada · {{hours}}h",
       "entryLine_other": "{{count}} entradas · {{hours}}h",
       "passive": "Passivo",
-      "needsRate": "Taxa não definida"
+      "needsRate": "Taxa não definida",
+      "entryLine_many": ""
     }
   },
   "crmDev": {
@@ -4261,73 +4153,7 @@
       "send": "Enviar para mim",
       "sending": "Colocando na fila…",
       "sentToast": "Na fila para {{to}}.",
-      "empty": "Nenhum modelo de e-mail de CRM encontrado — execute as migrações para pré-carregá-los.",
-      "label": {
-        "quote_sent": {
-          "title": "Orçamento enviado (ao cliente)",
-          "description": "Dispara quando um orçamento é enviado — inclui o anexo PDF + links de aceitar/recusar."
-        },
-        "quote_accepted_customer": {
-          "title": "Orçamento aceito — confirmação ao cliente",
-          "description": "Enviado ao cliente depois que ele (ou o admin em seu nome) aceita o orçamento. Inclui PDF."
-        },
-        "quote_accepted_admin": {
-          "title": "Orçamento aceito — notificação ao admin",
-          "description": "Notifica o admin de que um orçamento foi aceito pelo cliente."
-        },
-        "quote_declined_admin": {
-          "title": "Orçamento recusado — notificação ao admin",
-          "description": "Notifica o admin de que um orçamento foi recusado pelo cliente."
-        },
-        "invoice_sent": {
-          "title": "Fatura enviada (ao cliente)",
-          "description": "Dispara quando uma fatura é enviada — inclui o anexo PDF."
-        },
-        "invoice_reminder_first": {
-          "title": "Lembrete de fatura — primeiro",
-          "description": "Primeiro lembrete ao cliente. Ainda sem multa por atraso."
-        },
-        "invoice_reminder_second": {
-          "title": "Lembrete de fatura — segundo (com Mahngebühr)",
-          "description": "Segundo lembrete com o acréscimo da multa por atraso."
-        },
-        "invoice_payment_check_admin": {
-          "title": "Verificação de pagamento (admin)",
-          "description": "E-mail do admin com os três botões de ação de token assinado."
-        },
-        "contract_sent": {
-          "title": "Contrato enviado (ao cliente)",
-          "description": "Envio admin → cliente com o PDF do contrato não assinado anexado."
-        },
-        "contract_signed_admin_notification": {
-          "title": "Contrato assinado — notificação ao admin",
-          "description": "Aviso de assinatura do cliente de volta ao admin. Sem anexo."
-        },
-        "contract_fully_signed": {
-          "title": "Contrato totalmente assinado (ambas as partes)",
-          "description": "Envio às duas partes assim que ambas as assinaturas estiverem presentes. PDF do contrato carimbado anexado."
-        },
-        "event_reminder_default": {
-          "title": "Lembrete de evento — padrão (genérico)",
-          "description": "Aviso pré-evento usado quando nenhum modelo por categoria corresponde."
-        },
-        "event_reminder_wedding": {
-          "title": "Lembrete de evento — casamento",
-          "description": "Aviso pré-evento para eventos com event_type=wedding."
-        },
-        "event_reminder_birthday": {
-          "title": "Lembrete de evento — aniversário",
-          "description": "Aviso pré-evento para eventos com event_type=birthday."
-        },
-        "event_reminder_corporate": {
-          "title": "Lembrete de evento — corporativo",
-          "description": "Aviso pré-evento para eventos com event_type=corporate."
-        },
-        "event_reminder_other": {
-          "title": "Lembrete de evento — outro",
-          "description": "Aviso pré-evento para eventos com event_type=other."
-        }
-      }
+      "empty": "Nenhum modelo de e-mail de CRM encontrado — execute as migrações para pré-carregá-los."
     }
   },
   "ledger": {
@@ -4356,7 +4182,9 @@
       "ledger_account_default_expense": "Conta de despesa padrão",
       "ledger_account_mileage": "Conta de quilometragem",
       "ledger_account_per_diem": "Conta de diárias",
-      "ledger_account_rebilled_revenue": "Despesas re-faturadas (receita)"
+      "ledger_account_rebilled_revenue": "Despesas re-faturadas (receita)",
+      "ledger_vat_map": "",
+      "ledger_output_vat_map": ""
     },
     "vatMap": {
       "title": "Código de IVA por tratamento fiscal (custos)"
@@ -4395,16 +4223,11 @@
       "legacyRate": "{{rate}}% (não configurado)"
     },
     "export": {
-      "title": "Exportação para o Treuhänder",
-      "intro": "Baixe o diário coletivo (receitas + custos como lançamentos por competência com códigos de conta e IVA) para importação no software de contabilidade do seu Treuhänder.",
       "format": "Ferramenta de destino",
       "format_generic": "Genérico (todas as colunas)",
       "format_banana": "Banana — partidas dobradas",
       "format_banana_ie": "Banana — receitas e despesas",
-      "format_bexio": "bexio",
-      "download": "Baixar CSV",
-      "failed": "Falha na exportação.",
-      "disclaimer": "Apenas regime de competência (datas dos documentos) — pagamentos/movimentações bancárias não são incluídos. Os códigos de conta + IVA seguem o seu mapeamento do plano de contas. Sempre revise a importação com o seu Treuhänder antes de declarar."
+      "format_bexio": "bexio"
     }
   },
   "taxReport": {
@@ -4443,9 +4266,7 @@
     "grandTotalNet": "Total líquido",
     "grandTotalVat": "Total IVA",
     "grandTotalGross": "Total bruto",
-    "cancelledFootnote": "{{count}} fatura(s) cancelada(s) — valores excluídos dos totais (apresentados para continuidade do rastro de auditoria).",
     "skontoTooltip": "Pago com Skonto",
-    "costsTitle": "Custos (faturas recebidas + despesas)",
     "costsDisclaimer": "Esta visão geral de receitas/despesas é uma orientação para os seus registros (Einnahmen-Ausgaben-Rechnung). A recuperabilidade do IVA e o valor do resultado dependem do tratamento fiscal de cada custo — verifique com o seu Treuhänder / autoridade fiscal antes de declarar.",
     "summary": {
       "outgoingTitle": "Faturas emitidas",
@@ -4457,13 +4278,7 @@
       "vatUnconfigured": "O registro de IVA não está configurado, portanto o IVA a pagar não pode ser calculado. Defina-o em Configurações → Contabilidade."
     },
     "cost": {
-      "source": "Tipo",
-      "sourceIncoming": "Recebida",
-      "sourceExpense": "Despesa",
-      "supplier": "Fornecedor / descrição",
-      "taxTreatment": "Tratamento fiscal",
-      "company": "Empresa",
-      "total": "Total de custos"
+      "company": "Empresa"
     },
     "type": {
       "outgoing": "Fatura emitida",
@@ -4472,10 +4287,7 @@
     },
     "col": {
       "date": "Data",
-      "invoice": "Fatura",
-      "customer": "Cliente",
       "event": "Evento",
-      "vatRate": "IVA %",
       "net": "Líquido",
       "vat": "IVA",
       "total": "Bruto",
@@ -4484,7 +4296,11 @@
       "reference": "Referência",
       "party": "Cliente / fornecedor",
       "tax": "Imposto"
-    }
+    },
+    "cancelledFootnote_many": "",
+    "cancelledFootnote_one": "",
+    "cancelledFootnote_other": "",
+    "costsErrorTitle": ""
   },
   "quotes": {
     "errors": {
@@ -4518,7 +4334,6 @@
       "vatRate": "Taxa de IVA %",
       "shipping": "Valor do frete",
       "currency": "Moeda",
-      "selectPaymentTerm": "— Selecionar condições de pagamento —",
       "paymentNetDays": "Dias líquidos",
       "paymentTiming": "Cronograma de pagamento",
       "selectNetDays": "— Selecionar dias líquidos —",
@@ -4549,13 +4364,6 @@
     "title": "Orçamentos",
     "subtitle": "Envie, acompanhe e converta orçamentos em eventos.",
     "searchPlaceholder": "Buscar por número, cliente, evento…",
-    "sort": {
-      "newest": "Mais recentes primeiro",
-      "oldest": "Mais antigos primeiro",
-      "customerAsc": "Cliente A→Z",
-      "valueAsc": "Valor crescente",
-      "valueDesc": "Valor decrescente"
-    },
     "empty": "Nenhum orçamento ainda.",
     "table": {
       "customer": "Cliente",
@@ -4564,7 +4372,6 @@
       "total": "Total",
       "status": "Status"
     },
-    "pagination": "Página {{page}} de {{total}} · {{count}} orçamentos",
     "status": {
       "draft": "Rascunho",
       "sent": "Enviado",
@@ -4579,7 +4386,22 @@
       "after_event": "após o evento",
       "after_delivery": "após a entrega",
       "fixed_date": "em data fixa"
-    }
+    },
+    "pagination_many": "",
+    "pagination_one": "",
+    "pagination_other": "",
+    "confirmConvertToInvoice": "",
+    "convertedToInvoiceToast_many": "",
+    "convertedToInvoiceToast_one": "",
+    "convertedToInvoiceToast_other": "",
+    "confirmConvertToContract": "",
+    "contractAlreadyLinkedToast": "",
+    "convertedToContractToast": "",
+    "confirmAcceptOnBehalf": "",
+    "acceptedOnBehalfToast": "",
+    "acceptOnBehalf": "",
+    "convertToInvoice": "",
+    "convertToContract": ""
   },
   "crm": {
     "lineItems": {
@@ -4603,6 +4425,9 @@
       "detailsPlaceholder": "Notas opcionais — letras miúdas, inclusões do pacote, condições…",
       "autoTotaledHint": "Total calculado automaticamente a partir dos subitens abaixo",
       "autoTotaledNote": "= soma dos subitens"
+    },
+    "customerPicker": {
+      "search": ""
     }
   },
   "bills": {
@@ -4610,14 +4435,6 @@
     "subtitle": "Agende, envie, acompanhe pagamentos e cobre faturas atrasadas.",
     "new": "Nova fatura",
     "searchPlaceholder": "Buscar por número ou cliente…",
-    "sort": {
-      "newest": "Mais recentes primeiro",
-      "dueAsc": "Vencimento mais próximo primeiro",
-      "dueDesc": "Vencimento mais distante primeiro",
-      "customerAsc": "Cliente A→Z",
-      "valueAsc": "Valor crescente",
-      "valueDesc": "Valor decrescente"
-    },
     "filter": {
       "unpaidOnly": "Apenas não pagas"
     },
@@ -4643,7 +4460,6 @@
     "monthlyDraftBadge": "Rascunho mensal — enviado pelo dia da cadência do cliente ou por \"Disparar fatura agora\"",
     "confirmReminder": "Enviar um lembrete agora?",
     "reminderToast": "Lembrete enviado.",
-    "confirmCancel": "Cancelar esta fatura?",
     "confirmCancelDraft": "Cancelar este rascunho de fatura? Nenhum documento é enviado.",
     "confirmCancelIssued": "Uma Stornorechnung será gerada e enviada ao cliente por e-mail imediatamente. Isto não pode ser desfeito. Continuar?",
     "cancelledToast": "Fatura cancelada.",
@@ -4681,7 +4497,6 @@
       "shipping": "Frete",
       "currency": "Moeda",
       "ccPdfEmail": "CC do PDF para (destinatário extra)",
-      "sourceQuote": "Do orçamento",
       "businessBankAccount": "Conta de pagamento",
       "bankAccountProfileDefault": "Usar o padrão do perfil da empresa para {{currency}}",
       "bankAccountDefaultBadge": "(padrão)",
@@ -4704,7 +4519,7 @@
       "ccPdfPickFromAdmins": "Escolher entre admins:",
       "paymentTermHelp": "Dias líquidos + Skonto para esta fatura. Deixe em branco para herdar do orçamento de origem ou dos padrões globais do CRM.",
       "skontoDisabled": "Desabilitar Skonto para esta fatura (suprime o bloco de desconto por pagamento antecipado no PDF e os botões \"Pago com Skonto\" no e-mail do admin / diálogo de registro de pagamento).",
-      "sourceContract": "Do contrato"
+      "status": ""
     },
     "import": "Importar histórica",
     "importTitle": "Importar fatura histórica",
@@ -4810,7 +4625,22 @@
       "defaultLocale": "Localidade padrão",
       "timezone": "Fuso horário (IANA)",
       "defaultQrFormat": "QR de fatura padrão",
-      "footerLine": "Linha de rodapé do PDF"
+      "footerLine": "Linha de rodapé do PDF",
+      "timezoneSystemDefault": "",
+      "pdfLogoHeight": "",
+      "pdfFoldingMarks": "",
+      "pdfShowLogo": "",
+      "pdfShowLogoHelp": "",
+      "pdfShowCompanyName": "",
+      "pdfShowCompanyNameHelp": "",
+      "pdfCompanyNameInline": "",
+      "pdfCompanyNameInlineHelp": "",
+      "pdfQuoteShowNetDays": "",
+      "pdfQuoteShowNetDaysHelp": "",
+      "pdfQuoteShowSkonto": "",
+      "pdfQuoteShowSkontoHelp": "",
+      "pdfLogoUpload": "",
+      "pdfLogoUploadHelp": ""
     },
     "qrFormat": {
       "none": "Nenhum",
@@ -4828,7 +4658,21 @@
       "makeDefault": "Tornar padrão",
       "confirmDelete": "Remover esta conta bancária?"
     },
-    "noBanks": "Nenhuma conta bancária configurada ainda."
+    "noBanks": "Nenhuma conta bancária configurada ainda.",
+    "foldingMarks": {
+      "none": "",
+      "half": "",
+      "third": "",
+      "both": ""
+    },
+    "qrDisclaimer": {
+      "title": "",
+      "body": ""
+    },
+    "logoUploadedToast": "",
+    "logoConfirmClear": "",
+    "logoClearedToast": "",
+    "bankUpdatedToast": ""
   },
   "crmSettings": {
     "savedToast": "Configurações do CRM salvas.",
@@ -4904,24 +4748,6 @@
     "crm_invoices_number_format": {
       "label": "Formato do número da fatura"
     },
-    "crm_quotes_pdf_attachment_enabled": {
-      "label": "Anexar PDF do orçamento ao e-mail"
-    },
-    "crm_quotes_skonto_enabled": {
-      "label": "Permitir desconto por pagamento antecipado (Skonto) em orçamentos"
-    },
-    "crm_invoices_qr_enabled": {
-      "label": "Renderizar QR de pagamento nos PDFs de fatura"
-    },
-    "crm_invoices_reminders_enabled": {
-      "label": "Enviar lembretes automáticos para faturas vencidas"
-    },
-    "crm_invoices_late_fee_enabled": {
-      "label": "Adicionar uma multa por atraso no segundo lembrete"
-    },
-    "crm_quotes_tos_required": {
-      "label": "Exigir que os clientes marquem \"Aceito os Termos de Serviço\" antes de aceitar"
-    },
     "crm_quotes_tos_url": {
       "label": "URL dos Termos de Serviço (opcional)"
     },
@@ -4929,17 +4755,7 @@
       "label": "Texto dos Termos exibido na página do orçamento",
       "placeholder": "Cole os termos do contrato aqui. Texto simples. Deixe vazio para mostrar apenas a caixa de seleção + URL."
     },
-    "crm_contracts_pdf_attachment_enabled": {
-      "label": "Anexar PDF do contrato ao e-mail"
-    },
-    "crm_contracts_require_drawn_signature": {
-      "label": "Exigir assinatura desenhada (apenas o nome digitado não é suficiente)"
-    },
-    "crm_contracts_allow_pdf_upload": {
-      "label": "Permitir que o cliente envie um PDF assinado fisicamente"
-    },
     "crm_contracts_store_ip": {
-      "label": "Armazenar o endereço IP do signatário (recomendado — evidência corroborante em disputas civis)",
       "help": "Quando desativado, o IP do cliente e do admin no momento da assinatura NÃO é registrado na linha do contrato nem na confirmação de auditoria da página pública de assinatura. Pelo princípio de minimização de dados do GDPR, alguns operadores preferem isso — mas o IP é evidência corroborante de identidade se o contrato for contestado, então recomendamos mantê-lo ativado."
     },
     "crm_contracts_default_valid_days": {
@@ -4948,18 +4764,6 @@
     "crm_contracts_number_format": {
       "label": "Formato do número do contrato",
       "help": "Tokens suportados: {YEAR}, {MONTH}, {SEQ:04d}. Exemplo: LBM-C-{YEAR}-{SEQ:04d} → LBM-C-2026-0001."
-    },
-    "crm_overview_show_revenue": {
-      "label": "Blocos de receita (30 / 90 / 365 dias)"
-    },
-    "crm_overview_show_outstanding": {
-      "label": "Bloco de pagamentos em aberto"
-    },
-    "crm_overview_show_quotes": {
-      "label": "Pipeline de orçamentos (por status)"
-    },
-    "crm_overview_show_invoices": {
-      "label": "Pipeline de faturas (por status)"
     }
   },
   "quoteResponse": {
@@ -4982,7 +4786,13 @@
     "changeWithin": "Você pode alterar sua resposta até {{at}}.",
     "intro": "Aceite ou recuse este orçamento:",
     "accept": "Aceitar orçamento",
-    "decline": "Recusar"
+    "decline": "Recusar",
+    "tosRequiredError": "",
+    "submitting": "",
+    "tosCheckbox": "",
+    "tosLink": "",
+    "preselectAcceptHint": "",
+    "preselectDeclineHint": ""
   },
   "reminderTemplates": {
     "title": "E-mails de lembrete pré-evento",
@@ -5086,7 +4896,20 @@
       "cancelled": "Cancelado"
     },
     "list": {
-      "new": "Novo contrato"
+      "new": "Novo contrato",
+      "blocksLibrary": "",
+      "searchPlaceholder": "",
+      "empty": "",
+      "table": {
+        "number": "",
+        "customer": "",
+        "title": "",
+        "issueDate": "",
+        "status": ""
+      },
+      "pagination_many": "",
+      "pagination_one": "",
+      "pagination_other": ""
     },
     "detail": {
       "previewPdf": "Pré-visualizar PDF",
@@ -5126,7 +4949,6 @@
       "convertToInvoice": "Converter apenas em fatura",
       "convertedToEvent": "Convertido em evento",
       "convertedToEventToast": "Contrato convertido em evento #{{id}}",
-      "convertedToInvoiceToast": "{{count}} fatura(s) criada(s) a partir deste contrato",
       "countersignError": "Falha ao contra-assinar",
       "countersignHelp": "Digite seu nome E desenhe sua assinatura abaixo — ambos são carimbados no PDF renderizado novamente. IP e marca de tempo são registrados para auditoria.",
       "countersignSignaturePrompt": "Desenhe sua assinatura",
@@ -5168,7 +4990,10 @@
       "signedNamePlaceholder": "Seu nome completo",
       "uploadError": "Falha no envio",
       "uploadSigned": "Enviar PDF assinado",
-      "uploadedToast": "PDF assinado enviado."
+      "uploadedToast": "PDF assinado enviado.",
+      "convertedToInvoiceToast_many": "",
+      "convertedToInvoiceToast_one": "",
+      "convertedToInvoiceToast_other": ""
     },
     "editor": {
       "back": "Voltar à lista",
@@ -5206,6 +5031,142 @@
       "titleNew": "Novo contrato",
       "titlePlaceholder": "ex.: Contrato de casamento Doe / Müller",
       "validUntil": "Assinar até (opcional)"
+    },
+    "blocks": {
+      "createdToast": "",
+      "createError": "",
+      "updatedToast": "",
+      "updateError": "",
+      "deletedToast": "",
+      "deleteError": "",
+      "back": "",
+      "title": "",
+      "hideInactive": "",
+      "disclaimerTitle": "",
+      "disclaimerBody": "",
+      "sidebarHeading": "",
+      "new": "",
+      "systemBadge": "",
+      "empty": "",
+      "selectPrompt": "",
+      "dialog": {
+        "createTitle": "",
+        "editTitle": "",
+        "name": "",
+        "section": "",
+        "description": "",
+        "body": "",
+        "placeholderHint": ""
+      },
+      "active": "",
+      "inactive": "",
+      "deleteConfirm": "",
+      "delete": "",
+      "save": "",
+      "noTranslation": "",
+      "quoteLineItems": {
+        "calloutTitle": "",
+        "calloutBody": "",
+        "previewExample": ""
+      }
+    }
+  },
+  "paymentCheck": {
+    "missingToken": "",
+    "alreadyUsed": "",
+    "expired": "",
+    "loadError": "",
+    "partialInvalid": "",
+    "partialTooHigh": "",
+    "submitError": "",
+    "title": "",
+    "subtitle": "",
+    "field": {
+      "invoice": "",
+      "customer": "",
+      "issued": "",
+      "due": "",
+      "total": "",
+      "outstanding": "",
+      "paid": "",
+      "lateFee": ""
+    },
+    "action": {
+      "paidFull": "",
+      "paidFullHelp": "",
+      "paidSkonto": "",
+      "paidSkontoHelp": "",
+      "partial": "",
+      "partialHelp": "",
+      "partialAmount": "",
+      "partialMax": "",
+      "unpaid": "",
+      "unpaidHelp": "",
+      "unpaidWithFee": ""
+    },
+    "submitting": "",
+    "submit": "",
+    "result": {
+      "title": "",
+      "paid": "",
+      "paidSkonto": "",
+      "partial": "",
+      "unpaidMax": "",
+      "unpaid": "",
+      "close": ""
+    }
+  },
+  "publicContract": {
+    "errorAccept": "",
+    "errorName": "",
+    "errorSignatureRequired": "",
+    "notFoundTitle": "",
+    "notFoundBody": "",
+    "fallbackTitle": "",
+    "signed": {
+      "title": "",
+      "by": "",
+      "counterBy": "",
+      "auditTitle": "",
+      "auditBody": "",
+      "contractNumber": "",
+      "signedAt": "",
+      "ipAddress": "",
+      "counterSignedAt": "",
+      "signedSha": "",
+      "unsignedSha": ""
+    },
+    "downloadSigned": "",
+    "download": "",
+    "signTitle": "",
+    "nameField": "",
+    "signaturePromptRequired": "",
+    "signaturePrompt": "",
+    "clearSignature": "",
+    "acceptCheckbox": "",
+    "submit": "",
+    "uploadAlternative": "",
+    "uploadHint": "",
+    "uploadButton": ""
+  },
+  "crmOverview": {
+    "title": "",
+    "loadError": "",
+    "revenue": {
+      "month": "",
+      "quarter": "",
+      "year": ""
+    },
+    "outstanding": "",
+    "outstandingSub_many": "",
+    "outstandingSub_one": "",
+    "outstandingSub_other": "",
+    "quotes": {
+      "title": ""
+    },
+    "viewAll": "",
+    "invoices": {
+      "title": ""
     }
   }
 }
