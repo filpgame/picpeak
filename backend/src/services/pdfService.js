@@ -861,6 +861,18 @@ function drawTotals(doc, ctx, x, y, width) {
     doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).text(formatMinor(lateFeeMinor, currency, intlLocale), valueX, y, { width: valueCol, align: 'right' });
     y = doc.y + 4;
   }
+
+  // Rundung — sub-cent reconciliation row (crm_invoice_round_total). Only
+  // rendered when the stored (clean) net differs from the sum of the
+  // visible line totals; bridges "Betrag Netto" (= Σ lines, foots with
+  // the items) down/up to the clean Gesamtbetrag below. Zero ⇒ omitted,
+  // so unrounded documents are byte-identical to before.
+  const roundingMinor = Number(totals.roundingAdjustmentMinor || 0);
+  if (roundingMinor !== 0) {
+    doc.font(doc._fonts ? doc._fonts.bold : FONT_BOLD).text(t(locale, 'totals_rounding'), labelX, y, { width: labelCol });
+    doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).text(formatMinor(roundingMinor, currency, intlLocale), valueX, y, { width: valueCol, align: 'right' });
+    y = doc.y + 4;
+  }
   y += 6;
 
   // Divider line above grand total — spans the right half of the
