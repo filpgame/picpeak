@@ -299,7 +299,10 @@ function formatNumberInTemplate(format, year, seq) {
 // The previous SELECT-MAX-then-INSERT path raced under concurrent
 // admin creates and could emit `Q-2026-AB12C3` after 5 retries.
 async function nextQuoteNumber(trx) {
-  const format = (await getAppSetting('crm_quotes_number_format')) || 'Q-{YEAR}-{SEQ:04d}';
+  // Read through `trx` when present — getAppSetting on the global db inside an
+  // open transaction deadlocks the single-connection SQLite pool (prepare_quote
+  // runs createQuote unattended from a workflow).
+  const format = (await getAppSetting('crm_quotes_number_format', null, trx || db)) || 'Q-{YEAR}-{SEQ:04d}';
   const year = new Date().getFullYear();
   const seq = await claimNextSequence('quote', year, trx);
   return formatNumberInTemplate(format, year, seq);
@@ -521,6 +524,15 @@ async function createQuote(payload, adminId) {
   // Resolve bank account for the chosen currency.
   const bank = await businessProfileService.resolveBankAccountForCurrency(currency, payload.businessBankAccountId);
 
+  // Resolve schema-drift column checks BEFORE the transaction — a cold
+  // hasColumnCached lookup hits the global db, which deadlocks the single-
+  // connection SQLite pool if issued inside the trx (prepare_quote runs this
+  // unattended from a workflow).
+  const hasProjectId = await hasColumnCached('quotes', 'project_id');
+  const hasVatCode = await hasColumnCached('quotes', 'vat_code');
+  const hasEventType = await hasColumnCached('quotes', 'event_type');
+  const hasBookingWorkflowId = await hasColumnCached('quotes', 'booking_workflow_id');
+
   return await db.transaction(async (trx) => {
     // SQLite's 1-connection default deadlocks when claimNextSequence
     // opens its own micro-transaction inside this outer one — thread
@@ -574,21 +586,21 @@ async function createQuote(payload, adminId) {
       updated_at: new Date(),
     };
     // Migration 121 — optional link to a Project Overview project.
-    if (payload.projectId !== undefined && await hasColumnCached('quotes', 'project_id')) {
+    if (payload.projectId !== undefined && hasProjectId) {
       row.project_id = payload.projectId || null;
     }
     // Migration 130 — snapshot the chosen output VAT code (immutable; the export
     // emits exactly this rather than re-deriving from the mutable rate→code map).
-    if (payload.vatCode !== undefined && await hasColumnCached('quotes', 'vat_code')) {
+    if (payload.vatCode !== undefined && hasVatCode) {
       row.vat_code = payload.vatCode ? String(payload.vatCode).slice(0, 16) : null;
     }
     // Migration 146 — event type (event_types.slug_prefix). Drives the type of
     // the event the quote converts into, instead of the old hardcoded 'wedding'.
-    if (payload.eventType !== undefined && await hasColumnCached('quotes', 'event_type')) {
+    if (payload.eventType !== undefined && hasEventType) {
       row.event_type = payload.eventType ? String(payload.eventType).slice(0, 64) : null;
     }
     // Migration 147 — the booking workflow this quote runs on acceptance.
-    if (payload.bookingWorkflowId !== undefined && await hasColumnCached('quotes', 'booking_workflow_id')) {
+    if (payload.bookingWorkflowId !== undefined && hasBookingWorkflowId) {
       row.booking_workflow_id = payload.bookingWorkflowId || null;
     }
     const inserted = await trx('quotes').insert(row).returning('id');
@@ -620,7 +632,9 @@ async function createQuote(payload, adminId) {
     }
 
     try {
-      await logActivity('quote_created', { quoteId, quoteNumber, customerAccountId: payload.customerAccountId }, null, `admin:${adminId}`);
+      // Pass `trx` so the audit insert rides the transaction's connection —
+      // the global db here deadlocks the single-connection SQLite pool.
+      await logActivity('quote_created', { quoteId, quoteNumber, customerAccountId: payload.customerAccountId }, null, `admin:${adminId}`, trx);
     } catch (_) {}
 
     logger.info('Quote created', { adminId, quoteId, quoteNumber });
@@ -1100,6 +1114,65 @@ async function emitQuoteEvent(quote, status) {
   } catch (_) { /* best-effort */ }
 }
 
+/**
+ * Emit a quote accept/decline to the workflow engine — but only once the
+ * customer's response window has LOCKED. While the window is open (the public
+ * page lets them flip accept↔decline for crm_quotes_accept_window_minutes), an
+ * immediate emit would let the booking flow convert the quote right away,
+ * defeating the grace period (the quote went straight to 'converted' and could
+ * no longer be declined). So:
+ *   - window already closed (0-minute window, or admin decline) → emit now and
+ *     stamp `workflow_response_emitted_at` (idempotent claim).
+ *   - window still open → defer; `finalizeQuoteResponses` (scheduler) fires the
+ *     FINAL status once it locks, so toggling inside the window never converts.
+ * Returns true if it emitted, false if deferred / already emitted.
+ */
+async function maybeEmitQuoteResponse(quote, status, responseLockedAt) {
+  const locked = !responseLockedAt || new Date(responseLockedAt).getTime() <= Date.now();
+  if (!locked) return false; // deferred to the finalize sweep
+  const hasCol = await hasColumnCached('quotes', 'workflow_response_emitted_at');
+  if (hasCol) {
+    // Atomically claim the emit so a concurrent finalize sweep can't double-fire.
+    const claimed = await db('quotes').where({ id: quote.id })
+      .whereNull('workflow_response_emitted_at')
+      .update({ workflow_response_emitted_at: new Date() });
+    if (!claimed) return false; // already emitted elsewhere
+  }
+  await emitQuoteEvent(quote, status);
+  return true;
+}
+
+/**
+ * Scheduler sweep: fire the workflow event for quote responses whose toggle
+ * window has now locked but which were deferred at response time. Idempotent via
+ * `workflow_response_emitted_at` (atomic claim). Called from the CRM scheduler
+ * tick. Returns the number emitted.
+ */
+async function finalizeQuoteResponses(limit = 200) {
+  const hasCol = await hasColumnCached('quotes', 'workflow_response_emitted_at');
+  if (!hasCol) return 0; // pre-migration install — nothing to finalise
+  // The unemitted accept/decline set is naturally small (a row leaves it the
+  // moment it's emitted), so fetch the candidates and compare the lock time in
+  // JS — avoids SQLite/Postgres date-string comparison pitfalls.
+  const now = Date.now();
+  const candidates = await db('quotes')
+    .whereIn('status', ['accepted', 'declined'])
+    .whereNull('workflow_response_emitted_at')
+    .whereNotNull('response_locked_at')
+    .limit(limit);
+  const rows = candidates.filter((q) => new Date(q.response_locked_at).getTime() <= now);
+  let emitted = 0;
+  for (const q of rows) {
+    const claimed = await db('quotes').where({ id: q.id })
+      .whereNull('workflow_response_emitted_at')
+      .update({ workflow_response_emitted_at: new Date() });
+    if (!claimed) continue; // raced with another tick / the inline emit
+    await emitQuoteEvent(q, q.status);
+    emitted += 1;
+  }
+  return emitted;
+}
+
 async function recordResponse({ token, action, ip, tosAccepted }) {
   if (!['accept', 'decline'].includes(action)) {
     throw new AppError('Invalid action', 400);
@@ -1183,7 +1256,10 @@ async function recordResponse({ token, action, ip, tosAccepted }) {
     await logActivity(`quote_${newStatus}`, { quoteId: quote.id, token: tokenRow.token }, null, 'customer:public');
   } catch (_) {}
 
-  await emitQuoteEvent(quote, newStatus);
+  // Defer the workflow emit until the 15-min toggle window locks — so accepting
+  // (then converting) can't strip the customer's ability to decline. The
+  // scheduler's finalize sweep fires the final status once it locks.
+  await maybeEmitQuoteResponse(quote, newStatus, responseLockedAt);
 
   return { status: newStatus, lockedAt: responseLockedAt };
 }
@@ -1282,7 +1358,9 @@ async function adminAcceptQuote(id, adminId) {
     logger.warn('quote_accepted_customer email queue failed', { quoteId: id, err: err.message });
   }
 
-  await emitQuoteEvent(quote, 'accepted');
+  // Same deferral as the public path — an admin "accept on behalf" also opens
+  // the toggle window, so don't convert until it locks.
+  await maybeEmitQuoteResponse(quote, 'accepted', responseLockedAt);
 
   return { status: 'accepted', lockedAt: responseLockedAt };
 }
@@ -1347,7 +1425,9 @@ async function adminDeclineQuote(id, adminId, reason = null) {
     await logActivity('quote_declined_by_admin', { quoteId: id, reason: cleanReason }, null, `admin:${adminId}`);
   } catch (_) {}
 
-  await emitQuoteEvent(quote, 'declined');
+  // Admin decline locks the window immediately (response_locked_at = now), so
+  // this emits straight away (and stamps emitted) rather than deferring.
+  await maybeEmitQuoteResponse(quote, 'declined', now);
 
   return { status: 'declined', declinedAt: now };
 }
@@ -1415,12 +1495,12 @@ async function convertToInvoiceOnly(quoteId, adminId, options = {}) {
 
   const invoiceService = require('./invoiceService');
 
-  return await db.transaction(async (trx) => {
+  const result = await db.transaction(async (trx) => {
     const installments = Array.isArray(paymentTermSnapshot?.installments)
       ? paymentTermSnapshot.installments
       : [{ percent: 100, trigger: 'after_delivery', offset_days: 0, label: 'Total' }];
 
-    await invoiceService.scheduleInvoicesForEvent({
+    const spawnResult = await invoiceService.scheduleInvoicesForEvent({
       trx,
       // eventId omitted → invoices have source_quote_id but no event_id.
       eventId: null,
@@ -1459,6 +1539,10 @@ async function convertToInvoiceOnly(quoteId, adminId, options = {}) {
       // Migration 140 — every spawned invoice inherits the source
       // quote's deal_uuid so quote + N invoices group under one deal.
       dealUuid: quote.deal_uuid,
+      // Workflow draft-seam: when called by the booking flow's prepare_invoice
+      // action, create the invoices on HOLD (no scheduled_send_at) so they wait
+      // for the explicit send_document after the review gate.
+      hold: options.draft === true,
     });
 
     // Mark quote `converted` without a converted_event_id so the
@@ -1470,14 +1554,20 @@ async function convertToInvoiceOnly(quoteId, adminId, options = {}) {
       updated_at: new Date(),
     });
 
-    try {
-      await logActivity('quote_converted_invoices_only', { quoteId: quote.id, installments: installments.length },
-        null, `admin:${adminId}`);
-    } catch (_) {}
-
-    logger.info('Quote converted to invoices only (no event)', { adminId, quoteId: quote.id, installments: installments.length });
-    return { installmentsCreated: installments.length };
+    return { installmentsCreated: installments.length, invoiceIds: spawnResult?.invoiceIds || [] };
   });
+
+  // Audit log AFTER commit — logActivity writes via the global `db`, which
+  // deadlocks the single-connection SQLite pool if issued inside the trx
+  // (the booking flow's prepare_invoice action runs this unattended, so a
+  // hang here would wedge the workflow executor, not just a request).
+  try {
+    await logActivity('quote_converted_invoices_only', { quoteId: quote.id, installments: result.installmentsCreated },
+      null, `admin:${adminId}`);
+  } catch (_) {}
+
+  logger.info('Quote converted to invoices only (no event)', { adminId, quoteId: quote.id, installments: result.installmentsCreated });
+  return result;
 }
 
 async function convertToEvent(quoteId, adminId, options = {}) {
@@ -1487,7 +1577,16 @@ async function convertToEvent(quoteId, adminId, options = {}) {
     throw new AppError(`Cannot convert a quote with status '${quote.status}'`, 409);
   }
   if (quote.converted_event_id) {
-    return { eventId: quote.converted_event_id, alreadyConverted: true };
+    // Idempotent re-entry (e.g. workflow crash-recovery): hand back the
+    // already-created event and its scheduled invoices so the caller can
+    // adopt them instead of double-creating.
+    const existingInvoices = await db('invoices')
+      .where({ event_id: quote.converted_event_id }).select('id');
+    return {
+      eventId: quote.converted_event_id,
+      alreadyConverted: true,
+      invoiceIds: existingInvoices.map((r) => r.id),
+    };
   }
   // Same guard as convertToInvoiceOnly — refuse if a contract is in
   // flight unless the contract→event button re-entered this path.
@@ -1510,7 +1609,7 @@ async function convertToEvent(quoteId, adminId, options = {}) {
   // Lazy import to avoid the circular dep.
   const invoiceService = require('./invoiceService');
 
-  return await db.transaction(async (trx) => {
+  const result = await db.transaction(async (trx) => {
     // The events table schema has drifted across migrations:
     // installs that ran the original 060 series have
     // host_name/host_email; later ones renamed to customer_*; some
@@ -1531,7 +1630,7 @@ async function convertToEvent(quoteId, adminId, options = {}) {
     // else a configurable org default, else the resolved catch-all (an ACTIVE
     // type — never a hardcoded slug the admin may have disabled).
     const eventType = (quote.event_type && String(quote.event_type).trim())
-      || (await getAppSetting('crm_default_event_type'))
+      || (await getAppSetting('crm_default_event_type', null, trx))
       || (await resolveDefaultEventType(trx));
 
     // Each candidate column is paired with the value we'd write. We
@@ -1591,37 +1690,46 @@ async function convertToEvent(quoteId, adminId, options = {}) {
       ? paymentTermSnapshot.installments
       : [{ percent: 100, trigger: 'after_delivery', offset_days: 0, label: 'Total' }];
 
-    await invoiceService.scheduleInvoicesForEvent({
-      trx,
-      eventId,
-      quoteId: quote.id,
-      customer,
-      currency: quote.currency,
-      language: quote.language,
-      lineItems,
-      totals: {
-        net: quote.net_amount_minor,
-        vatRate: quote.vat_rate,
-        vat: quote.vat_amount_minor,
-        shipping: quote.shipping_amount_minor,
-        total: quote.total_amount_minor,
-      },
-      installments,
-      eventDate: quote.event_date,
-      // Inline event snapshot — same rationale as convertToInvoiceOnly
-      // above (migration 123).
-      eventName: quote.event_name,
-      eventTimeStart: quote.event_time_start,
-      eventTimeEnd: quote.event_time_end,
-      adminId,
-      ccPdfEmail: quote.cc_pdf_email,
-      // Net 14 / 30 / 60 / 90 carry through from the quote's
-      // payment-term template (same as convertToInvoiceOnly).
-      netDays: paymentTermSnapshot?.net_days,
-      // Migration 140 — propagate the quote's deal_uuid down through
-      // every spawned invoice (same as convertToInvoiceOnly above).
-      dealUuid: quote.deal_uuid,
-    });
+    // `skipInvoices` (workflow reserve_date): create the event as a pure date
+    // hold — no invoices scheduled at all. The other booking actions handle
+    // money documents separately.
+    const spawnResult = options.skipInvoices === true
+      ? { invoiceIds: [] }
+      : await invoiceService.scheduleInvoicesForEvent({
+        trx,
+        eventId,
+        quoteId: quote.id,
+        customer,
+        currency: quote.currency,
+        language: quote.language,
+        lineItems,
+        totals: {
+          net: quote.net_amount_minor,
+          vatRate: quote.vat_rate,
+          vat: quote.vat_amount_minor,
+          shipping: quote.shipping_amount_minor,
+          total: quote.total_amount_minor,
+        },
+        installments,
+        eventDate: quote.event_date,
+        // Inline event snapshot — same rationale as convertToInvoiceOnly
+        // above (migration 123).
+        eventName: quote.event_name,
+        eventTimeStart: quote.event_time_start,
+        eventTimeEnd: quote.event_time_end,
+        adminId,
+        ccPdfEmail: quote.cc_pdf_email,
+        // Net 14 / 30 / 60 / 90 carry through from the quote's
+        // payment-term template (same as convertToInvoiceOnly).
+        netDays: paymentTermSnapshot?.net_days,
+        // Migration 140 — propagate the quote's deal_uuid down through
+        // every spawned invoice (same as convertToInvoiceOnly above).
+        dealUuid: quote.deal_uuid,
+        // Workflow draft-seam: the booking flow's prepare_event creates the
+        // event's invoices on HOLD (no scheduled_send_at) so they wait for the
+        // review gate + explicit send_document after the event date.
+        hold: options.hold === true,
+      });
 
     await trx('quotes').where({ id: quote.id }).update({
       status: 'converted',
@@ -1629,13 +1737,18 @@ async function convertToEvent(quoteId, adminId, options = {}) {
       updated_at: new Date(),
     });
 
-    try {
-      await logActivity('quote_converted', { quoteId: quote.id, eventId }, eventId, `admin:${adminId}`);
-    } catch (_) {}
-
-    logger.info('Quote converted to event', { adminId, quoteId: quote.id, eventId });
-    return { eventId, alreadyConverted: false };
+    return { eventId, alreadyConverted: false, invoiceIds: spawnResult?.invoiceIds || [] };
   });
+
+  // Audit log AFTER commit — logActivity writes via the global `db`, which
+  // deadlocks the single-connection SQLite pool if issued inside the trx
+  // (prepare_event runs this unattended from the booking flow).
+  try {
+    await logActivity('quote_converted', { quoteId: quote.id, eventId: result.eventId }, result.eventId, `admin:${adminId}`);
+  } catch (_) {}
+
+  logger.info('Quote converted to event', { adminId, quoteId: quote.id, eventId: result.eventId });
+  return result;
 }
 
 async function duplicateQuote(id, adminId) {
@@ -1975,6 +2088,7 @@ module.exports = {
   recordResponse,
   adminAcceptQuote,
   adminDeclineQuote,
+  finalizeQuoteResponses,
   convertToEvent,
   convertToInvoiceOnly,
 

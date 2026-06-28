@@ -59,7 +59,9 @@ function formatNumberInTemplate(format, year, seq) {
 // admin creates and emitted a random `R-2026-AB12C3` after 5 retries,
 // breaking the §14 UStG single-sequence requirement.
 async function nextInvoiceNumber(trx) {
-  const format = (await getAppSetting('crm_invoices_number_format')) || 'R-{YEAR}-{SEQ:04d}';
+  // Read through `trx` when present — getAppSetting on the global db inside an
+  // open transaction deadlocks the single-connection SQLite pool.
+  const format = (await getAppSetting('crm_invoices_number_format', null, trx || db)) || 'R-{YEAR}-{SEQ:04d}';
   const year = new Date().getFullYear();
   const seq = await claimNextSequence('invoice', year, trx);
   return formatNumberInTemplate(format, year, seq);
@@ -998,7 +1000,7 @@ async function spawnInstallmentInvoices({ trx, eventId, quoteId, customer, curre
                                           ccPdfEmail, netDays,
                                           eventName, eventTimeStart, eventTimeEnd,
                                           paymentNetDaysTemplateId, paymentTimingTemplateId,
-                                          paymentTermSnapshot, dealUuid }) {
+                                          paymentTermSnapshot, dealUuid, hold = false }) {
   // Monthly-billing intercept (migration 128). Quote → invoice
   // conversion for a monthly-mode customer doesn't fan out N
   // installment invoices — the customer pays one consolidated bill
@@ -1029,7 +1031,7 @@ async function spawnInstallmentInvoices({ trx, eventId, quoteId, customer, curre
   // absent we fall back to the crm_payment_default_net_days setting
   // (then 30) rather than silently using 30, matching createInvoice.
   const resolvedNetDays = ensureInt(netDays)
-    || ensureInt(await getAppSetting('crm_payment_default_net_days'))
+    || ensureInt(await getAppSetting('crm_payment_default_net_days', null, trx || db))
     || 30;
   const total = installments.length;
   const acceptanceTime = new Date();
@@ -1075,8 +1077,16 @@ async function spawnInstallmentInvoices({ trx, eventId, quoteId, customer, curre
     // status `scheduled`, so they sit idle until the admin clicks
     // "Release for delivery" on the invoice detail page.
     const isDeliveryTrigger = inst.trigger === 'after_delivery';
-    const rowStatus = isDeliveryTrigger ? 'pending_delivery' : 'scheduled';
-    const rowScheduledSendAt = isDeliveryTrigger ? null : scheduledSendAt;
+    // `hold` (workflow draft-seam): the booking flow's review gate + explicit
+    // send_document IS the release, so a held invoice is always `scheduled`
+    // (editable + sendable via sendInvoice) regardless of trigger — never
+    // `pending_delivery`, which sendInvoice refuses. Without hold, an
+    // after_delivery invoice stays `pending_delivery` as before.
+    const rowStatus = (isDeliveryTrigger && !hold) ? 'pending_delivery' : 'scheduled';
+    // Held invoices carry no scheduled_send_at so the scheduler never auto-sends
+    // them — they wait for send_document. after_delivery rows are likewise null
+    // (the scheduler can't infer a delivery date).
+    const rowScheduledSendAt = (isDeliveryTrigger || hold) ? null : scheduledSendAt;
 
     const invoiceNumber = await nextInvoiceNumber(trx);
     const dueDate = computeDueDate(scheduledSendAt, resolvedNetDays).toISOString().slice(0, 10);
@@ -1219,8 +1229,11 @@ async function spawnInstallmentInvoices({ trx, eventId, quoteId, customer, curre
     }
 
     try {
+      // Pass `trx` so the audit insert rides the transaction's connection —
+      // logging via the global db here deadlocks the single-connection SQLite
+      // pool (this runs unattended from the booking flow's prepare_invoice).
       await logActivity('invoice_scheduled', { invoiceId, invoiceNumber, eventId, quoteId, scheduledSendAt },
-        eventId, `admin:${adminId}`);
+        eventId, `admin:${adminId}`, trx);
     } catch (_) {}
     invoiceIds.push(invoiceId);
   }
