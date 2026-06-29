@@ -2,7 +2,7 @@
  * Customer Accounts Service
  *
  * Recurring user logins (the third user tier alongside admin and guest).
- * See discussion the-luap/picpeak#354 and migration 087 for context.
+ * See discussion PicPeak/picpeak#354 and migration 087 for context.
  *
  * Mirrors userManagementService.js for invitation lifecycle but operates
  * on customer_accounts / customer_invitations / event_customer_assignments

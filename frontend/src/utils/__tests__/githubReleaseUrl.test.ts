@@ -12,13 +12,13 @@ import { githubReleaseUrl } from '../githubReleaseUrl';
 describe('githubReleaseUrl', () => {
   it('maps a stable version to its tag page', () => {
     expect(githubReleaseUrl('3.55.0')).toBe(
-      'https://github.com/the-luap/picpeak/releases/tag/v3.55.0',
+      'https://github.com/PicPeak/picpeak/releases/tag/v3.55.0',
     );
   });
 
   it('maps a beta version (with channel suffix) to its tag page', () => {
     expect(githubReleaseUrl('3.55.0-beta.0')).toBe(
-      'https://github.com/the-luap/picpeak/releases/tag/v3.55.0-beta.0',
+      'https://github.com/PicPeak/picpeak/releases/tag/v3.55.0-beta.0',
     );
   });
 

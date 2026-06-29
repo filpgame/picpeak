@@ -33,8 +33,8 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 
 Unsure where to begin? You can start by looking through these issues:
 
-* [Good first issues](https://github.com/the-luap/picpeak/labels/good%20first%20issue) - issues which should only require a few lines of code
-* [Help wanted issues](https://github.com/the-luap/picpeak/labels/help%20wanted) - issues which need extra attention
+* [Good first issues](https://github.com/PicPeak/picpeak/labels/good%20first%20issue) - issues which should only require a few lines of code
+* [Help wanted issues](https://github.com/PicPeak/picpeak/labels/help%20wanted) - issues which need extra attention
 
 ### Pull Requests
 
@@ -161,8 +161,8 @@ See [RELEASING.md](RELEASING.md) for the full operational doc (promotion criteri
 
 ## 📮 Contact
 
-- Create an [issue](https://github.com/the-luap/picpeak/issues) for bugs or features
-- Join [discussions](https://github.com/the-luap/picpeak/discussions) for questions
-- Security issues: Open a [security issue](https://github.com/the-luap/picpeak/issues/new?labels=security) on GitHub
+- Create an [issue](https://github.com/PicPeak/picpeak/issues) for bugs or features
+- Join [discussions](https://github.com/PicPeak/picpeak/discussions) for questions
+- Security issues: Open a [security issue](https://github.com/PicPeak/picpeak/issues/new?labels=security) on GitHub
 
 Thank you for contributing! 🎉

@@ -94,7 +94,7 @@ async function fetchAvailableVersions() {
   try {
     // Use GitHub Releases API (public, no auth required)
     const response = await axios.get(
-      'https://api.github.com/repos/the-luap/picpeak/releases',
+      'https://api.github.com/repos/PicPeak/picpeak/releases',
       {
         headers: {
           'Accept': 'application/vnd.github+json',

@@ -90,7 +90,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onDismis
                 {t('admin.updates.updateNow', 'Update Now')}
               </button>
               <a
-                href="https://github.com/the-luap/picpeak/releases"
+                href="https://github.com/PicPeak/picpeak/releases"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"

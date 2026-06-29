@@ -7,7 +7,7 @@ ARG VCS_REF
 ARG VERSION
 
 # Add labels for GitHub Container Registry
-LABEL org.opencontainers.image.source="https://github.com/the-luap/picpeak"
+LABEL org.opencontainers.image.source="https://github.com/PicPeak/picpeak"
 LABEL org.opencontainers.image.description="PicPeak Backend Service"
 LABEL org.opencontainers.image.licenses="MIT"
 

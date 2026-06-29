@@ -83,7 +83,7 @@ Get PicPeak running in under 5 minutes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/the-luap/picpeak.git
+git clone https://github.com/PicPeak/picpeak.git
 cd picpeak
 
 # Copy environment template
@@ -392,7 +392,7 @@ PicPeak takes security seriously:
 - 📝 Activity logging
 - 🔒 Secure file access
 
-Found a security issue? Please open a [security issue](https://github.com/the-luap/picpeak/issues/new?labels=security) on GitHub
+Found a security issue? Please open a [security issue](https://github.com/PicPeak/picpeak/issues/new?labels=security) on GitHub
 
 ## 📸 Screenshots
 
@@ -537,7 +537,7 @@ PicPeak is released under the [MIT License](LICENSE). Use it freely for personal
   <br>
   <a href="https://www.picpeak.app">Homepage</a> •
   <a href="https://demo.picpeak.app">Live Demo</a> •
-  <a href="https://github.com/the-luap/picpeak">GitHub</a> •
+  <a href="https://github.com/PicPeak/picpeak">GitHub</a> •
   <a href="https://docs.picpeak.app">Documentation</a> •
-  <a href="https://github.com/the-luap/picpeak/issues">Support</a>
+  <a href="https://github.com/PicPeak/picpeak/issues">Support</a>
 </p>

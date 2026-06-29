@@ -45,7 +45,7 @@ services:
   backend:
     # Use pre-built image from GitHub Container Registry
     # PICPEAK_CHANNEL: 'stable' (default), 'beta', or specific version like 'v2.3.0'
-    image: ghcr.io/the-luap/picpeak/backend:${PICPEAK_CHANNEL:-stable}
+    image: ghcr.io/picpeak/picpeak/backend:${PICPEAK_CHANNEL:-stable}
     container_name: picpeak-backend
     env_file: .env
     environment:
@@ -93,7 +93,7 @@ services:
   frontend:
     # Use pre-built image from GitHub Container Registry
     # Uses same channel as backend for consistency
-    image: ghcr.io/the-luap/picpeak/frontend:${PICPEAK_CHANNEL:-stable}
+    image: ghcr.io/picpeak/picpeak/frontend:${PICPEAK_CHANNEL:-stable}
     container_name: picpeak-frontend
     # Note: Pre-built frontend uses Nginx to proxy /api to backend:3001.
     # Prefer keeping API base as '/api' in builds to avoid CORS.
