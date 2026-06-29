@@ -3086,6 +3086,11 @@
     "message": "We're currently performing scheduled maintenance to improve our service. We'll be back online shortly.",
     "urgentMatters": "For urgent matters, please contact"
   },
+  "migrationBanner": {
+    "title": "PicPeak's image registry has moved",
+    "body": "Update your docker-compose.yml to pull from {{newPath}} — the old path is no longer being updated.",
+    "link": "See migration notes"
+  },
   "passwordChange": {
     "title": "Change Password",
     "currentPassword": "Current Password",
