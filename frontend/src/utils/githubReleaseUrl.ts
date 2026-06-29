@@ -11,4 +11,4 @@
  * indicator to link to the upgrade target's notes.
  */
 export const githubReleaseUrl = (version: string): string =>
-  `https://github.com/the-luap/picpeak/releases/tag/v${version}`;
+  `https://github.com/PicPeak/picpeak/releases/tag/v${version}`;

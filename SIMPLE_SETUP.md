@@ -8,7 +8,7 @@ This guide provides easy installation instructions for PicPeak on Linux servers 
 
 ```bash
 # Download and run the unified setup script
-curl -fsSL https://raw.githubusercontent.com/the-luap/picpeak/main/scripts/picpeak-setup.sh -o picpeak-setup.sh && \
+curl -fsSL https://raw.githubusercontent.com/PicPeak/picpeak/main/scripts/picpeak-setup.sh -o picpeak-setup.sh && \
 chmod +x picpeak-setup.sh && \
 sudo ./picpeak-setup.sh
 ```
@@ -472,7 +472,7 @@ sudo -u picpeak node scripts/reset-admin-password.js
    - [Deployment Guide](https://docs.picpeak.app/deployment)
 
 3. **Support:**
-   - [GitHub Issues](https://github.com/the-luap/picpeak/issues)
+   - [GitHub Issues](https://github.com/PicPeak/picpeak/issues)
    - Include: Error messages, system info (`uname -a`), installation method
 
 ## 🔒 Security Best Practices
@@ -550,4 +550,4 @@ sudo ./picpeak-setup.sh --native \
 
 ---
 
-**PicPeak Setup v1.0** | [Documentation](https://github.com/the-luap/picpeak) | [Support](https://github.com/the-luap/picpeak/issues)
+**PicPeak Setup v1.0** | [Documentation](https://github.com/PicPeak/picpeak) | [Support](https://github.com/PicPeak/picpeak/issues)

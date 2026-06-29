@@ -13,7 +13,7 @@ IFS=$'\n\t'
 # Script configuration
 readonly SCRIPT_VERSION="2.1.0"
 readonly APP_NAME="PicPeak"
-readonly REPO_URL="https://github.com/the-luap/picpeak.git"
+readonly REPO_URL="https://github.com/PicPeak/picpeak.git"
 readonly NODE_VERSION="20"
 readonly MIN_RAM_DOCKER=2048
 readonly MIN_RAM_NATIVE=1024
@@ -1157,8 +1157,8 @@ print_success_message() {
     echo
     echo "📚 Documentation:"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "Setup Guide:  https://github.com/the-luap/picpeak/blob/main/SIMPLE_SETUP.md"
-    echo "Full Docs:    https://github.com/the-luap/picpeak"
+    echo "Setup Guide:  https://github.com/PicPeak/picpeak/blob/main/SIMPLE_SETUP.md"
+    echo "Full Docs:    https://github.com/PicPeak/picpeak"
     echo
     echo -e "${GREEN}✨ Setup complete! Visit the admin panel to start creating galleries.${NC}"
 }
