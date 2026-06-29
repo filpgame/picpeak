@@ -3065,6 +3065,11 @@
     "message": "Wir führen derzeit geplante Wartungsarbeiten durch, um unseren Service zu verbessern. Wir sind in Kürze wieder online.",
     "urgentMatters": "Bei dringenden Anliegen kontaktieren Sie bitte"
   },
+  "migrationBanner": {
+    "title": "Die Image-Registry von PicPeak wurde verschoben",
+    "body": "Aktualisiere deine docker-compose.yml, um Images von {{newPath}} zu beziehen — der alte Pfad wird nicht mehr aktualisiert.",
+    "link": "Migrationshinweise ansehen"
+  },
   "passwordChange": {
     "title": "Passwort ändern",
     "currentPassword": "Aktuelles Passwort",
