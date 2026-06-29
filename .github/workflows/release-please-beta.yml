@@ -2,7 +2,7 @@ name: Release Please (Beta)
 
 on:
   push:
-    branches: [beta]
+    branches: [main]
 
 permissions:
   contents: write
@@ -23,7 +23,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config-beta.json
           manifest-file: .release-please-manifest-beta.json
-          target-branch: beta
+          target-branch: main
 
       - name: Output Release Info
         if: ${{ steps.release.outputs.release_created }}

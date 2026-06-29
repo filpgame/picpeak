@@ -1,7 +1,8 @@
 name: Build and Push Docker Images
 
 # This workflow is triggered by:
-# - Push to main/beta branches (builds 'latest'/'stable' or 'beta' tagged images)
+# - Push to main/stable branches (main → ':main' rolling tag for active-dev
+#   builds; stable → ':stable' + ':latest' for the curated channel)
 # - Version tags from Release Please (e.g., v1.2.0 -> builds versioned images)
 # - GitHub Releases (created by Release Please)
 # - Pull requests (build verification only, no push by default)
@@ -20,10 +21,10 @@ name: Build and Push Docker Images
 
 on:
   push:
-    branches: [ main, beta ]
+    branches: [ main, stable ]
     tags: [ 'v*.*.*', 'v*.*.*-beta.*' ]  # Triggered by Release Please tags (stable and beta)
   pull_request:
-    branches: [ main, beta ]
+    branches: [ main, stable ]
   release:
     types: [ published ]  # Triggered when Release Please creates a release
   workflow_dispatch:
@@ -245,7 +246,9 @@ jobs:
     - name: Determine build context
       id: context
       run: |
-        if [[ "${{ github.ref }}" == refs/tags/v*-beta* ]] || [[ "${{ github.ref }}" == refs/heads/beta ]]; then
+        if [[ "${{ github.ref }}" == refs/tags/v*-beta* ]] || [[ "${{ github.ref }}" == refs/heads/main ]]; then
+          # Active-dev branch (`main`, renamed from `beta` per #669) produces
+          # prereleases; the `-beta.N` version-suffix scheme is unchanged.
           echo "channel=beta" >> $GITHUB_OUTPUT
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
         else
@@ -270,9 +273,14 @@ jobs:
           type=semver,pattern={{major}}.{{minor}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
           type=semver,pattern={{major}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
           type=sha,format=short
-          type=raw,value=latest,enable={{is_default_branch}}
-          type=raw,value=stable,enable=${{ github.ref == 'refs/heads/main' || (startsWith(github.ref, 'refs/tags/v') && steps.context.outputs.is_prerelease == 'false') }}
-          type=raw,value=beta,enable=${{ github.ref == 'refs/heads/beta' || steps.context.outputs.is_prerelease == 'true' }}
+          # `:latest` + `:stable` follow the stable channel (the `stable` branch +
+          # stable release tags). The default branch is now `main` (active dev),
+          # so `is_default_branch` no longer maps to "stable" — be explicit.
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/stable' || (startsWith(github.ref, 'refs/tags/v') && steps.context.outputs.is_prerelease == 'false') }}
+          type=raw,value=stable,enable=${{ github.ref == 'refs/heads/stable' || (startsWith(github.ref, 'refs/tags/v') && steps.context.outputs.is_prerelease == 'false') }}
+          # `:beta` is RETIRED post-rename (Option B / #669). Active-dev pulls
+          # are `:main` (auto via type=ref,event=branch). The pre-rename `:beta`
+          # tag remains frozen at its last build — operators should update.
 
     - name: Create and push multi-arch manifest
       working-directory: /tmp/digests
@@ -455,7 +463,9 @@ jobs:
     - name: Determine build context
       id: context
       run: |
-        if [[ "${{ github.ref }}" == refs/tags/v*-beta* ]] || [[ "${{ github.ref }}" == refs/heads/beta ]]; then
+        if [[ "${{ github.ref }}" == refs/tags/v*-beta* ]] || [[ "${{ github.ref }}" == refs/heads/main ]]; then
+          # Active-dev branch (`main`, renamed from `beta` per #669) produces
+          # prereleases; the `-beta.N` version-suffix scheme is unchanged.
           echo "channel=beta" >> $GITHUB_OUTPUT
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
         else
@@ -480,9 +490,14 @@ jobs:
           type=semver,pattern={{major}}.{{minor}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
           type=semver,pattern={{major}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
           type=sha,format=short
-          type=raw,value=latest,enable={{is_default_branch}}
-          type=raw,value=stable,enable=${{ github.ref == 'refs/heads/main' || (startsWith(github.ref, 'refs/tags/v') && steps.context.outputs.is_prerelease == 'false') }}
-          type=raw,value=beta,enable=${{ github.ref == 'refs/heads/beta' || steps.context.outputs.is_prerelease == 'true' }}
+          # `:latest` + `:stable` follow the stable channel (the `stable` branch +
+          # stable release tags). The default branch is now `main` (active dev),
+          # so `is_default_branch` no longer maps to "stable" — be explicit.
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/stable' || (startsWith(github.ref, 'refs/tags/v') && steps.context.outputs.is_prerelease == 'false') }}
+          type=raw,value=stable,enable=${{ github.ref == 'refs/heads/stable' || (startsWith(github.ref, 'refs/tags/v') && steps.context.outputs.is_prerelease == 'false') }}
+          # `:beta` is RETIRED post-rename (Option B / #669). Active-dev pulls
+          # are `:main` (auto via type=ref,event=branch). The pre-rename `:beta`
+          # tag remains frozen at its last build — operators should update.
 
     - name: Create and push multi-arch manifest
       working-directory: /tmp/digests
