@@ -1,5 +1,13 @@
 # 📸 PicPeak - Open Source Photo Sharing for Events
 
+> [!IMPORTANT]
+> **PicPeak has moved to its own GitHub organization.**
+>
+> - **Docker images** are now published at `ghcr.io/picpeak/picpeak/{backend,frontend}`. The old path (`ghcr.io/the-luap/picpeak/...`) is no longer served — update your `docker-compose.yml`.
+> - **Branches**: active development is now on `main` (was `beta`); the curated stable channel is now `stable` (was `main`). Existing PRs and clones auto-redirect via GitHub.
+>
+> See **[`docs/migration-to-org.md`](docs/migration-to-org.md)** for the one-line `docker-compose.yml` edit and full details.
+
 <div align="center">
   <img src="docs/picpeak-logo.png" alt="PicPeak Logo" width="300" />
   
