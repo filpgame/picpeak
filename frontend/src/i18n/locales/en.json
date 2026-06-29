@@ -4789,6 +4789,7 @@
       "notes": "Notes",
       "methodPlaceholder": "Select method…",
       "methods": {
+        "bankTransfer": "Bank transfer",
         "card": "Card",
         "cash": "Cash",
         "paypal": "PayPal",
@@ -4810,6 +4811,7 @@
     },
     "status": {
       "scheduled": "Scheduled",
+      "draft": "Draft",
       "pending_delivery": "Awaiting delivery",
       "sent": "Sent",
       "paid": "Paid",
