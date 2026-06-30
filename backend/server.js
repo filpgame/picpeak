@@ -769,12 +769,21 @@ try {
     // SPA fallback for admin + gallery routes. For gallery URLs we intercept
     // social-crawler User-Agents and serve OG/Twitter-card metadata so link
     // previews show the event name + branding instead of the SPA stub.
-    app.get('/gallery/:slug/:token?', (req, res, next) => {
+    //
+    // Two route shapes — 1-2 segments (`/gallery/:slug/:token?`) and the
+    // 3-segment slideshow form (`/gallery/:slug/show/:token`). The slideshow
+    // shape was previously falling through to the SPA-catchall below and
+    // skipping OG injection entirely (#699). Both patterns route to the
+    // same handler — buildOgMetadata only looks at `slug`, so the extra
+    // /show/ segment is harmless.
+    const ogIntercept = (req, res, next) => {
       if (isSocialCrawler(req.get('user-agent'))) {
         return handleGalleryOgRequest(req, res);
       }
       return next();
-    }, (req, res) => res.sendFile(indexPath));
+    };
+    app.get('/gallery/:slug/:token?', ogIntercept, (req, res) => res.sendFile(indexPath));
+    app.get('/gallery/:slug/show/:token', ogIntercept, (req, res) => res.sendFile(indexPath));
 
     app.get(['/admin', '/admin/*', '/gallery/*'], (req, res) => {
       res.sendFile(indexPath);
