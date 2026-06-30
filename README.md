@@ -484,6 +484,7 @@ PicPeak is inspired by the best features of commercial platforms while remaining
 
 A huge thank you to the people whose code, reports, and feedback have shaped PicPeak:
 
+- [**@the-luap**](https://github.com/the-luap) — creator and lead maintainer. Started the project and built PicPeak's foundation and the entire gallery experience (events, galleries, uploads, sharing, download protection, templates), plus backup & restore, analytics, system health, branding/theming, and WhatsApp notifications — and the architecture every later feature builds on.
 - [**@Luca-Timo**](https://github.com/Luca-Timo) — native Apple Silicon multi-arch images, external-URL toggle for legal CMS pages, the lazy-loaded folder tree picker, the admin-email picker on event creation, the data-driven self-hosted webfont system, the gallery header/banner decoupling, several typed-API refactors, and the CRM + accounting suite (quotes/contracts/invoices, hours logging, calendar, tax report, inbound supplier-invoice capture, expenses, and the Treuhänder/Banana export). Consistently raises the bar with thoughtful PRs.
 - [**@Rekoo-PS**](https://github.com/Rekoo-PS) — sharp-eyed bug reporter and product feedback. Filed the issues that drove the login-loop fix, the gallery-loading skeleton work, the redirection cleanup, the mobile-lightbox overhaul, the admin-events search-counter fix, the photo-count column, and the bulk-delete workflow. Also a [BuyMeACoffee](https://buymeacoffee.com/theluap) supporter — the kind of feedback loop that keeps the project useful for real deployments.
 
