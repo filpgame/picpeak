@@ -378,17 +378,23 @@ See our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## 📊 Comparison with Alternatives
 
-| Feature | PicPeak | PicDrop | Scrapbook.de |
-|---------|---------|---------|--------------|
-| Self-Hosted | ✅ | ❌ | ❌ |
-| Custom Branding | ✅ Full | Limited | Limited |
-| Monthly Cost | $0 | $29-199 | €19-99 |
-| Storage Limit | Unlimited* | 50-500GB | 100-1000GB |
-| Client Uploads | ✅ | ✅ | ✅ |
-| API Access | ✅ | Paid | ❌ |
-| Open Source | ✅ | ❌ | ❌ |
+| Feature | PicPeak | PicDrop | Scrapbook.de | Pixieset |
+|---------|---------|---------|--------------|----------|
+| Self-Hosted | ✅ | ❌ | ❌ | ❌ |
+| Custom Branding | ✅ Full | Limited | Limited | ✅ (paid) |
+| Monthly Cost | $0* | $29-199 | €19-99 | ~$60 |
+| Storage Limit | Unlimited** | 50-500GB | 100-1000GB | 3GB–Unlimited*** |
+| Client Uploads | ✅ | ✅ | ✅ | Limited |
+| API Access | ✅ | Paid | ❌ | ❌ |
+| Open Source | ✅ | ❌ | ❌ | ❌ |
+| Customer Accounts | ✅ | ❌ | ❌ | ✅ |
+| Quotes / Contracts / Invoices | 🧪 Beta | ❌ | ❌ | ✅ |
+| Incoming Invoices & Accounting | 🧪 Beta | ❌ | ❌ | ❌ |
 
-*Limited only by your server storage
+*You still bring your own server (own hardware or a VPS) and, if you want one, a domain.
+**Limited only by your server storage.
+***Pixieset's "unlimited" is photos only; video is capped by plan (roughly 0–10 h depending on tier).
+🧪 Beta = built but feature-flagged off by default (see [Beta Features](#-beta-features-use-at-your-own-risk)).
 
 ## 🛡️ Security
 
