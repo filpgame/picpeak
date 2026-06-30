@@ -378,17 +378,21 @@ See our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## 📊 Comparison with Alternatives
 
-| Feature | PicPeak | PicDrop | Scrapbook.de |
-|---------|---------|---------|--------------|
-| Self-Hosted | ✅ | ❌ | ❌ |
-| Custom Branding | ✅ Full | Limited | Limited |
-| Monthly Cost | $0 | $29-199 | €19-99 |
-| Storage Limit | Unlimited* | 50-500GB | 100-1000GB |
-| Client Uploads | ✅ | ✅ | ✅ |
-| API Access | ✅ | Paid | ❌ |
-| Open Source | ✅ | ❌ | ❌ |
+| Feature | PicPeak | PicDrop | Scrapbook.de | Pixieset |
+|---------|---------|---------|--------------|----------|
+| Self-Hosted | ✅ | ❌ | ❌ | ❌ |
+| Custom Branding | ✅ Full | Limited | Limited | ✅ (paid) |
+| Monthly Cost | $0 | $29-199 | €19-99 | ~$60 |
+| Storage Limit | Unlimited* | 50-500GB | 100-1000GB | 3GB–Unlimited |
+| Client Uploads | ✅ | ✅ | ✅ | Limited |
+| API Access | ✅ | Paid | ❌ | ❌ |
+| Open Source | ✅ | ❌ | ❌ | ❌ |
+| Customer Accounts | ✅ | ❌ | ❌ | ✅ |
+| Quotes / Contracts / Invoices | 🧪 Beta | ❌ | ❌ | ✅ |
+| Incoming Invoices & Accounting | 🧪 Beta | ❌ | ❌ | ❌ |
 
-*Limited only by your server storage
+*Limited only by your server storage.
+🧪 Beta = built but feature-flagged off by default (see [Beta Features](#-beta-features-use-at-your-own-risk)). picdrop and Scrapbook.de are gallery/delivery tools (no client billing or accounting). Pixieset's client CRM, contracts and invoices live in its paid **Studio Manager**, but it has no inbound supplier-invoice capture or bookkeeping/accountant-export module.
 
 ## 🛡️ Security
 
