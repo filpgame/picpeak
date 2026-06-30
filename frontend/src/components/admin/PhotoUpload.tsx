@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Upload, X, Image, Loader2, Cog } from 'lucide-react';
+import { Upload, X, Image, Loader2, Cog, AlertTriangle } from 'lucide-react';
 import { Button } from '../common';
 import { clsx } from 'clsx';
 import { api } from '../../config/api';
@@ -28,6 +28,21 @@ type UploadPhase =
   | { kind: 'transferring'; chunkIndex: number; totalChunks: number; bytePct: number }
   | { kind: 'processing'; chunkIndex: number; totalChunks: number; filesInChunk: number };
 
+// Why a file didn't make it into the gallery. Each maps to a distinct
+// stage so the user knows whether to re-pick the file (rejected), retry
+// the network (transfer), or check the source image (processing).
+//   - rejected:   validation/queueing refused it (bad type, too large,
+//                 corrupt) — returned per-file in the upload response.
+//   - transfer:   the whole chunk request failed (timeout, 5xx, network).
+//   - processing: stored fine, but the background worker couldn't process
+//                 it (from useUploadProgress's failedPhotos).
+type UploadFailureKind = 'rejected' | 'transfer' | 'processing';
+interface UploadFailure {
+  filename: string;
+  reason: string;
+  kind: UploadFailureKind;
+}
+
 export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadComplete }) => {
   const { t } = useTranslation();
   const [isUploading, setIsUploading] = useState(false);
@@ -42,11 +57,28 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
   // hook merges status across all of them so the user sees one unified
   // progress count even when the upload spans multiple HTTP requests.
   const [uploadIds, setUploadIds] = useState<string[]>([]);
+  // Per-file failures surfaced from the transfer stage (chunk POSTs):
+  // validation rejections (response.errors) and whole-chunk failures.
+  // Processing failures are merged in from the progress hook below.
+  const [transferFailures, setTransferFailures] = useState<UploadFailure[]>([]);
+  const [failuresDismissed, setFailuresDismissed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { aggregate: processingAggregate } = useUploadProgress(uploadIds, {
     enabled: phase.kind === 'processing' && uploadIds.length > 0,
   });
+
+  // Single source of truth for the "which files failed" report: transfer
+  // stage failures (collected during handleUpload) plus processing
+  // failures (live, from the progress hook). Both carry filename + reason.
+  const failures = useMemo<UploadFailure[]>(() => {
+    const processing: UploadFailure[] = processingAggregate.failedPhotos.map((p) => ({
+      filename: p.filename,
+      reason: p.error || t('upload.failures.unknownReason', 'Unknown error'),
+      kind: 'processing',
+    }));
+    return [...transferFailures, ...processing];
+  }, [transferFailures, processingAggregate.failedPhotos, t]);
   
   // Fetch categories for this event
   const { data: categories = [] } = useQuery({
@@ -162,6 +194,9 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
     setIsUploading(true);
     setUploadProgress(0);
     setUploadIds([]);
+    // Clear any prior failure report before this run.
+    setTransferFailures([]);
+    setFailuresDismissed(false);
 
     // For large uploads, chunk the files by both count AND size to prevent memory/network issues.
     // #509: the per-chunk byte cap MUST be tunable so users behind Cloudflare Tunnel and other
@@ -195,9 +230,10 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
     }
 
     setTotalChunks(chunks.length);
-    let totalUploaded = 0;
     let totalReplaced = 0;
-    let failedFiles = [];
+    // Accumulates transfer-stage failures (per-file rejections + whole-chunk
+    // failures) with their reasons, so the report can name each one.
+    const collected: UploadFailure[] = [];
 
     try {
       for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
@@ -258,8 +294,20 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
             },
           });
 
-          totalUploaded += (response.data?.successCount || chunk.length);
           totalReplaced += (response.data?.replacedCount || 0);
+          // The backend accepts the request (202) but may reject individual
+          // files (bad type, too large, corrupt) and reports them in
+          // `errors: [{ filename, error }]`. Surface each one by name.
+          const rejected = response.data?.errors;
+          if (Array.isArray(rejected)) {
+            for (const r of rejected) {
+              collected.push({
+                filename: r?.filename || t('upload.failures.unknownFile', 'Unknown file'),
+                reason: r?.error || t('upload.failures.unknownReason', 'Unknown error'),
+                kind: 'rejected',
+              });
+            }
+          }
           // Backend returns a per-request upload_id. Track it so the
           // processing-status hook can poll/stream live progress.
           if (response.data?.upload_id) {
@@ -268,7 +316,13 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
           }
         } catch (error: any) {
           console.error(`Error uploading chunk ${chunkIndex + 1}:`, error);
-          failedFiles.push(...chunk.map(f => f.name));
+          const reason =
+            error?.response?.data?.error ||
+            error?.message ||
+            t('upload.failures.transferReason', 'Transfer failed');
+          collected.push(
+            ...chunk.map((f) => ({ filename: f.name, reason, kind: 'transfer' as const }))
+          );
 
           // Continue with next chunk even if one fails
           continue;
@@ -288,10 +342,15 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
       if (totalReplaced > 0) {
         toast.info(t('upload.replacedFiles', { count: totalReplaced }) || `${totalReplaced} photo(s) replaced`);
       }
-      if (failedFiles.length > 0) {
+      // Publish transfer-stage failures to the report (rendered below with
+      // each filename + reason). The toast is just the headline; the list
+      // is where the user finds out *which* files failed.
+      setTransferFailures(collected);
+      if (collected.length > 0) {
         toast.warning(
-          t('upload.someFilesFailed') ||
-          `Transferred ${totalUploaded} files. ${failedFiles.length} files failed to transfer.`
+          t('upload.failures.toast', '{{count}} file(s) could not be uploaded — see the list below.', {
+            count: collected.length,
+          })
         );
       }
 
@@ -486,6 +545,59 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
           {isUploading ? t('upload.uploading') : t('common.upload') + ` ${selectedFiles.length} ${t(selectedFiles.length === 1 ? 'common.photo' : 'common.photos')}`}
         </Button>
       </div>
+
+      {/* Failure report — names every file that didn't make it into the
+          gallery, grouped by failure stage, so the user can act on each.
+          Persists until dismissed or a new upload starts. */}
+      {!failuresDismissed && failures.length > 0 && (
+        <div
+          data-testid="upload-failure-report"
+          className="rounded-lg border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-900/20 p-4"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+              <p className="text-sm font-medium">
+                {t('upload.failures.title', '{{count}} file(s) could not be uploaded', {
+                  count: failures.length,
+                })}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFailuresDismissed(true)}
+              aria-label={t('common.dismiss', 'Dismiss')}
+              className="p-1 -m-1 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-800/40 rounded"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <ul className="mt-3 max-h-48 overflow-y-auto space-y-1.5">
+            {failures.map((f, i) => (
+              <li key={`${f.kind}-${f.filename}-${i}`} className="flex items-start gap-2 text-xs">
+                <span
+                  className={clsx(
+                    'flex-shrink-0 mt-0.5 px-1.5 py-0.5 rounded font-medium whitespace-nowrap',
+                    f.kind === 'rejected' && 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+                    f.kind === 'transfer' && 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+                    f.kind === 'processing' && 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+                  )}
+                >
+                  {f.kind === 'rejected' && t('upload.failures.kindRejected', 'Rejected')}
+                  {f.kind === 'transfer' && t('upload.failures.kindTransfer', 'Transfer failed')}
+                  {f.kind === 'processing' && t('upload.failures.kindProcessing', 'Processing failed')}
+                </span>
+                <span className="min-w-0">
+                  <span className="font-medium text-neutral-800 dark:text-neutral-200 break-all">
+                    {f.filename}
+                  </span>
+                  <span className="text-neutral-500 dark:text-neutral-400"> — {f.reason}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Progress display — two distinct phases. Bytes-on-wire ('transferring')
           drives the determinate bar; the post-bytes wait ('processing') swaps

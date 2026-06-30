@@ -169,6 +169,16 @@
     "retryFailed": "Retry failed",
     "uploadComplete": "Upload complete!",
     "someFilesFailed": "Some files failed to upload",
+    "failures": {
+      "title": "{{count}} file(s) could not be uploaded",
+      "toast": "{{count}} file(s) could not be uploaded — see the list below.",
+      "kindRejected": "Rejected",
+      "kindTransfer": "Transfer failed",
+      "kindProcessing": "Processing failed",
+      "transferReason": "Transfer failed",
+      "unknownReason": "Unknown error",
+      "unknownFile": "Unknown file"
+    },
     "replaceByName": "Replace existing photos with same name",
     "uploadPhotos": "Upload Photos",
     "uploadMedia": "Upload Photos & Videos",
