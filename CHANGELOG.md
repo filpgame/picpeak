@@ -5,6 +5,20 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.75.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.74.0-beta.0...v3.75.0-beta.0) (2026-06-30)
+
+
+### Features
+
+* **updates:** "What's New" highlights after update + pre-update teaser ([a1a73bf](https://github.com/PicPeak/picpeak/commit/a1a73bf75ff3fcd0833fdf7922a35ad09f19439b))
+* **updates:** "What's New" highlights after update + pre-update teaser ([500cf85](https://github.com/PicPeak/picpeak/commit/500cf8522e556575bd74d4c71d38a83fb2596b5e))
+
+
+### Documentation
+
+* **readme:** credit [@the-luap](https://github.com/the-luap) as creator/lead maintainer ([3528f6b](https://github.com/PicPeak/picpeak/commit/3528f6b8b7e2b537b111f7787d48459a976ef744))
+* **readme:** credit [@the-luap](https://github.com/the-luap) as creator/lead maintainer ([748238e](https://github.com/PicPeak/picpeak/commit/748238e8caf198e3899954804e61a2e179058957))
+
 ## [3.74.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.73.0-beta.0...v3.74.0-beta.0) (2026-06-29)
 
 
