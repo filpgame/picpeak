@@ -13,7 +13,14 @@ import { useUploadProgress } from '../../hooks/useUploadProgress';
 
 interface PhotoUploadProps {
   eventId: number;
+  /** Refresh the photo grid. Called early (as bytes land) and again when
+   *  processing finishes. Never closes the modal. */
   onUploadComplete?: () => void;
+  /** Fired once the transfer stage is done, reporting whether any file
+   *  failed. The host (modal) uses this to decide whether to auto-close:
+   *  a clean upload closes as before; a partial failure keeps the modal
+   *  open so the failure report stays visible. */
+  onUploadSettled?: (result: { hasFailures: boolean }) => void;
 }
 
 const DEFAULT_MAX_FILES_PER_UPLOAD = 500;
@@ -43,7 +50,7 @@ interface UploadFailure {
   kind: UploadFailureKind;
 }
 
-export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadComplete }) => {
+export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadComplete, onUploadSettled }) => {
   const { t } = useTranslation();
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -234,6 +241,8 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
     // Accumulates transfer-stage failures (per-file rejections + whole-chunk
     // failures) with their reasons, so the report can name each one.
     const collected: UploadFailure[] = [];
+    // Whether at least one chunk was accepted for background processing.
+    let anyQueued = false;
 
     try {
       for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
@@ -311,6 +320,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
           // Backend returns a per-request upload_id. Track it so the
           // processing-status hook can poll/stream live progress.
           if (response.data?.upload_id) {
+            anyQueued = true;
             const newId = response.data.upload_id as string;
             setUploadIds((prev) => (prev.includes(newId) ? prev : [...prev, newId]));
           }
@@ -359,6 +369,22 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
       // below will refresh again on completion.
       if (onUploadComplete) {
         onUploadComplete();
+      }
+
+      // Tell the host the transfer stage settled. A clean upload lets the
+      // modal auto-close (unchanged behaviour); a partial failure keeps it
+      // open so the failure report below stays visible.
+      onUploadSettled?.({ hasFailures: collected.length > 0 });
+
+      // Nothing was queued for background processing (every chunk failed,
+      // or a pre-async backend) — there's no processing phase to wait on,
+      // so reset the transfer UI here. The failure report persists.
+      if (!anyQueued) {
+        setIsUploading(false);
+        setUploadProgress(0);
+        setCurrentChunk(0);
+        setTotalChunks(0);
+        setPhase({ kind: 'idle' });
       }
 
       // If the backend never returned an upload_id (e.g. only failures
