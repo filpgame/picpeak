@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Check, Download, Trash2, Eye, EyeOff, Heart, Package, MessageSquare, Star, Video, FolderOpen, Cog, AlertTriangle, RefreshCw, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -47,9 +47,13 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = ({
   // Layout toggle (Grid / List) persisted per admin via localStorage.
   const [viewMode, setViewMode] = useState<PhotoViewMode>(() => getPhotoViewMode());
 
-  useEffect(() => {
-    setPhotoViewMode(viewMode);
-  }, [viewMode]);
+  // Persist on user action only — writing in an effect would re-save the
+  // value on every mount (i.e. each time the Photos tab is opened), even
+  // when the user never touched the toggle.
+  const selectView = (mode: PhotoViewMode) => {
+    setViewMode(mode);
+    setPhotoViewMode(mode);
+  };
 
   const handlePhotoSelect = (photoId: number, e?: React.MouseEvent) => {
     if (e) {
@@ -259,12 +263,14 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = ({
           <div className="text-sm text-neutral-600 dark:text-neutral-400">
             {t('gallery.photosCount', { count: photos.length })}
           </div>
-          {/* Layout toggle: Grid / List */}
-          <div className="inline-flex rounded-lg border border-neutral-300 dark:border-neutral-600 overflow-hidden" role="group" aria-label={t('admin.photos.viewMode', 'View mode')}>
+          {/* Layout toggle: Grid / List — radiogroup so a screen reader
+              announces the two options as one mutually-exclusive set. */}
+          <div className="inline-flex rounded-lg border border-neutral-300 dark:border-neutral-600 overflow-hidden" role="radiogroup" aria-label={t('admin.photos.viewMode', 'View mode')}>
             <button
               type="button"
-              onClick={() => setViewMode('grid')}
-              aria-pressed={viewMode === 'grid'}
+              role="radio"
+              onClick={() => selectView('grid')}
+              aria-checked={viewMode === 'grid'}
               title={t('admin.photos.gridView', 'Grid view')}
               className={`p-1.5 transition-colors ${
                 viewMode === 'grid'
@@ -276,8 +282,9 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setViewMode('list')}
-              aria-pressed={viewMode === 'list'}
+              role="radio"
+              onClick={() => selectView('list')}
+              aria-checked={viewMode === 'list'}
               title={t('admin.photos.listView', 'List view')}
               className={`p-1.5 transition-colors border-l border-neutral-300 dark:border-neutral-600 ${
                 viewMode === 'list'

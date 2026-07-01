@@ -83,11 +83,17 @@ describe('AdminPhotoGrid layout toggle', () => {
     expect(screen.queryByTestId('admin-photo-row-1')).not.toBeInTheDocument();
   });
 
+  it('does not write to localStorage on mount (only on user toggle)', () => {
+    renderGrid();
+    // Opening the tab must not persist the value it just read.
+    expect(localStorage.getItem('picpeak.adminPhotos.view')).toBeNull();
+  });
+
   it('switches to list rows when the List toggle is clicked', async () => {
     const user = userEvent.setup();
     renderGrid();
 
-    await user.click(screen.getByRole('button', { name: /list view/i }));
+    await user.click(screen.getByRole('radio', { name: /list view/i }));
 
     expect(screen.getByTestId('admin-photo-row-1')).toBeInTheDocument();
     expect(screen.getByTestId('admin-photo-row-2')).toBeInTheDocument();
@@ -98,7 +104,7 @@ describe('AdminPhotoGrid layout toggle', () => {
     const user = userEvent.setup();
     const { unmount } = renderGrid();
 
-    await user.click(screen.getByRole('button', { name: /list view/i }));
+    await user.click(screen.getByRole('radio', { name: /list view/i }));
     expect(localStorage.getItem('picpeak.adminPhotos.view')).toBe('list');
     unmount();
 
