@@ -169,6 +169,16 @@
     "retryFailed": "Fehlgeschlagene erneut versuchen",
     "uploadComplete": "Upload abgeschlossen!",
     "someFilesFailed": "Einige Dateien konnten nicht hochgeladen werden",
+    "failures": {
+      "title": "{{count}} Datei(en) konnten nicht hochgeladen werden",
+      "toast": "{{count}} Datei(en) konnten nicht hochgeladen werden – siehe Liste unten.",
+      "kindRejected": "Abgelehnt",
+      "kindTransfer": "Übertragung fehlgeschlagen",
+      "kindProcessing": "Verarbeitung fehlgeschlagen",
+      "transferReason": "Übertragung fehlgeschlagen",
+      "unknownReason": "Unbekannter Fehler",
+      "unknownFile": "Unbekannte Datei"
+    },
     "replaceByName": "Vorhandene Fotos mit gleichem Namen ersetzen",
     "uploadPhotos": "Fotos hochladen",
     "uploadMedia": "Fotos & Videos hochladen",
