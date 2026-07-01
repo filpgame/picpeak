@@ -68,6 +68,11 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
   // validation rejections (response.errors) and whole-chunk failures.
   // Processing failures are merged in from the progress hook below.
   const [transferFailures, setTransferFailures] = useState<UploadFailure[]>([]);
+  // Processing failures are captured into state (not read live) because the
+  // completion effect clears uploadIds, which empties the progress hook's
+  // failedPhotos — reading live would make the rows vanish the instant they
+  // appear.
+  const [processingFailures, setProcessingFailures] = useState<UploadFailure[]>([]);
   const [failuresDismissed, setFailuresDismissed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,16 +81,12 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
   });
 
   // Single source of truth for the "which files failed" report: transfer
-  // stage failures (collected during handleUpload) plus processing
-  // failures (live, from the progress hook). Both carry filename + reason.
-  const failures = useMemo<UploadFailure[]>(() => {
-    const processing: UploadFailure[] = processingAggregate.failedPhotos.map((p) => ({
-      filename: p.filename,
-      reason: p.error || t('upload.failures.unknownReason', 'Unknown error'),
-      kind: 'processing',
-    }));
-    return [...transferFailures, ...processing];
-  }, [transferFailures, processingAggregate.failedPhotos, t]);
+  // stage failures (collected during handleUpload) plus processing failures
+  // (captured on completion). Both carry filename + reason.
+  const failures = useMemo<UploadFailure[]>(
+    () => [...transferFailures, ...processingFailures],
+    [transferFailures, processingFailures]
+  );
   
   // Fetch categories for this event
   const { data: categories = [] } = useQuery({
@@ -203,6 +204,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
     setUploadIds([]);
     // Clear any prior failure report before this run.
     setTransferFailures([]);
+    setProcessingFailures([]);
     setFailuresDismissed(false);
 
     // For large uploads, chunk the files by both count AND size to prevent memory/network issues.
@@ -317,9 +319,12 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
               });
             }
           }
-          // Backend returns a per-request upload_id. Track it so the
-          // processing-status hook can poll/stream live progress.
-          if (response.data?.upload_id) {
+          // Track the per-request upload_id so the processing hook can poll
+          // for live progress — but only when photos were actually queued
+          // (count > 0). The backend returns an upload_id even when every
+          // file was rejected (count 0); tracking it there would make us wait
+          // for a processing phase that never starts, hanging the spinner.
+          if (response.data?.upload_id && (response.data?.count ?? 0) > 0) {
             anyQueued = true;
             const newId = response.data.upload_id as string;
             setUploadIds((prev) => (prev.includes(newId) ? prev : [...prev, newId]));
@@ -371,25 +376,20 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
         onUploadComplete();
       }
 
-      // Tell the host the transfer stage settled. A clean upload lets the
-      // modal auto-close (unchanged behaviour); a partial failure keeps it
-      // open so the failure report below stays visible.
-      onUploadSettled?.({ hasFailures: collected.length > 0 });
-
-      // Nothing was queued for background processing (every chunk failed,
-      // or a pre-async backend) — there's no processing phase to wait on,
-      // so reset the transfer UI here. The failure report persists.
+      // Settling (and the modal's close decision) is deferred until we know
+      // the WHOLE outcome, including background processing. If nothing was
+      // queued (every file rejected, or a pre-async backend), the transfer
+      // stage is already terminal — settle now and reset the UI. Otherwise
+      // the processing effect below settles once the worker finishes, so
+      // processing failures are included before the modal decides to close.
       if (!anyQueued) {
+        onUploadSettled?.({ hasFailures: collected.length > 0 });
         setIsUploading(false);
         setUploadProgress(0);
         setCurrentChunk(0);
         setTotalChunks(0);
         setPhase({ kind: 'idle' });
       }
-
-      // If the backend never returned an upload_id (e.g. only failures
-      // or pre-async-backend deployment), we have nothing to wait for —
-      // fall through to the finally cleanup which resets state.
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.response?.data?.error || t('toast.uploadError'));
@@ -410,6 +410,15 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
     if (!processingAggregate.isComplete) return;
 
     if (processingAggregate.failed > 0) {
+      // Persist the failed photos into the report before uploadIds is cleared
+      // below (which would otherwise empty the progress hook's failedPhotos).
+      setProcessingFailures(
+        processingAggregate.failedPhotos.map((p) => ({
+          filename: p.filename,
+          reason: p.error || t('upload.failures.unknownReason', 'Unknown error'),
+          kind: 'processing' as const,
+        }))
+      );
       toast.warning(
         t('upload.processingFailed', { count: processingAggregate.failed }) ||
           `${processingAggregate.failed} photo(s) failed to process`
@@ -421,6 +430,12 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
     }
 
     if (onUploadComplete) onUploadComplete();
+    // Now the whole outcome is known — settle. The modal auto-closes only
+    // when nothing failed at either stage; any transfer OR processing
+    // failure keeps it open so the report (which lists both) stays visible.
+    onUploadSettled?.({
+      hasFailures: transferFailures.length > 0 || processingAggregate.failed > 0,
+    });
     setIsUploading(false);
     setUploadProgress(0);
     setCurrentChunk(0);
@@ -578,6 +593,8 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
       {!failuresDismissed && failures.length > 0 && (
         <div
           data-testid="upload-failure-report"
+          role="status"
+          aria-live="polite"
           className="rounded-lg border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-900/20 p-4"
         >
           <div className="flex items-start justify-between gap-3">
