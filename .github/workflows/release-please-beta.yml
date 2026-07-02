@@ -41,6 +41,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_PAT: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          # This job has no checkout, so gh can't infer the repo from a git
+          # remote — set it explicitly (same pattern as whatsnew, 2a5f0a8).
+          GH_REPO: ${{ github.repository }}
         run: |
           if [ -z "$RELEASE_PAT" ]; then
             echo "RELEASE_PLEASE_TOKEN not set — skipping auto-merge (manual review still required)."
