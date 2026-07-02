@@ -184,23 +184,31 @@ async function createPicpeak({ includePhotos = false, outDir } = {}) {
     const stamp = manifest.created_at.replace(/[:.]/g, '-');
     const filePath = path.join(targetDir, `picpeak-backup-${stamp}.picpeak`);
 
-    await new Promise((resolve, reject) => {
-      const output = fs.createWriteStream(filePath);
-      const archive = archiver('zip', { zlib: { level: 9 } });
-      output.on('close', resolve);
-      output.on('error', reject);
-      archive.on('error', reject);
-      // Surface archiver warnings (e.g. a file vanished mid-run) instead of
-      // silently shipping an incomplete archive.
-      archive.on('warning', (err) => reject(err));
-      archive.pipe(output);
-      archive.file(path.join(staging, 'manifest.json'), { name: 'manifest.json' });
-      archive.directory(dataDir, 'data');
-      for (const f of files) {
-        archive.file(f.abs, { name: path.posix.join('files', f.rel.split(path.sep).join('/')) });
-      }
-      archive.finalize();
-    });
+    try {
+      await new Promise((resolve, reject) => {
+        const output = fs.createWriteStream(filePath);
+        const archive = archiver('zip', { zlib: { level: 9 } });
+        output.on('close', resolve);
+        output.on('error', reject);
+        archive.on('error', reject);
+        // Surface archiver warnings (e.g. a file vanished mid-run) instead of
+        // silently shipping an incomplete archive.
+        archive.on('warning', (err) => reject(err));
+        archive.pipe(output);
+        archive.file(path.join(staging, 'manifest.json'), { name: 'manifest.json' });
+        archive.directory(dataDir, 'data');
+        for (const f of files) {
+          archive.file(f.abs, { name: path.posix.join('files', f.rel.split(path.sep).join('/')) });
+        }
+        archive.finalize();
+      });
+    } catch (err) {
+      // Archiver failed → the partial .picpeak holds plaintext secrets and is
+      // useless; remove our own temp out dir so it isn't orphaned. A
+      // caller-supplied outDir is left untouched.
+      if (!outDir) await fsp.rm(targetDir, { recursive: true, force: true }).catch(() => {});
+      throw err;
+    }
 
     logger.info(
       `[picpeak-export] wrote ${filePath} (${tables.length} tables, ${files.length} files, includePhotos=${!!includePhotos})`
@@ -215,6 +223,7 @@ async function createPicpeak({ includePhotos = false, outDir } = {}) {
 
 module.exports = {
   PICPEAK_FORMAT_VERSION,
+  EXCLUDED_TABLES,
   createPicpeak,
   // exported for reuse/testing
   listDataTables,

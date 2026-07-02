@@ -23,7 +23,7 @@ const knexConfig = require('../../knexfile');
 const { getStoragePath } = require('../config/storage');
 const { hasColumnCached } = require('../utils/schemaCache');
 const logger = require('../utils/logger');
-const { PICPEAK_FORMAT_VERSION } = require('./picpeakExportService');
+const { PICPEAK_FORMAT_VERSION, EXCLUDED_TABLES, listDataTables } = require('./picpeakExportService');
 
 const isPostgres = () => knexConfig.client === 'pg';
 
@@ -129,8 +129,23 @@ function serialiseJsonColumns(rows, jsonCols) {
 // in the data set, so the target's schema/migration state is left intact.
 async function replaceAllTables(tables, dataDir, currentAdmin) {
   await db.transaction(async (trx) => {
-    if (isPostgres()) await trx.raw("SET session_replication_role = 'replica'");
-    else await trx.raw('PRAGMA defer_foreign_keys = ON');
+    if (isPostgres()) {
+      try {
+        await trx.raw("SET session_replication_role = 'replica'");
+      } catch (_) {
+        // session_replication_role requires a Postgres SUPERUSER. The bundled
+        // postgres image's role is one; managed Postgres (RDS / Cloud SQL / …)
+        // app users usually are not. Fail fast with a clear message BEFORE any
+        // rows are deleted — the transaction rolls back, so nothing is wiped.
+        const err = new Error(
+          'Restore needs a PostgreSQL superuser to suspend foreign-key checks during the full replace, but this instance’s database user is not a superuser (common on managed Postgres such as RDS or Cloud SQL). Restore onto the bundled Postgres, or grant the role superuser for the restore.'
+        );
+        err.statusCode = 400;
+        throw err;
+      }
+    } else {
+      await trx.raw('PRAGMA defer_foreign_keys = ON');
+    }
 
     for (const table of tables) {
       await trx(table).del();
@@ -223,7 +238,18 @@ async function importFromPicpeak({ picpeakPath, currentAdminId }) {
     }
 
     const dataDir = path.join(staging, 'data');
-    const tables = Object.keys(manifest.tables || {});
+    // Only touch tables that (a) the uploaded manifest lists AND (b) actually
+    // exist as real tables in THIS database. listDataTables() already excludes
+    // knex_migrations/_lock (EXCLUDED_TABLES), so a crafted or corrupted
+    // .picpeak can never make the restore delete the migration bookkeeping — or
+    // any table that isn't a genuine data table here.
+    const dbTables = new Set(await listDataTables());
+    const manifestTables = Object.keys(manifest.tables || {});
+    const tables = manifestTables.filter((tbl) => dbTables.has(tbl) && !EXCLUDED_TABLES.has(tbl));
+    const skipped = manifestTables.filter((tbl) => !tables.includes(tbl));
+    if (skipped.length) {
+      logger.warn(`[picpeak-import] ignoring ${skipped.length} backup table(s) not present in this DB (or protected): ${skipped.join(', ')}`);
+    }
 
     await replaceAllTables(tables, dataDir, currentAdmin);
     const filesRestored = await restoreFiles(staging);

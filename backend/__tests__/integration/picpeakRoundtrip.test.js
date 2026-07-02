@@ -18,13 +18,14 @@ let cleanup;
 let tmpDir;
 let createPicpeak;
 let importFromPicpeak;
+let validateManifest;
 let superAdminRoleId;
 
 beforeAll(async () => {
   ({ db, cleanup, tmpDir } = await bootCrmDb());
   process.env.STORAGE_PATH = tmpDir;
   ({ createPicpeak } = require('../../src/services/picpeakExportService'));
-  ({ importFromPicpeak } = require('../../src/services/picpeakImportService'));
+  ({ importFromPicpeak, validateManifest } = require('../../src/services/picpeakImportService'));
   const role = await db('roles').where({ name: 'super_admin' }).first();
   superAdminRoleId = role.id;
 }, 60000);
@@ -115,5 +116,65 @@ describe('.picpeak roundtrip (export → import)', () => {
     } finally {
       fs.rmSync(path.dirname(filePath), { recursive: true, force: true });
     }
+  });
+
+  it('restores files/ and reports filesRestored', async () => {
+    // A business-doc that lives in storage → travels in the backup.
+    const docDir = path.join(tmpDir, 'business-docs');
+    const marker = path.join(docDir, 'roundtrip-doc.txt');
+    fs.mkdirSync(docDir, { recursive: true });
+    fs.writeFileSync(marker, 'hello');
+    await db('admin_users').del();
+    const [id] = await db('admin_users').insert(adminRow('files@example.com', 'H')).returning('id');
+    const currentAdminId = typeof id === 'object' ? id.id : id;
+
+    const { filePath } = await createPicpeak({ includePhotos: false });
+    try {
+      fs.rmSync(marker); // delete on disk so the restore must bring it back
+      const result = await importFromPicpeak({ picpeakPath: filePath, currentAdminId });
+      expect(result.filesRestored).toBeGreaterThanOrEqual(1);
+      expect(fs.existsSync(marker)).toBe(true);
+      expect(fs.readFileSync(marker, 'utf8')).toBe('hello');
+    } finally {
+      fs.rmSync(path.dirname(filePath), { recursive: true, force: true });
+      fs.rmSync(docDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('.picpeak manifest validation', () => {
+  it('rejects a database-engine mismatch', async () => {
+    // Harness runs on SQLite, so a pg manifest must be refused.
+    const blockers = await validateManifest({
+      kind: 'picpeak-backup', format: 1, database: { engine: 'pg' }, tables: {},
+    });
+    expect(blockers.some((b) => /engine/i.test(b))).toBe(true);
+  });
+
+  it('rejects a backup from a newer schema (forward-only)', async () => {
+    // validateManifest reads knex_migrations for the target's latest migration;
+    // the harness has none, so create it with an older migration than the backup.
+    await db.schema.createTable('knex_migrations', (t) => {
+      t.increments('id');
+      t.string('name');
+      t.integer('batch');
+      t.timestamp('migration_time');
+    });
+    try {
+      await db('knex_migrations').insert({ name: '100_baseline', batch: 1 });
+      const blockers = await validateManifest({
+        kind: 'picpeak-backup', format: 1,
+        database: { engine: 'sqlite', latest_migration: '999_from_the_future' },
+        tables: {},
+      });
+      expect(blockers.some((b) => /newer/i.test(b))).toBe(true);
+    } finally {
+      await db.schema.dropTableIfExists('knex_migrations');
+    }
+  });
+
+  it('rejects a file that is not a PicPeak backup', async () => {
+    const blockers = await validateManifest({ some: 'random-json' });
+    expect(blockers.length).toBeGreaterThan(0);
   });
 });
