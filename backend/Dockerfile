@@ -30,9 +30,14 @@ WORKDIR /app
 # Upgrade all packages to fix security vulnerabilities (OpenSSL, libexpat, BusyBox CVEs)
 RUN apk upgrade --no-cache
 
-# Upgrade npm to fix tar, minimatch, brace-expansion CVEs in npm's own deps
-# Pin to 10.x to stay compatible with Node 22 Alpine (npm 11.x has dependency issues)
-RUN npm install -g npm@10
+# Upgrade the npm CLI in the final image so its bundled deps are patched
+# (sigstore 4.x, tar) — closes CVE-2026-48815 and the older @sigstore/core / tar
+# Trivy alerts. Safe here: only the CLI present in the image changes. Runtime
+# dependencies come from the builder stage (COPY --from=builder node_modules
+# below) and the entrypoint runs node, not npm — so npm 11's install behaviour
+# (the reason 10.x was pinned) never executes in this stage. npm 11 needs
+# Node >=22.9, satisfied by node:22-alpine.
+RUN npm install -g npm@11
 
 # Install dumb-init for proper signal handling, postgresql-client for database
 # checks, ffmpeg for video upload support, and su-exec for the root → nodejs
