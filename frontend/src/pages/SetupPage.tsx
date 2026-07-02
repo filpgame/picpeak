@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Input, Card, Loading } from '../components/common';
 import { useAdminAuth } from '../contexts';
 import { setupService } from '../services/setup.service';
+import { resolveLoginLogoClasses } from '../utils/loginLogoSize';
 import type { AdminUser } from '../types';
 
 // Where the first-run setup is documented, for the case where the server logs
@@ -170,10 +171,16 @@ export const SetupPage: React.FC = () => {
         <div className="text-center mb-8">
           {/* On a fresh instance there are no branding settings yet, so use the
               bundled PicPeak logo — the same default the login page falls back
-              to — on the cream brand plate. First impressions should be on-brand. */}
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#eee6d2' }}>
-            <img src="/picpeak-logo-transparent.png" alt="PicPeak" className="w-11 h-11 object-contain" />
-          </div>
+              to — on the cream brand plate. Size matches the login default
+              (`medium`) so the two screens read identically. */}
+          {(() => {
+            const cls = resolveLoginLogoClasses(undefined);
+            return (
+              <div className={`${cls.frameOuter} mx-auto mb-6 rounded-2xl flex items-center justify-center`} style={{ backgroundColor: '#eee6d2' }}>
+                <img src="/picpeak-logo-transparent.png" alt="PicPeak" className={`${cls.frameInner} object-contain`} />
+              </div>
+            );
+          })()}
           <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text, #171717)' }}>{t('setup.title')}</h1>
           <p className="mt-2" style={{ color: 'var(--color-text, #171717)', opacity: 0.7 }}>
             {step === 'token' ? t('setup.tokenStepSubtitle') : t('setup.accountStepSubtitle')}
