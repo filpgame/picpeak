@@ -44,8 +44,11 @@ jobs:
           fi
           pr=$(gh pr list --head release-please--branches--stable --state open --json number --jq '.[0].number // empty')
           if [ -n "$pr" ]; then
+            # Approve as github-actions[bot] (GITHUB_TOKEN, ≠ the PAT author) so it
+            # is a valid review; enable auto-merge as the PAT so the merge commit is
+            # attributed to a real identity and triggers the tag-cutting run (#719).
             gh pr review "$pr" --approve --body "Automated approval — release-please version bump + changelog (#719)." || true
-            gh pr merge "$pr" --squash --auto || true
+            GH_TOKEN="$RELEASE_PAT" gh pr merge "$pr" --squash --auto || true
           else
             echo "No open release PR to auto-merge."
           fi
