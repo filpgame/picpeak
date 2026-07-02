@@ -38,6 +38,16 @@ on:
           - 'true'
           - 'false'
 
+# Once release-please authors releases with a PAT (#719), a new version fires
+# BOTH the tag-push and the release-published triggers (GITHUB_TOKEN used to
+# suppress them). They build the same immutable version, so collapse them into a
+# single run by grouping on the ref. Branch and PR builds use different refs and
+# still run independently; a superseding push cancels an in-flight run for the
+# same ref (only the newest build per ref is kept).
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   # BACKEND_IMAGE_NAME and FRONTEND_IMAGE_NAME are computed per job in the
