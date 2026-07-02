@@ -158,6 +158,44 @@ router.get('/picpeak/export', adminAuth, requirePermission('backup.create'), asy
   }
 });
 
+// Multipart upload for .picpeak restore — streamed to a temp file. Runs AFTER
+// auth so an unauthenticated request can't push a large file to disk.
+const os = require('os');
+const multer = require('multer');
+const picpeakUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, os.tmpdir()),
+    filename: (req, file, cb) => cb(null, `picpeak-upload-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.picpeak`),
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 * 1024 }, // 5 GB — .picpeak with photos can be large
+});
+
+// Upload + restore a .picpeak onto THIS instance. DESTRUCTIVE: full override of
+// all data except the current logged-in account (the client shows an explicit
+// confirmation before calling this). Returns `usesExternalMedia` so the UI can
+// prompt the admin to reconfigure the external-media mount afterwards.
+router.post('/picpeak/import', adminAuth, requirePermission('backup.restore'), picpeakUpload.single('backup'), async (req, res) => {
+  const fsSync = require('fs');
+  if (!req.file) return res.status(400).json({ error: 'No backup file uploaded' });
+  const picpeakPath = req.file.path;
+  try {
+    const { importFromPicpeak } = require('../services/picpeakImportService');
+    const result = await importFromPicpeak({ picpeakPath, currentAdminId: req.user && req.user.id });
+    res.json({
+      success: true,
+      tables: result.tables,
+      filesRestored: result.filesRestored,
+      usesExternalMedia: result.usesExternalMedia,
+    });
+  } catch (error) {
+    const status = error.statusCode || 500;
+    logger.error('[picpeak-import] restore failed', { error: error.message });
+    res.status(status).json({ error: error.message || 'Restore failed', validation: error.validation });
+  } finally {
+    fsSync.unlink(picpeakPath, () => {});
+  }
+});
+
 // Get backup run details
 router.get('/runs/:id', adminAuth, requirePermission('backup.view'), async (req, res) => {
   try {
