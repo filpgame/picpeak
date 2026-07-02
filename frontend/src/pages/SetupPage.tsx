@@ -10,6 +10,7 @@ import { useAdminAuth } from '../contexts';
 import { setupService } from '../services/setup.service';
 import { featureFlagsService, type FeatureFlags, type FeatureKey } from '../services/featureFlags.service';
 import { PicpeakRestoreCard } from '../components/admin/PicpeakBackupCard';
+import { SetupConfigStep } from '../components/admin/SetupConfigStep';
 import { resolveLoginLogoClasses } from '../utils/loginLogoSize';
 import type { AdminUser } from '../types';
 
@@ -52,7 +53,7 @@ export const SetupPage: React.FC = () => {
     staleTime: Infinity,
   });
 
-  const [step, setStep] = useState<'token' | 'account' | 'usage' | 'restore'>('token');
+  const [step, setStep] = useState<'token' | 'account' | 'usage' | 'restore' | 'config'>('token');
   const [form, setForm] = useState({ token: '', email: '', password: '', confirm: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -226,7 +227,15 @@ export const SetupPage: React.FC = () => {
       toast.warn(t('setup.featuresSaveFailed'));
     } finally {
       setIsSavingFeatures(false);
-      navigate('/admin/dashboard', { replace: true });
+      // If the chosen features need config the wizard can collect (invoicing,
+      // email), go to the config step; otherwise enter the app.
+      const needsConfig =
+        selectedFeatures.has('bills') ||
+        selectedFeatures.has('reminderEmails') ||
+        selectedFeatures.has('incomingMail') ||
+        selectedFeatures.has('whatsapp');
+      if (needsConfig) setStep('config');
+      else navigate('/admin/dashboard', { replace: true });
     }
   };
 
@@ -256,9 +265,11 @@ export const SetupPage: React.FC = () => {
                 ? t('setup.accountStepSubtitle')
                 : step === 'restore'
                   ? t('setup.restoreStepSubtitle')
-                  : t('setup.usageSubtitle')}
+                  : step === 'config'
+                    ? t('setup.config.subtitle')
+                    : t('setup.usageSubtitle')}
           </p>
-          {step !== 'restore' && (
+          {(step === 'token' || step === 'account' || step === 'usage') && (
             <p className="mt-3 text-xs font-medium tracking-wide uppercase" style={{ color: '#171717', opacity: 0.5 }}>
               {t('setup.stepOf', { current: stepNumber, total: 3 })}
             </p>
@@ -461,7 +472,7 @@ export const SetupPage: React.FC = () => {
                 {selectedFeatures.size > 0 ? t('setup.finish') : t('setup.usageSkip')}
               </Button>
             </div>
-          ) : (
+          ) : step === 'restore' ? (
             <div className="space-y-6">
               <p className="text-sm text-neutral-600">{t('setup.restoreIntro')}</p>
               <PicpeakRestoreCard />
@@ -475,6 +486,11 @@ export const SetupPage: React.FC = () => {
                 {t('setup.back')}
               </Button>
             </div>
+          ) : (
+            <SetupConfigStep
+              selectedFeatures={selectedFeatures}
+              onDone={() => navigate('/admin/dashboard', { replace: true })}
+            />
           )}
         </Card>
       </div>
