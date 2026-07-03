@@ -27,6 +27,7 @@ import { toast } from 'react-toastify';
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
 import { Button, Card, Loading } from '../../../components/common';
 import { SUPPORTED_LANGUAGES } from '../../../components/common/LanguageSelector';
+import { useMutationWithToast } from '../../../hooks';
 import {
   contractsService,
   type ContractBlock,
@@ -147,14 +148,12 @@ export const BlockLibraryPage: React.FC = () => {
     onError: (err: any) => toast.error(err?.response?.data?.error || t('contracts.blocks.updateError', 'Update failed') as string),
   });
 
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutationWithToast({
     mutationFn: (id: number) => contractsService.deleteBlock(id),
-    onSuccess: () => {
-      toast.success(t('contracts.blocks.deletedToast', 'Block deleted.') as string);
-      queryClient.invalidateQueries({ queryKey: ['contracts', 'blocks'] });
-      setSelection(null);
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || t('contracts.blocks.deleteError', 'Delete failed') as string),
+    successMessage: t('contracts.blocks.deletedToast', 'Block deleted.') as string,
+    invalidateKeys: [['contracts', 'blocks']],
+    errorMessage: t('contracts.blocks.deleteError', 'Delete failed') as string,
+    onSuccess: () => setSelection(null),
   });
 
   // Group blocks by section for sidebar rendering. Empty sections are

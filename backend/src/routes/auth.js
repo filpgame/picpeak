@@ -17,6 +17,7 @@ const { endSession } = require('../middleware/sessionTimeout');
 const { revokeToken } = require('../utils/tokenRevocation');
 const { timingSafeEqualStr } = require('../utils/timingSafe');
 const logger = require('../utils/logger');
+const { errorResponse } = require('../utils/routeHelpers');
 const {
   setAdminAuthCookie,
   clearAdminAuthCookie,
@@ -160,8 +161,7 @@ router.post('/admin/login', [
 
     return await completeAdminLogin(req, res, admin, ipAddress, userAgent, username);
   } catch (error) {
-    logger.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    errorResponse(res, error, 500, 'Login failed');
   }
 });
 
@@ -303,8 +303,7 @@ router.post('/logout', async (req, res) => {
 
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
-    logger.error('Logout error:', error);
-    res.status(500).json({ error: 'Logout failed' });
+    errorResponse(res, error, 500, 'Logout failed');
   }
 });
 
@@ -416,8 +415,7 @@ router.post('/gallery/verify', [
       }
     });
   } catch (error) {
-    logger.error('Gallery verification error:', error);
-    res.status(500).json({ error: 'Verification failed' });
+    errorResponse(res, error, 500, 'Verification failed');
   }
 });
 
@@ -492,8 +490,7 @@ router.post('/gallery/:slug/client-login', [
       accessLevel: 'client'
     });
   } catch (error) {
-    logger.error('Client login error:', error);
-    res.status(500).json({ error: 'Authentication failed' });
+    errorResponse(res, error, 500, 'Authentication failed');
   }
 });
 
@@ -579,8 +576,7 @@ router.post('/gallery/share-login', [
       }
     });
   } catch (error) {
-    logger.error('Share link authentication error:', error);
-    res.status(500).json({ error: 'Share link login failed' });
+    errorResponse(res, error, 500, 'Share link login failed');
   }
 });
 
@@ -595,8 +591,7 @@ router.post('/gallery/logout', async (req, res) => {
     clearGalleryAuthCookies(res, slug);
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
-    logger.error('Gallery logout error:', error);
-    res.status(500).json({ error: 'Logout failed' });
+    errorResponse(res, error, 500, 'Logout failed');
   }
 });
 
@@ -810,8 +805,7 @@ router.post('/admin/change-password', [
       score: passwordValidation.score
     });
   } catch (error) {
-    logger.error('Password change error:', error);
-    res.status(500).json({ error: 'Failed to change password' });
+    errorResponse(res, error, 500, 'Failed to change password');
   }
 });
 

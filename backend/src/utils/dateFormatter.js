@@ -1,4 +1,5 @@
 const { db } = require('../database/db');
+const logger = require('./logger');
 
 // Default date format settings
 const DEFAULT_FORMAT = {
@@ -19,7 +20,7 @@ async function formatDate(date, language = 'en') {
         try {
           dateConfig = JSON.parse(setting.setting_value);
         } catch (e) {
-          console.warn('Failed to parse date format setting:', e.message);
+          logger.warn('Failed to parse date format setting:', e.message);
           dateConfig = DEFAULT_FORMAT;
         }
       } else {
@@ -46,7 +47,7 @@ async function formatDate(date, language = 'en') {
     
     // Check if date is valid
     if (isNaN(dateObj.getTime())) {
-      console.error('Invalid date provided to formatDate:', date);
+      logger.error('Invalid date provided to formatDate:', date);
       throw new Error('Invalid date');
     }
     
@@ -91,7 +92,7 @@ async function formatDate(date, language = 'en') {
       });
     }
   } catch (error) {
-    console.error('Error formatting date:', error);
+    logger.error('Error formatting date:', error);
     // Fallback to basic formatting
     return date instanceof Date ? date.toLocaleDateString() : new Date(date).toLocaleDateString();
   }

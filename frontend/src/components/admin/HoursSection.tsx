@@ -24,6 +24,7 @@ import { parseLocaleDecimal, parseDuration } from '../../utils/parsers';
 import { customerAdminService } from '../../services/customerAdmin.service';
 import { businessProfileService } from '../../services/businessProfile.service';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../hooks';
 import { ProjectSelect } from './ProjectSelect';
 
 export interface HoursSectionProps {
@@ -151,16 +152,11 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
     },
   });
 
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutationWithToast({
     mutationFn: (entryId: number) => customerAdminService.deleteHourEntry(customerId, entryId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-customer-hour-entries', customerId] });
-      qc.invalidateQueries({ queryKey: ['admin-customer', customerId] });
-      toast.success(t('customers.hours.toast.deleted', 'Entry deleted'));
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.error || 'Failed to delete entry');
-    },
+    invalidateKeys: [['admin-customer-hour-entries', customerId], ['admin-customer', customerId]],
+    successMessage: t('customers.hours.toast.deleted', 'Entry deleted'),
+    errorMessage: 'Failed to delete entry',
   });
 
   const billMutation = useMutation({

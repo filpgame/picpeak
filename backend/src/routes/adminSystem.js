@@ -29,7 +29,7 @@ router.get('/version', adminAuth, requirePermission('settings.view'), async (req
       const packageJson = JSON.parse(packageContent);
       backendVersion = packageJson.version || '1.0.0';
     } catch (err) {
-      console.error('Could not read package.json:', err);
+      logger.error('Could not read package.json:', err);
     }
 
     const channel = getCurrentChannel(backendVersion);
@@ -42,7 +42,7 @@ router.get('/version', adminAuth, requirePermission('settings.view'), async (req
       channel: channel
     });
   } catch (error) {
-    console.error('Error fetching version:', error);
+    logger.error('Error fetching version:', error);
     res.status(500).json({ error: 'Failed to fetch version information' });
   }
 });
@@ -231,7 +231,7 @@ router.get('/status', adminAuth, requirePermission('settings.view'), async (req,
         `, [dbName]);
         dbSize = result.rows[0]?.size || 0;
       } catch (error) {
-        console.error('Error getting PostgreSQL database size:', error);
+        logger.error('Error getting PostgreSQL database size:', error);
       }
     } else {
       // SQLite - check file size
@@ -240,7 +240,7 @@ router.get('/status', adminAuth, requirePermission('settings.view'), async (req,
         const stats = await fs.stat(dbPath);
         dbSize = stats.size;
       } catch (error) {
-        console.error('Error getting SQLite database size:', error);
+        logger.error('Error getting SQLite database size:', error);
       }
     }
 
@@ -285,7 +285,7 @@ router.get('/status', adminAuth, requirePermission('settings.view'), async (req,
           const stats = await fs.stat(fullArchivePath);
           archiveStorage += stats.size;
         } catch (error) {
-          console.error('Archive file not found:', archive.archive_path);
+          logger.error('Archive file not found:', archive.archive_path);
         }
       }
     }
@@ -345,7 +345,7 @@ router.get('/status', adminAuth, requirePermission('settings.view'), async (req,
 
     res.json(status);
   } catch (error) {
-    console.error('Error fetching system status:', error);
+    logger.error('Error fetching system status:', error);
     res.status(500).json({ error: 'Failed to fetch system status' });
   }
 });
@@ -407,7 +407,7 @@ router.get('/database', adminAuth, requirePermission('settings.view'), async (re
       timestamp: new Date()
     });
   } catch (error) {
-    console.error('Error fetching database info:', error);
+    logger.error('Error fetching database info:', error);
     res.status(500).json({ error: 'Failed to fetch database information' });
   }
 });

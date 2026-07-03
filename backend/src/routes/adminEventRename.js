@@ -9,6 +9,7 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const { requireEventOwnership } = require('../middleware/ownership');
 const eventRenameService = require('../services/eventRenameService');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
@@ -51,7 +52,7 @@ router.post('/:eventId/rename', adminAuth, requirePermission('events.edit'), req
       data: result.data
     });
   } catch (error) {
-    console.error('Error renaming event:', error);
+    logger.error('Error renaming event:', error);
     res.status(500).json({ success: false, error: 'Failed to rename event' });
   }
 });
@@ -82,7 +83,7 @@ router.post('/:eventId/validate-rename', adminAuth, requirePermission('events.ed
 
     res.json(validation);
   } catch (error) {
-    console.error('Error validating rename:', error);
+    logger.error('Error validating rename:', error);
     res.status(500).json({ valid: false, error: 'Validation failed' });
   }
 });

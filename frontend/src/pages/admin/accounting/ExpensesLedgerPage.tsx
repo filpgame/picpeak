@@ -8,7 +8,7 @@
  */
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { X, Plus, Paperclip, Car, CalendarDays, Coins, Pencil, FileText, CheckCircle2, Circle, Lock } from 'lucide-react';
@@ -18,6 +18,7 @@ import { EventBookingSelect } from '../../../components/admin/EventBookingSelect
 import { CustomerAccountPicker, type SelectedCustomer } from '../../../components/admin/CustomerAccountPicker';
 import { formatMoneyMinor } from '../../../utils/money';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
+import { useMutationWithToast, useModal } from '../../../hooks';
 import {
   accountingService, categoryLabel,
   type Expense, type ExpenseKind, type ExpenseCategory, type MarkupType, type PaymentMethod,
@@ -68,12 +69,13 @@ const ExpenseFormModal: React.FC<{ categories: ExpenseCategory[]; expense?: Expe
     description: description || null,
   });
 
-  const save = useMutation({
+  const save = useMutationWithToast({
     mutationFn: () => isEdit
       ? accountingService.updateExpense(expense!.id, payload(), file)
       : accountingService.createExpense(payload(), file),
-    onSuccess: () => { toast.success(isEdit ? t('accounting.ledger.updatedToast', 'Expense updated.') : t('accounting.ledger.createdToast', 'Expense added.')); onDone(); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: isEdit ? t('accounting.ledger.updatedToast', 'Expense updated.') : t('accounting.ledger.createdToast', 'Expense added.'),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
+    onSuccess: () => onDone(),
   });
 
   const qtyLabel = kind === 'mileage' ? t('accounting.expense.km', 'Kilometres') : t('accounting.expense.days', 'Days');
@@ -143,10 +145,11 @@ const ExpensePaidModal: React.FC<{ expense: Expense; onClose: () => void; onDone
   const [paidAt, setPaidAt] = useState('');
   const [method, setMethod] = useState<PaymentMethod>('bank_transfer');
   const [reference, setReference] = useState('');
-  const save = useMutation({
+  const save = useMutationWithToast({
     mutationFn: () => accountingService.markExpensePaid(expense.id, { paid: true, paidAt: paidAt || undefined, paymentMethod: method, paymentReference: reference || undefined }),
-    onSuccess: () => { toast.success(t('accounting.ledger.paidToast', 'Marked as paid.')); onDone(); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: t('accounting.ledger.paidToast', 'Marked as paid.'),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
+    onSuccess: () => onDone(),
   });
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4">
@@ -182,15 +185,16 @@ const InvoiceExpenseModal: React.FC<{ expense: Expense; onClose: () => void; onD
   const [customer, setCustomer] = useState<SelectedCustomer[]>([]);
   const [markupType, setMarkupType] = useState<MarkupType>('none');
   const [markupValue, setMarkupValue] = useState<number>(NaN);
-  const save = useMutation({
+  const save = useMutationWithToast({
     mutationFn: () => accountingService.invoiceExpense(expense.id, {
       customerAccountId: customer[0]!.id,
       markupType,
       markupPercent: markupType === 'percent' && Number.isFinite(markupValue) ? markupValue : null,
       markupFlatMinor: markupType === 'flat' && Number.isFinite(markupValue) ? Math.round(markupValue * 100) : null,
     }),
-    onSuccess: () => { toast.success(t('accounting.ledger.invoicedToast', 'Added to a client invoice.')); onDone(); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: t('accounting.ledger.invoicedToast', 'Added to a client invoice.'),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
+    onSuccess: () => onDone(),
   });
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4">
@@ -230,15 +234,15 @@ export const ExpensesLedgerPage: React.FC = () => {
   const qc = useQueryClient();
   const { format } = useLocalizedDate();
   const [kind, setKind] = useState('');
-  const [showAdd, setShowAdd] = useState(false);
+  const addModal = useModal();
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [paidExpense, setPaidExpense] = useState<Expense | null>(null);
   const [invoiceExpense, setInvoiceExpense] = useState<Expense | null>(null);
 
-  const unpay = useMutation({
+  const unpay = useMutationWithToast({
     mutationFn: (id: number) => accountingService.markExpensePaid(id, { paid: false }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['accounting-expenses'] }),
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    invalidateKeys: [['accounting-expenses']],
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
   });
 
   const { data, isLoading } = useQuery({
@@ -262,7 +266,7 @@ export const ExpensesLedgerPage: React.FC = () => {
           <option value="">{t('accounting.ledger.allKinds', 'All types')}</option>
           {KINDS.map((k) => <option key={k} value={k}>{t(`accounting.expenseKind.${k}`, k)}</option>)}
         </select>
-        <Button className="ml-auto" onClick={() => setShowAdd(true)}><Plus className="w-4 h-4 mr-1" /> {t('accounting.ledger.addExpense', 'Add expense')}</Button>
+        <Button className="ml-auto" onClick={() => addModal.open()}><Plus className="w-4 h-4 mr-1" /> {t('accounting.ledger.addExpense', 'Add expense')}</Button>
       </div>
 
       {isLoading ? <Loading /> : items.length === 0 ? (
@@ -318,7 +322,7 @@ export const ExpensesLedgerPage: React.FC = () => {
         </div>
       )}
 
-      {showAdd && <ExpenseFormModal categories={categories ?? []} onClose={() => setShowAdd(false)} onDone={() => { setShowAdd(false); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />}
+      {addModal.isOpen && <ExpenseFormModal categories={categories ?? []} onClose={() => addModal.close()} onDone={() => { addModal.close(); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />}
       {editExpense && <ExpenseFormModal categories={categories ?? []} expense={editExpense} onClose={() => setEditExpense(null)} onDone={() => { setEditExpense(null); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />}
       {paidExpense && <ExpensePaidModal expense={paidExpense} onClose={() => setPaidExpense(null)} onDone={() => { setPaidExpense(null); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />}
       {invoiceExpense && <InvoiceExpenseModal expense={invoiceExpense} onClose={() => setInvoiceExpense(null)} onDone={() => { setInvoiceExpense(null); qc.invalidateQueries({ queryKey: ['accounting-expenses'] }); }} />}

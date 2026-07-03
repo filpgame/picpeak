@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { Plus, Workflow as WorkflowIcon, Inbox, Trash2, Pencil, FlaskConical } from 'lucide-react';
 import { Button, Card, Loading } from '../../../components/common';
+import { useMutationWithToast } from '../../../hooks';
 import { workflowsService, type WorkflowSummary, type WorkflowSavePayload, type WorkflowTestResult } from '../../../services/workflows.service';
 
 const NEW_WORKFLOW: WorkflowSavePayload = {
@@ -55,19 +56,17 @@ export const WorkflowsListPage: React.FC = () => {
     onError: (err: any) => toast.error(err?.response?.data?.error || (t('workflows.test.failed', 'Test run failed') as string)),
   });
 
-  const toggleMutation = useMutation({
+  const toggleMutation = useMutationWithToast({
     mutationFn: ({ id, enabled }: { id: number; enabled: boolean }) => workflowsService.setEnabled(id, enabled),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['workflows'] }),
-    onError: (err: any) => toast.error(err?.response?.data?.error || (t('common.error', 'Something went wrong') as string)),
+    invalidateKeys: [['workflows']],
+    errorMessage: t('common.error', 'Something went wrong') as string,
   });
 
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutationWithToast({
     mutationFn: (id: number) => workflowsService.remove(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['workflows'] });
-      toast.success(t('workflows.toast.deleted', 'Workflow deleted') as string);
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || (t('workflows.toast.deleteFailed', 'Could not delete workflow') as string)),
+    successMessage: t('workflows.toast.deleted', 'Workflow deleted') as string,
+    invalidateKeys: [['workflows']],
+    errorMessage: t('workflows.toast.deleteFailed', 'Could not delete workflow') as string,
   });
 
   const isEnabled = (w: WorkflowSummary) => w.enabled === true || w.enabled === 1;

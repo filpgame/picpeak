@@ -14,7 +14,7 @@ const secureImageService = require('../services/secureImageService');
 const logger = require('../utils/logger');
 const { resolvePhotoFilePath } = require('../services/photoResolver');
 const { getEventShareToken, resolveShareIdentifier, buildShareLinkVariants } = require('../services/shareLinkService');
-const { handleAsync } = require('../utils/routeHelpers');
+const { handleAsync, errorResponse } = require('../utils/routeHelpers');
 const { NotFoundError } = require('../utils/errors');
 const { ensureThumbnail, ensureHeroImage, ensurePreviewImage, withLocalCopy } = require('../services/imageProcessor');
 const downloadZipService = require('../services/downloadZipService');
@@ -213,8 +213,7 @@ router.get('/:slug/info', async (req, res) => {
       promo_markdown: event.promo_markdown || null
     });
   } catch (error) {
-    console.error('Error fetching gallery info:', error);
-    res.status(500).json({ error: 'Failed to fetch gallery info' });
+    errorResponse(res, error, 500, 'Failed to fetch gallery info');
   }
 });
 
@@ -739,8 +738,7 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
       })
     });
   } catch (error) {
-    console.error('Error fetching photos:', error);
-    res.status(500).json({ error: 'Failed to fetch photos' });
+    errorResponse(res, error, 500, 'Failed to fetch photos');
   }
 });
 
@@ -772,8 +770,7 @@ router.patch('/:slug/photos/:photoId/visibility', verifyGalleryAccess, async (re
 
     res.json({ message: 'Photo visibility updated', visibility });
   } catch (error) {
-    logger.error('Error updating photo visibility:', error);
-    res.status(500).json({ error: 'Failed to update photo visibility' });
+    errorResponse(res, error, 500, 'Failed to update photo visibility');
   }
 });
 
@@ -801,8 +798,7 @@ router.patch('/:slug/photos/visibility/bulk', verifyGalleryAccess, async (req, r
 
     res.json({ message: `${count} photos updated`, visibility });
   } catch (error) {
-    logger.error('Error bulk updating photo visibility:', error);
-    res.status(500).json({ error: 'Failed to update photo visibility' });
+    errorResponse(res, error, 500, 'Failed to update photo visibility');
   }
 });
 
@@ -916,13 +912,7 @@ router.get('/:slug/download/:photoId', verifyGalleryAccess, denySlideshowToken, 
       });
     }
   } catch (error) {
-    logger.error('Unexpected error processing gallery download', {
-      slug: req.params.slug,
-      photoId: req.params.photoId,
-      eventId: req.event?.id,
-      error: error.message,
-    });
-    res.status(500).json({ error: 'Failed to download photo' });
+    errorResponse(res, error, 500, 'Failed to download photo');
   }
 });
 
@@ -1093,12 +1083,7 @@ router.get('/:slug/download-all', verifyGalleryAccess, denySlideshowToken, async
       action: 'download_all'
     });
   } catch (error) {
-    logger.error('Error creating bulk gallery download', {
-      slug: req.params.slug,
-      eventId: req.event?.id,
-      error: error.message,
-    });
-    res.status(500).json({ error: 'Failed to create download archive' });
+    errorResponse(res, error, 500, 'Failed to create download archive');
   }
 });
 
@@ -1215,12 +1200,7 @@ router.post('/:slug/download-selected', verifyGalleryAccess, denySlideshowToken,
       action: 'download_selected'
     });
   } catch (error) {
-    logger.error('Error in download-selected:', {
-      slug: req.params.slug,
-      eventId: req.event?.id,
-      error: error.message,
-    });
-    res.status(500).json({ error: 'Failed to download selected photos' });
+    errorResponse(res, error, 500, 'Failed to download selected photos');
   }
 });
 
@@ -1452,13 +1432,7 @@ router.get('/:slug/photo/:photoId',
         }
       }
     } catch (error) {
-      logger.error('Error serving photo:', {
-        error: error.message,
-        stack: error.stack,
-        photoId: req.params.photoId,
-        eventId: req.event?.id
-      });
-      res.status(500).json({ error: 'Failed to serve photo' });
+      errorResponse(res, error, 500, 'Failed to serve photo');
     }
   }
 );
@@ -1549,12 +1523,7 @@ router.get('/:slug/thumbnail/:photoId',
         stream.pipe(res);
       }
     } catch (error) {
-      logger.error('Error serving thumbnail:', {
-        error: error.message,
-        photoId: req.params.photoId,
-        eventId: req.event?.id
-      });
-      res.status(500).json({ error: 'Failed to serve thumbnail' });
+      errorResponse(res, error, 500, 'Failed to serve thumbnail');
     }
   }
 );
@@ -1763,8 +1732,7 @@ router.get('/:slug/feedback-settings', verifyGalleryAccess, async (req, res) => 
       identity_mode: settings.identity_mode || 'simple'
     });
   } catch (error) {
-    console.error('Error fetching feedback settings:', error);
-    res.status(500).json({ error: 'Failed to fetch feedback settings' });
+    errorResponse(res, error, 500, 'Failed to fetch feedback settings');
   }
 });
 
@@ -1826,8 +1794,7 @@ router.post('/:eventId/upload', verifyGalleryAccess, denySlideshowToken, async (
         fs.mkdirSync(tempUploadDir, { recursive: true, mode: 0o755 });
         logger.info('Created temp upload directory:', tempUploadDir);
       } catch (mkdirErr) {
-        logger.error('Failed to create temp upload directory:', mkdirErr);
-        return res.status(500).json({ error: 'Server configuration error: unable to create upload directory' });
+        return errorResponse(res, mkdirErr, 500, 'Server configuration error: unable to create upload directory');
       }
     }
 
@@ -1877,7 +1844,7 @@ router.post('/:eventId/upload', verifyGalleryAccess, denySlideshowToken, async (
     // Handle upload
     upload(req, res, async (err) => {
       if (err) {
-        console.error('Upload error:', err);
+        logger.error('Upload error:', err);
         return res.status(400).json({ error: err.message });
       }
       
@@ -1911,13 +1878,11 @@ router.post('/:eventId/upload', verifyGalleryAccess, denySlideshowToken, async (
           errors: result.errors.length > 0 ? result.errors : undefined,
         });
       } catch (processError) {
-        console.error('Photo processing error:', processError);
-        res.status(500).json({ error: 'Failed to process photos' });
+        errorResponse(res, processError, 500, 'Failed to process photos');
       }
     });
   } catch (error) {
-    console.error('Upload route error:', error);
-    res.status(500).json({ error: 'Failed to upload photos' });
+    errorResponse(res, error, 500, 'Failed to upload photos');
   }
 });
 
@@ -1955,7 +1920,7 @@ router.get('/:slug/css-template', async (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour cache
     res.send(template.css_content);
   } catch (error) {
-    console.error('Get CSS template error:', error);
+    logger.error('Get CSS template error:', error);
     res.status(500).send('/* Error loading template */');
   }
 });

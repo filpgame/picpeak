@@ -1,7 +1,6 @@
 export { AdminLayout } from './AdminLayout';
 export { AdminSidebar } from './AdminSidebar';
 export { AdminHeader } from './AdminHeader';
-export { ThemeCustomizer } from './ThemeCustomizer';
 export { PasswordChangeModal } from './PasswordChangeModal';
 export { AdminAuthWrapper } from './AdminAuthWrapper';
 export { PhotoUpload } from './PhotoUpload';

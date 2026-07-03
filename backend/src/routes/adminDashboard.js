@@ -6,6 +6,7 @@ const { sanitizeDays, addDateRangeCondition } = require('../utils/sqlSecurity');
 const { formatBoolean } = require('../utils/dbCompat');
 const { resolveAdapter } = require('../services/trackers');
 const logger = require('../utils/logger');
+const { errorResponse, getPagination } = require('../utils/routeHelpers');
 const router = express.Router();
 
 /**
@@ -126,16 +127,15 @@ router.get('/stats', adminAuth, requirePermission('analytics.view'), async (req,
       totalEvents: totalEvents.count || 0
     });
   } catch (error) {
-    console.error('Dashboard stats error:', error);
-    res.status(500).json({ error: 'Failed to fetch dashboard statistics' });
+    errorResponse(res, error, 500, 'Failed to fetch dashboard statistics');
   }
 });
 
 // Get recent activity
 router.get('/activity', adminAuth, requirePermission('analytics.view'), async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
-    
+    const { limit } = getPagination(req, { limit: 10 });
+
     const activities = await db('activity_logs')
       .select('activity_logs.*', 'events.event_name')
       .leftJoin('events', 'activity_logs.event_id', 'events.id')
@@ -155,7 +155,7 @@ router.get('/activity', adminAuth, requirePermission('analytics.view'), async (r
           if (typeof activity.metadata === 'object') return activity.metadata;
           return JSON.parse(activity.metadata);
         } catch (e) {
-          console.warn('Failed to parse metadata for activity:', activity.id, e.message);
+          logger.warn('Failed to parse metadata for activity:', activity.id, e.message);
           return {};
         }
       })(),
@@ -164,8 +164,7 @@ router.get('/activity', adminAuth, requirePermission('analytics.view'), async (r
 
     res.json(formattedActivities);
   } catch (error) {
-    console.error('Activity log error:', error);
-    res.status(500).json({ error: 'Failed to fetch activity log' });
+    errorResponse(res, error, 500, 'Failed to fetch activity log');
   }
 });
 
@@ -233,7 +232,7 @@ router.get('/health', adminAuth, requirePermission('settings.view'), async (req,
       }
     });
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error('Health check error:', error);
     res.status(500).json({ 
       overall: 'error',
       error: 'Failed to check system health' 
@@ -400,8 +399,7 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
       }
     });
   } catch (error) {
-    console.error('Analytics error:', error);
-    res.status(500).json({ error: 'Failed to fetch analytics data' });
+    errorResponse(res, error, 500, 'Failed to fetch analytics data');
   }
 });
 
@@ -586,8 +584,7 @@ router.get('/crm-stats', adminAuth, async (req, res) => {
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    require('../utils/logger').error('CRM stats error:', error);
-    res.status(500).json({ error: 'Failed to load CRM stats' });
+    errorResponse(res, error, 500, 'Failed to load CRM stats');
   }
 });
 

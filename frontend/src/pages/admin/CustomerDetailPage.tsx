@@ -32,6 +32,7 @@ import { CustomerCrmPanels } from '../../components/admin/CustomerCrmPanels';
 import { HoursSection } from '../../components/admin/HoursSection';
 import { formatMoney } from '../../components/admin/LineItemsTable';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
+import { useMutationWithToast, useModal } from '../../hooks';
 import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
 
 type EditableFields =
@@ -101,13 +102,13 @@ export const CustomerDetailPage: React.FC = () => {
   };
 
   const [form, setForm] = useState<Partial<Pick<CustomerAccountDetail, EditableFields>>>({});
-  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
-  const [confirmErase, setConfirmErase] = useState(false);
+  const deactivateModal = useModal();
+  const eraseModal = useModal();
   // Drives the "Manage galleries" modal launched from the Assigned
   // events card. We hold open-state here (rather than inside the
   // dialog) so the parent decides when to mount/unmount and the
   // dialog can hard-reset its internal state per open.
-  const [assignedDialogOpen, setAssignedDialogOpen] = useState(false);
+  const assignedDialog = useModal();
 
   // Hydrate the form from the fetched record once. We deliberately do NOT
   // re-sync on every refetch so an admin's in-progress edits aren't blown
@@ -187,10 +188,10 @@ export const CustomerDetailPage: React.FC = () => {
    * Confirm dialog ahead of the click is surfaced via the same modal
    * pattern as deactivate.
    */
-  const passwordResetMutation = useMutation({
+  const passwordResetMutation = useMutationWithToast({
     mutationFn: () => customerAdminService.sendPasswordReset(customerId),
-    onSuccess: () => toast.success(t('customers.detail.passwordReset.success', 'Password reset email sent')),
-    onError: () => toast.error(t('customers.detail.passwordReset.error', 'Could not send password reset')),
+    successMessage: t('customers.detail.passwordReset.success', 'Password reset email sent'),
+    errorMessage: () => t('customers.detail.passwordReset.error', 'Could not send password reset'),
   });
 
   // Promote a passive customer to active by firing the standard
@@ -219,25 +220,21 @@ export const CustomerDetailPage: React.FC = () => {
   // before the configured day. Surfaces backend errors verbatim so
   // admin sees "No pending monthly bill" / "Draft is empty" when the
   // queue isn't ready.
-  const triggerMonthlyBillMutation = useMutation({
+  const triggerMonthlyBillMutation = useMutationWithToast({
     mutationFn: () => customerAdminService.triggerMonthlyBill(customerId),
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-customer', customerId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-customer-hour-entries', customerId] });
+    invalidateKeys: [
+      ['admin-customer', customerId],
+      ['admin-customer-hour-entries', customerId],
       // Clear the draft preview so the list collapses to empty
       // immediately after the trigger ships — a new draft is minted
       // on the next createInvoice / hour-entry append.
-      queryClient.invalidateQueries({ queryKey: ['admin-customer-monthly-draft', customerId] });
-      toast.success(
-        t('customers.billing.triggered',
-          'Monthly bill issued: {{number}}',
-          { number: result.invoiceNumber }),
-      );
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.error
-        || t('customers.billing.triggerError', 'Could not trigger the monthly bill.'));
-    },
+      ['admin-customer-monthly-draft', customerId],
+    ],
+    successMessage: (result) =>
+      t('customers.billing.triggered',
+        'Monthly bill issued: {{number}}',
+        { number: result.invoiceNumber }),
+    errorMessage: t('customers.billing.triggerError', 'Could not trigger the monthly bill.'),
   });
 
   const deactivateMutation = useMutation({
@@ -252,14 +249,11 @@ export const CustomerDetailPage: React.FC = () => {
   });
 
   /** Re-enable login for a deactivated customer. */
-  const reactivateMutation = useMutation({
+  const reactivateMutation = useMutationWithToast({
     mutationFn: () => customerAdminService.reactivate(customerId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-customer', customerId] });
-      queryClient.invalidateQueries({ queryKey: ['admin-customers'] });
-      toast.success(t('customers.reactivate.success', 'Customer reactivated'));
-    },
-    onError: () => toast.error(t('customers.reactivate.error', 'Could not reactivate customer')),
+    invalidateKeys: [['admin-customer', customerId], ['admin-customers']],
+    successMessage: t('customers.reactivate.success', 'Customer reactivated'),
+    errorMessage: () => t('customers.reactivate.error', 'Could not reactivate customer'),
   });
 
   /**
@@ -466,7 +460,7 @@ export const CustomerDetailPage: React.FC = () => {
             variant="outline"
             size="sm"
             leftIcon={<SettingsIcon className="w-4 h-4" />}
-            onClick={() => setAssignedDialogOpen(true)}
+            onClick={() => assignedDialog.open()}
             disabled={!customer.isActive}
           >
             {t('customers.detail.manageEvents', 'Manage galleries')}
@@ -495,13 +489,13 @@ export const CustomerDetailPage: React.FC = () => {
 
       <AssignedEventsDialog
         customerId={customer.id}
-        isOpen={assignedDialogOpen}
+        isOpen={assignedDialog.isOpen}
         initial={customer.events.map((ev) => ({
           id: ev.id,
           eventName: ev.eventName,
           eventDate: ev.eventDate || null,
         }))}
-        onClose={() => setAssignedDialogOpen(false)}
+        onClose={() => assignedDialog.close()}
         onSaved={() => {
           // Parent refetch is handled by the dialog's invalidateQueries.
         }}
@@ -960,7 +954,7 @@ export const CustomerDetailPage: React.FC = () => {
             <Button
               variant="outline"
               leftIcon={<Trash2 className="w-4 h-4" />}
-              onClick={() => setConfirmDeactivate(true)}
+              onClick={() => deactivateModal.open()}
             >
               {t('customers.deactivate.button', 'Deactivate')}
             </Button>
@@ -981,7 +975,7 @@ export const CustomerDetailPage: React.FC = () => {
               <Button
                 variant="outline"
                 leftIcon={<Trash2 className="w-4 h-4 text-red-600" />}
-                onClick={() => setConfirmErase(true)}
+                onClick={() => eraseModal.open()}
               >
                 <span className="text-red-600">
                   {t('customers.erase.button', 'Erase customer data')}
@@ -1000,7 +994,7 @@ export const CustomerDetailPage: React.FC = () => {
         </Button>
       </div>
 
-      {confirmDeactivate && (
+      {deactivateModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-md rounded-xl shadow-lg bg-white dark:bg-neutral-900">
             <div className="p-6">
@@ -1017,13 +1011,13 @@ export const CustomerDetailPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => setConfirmDeactivate(false)}>
+                <Button variant="outline" onClick={() => deactivateModal.close()}>
                   {t('common.cancel', 'Cancel')}
                 </Button>
                 <Button
                   variant="primary"
                   isLoading={deactivateMutation.isPending}
-                  onClick={() => { deactivateMutation.mutate(); setConfirmDeactivate(false); }}
+                  onClick={() => { deactivateMutation.mutate(); deactivateModal.close(); }}
                 >
                   {t('common.confirm', 'Confirm')}
                 </Button>
@@ -1037,7 +1031,7 @@ export const CustomerDetailPage: React.FC = () => {
           "irreversible" copy + red Confirm button so the click feels
           deliberate. The action anonymizes PII in place; assignments
           and audit-log references are preserved. */}
-      {confirmErase && (
+      {eraseModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-md rounded-xl shadow-lg bg-white dark:bg-neutral-900">
             <div className="p-6">
@@ -1054,14 +1048,14 @@ export const CustomerDetailPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => setConfirmErase(false)}>
+                <Button variant="outline" onClick={() => eraseModal.close()}>
                   {t('common.cancel', 'Cancel')}
                 </Button>
                 <button
                   type="button"
                   className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
                   disabled={eraseMutation.isPending}
-                  onClick={() => { eraseMutation.mutate(); setConfirmErase(false); }}
+                  onClick={() => { eraseMutation.mutate(); eraseModal.close(); }}
                 >
                   {eraseMutation.isPending
                     ? t('customers.erase.confirmInFlight', 'Erasing…')

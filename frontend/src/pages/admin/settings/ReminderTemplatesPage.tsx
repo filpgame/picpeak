@@ -31,8 +31,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Save, AlertTriangle, Workflow as WorkflowIcon } from 'lucide-react';
 import { Button, Card, Loading, Input } from '../../../components/common';
 import { SUPPORTED_LANGUAGES } from '../../../components/common/LanguageSelector';
@@ -41,6 +40,7 @@ import { eventTypesService } from '../../../services/eventTypes.service';
 import { emailService, type EmailTemplateTranslation } from '../../../services/email.service';
 import { settingsService } from '../../../services/settings.service';
 import { useFeatureFlags } from '../../../contexts/FeatureFlagsContext';
+import { useMutationWithToast } from '../../../hooks';
 
 const TEMPLATE_KEY_DEFAULT = 'event_reminder_default';
 const TEMPLATE_KEY_PREFIX = 'event_reminder_';
@@ -60,7 +60,6 @@ interface SidebarRow {
 
 export const ReminderTemplatesPage: React.FC = () => {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
 
   // Global on/off + lead time: owned by the "Pre-event reminder" workflow when
   // the engine is live; otherwise the legacy crm_event_reminders_* settings drive
@@ -86,16 +85,14 @@ export const ReminderTemplatesPage: React.FC = () => {
     const d = Number(settings.crm_event_reminders_days_before);
     setDaysBefore(Number.isFinite(d) ? d : 2);
   }, [settings]);
-  const saveSettingsMutation = useMutation({
+  const saveSettingsMutation = useMutationWithToast({
     mutationFn: () => settingsService.updateSettings({
       crm_event_reminders_enabled: enabled,
       crm_event_reminders_days_before: daysBefore,
     }),
-    onSuccess: () => {
-      toast.success(t('reminderTemplates.settingsSaved', 'Reminder settings saved.'));
-      queryClient.invalidateQueries({ queryKey: ['reminder-settings'] });
-    },
-    onError: () => toast.error(t('reminderTemplates.settingsSaveError', 'Could not save reminder settings.')),
+    successMessage: t('reminderTemplates.settingsSaved', 'Reminder settings saved.'),
+    invalidateKeys: [['reminder-settings']],
+    errorMessage: () => t('reminderTemplates.settingsSaveError', 'Could not save reminder settings.'),
   });
 
   // ---- Event types catalog ---------------------------------------------
@@ -195,7 +192,7 @@ export const ReminderTemplatesPage: React.FC = () => {
   }, [selectedKey, selectedTemplate, defaultTemplate]);
 
   // ---- Save -------------------------------------------------------------
-  const saveMutation = useMutation({
+  const saveMutation = useMutationWithToast({
     mutationFn: async () => {
       // Only send non-empty translations so we don't clobber DB rows
       // for locales the admin hasn't touched.
@@ -220,15 +217,9 @@ export const ReminderTemplatesPage: React.FC = () => {
         });
       }
     },
-    onSuccess: () => {
-      toast.success(t('reminderTemplates.saved', 'Template saved.'));
-      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-      queryClient.invalidateQueries({ queryKey: ['email-template', selectedKey] });
-    },
-    onError: (err: unknown) => {
-      const e = err as { response?: { data?: { error?: string } } };
-      toast.error(e?.response?.data?.error || t('reminderTemplates.saveError', 'Could not save template.'));
-    },
+    successMessage: t('reminderTemplates.saved', 'Template saved.'),
+    invalidateKeys: [['email-templates'], ['email-template', selectedKey]],
+    errorMessage: t('reminderTemplates.saveError', 'Could not save template.'),
   });
 
   // Translation completeness pill for the sidebar — matches the email

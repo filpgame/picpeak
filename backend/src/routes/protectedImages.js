@@ -8,6 +8,7 @@ const { getStorage } = require('../services/storage');
 const { resolvePhotoStorageKey, resolvePhotoFilePath } = require('../services/photoResolver');
 const { withLocalCopy } = require('../services/imageProcessor');
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 const { timingSafeEqualStr } = require('../utils/timingSafe');
 
 const router = express.Router();
@@ -165,7 +166,7 @@ router.get('/:slug/photo/:photoId/view', verifyGalleryAccess, async (req, res) =
     res.send(finalImage);
     
   } catch (error) {
-    console.error('Error serving protected image:', error);
+    logger.error('Error serving protected image:', error);
     res.status(500).json({ error: 'Failed to serve image' });
   }
 });
@@ -209,7 +210,7 @@ router.post('/:slug/photo/:photoId/generate-secure-token', verifyGalleryAccess, 
     });
     
   } catch (error) {
-    console.error('Error generating secure token:', error);
+    logger.error('Error generating secure token:', error);
     res.status(500).json({ error: 'Failed to generate token' });
   }
 });
@@ -243,7 +244,7 @@ router.post('/:slug/photo/:photoId/generate-url', verifyGalleryAccess, async (re
     });
     
   } catch (error) {
-    console.error('Error generating signed URL:', error);
+    logger.error('Error generating signed URL:', error);
     res.status(500).json({ error: 'Failed to generate URL' });
   }
 });
@@ -305,7 +306,7 @@ router.get('/:slug/photo/:photoId/signed/:token', async (req, res) => {
     res.send(imageBuffer);
     
   } catch (error) {
-    console.error('Error serving signed image:', error);
+    logger.error('Error serving signed image:', error);
     res.status(500).json({ error: 'Failed to serve image' });
   }
 });

@@ -7,17 +7,16 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Check, X } from 'lucide-react';
 import { Button, Card, Loading } from '../../../components/common';
 import { workflowsService, type WorkflowApproval } from '../../../services/workflows.service';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../../hooks';
 
 export const WorkflowApprovalsPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const { formatDateTime } = useLocalizedDate();
 
   const { data: approvals, isLoading } = useQuery({
@@ -25,13 +24,11 @@ export const WorkflowApprovalsPage: React.FC = () => {
     queryFn: () => workflowsService.approvals(),
   });
 
-  const actMutation = useMutation({
+  const actMutation = useMutationWithToast({
     mutationFn: ({ id, action }: { id: number; action: 'confirm' | 'deny' }) => workflowsService.actApproval(id, action),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['workflow-approvals'] });
-      toast.success(t('workflows.approvals.recorded', 'Response recorded') as string);
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || (t('common.error', 'Something went wrong') as string)),
+    successMessage: t('workflows.approvals.recorded', 'Response recorded') as string,
+    invalidateKeys: [['workflow-approvals']],
+    errorMessage: t('common.error', 'Something went wrong') as string,
   });
 
   const promptOf = (a: WorkflowApproval) => (a.payload && (a.payload.prompt as string)) || t('workflows.approvals.defaultPrompt', 'A workflow needs your confirmation.');

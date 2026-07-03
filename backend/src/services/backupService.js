@@ -10,6 +10,7 @@ const cron = require('node-cron');
 const { db } = require('../database/db');
 const { queueEmail } = require('./emailProcessor');
 const logger = require('../utils/logger');
+const { formatBytes } = require('../utils/formatBytes');
 const { formatBoolean } = require('../utils/dbCompat');
 const backupManifest = require('./backupManifest');
 const S3StorageAdapter = require('./storage/s3Storage');
@@ -778,19 +779,6 @@ async function performRsyncBackup(config, files) {
   };
 }
 
-function formatBytes(bytes, decimals = 2) {
-  if (!bytes) {
-    return '0 Bytes';
-  }
-
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-}
-
 async function performS3Backup(config, files) {
   try {
     const bucket = config.backup_s3_bucket;
@@ -1189,7 +1177,7 @@ async function runBackupInternal(isManual = false) {
 
 async function startBackupService() {
   try {
-  const config = await resolveConfigWithFallback();
+    const config = await resolveConfigWithFallback();
     if (!config || !normalizeBoolean(config.backup_enabled)) {
       if (backupJob) {
         backupJob.stop();

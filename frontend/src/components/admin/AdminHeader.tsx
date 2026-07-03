@@ -9,6 +9,7 @@ import { useAdminAuth } from '../../contexts';
 import { useAdminDarkMode } from '../../contexts/AdminDarkModeContext';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import { usePublicSettings } from '../../hooks/usePublicSettings';
+import { useModal } from '../../hooks';
 import { PasswordChangeModal } from './PasswordChangeModal';
 import { LanguageSelector, SUPPORTED_LANGUAGES } from '../common';
 import { notificationsService } from '../../services/notifications.service';
@@ -25,10 +26,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const { isDark, toggle: toggleDarkMode, forcedMode } = useAdminDarkMode();
   const { t, i18n } = useTranslation();
   const { format, formatDistanceToNow } = useLocalizedDate();
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showUserMenuLangSection, setShowUserMenuLangSection] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const userMenuModal = useModal();
+  const userMenuLangSectionModal = useModal();
+  const notificationsModal = useModal();
+  const passwordModal = useModal();
   const queryClient = useQueryClient();
 
   const { data: brandingSettings, isLoading: brandingLoading } = usePublicSettings();
@@ -138,8 +139,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   // outer dropdown closes, so re-opening it doesn't surprise the user
   // with the language list already expanded from the previous session.
   const closeUserMenu = () => {
-    setShowUserMenu(false);
-    setShowUserMenuLangSection(false);
+    userMenuModal.close();
+    userMenuLangSectionModal.close();
   };
   const handleUserMenuLangSelect = (languageCode: string) => {
     i18n.changeLanguage(languageCode);
@@ -150,7 +151,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const notificationRef = useRef<HTMLDivElement>(null);
 
   useOnClickOutside(userMenuRef, closeUserMenu);
-  useOnClickOutside(notificationRef, () => setShowNotifications(false));
+  useOnClickOutside(notificationRef, notificationsModal.close);
 
   const handleLogout = () => {
     logout();
@@ -159,8 +160,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
 
   // Fetch notifications
   const { data: notificationsData } = useQuery({
-    queryKey: ['notifications', showNotifications],
-    queryFn: () => notificationsService.getNotifications(showNotifications, 20),
+    queryKey: ['notifications', notificationsModal.isOpen],
+    queryFn: () => notificationsService.getNotifications(notificationsModal.isOpen, 20),
     refetchInterval: 60000, // Refetch every minute
   });
 
@@ -297,7 +298,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
             {/* Notifications */}
             <div className="relative" ref={notificationRef}>
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={notificationsModal.toggle}
                 className="relative p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
               >
                 <Bell className="w-5 h-5" />
@@ -307,7 +308,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               </button>
 
               {/* Notifications dropdown */}
-              {showNotifications && (
+              {notificationsModal.isOpen && (
                 <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700">
                   <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-700 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('admin.notifications')}</h3>
@@ -368,7 +369,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                   {notifications.length > 0 && (
                     <div className="px-4 py-2 border-t border-neutral-100 dark:border-neutral-700 text-center">
                       <button
-                        onClick={() => setShowNotifications(false)}
+                        onClick={notificationsModal.close}
                         className="text-sm text-accent hover:opacity-80"
                       >
                         {t('admin.close')}
@@ -382,7 +383,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
             {/* User menu */}
             <div className="relative" ref={userMenuRef}>
               <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
+                onClick={userMenuModal.toggle}
                 className="flex items-center gap-3 p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
               >
                 <div className="text-right hidden sm:block">
@@ -395,7 +396,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               </button>
 
               {/* User dropdown */}
-              {showUserMenu && (
+              {userMenuModal.isOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 py-1">
                   <div className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-700 sm:hidden">
                     <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{user?.username}</p>
@@ -408,16 +409,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                       so the menu isn't 8 rows taller by default. */}
                   <div className="sm:hidden border-b border-neutral-100 dark:border-neutral-700">
                     <button
-                      onClick={() => setShowUserMenuLangSection(!showUserMenuLangSection)}
+                      onClick={userMenuLangSectionModal.toggle}
                       className="w-full px-4 py-2 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 flex items-center gap-3"
-                      aria-expanded={showUserMenuLangSection}
+                      aria-expanded={userMenuLangSectionModal.isOpen}
                     >
                       <Globe className="w-4 h-4" />
                       <span className="flex-1">{t('common.language', 'Language')}</span>
                       <currentLanguage.Flag className="w-4 h-4" />
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenuLangSection ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-4 h-4 transition-transform ${userMenuLangSectionModal.isOpen ? 'rotate-180' : ''}`} />
                     </button>
-                    {showUserMenuLangSection && (
+                    {userMenuLangSectionModal.isOpen && (
                       <div className="bg-neutral-50 dark:bg-neutral-900 py-1">
                         {SUPPORTED_LANGUAGES.map((language) => (
                           <button
@@ -449,7 +450,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                   <button
                     onClick={() => {
                       closeUserMenu();
-                      setShowPasswordModal(true);
+                      passwordModal.open();
                     }}
                     className="w-full px-4 py-2 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 flex items-center gap-3"
                   >
@@ -471,9 +472,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
       </div>
       
       {/* Password Change Modal */}
-      <PasswordChangeModal 
-        isOpen={showPasswordModal} 
-        onClose={() => setShowPasswordModal(false)} 
+      <PasswordChangeModal
+        isOpen={passwordModal.isOpen}
+        onClose={passwordModal.close}
       />
     </header>
   );

@@ -14,6 +14,7 @@ import { toast } from 'react-toastify';
 import { Save, Server, User, Lock, Eye, EyeOff, FolderSearch, PlugZap, Mailbox, RefreshCw } from 'lucide-react';
 import { Button, Card, Input, Loading } from '../common';
 import { emailService, type IncomingMailConfig, type ImapFolder } from '../../services/email.service';
+import { useMutationWithToast, useModal } from '../../hooks';
 
 const labelCls = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1';
 const selectCls = 'w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-accent-dark';
@@ -23,14 +24,14 @@ export const IncomingMailConfigCard: React.FC = () => {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['incoming-mail-config'], queryFn: () => emailService.getIncomingConfig() });
   const [cfg, setCfg] = useState<IncomingMailConfig>({ imap_host: '', imap_port: 993, imap_secure: true, imap_user: '', imap_pass: '', imap_folder: 'INBOX' });
-  const [showPassword, setShowPassword] = useState(false);
+  const passwordVisibilityModal = useModal();
   const [folders, setFolders] = useState<ImapFolder[] | null>(null);
 
   useEffect(() => { if (data) setCfg(data); }, [data]);
 
   const set = (k: keyof IncomingMailConfig, v: any) => setCfg((c) => ({ ...c, [k]: v }));
 
-  const save = useMutation({
+  const save = useMutationWithToast({
     mutationFn: () => {
       // Mirror the SMTP card's client-side required guard. Host + port +
       // username are needed for the poller to authenticate (getImapConfig
@@ -40,20 +41,21 @@ export const IncomingMailConfigCard: React.FC = () => {
       }
       return emailService.updateIncomingConfig(cfg);
     },
-    onSuccess: () => { toast.success(t('email.incoming.savedToast', 'Incoming mail settings saved.')); qc.invalidateQueries({ queryKey: ['incoming-mail-config'] }); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e?.response?.data?.errors?.[0]?.msg || e.message || 'Failed'),
+    successMessage: t('email.incoming.savedToast', 'Incoming mail settings saved.'),
+    invalidateKeys: [['incoming-mail-config']],
+    errorMessage: (e: any) => e?.response?.data?.error || e?.response?.data?.errors?.[0]?.msg || e.message || 'Failed',
   });
 
-  const test = useMutation({
+  const test = useMutationWithToast({
     mutationFn: () => emailService.testIncoming(cfg),
-    onSuccess: (r) => toast.success(t('email.incoming.testOk', 'Connected to {{folder}} — {{messages}} messages, {{unseen}} unread.', { folder: r.folder, messages: r.messages, unseen: r.unseen })),
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || t('email.incoming.testFailed', 'Connection failed.')),
+    successMessage: (r) => t('email.incoming.testOk', 'Connected to {{folder}} — {{messages}} messages, {{unseen}} unread.', { folder: r.folder, messages: r.messages, unseen: r.unseen }),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || t('email.incoming.testFailed', 'Connection failed.'),
   });
 
-  const roundTrip = useMutation({
+  const roundTrip = useMutationWithToast({
     mutationFn: () => emailService.roundTripIncoming(),
-    onSuccess: (r) => toast.success(t('email.incoming.roundTripOk', 'Round-trip OK — delivered to {{recipient}} in {{seconds}}s.', { recipient: r.recipient, seconds: r.seconds })),
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || t('email.incoming.roundTripFailed', 'Round-trip test failed.')),
+    successMessage: (r) => t('email.incoming.roundTripOk', 'Round-trip OK — delivered to {{recipient}} in {{seconds}}s.', { recipient: r.recipient, seconds: r.seconds }),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || t('email.incoming.roundTripFailed', 'Round-trip test failed.'),
   });
 
   const poll = useMutation({
@@ -143,15 +145,15 @@ export const IncomingMailConfigCard: React.FC = () => {
           <label className={labelCls}>{t('email.incoming.pass', 'Password')}</label>
           <div className="relative">
             <Input
-              type={showPassword ? 'text' : 'password'}
+              type={passwordVisibilityModal.isOpen ? 'text' : 'password'}
               value={cfg.imap_pass}
               onChange={(e) => set('imap_pass', e.target.value)}
               autoComplete="new-password"
               placeholder={t('email.enterPassword', 'Enter password')}
               leftIcon={<Lock className="w-5 h-5 text-neutral-400" />}
             />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600">
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            <button type="button" onClick={passwordVisibilityModal.toggle} className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600">
+              {passwordVisibilityModal.isOpen ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
         </div>

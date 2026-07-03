@@ -33,7 +33,7 @@ const { getAppSetting } = require('../utils/appSettings');
 const { cleanNetMinor } = require('../utils/invoiceRounding');
 const { AppError } = require('../utils/errors');
 const { formatBoolean } = require('../utils/dbCompat');
-const { claimNextSequence } = require('../utils/documentSequences');
+const { nextDocumentNumber } = require('../utils/documentSequences');
 const { formatShortDate } = require('../utils/dateFormatter');
 const businessProfileService = require('./businessProfileService');
 const { buildIssuerBlock, buildRecipientBlock } = require('./_renderContext');
@@ -300,28 +300,12 @@ async function insertLineItemsHierarchical(trx, tableName, ownerColumn, ownerId,
   }
 }
 
-function formatNumberInTemplate(format, year, seq) {
-  // Tokens: {YEAR}, {MONTH}, {SEQ:04d}. Defaults handle padding via
-  // a tiny formatter, kept inline to avoid a new dependency.
-  return format
-    .replace(/\{YEAR\}/g, String(year))
-    .replace(/\{MONTH\}/g, String(new Date().getMonth() + 1).padStart(2, '0'))
-    .replace(/\{SEQ:(\d+)d\}/g, (_, pad) => String(seq).padStart(parseInt(pad, 10), '0'))
-    .replace(/\{SEQ\}/g, String(seq));
-}
-
 // Atomic gap-free quote number generator. See utils/documentSequences.js
 // for the locking story; migration 132 created the underlying table.
 // The previous SELECT-MAX-then-INSERT path raced under concurrent
 // admin creates and could emit `Q-2026-AB12C3` after 5 retries.
 async function nextQuoteNumber(trx) {
-  // Read through `trx` when present — getAppSetting on the global db inside an
-  // open transaction deadlocks the single-connection SQLite pool (prepare_quote
-  // runs createQuote unattended from a workflow).
-  const format = (await getAppSetting('crm_quotes_number_format', null, trx || db)) || 'Q-{YEAR}-{SEQ:04d}';
-  const year = new Date().getFullYear();
-  const seq = await claimNextSequence('quote', year, trx);
-  return formatNumberInTemplate(format, year, seq);
+  return nextDocumentNumber('quote', 'crm_quotes_number_format', 'Q-{YEAR}-{SEQ:04d}', trx);
 }
 
 /**
@@ -416,40 +400,40 @@ async function listQuotes({ filters = {}, sort = 'issue_desc', page = 1, pageSiz
     const total = ensureInt(totalRow?.total || 0);
 
     switch (sort) {
-      // "Newest" / "Oldest" sort by CREATION time, not issue_date —
-      // the latter is admin-controlled (retro-dated quotes, future-
-      // dated quotes for accruals) and drifts from actual chronology.
-      // Sorting by created_at always puts a just-saved quote at the
-      // top of the "Newest first" list.
-      case 'oldest':
-        query = query.orderBy('quotes.created_at', 'asc').orderBy('quotes.id', 'asc');
-        break;
-      case 'issue_asc':
-        query = query.orderBy('quotes.issue_date', 'asc').orderBy('quotes.id', 'asc');
-        break;
-      case 'issue_desc':
-        query = query.orderBy('quotes.issue_date', 'desc').orderBy('quotes.id', 'desc');
-        break;
-      case 'customer_asc':
-        query = query
-          .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) asc')
-          .orderBy('quotes.id', 'desc');
-        break;
-      case 'customer_desc':
-        query = query
-          .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) desc')
-          .orderBy('quotes.id', 'desc');
-        break;
-      case 'value_asc':
-        query = query.orderBy('quotes.total_amount_minor', 'asc');
-        break;
-      case 'value_desc':
-        query = query.orderBy('quotes.total_amount_minor', 'desc');
-        break;
-      case 'newest':
-      default:
-        query = query.orderBy('quotes.created_at', 'desc').orderBy('quotes.id', 'desc');
-        break;
+    // "Newest" / "Oldest" sort by CREATION time, not issue_date —
+    // the latter is admin-controlled (retro-dated quotes, future-
+    // dated quotes for accruals) and drifts from actual chronology.
+    // Sorting by created_at always puts a just-saved quote at the
+    // top of the "Newest first" list.
+    case 'oldest':
+      query = query.orderBy('quotes.created_at', 'asc').orderBy('quotes.id', 'asc');
+      break;
+    case 'issue_asc':
+      query = query.orderBy('quotes.issue_date', 'asc').orderBy('quotes.id', 'asc');
+      break;
+    case 'issue_desc':
+      query = query.orderBy('quotes.issue_date', 'desc').orderBy('quotes.id', 'desc');
+      break;
+    case 'customer_asc':
+      query = query
+        .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) asc')
+        .orderBy('quotes.id', 'desc');
+      break;
+    case 'customer_desc':
+      query = query
+        .orderByRaw('COALESCE(customer_accounts.company_name, customer_accounts.last_name, customer_accounts.email) desc')
+        .orderBy('quotes.id', 'desc');
+      break;
+    case 'value_asc':
+      query = query.orderBy('quotes.total_amount_minor', 'asc');
+      break;
+    case 'value_desc':
+      query = query.orderBy('quotes.total_amount_minor', 'desc');
+      break;
+    case 'newest':
+    default:
+      query = query.orderBy('quotes.created_at', 'desc').orderBy('quotes.id', 'desc');
+      break;
     }
 
     const offset = Math.max(0, (page - 1) * pageSize);
@@ -1524,8 +1508,8 @@ async function convertToInvoiceOnly(quoteId, adminId, options = {}) {
 
   const paymentTermSnapshot = quote.payment_term_snapshot
     ? (typeof quote.payment_term_snapshot === 'string'
-        ? JSON.parse(quote.payment_term_snapshot)
-        : quote.payment_term_snapshot)
+      ? JSON.parse(quote.payment_term_snapshot)
+      : quote.payment_term_snapshot)
     : null;
 
   const invoiceService = require('./invoiceService');
@@ -1637,8 +1621,8 @@ async function convertToEvent(quoteId, adminId, options = {}) {
 
   const paymentTermSnapshot = quote.payment_term_snapshot
     ? (typeof quote.payment_term_snapshot === 'string'
-        ? JSON.parse(quote.payment_term_snapshot)
-        : quote.payment_term_snapshot)
+      ? JSON.parse(quote.payment_term_snapshot)
+      : quote.payment_term_snapshot)
     : null;
 
   // Lazy import to avoid the circular dep.
