@@ -835,13 +835,14 @@ export const EventInformationCard: React.FC<EventInformationCardProps> = ({
                 }`}>
                   {event.protection_level || 'standard'}
                 </span>
-                {event.disable_right_click && (
+                {/* !! on the next three — SQLite integer booleans render literal "0" when falsy */}
+                {!!event.disable_right_click && (
                   <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded">
                     <MousePointer className="w-3 h-3 mr-1" />
                     {t('events.rightClickBlocked', 'Right-click blocked')}
                   </span>
                 )}
-                {event.enable_devtools_protection && (
+                {!!event.enable_devtools_protection && (
                   <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded">
                     <Monitor className="w-3 h-3 mr-1" />
                     {t('events.devtoolsDetection', 'DevTools detection')}
@@ -853,7 +854,7 @@ export const EventInformationCard: React.FC<EventInformationCardProps> = ({
                     {t('events.downloadsDisabled', 'Downloads disabled')}
                   </span>
                 )}
-                {event.watermark_downloads && (
+                {!!event.watermark_downloads && (
                   <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded">
                     <Droplets className="w-3 h-3 mr-1" />
                     {t('events.watermarked', 'Watermarked')}

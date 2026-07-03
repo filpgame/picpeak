@@ -207,7 +207,8 @@ export const EventDetailsHeader: React.FC<EventDetailsHeaderProps> = ({
       </div>
 
       {/* Draft Banner */}
-      {event.is_draft && !event.is_archived && (
+      {/* !! — SQLite returns integer booleans; a bare 0 would render as literal "0" */}
+      {!!event.is_draft && !event.is_archived && (
         <Card className="p-4 mb-6 border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />

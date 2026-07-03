@@ -49,7 +49,8 @@ export const ClientAccessCard: React.FC<ClientAccessCardProps> = ({ event, refet
           </div>
         </label>
 
-        {event?.client_access_enabled && (
+        {/* !! — SQLite integer boolean; bare 0 renders as literal "0" */}
+        {!!event?.client_access_enabled && (
           <>
             {/* Set/Change PIN */}
             <div className="flex items-end gap-2">

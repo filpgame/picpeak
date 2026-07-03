@@ -24,6 +24,7 @@ const { normaliseEventTimeTriple } = require('../../services/eventService');
 const { hasColumnCached } = require('../../utils/schemaCache');
 const { requireEventOwnership } = require('../../middleware/ownership');
 const { getAppSetting } = require('../../utils/appSettings');
+const { clampIntOrUndefined } = require('../../utils/numericHelpers');
 const { getFrontendBaseUrl } = require('../../utils/frontendUrl');
 const downloadZipService = require('../../services/downloadZipService');
 const { validateHeroImageAnchor, getEventFieldRequirements, readBooleanSetting, getDownloadProtectionDefaults, getBrandingDefaults, getCustomerNameFromPayload, getCustomerEmailFromPayload, getCustomerPhoneFromPayload, isPhoneFieldEnabled, mapEventForApi, hasCustomerContactColumns, deleteEventCascade, SLIDESHOW_TRANSITIONS, SLIDESHOW_COLORFILTERS } = require('./helpers');
@@ -369,7 +370,13 @@ module.exports = (router) => {
       let slideshowSeed = {};
       if (await hasColumnCached('events', 'show_interval_ms')) {
         try {
-          const intP = (v, min, max) => (Number.isFinite(+v) ? Math.min(max, Math.max(min, parseInt(v, 10))) : undefined);
+          // parseInt-first: the previous `Number.isFinite(+v)` pre-check let
+          // NaN through for null/''/true (+null is 0, parseInt(null) is NaN),
+          // producing show_interval_ms=NaN in the INSERT — PG rejects that
+          // with "invalid input syntax for type integer" while SQLite
+          // silently stores NULL, so event creation 500'd on PG whenever the
+          // slideshow app_settings rows were absent.
+          const intP = (v, min, max) => clampIntOrUndefined(v, min, max);
           const oneOf = (v, allowed) => (allowed.includes(v) ? v : undefined);
           const i = intP(await getAppSetting('slideshow_interval_ms', undefined), 1000, 120000);
           const tr = oneOf(await getAppSetting('slideshow_transition', undefined), SLIDESHOW_TRANSITIONS);
