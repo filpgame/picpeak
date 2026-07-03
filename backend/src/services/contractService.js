@@ -39,7 +39,7 @@ const { db, withRetry, logActivity } = require('../database/db');
 const logger = require('../utils/logger');
 const { getAppSetting } = require('../utils/appSettings');
 const { AppError } = require('../utils/errors');
-const { claimNextSequence } = require('../utils/documentSequences');
+const { nextDocumentNumber } = require('../utils/documentSequences');
 const { hasColumnCached } = require('../utils/schemaCache');
 const { formatShortDate } = require('../utils/dateFormatter');
 const businessProfileService = require('./businessProfileService');
@@ -151,14 +151,6 @@ async function maybeStoreIp(ip) {
 // D.2 — `ensureInt` consolidated into utils/numericHelpers.
 const { ensureInt } = require('../utils/numericHelpers');
 
-function formatNumberInTemplate(format, year, seq) {
-  return format
-    .replace(/\{YEAR\}/g, String(year))
-    .replace(/\{MONTH\}/g, String(new Date().getMonth() + 1).padStart(2, '0'))
-    .replace(/\{SEQ:(\d+)d\}/g, (_, pad) => String(seq).padStart(parseInt(pad, 10), '0'))
-    .replace(/\{SEQ\}/g, String(seq));
-}
-
 /**
  * Gap-free per-year contract number sequence. See
  * utils/documentSequences.js for the locking story; migration 132
@@ -167,13 +159,7 @@ function formatNumberInTemplate(format, year, seq) {
  * emit `C-2026-AB12C3` after 5 retries.
  */
 async function nextContractNumber(trx) {
-  // Read through `trx` when present — getAppSetting on the global db inside an
-  // open transaction deadlocks the single-connection SQLite pool (the booking
-  // flow's prepare_contract action runs createFromQuote unattended).
-  const format = (await getAppSetting('crm_contracts_number_format', null, trx || db)) || 'C-{YEAR}-{SEQ:04d}';
-  const year = new Date().getFullYear();
-  const seq = await claimNextSequence('contract', year, trx);
-  return formatNumberInTemplate(format, year, seq);
+  return nextDocumentNumber('contract', 'crm_contracts_number_format', 'C-{YEAR}-{SEQ:04d}', trx);
 }
 
 /**

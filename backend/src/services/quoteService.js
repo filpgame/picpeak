@@ -33,7 +33,7 @@ const { getAppSetting } = require('../utils/appSettings');
 const { cleanNetMinor } = require('../utils/invoiceRounding');
 const { AppError } = require('../utils/errors');
 const { formatBoolean } = require('../utils/dbCompat');
-const { claimNextSequence } = require('../utils/documentSequences');
+const { nextDocumentNumber } = require('../utils/documentSequences');
 const { formatShortDate } = require('../utils/dateFormatter');
 const businessProfileService = require('./businessProfileService');
 const { buildIssuerBlock, buildRecipientBlock } = require('./_renderContext');
@@ -300,28 +300,12 @@ async function insertLineItemsHierarchical(trx, tableName, ownerColumn, ownerId,
   }
 }
 
-function formatNumberInTemplate(format, year, seq) {
-  // Tokens: {YEAR}, {MONTH}, {SEQ:04d}. Defaults handle padding via
-  // a tiny formatter, kept inline to avoid a new dependency.
-  return format
-    .replace(/\{YEAR\}/g, String(year))
-    .replace(/\{MONTH\}/g, String(new Date().getMonth() + 1).padStart(2, '0'))
-    .replace(/\{SEQ:(\d+)d\}/g, (_, pad) => String(seq).padStart(parseInt(pad, 10), '0'))
-    .replace(/\{SEQ\}/g, String(seq));
-}
-
 // Atomic gap-free quote number generator. See utils/documentSequences.js
 // for the locking story; migration 132 created the underlying table.
 // The previous SELECT-MAX-then-INSERT path raced under concurrent
 // admin creates and could emit `Q-2026-AB12C3` after 5 retries.
 async function nextQuoteNumber(trx) {
-  // Read through `trx` when present — getAppSetting on the global db inside an
-  // open transaction deadlocks the single-connection SQLite pool (prepare_quote
-  // runs createQuote unattended from a workflow).
-  const format = (await getAppSetting('crm_quotes_number_format', null, trx || db)) || 'Q-{YEAR}-{SEQ:04d}';
-  const year = new Date().getFullYear();
-  const seq = await claimNextSequence('quote', year, trx);
-  return formatNumberInTemplate(format, year, seq);
+  return nextDocumentNumber('quote', 'crm_quotes_number_format', 'Q-{YEAR}-{SEQ:04d}', trx);
 }
 
 /**

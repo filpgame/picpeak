@@ -4,6 +4,7 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const { triggerManualBackup, getBackupStatus, cleanupOldBackupRuns, getBackupManifest, validateBackupManifest } = require('../services/backupService');
 const logger = require('../utils/logger');
+const { formatBytes } = require('../utils/formatBytes');
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
@@ -946,15 +947,6 @@ router.post('/estimate', adminAuth, requirePermission('backup.view'), async (req
 });
 
 // Helper function to format bytes
-function formatBytes(bytes, decimals = 2) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
 // Helper function to get backup configuration
 async function getBackupConfig() {
   try {

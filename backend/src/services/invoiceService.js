@@ -26,7 +26,7 @@ const { getAppSetting } = require('../utils/appSettings');
 const { cleanNetMinor } = require('../utils/invoiceRounding');
 const { AppError } = require('../utils/errors');
 const { formatBoolean } = require('../utils/dbCompat');
-const { claimNextSequence } = require('../utils/documentSequences');
+const { nextDocumentNumber } = require('../utils/documentSequences');
 const { formatShortDate } = require('../utils/dateFormatter');
 const businessProfileService = require('./businessProfileService');
 const { buildIssuerBlock, buildRecipientBlock } = require('./_renderContext');
@@ -46,26 +46,13 @@ function getHierarchyHelpers() {
 const { ensureInt, ensureNumber } = require('../utils/numericHelpers');
 const { hasColumnCached } = require('../utils/schemaCache');
 
-function formatNumberInTemplate(format, year, seq) {
-  return format
-    .replace(/\{YEAR\}/g, String(year))
-    .replace(/\{MONTH\}/g, String(new Date().getMonth() + 1).padStart(2, '0'))
-    .replace(/\{SEQ:(\d+)d\}/g, (_, pad) => String(seq).padStart(parseInt(pad, 10), '0'))
-    .replace(/\{SEQ\}/g, String(seq));
-}
-
 // Atomic gap-free invoice number generator. See utils/documentSequences.js
 // for the locking story; migration 132 created the underlying table.
 // The previous SELECT-MAX-then-INSERT path raced under concurrent
 // admin creates and emitted a random `R-2026-AB12C3` after 5 retries,
 // breaking the §14 UStG single-sequence requirement.
 async function nextInvoiceNumber(trx) {
-  // Read through `trx` when present — getAppSetting on the global db inside an
-  // open transaction deadlocks the single-connection SQLite pool.
-  const format = (await getAppSetting('crm_invoices_number_format', null, trx || db)) || 'R-{YEAR}-{SEQ:04d}';
-  const year = new Date().getFullYear();
-  const seq = await claimNextSequence('invoice', year, trx);
-  return formatNumberInTemplate(format, year, seq);
+  return nextDocumentNumber('invoice', 'crm_invoices_number_format', 'R-{YEAR}-{SEQ:04d}', trx);
 }
 
 function ensureCustomerCanBill(customer) {

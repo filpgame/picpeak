@@ -10,6 +10,7 @@ const cron = require('node-cron');
 const { db } = require('../database/db');
 const { queueEmail } = require('./emailProcessor');
 const logger = require('../utils/logger');
+const { formatBytes } = require('../utils/formatBytes');
 const { formatBoolean } = require('../utils/dbCompat');
 const backupManifest = require('./backupManifest');
 const S3StorageAdapter = require('./storage/s3Storage');
@@ -776,19 +777,6 @@ async function performRsyncBackup(config, files) {
     backedUpFiles,
     backupPath: `${config.backup_rsync_host}:${config.backup_rsync_path}`
   };
-}
-
-function formatBytes(bytes, decimals = 2) {
-  if (!bytes) {
-    return '0 Bytes';
-  }
-
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
 async function performS3Backup(config, files) {
