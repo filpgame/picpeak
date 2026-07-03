@@ -252,6 +252,20 @@ export interface LoginResponse {
   user: AdminUser;
 }
 
+// Two-step admin login: when MFA is enabled, POST /auth/admin/login returns
+// this challenge instead of a session (no cookie yet). The mfaToken is a
+// short-lived (5 min) JWT exchanged at POST /auth/admin/login/mfa.
+export interface MfaChallengeResponse {
+  mfaRequired: true;
+  mfaToken: string;
+}
+
+export type AdminLoginResponse = LoginResponse | MfaChallengeResponse;
+
+export function isMfaChallenge(res: AdminLoginResponse): res is MfaChallengeResponse {
+  return (res as MfaChallengeResponse).mfaRequired === true;
+}
+
 export interface GalleryAuthResponse {
   token: string;
   event: {
