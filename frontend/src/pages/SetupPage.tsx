@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Key, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft, ArrowRight, Copy, Check, ExternalLink } from 'lucide-react';
+import { Key, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft, ArrowRight, Copy, Check, ExternalLink, Bug, Lightbulb, Star, Coffee } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 
@@ -18,6 +18,20 @@ import type { AdminUser } from '../types';
 // have already rotated away and the admin can no longer grep the token out.
 const SETUP_DOCS_URL =
   'https://github.com/PicPeak/picpeak/blob/main/README.md#first-run--create-your-admin-account';
+
+// Final "own your data" thank-you step (#732). Link cards shown once, on
+// first-run only, before entering the app. Every link is optional and opens
+// in a new tab; nothing here makes an external call.
+const COMMUNITY_LINKS: {
+  key: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+  { key: 'bug', href: 'https://github.com/PicPeak/picpeak/issues/new?template=bug_report.md', icon: Bug },
+  { key: 'feature', href: 'https://github.com/PicPeak/picpeak/issues/new?template=feature_request.md', icon: Lightbulb },
+  { key: 'star', href: 'https://github.com/PicPeak/picpeak', icon: Star },
+  { key: 'support', href: 'https://www.buymeacoffee.com/theluap', icon: Coffee },
+];
 
 // "How will you use PicPeak?" — the opt-in feature groups shown after the admin
 // account is created. galleries/analytics/userManagement are always on and not
@@ -53,7 +67,7 @@ export const SetupPage: React.FC = () => {
     staleTime: Infinity,
   });
 
-  const [step, setStep] = useState<'token' | 'account' | 'usage' | 'restore' | 'config'>('token');
+  const [step, setStep] = useState<'token' | 'account' | 'usage' | 'restore' | 'config' | 'community'>('token');
   const [form, setForm] = useState({ token: '', email: '', password: '', confirm: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -234,8 +248,9 @@ export const SetupPage: React.FC = () => {
         selectedFeatures.has('reminderEmails') ||
         selectedFeatures.has('incomingMail') ||
         selectedFeatures.has('whatsapp');
-      if (needsConfig) setStep('config');
-      else navigate('/admin/dashboard', { replace: true });
+      // Both the config branch and the no-config path end on the final
+      // community/thank-you step (#732), whose Finish button enters the app.
+      setStep(needsConfig ? 'config' : 'community');
     }
   };
 
@@ -267,7 +282,9 @@ export const SetupPage: React.FC = () => {
                   ? t('setup.restoreStepSubtitle')
                   : step === 'config'
                     ? t('setup.config.subtitle')
-                    : t('setup.usageSubtitle')}
+                    : step === 'community'
+                      ? t('setup.community.subtitle')
+                      : t('setup.usageSubtitle')}
           </p>
           {(step === 'token' || step === 'account' || step === 'usage') && (
             <p className="mt-3 text-xs font-medium tracking-wide uppercase" style={{ color: '#171717', opacity: 0.5 }}>
@@ -397,7 +414,15 @@ export const SetupPage: React.FC = () => {
                 />
               </div>
 
-              <div className="flex gap-3">
+              {/* Stacked full-width (not a side-by-side flex row): the primary
+                  label + loading spinner exceeded the card width when squeezed
+                  next to Back, so the button overflowed the card outline while
+                  submitting (#730). Full-width also keeps longer translations
+                  (e.g. German) inside the button. Matches every other step. */}
+              <div className="space-y-3">
+                <Button type="submit" variant="primary" size="lg" isLoading={isSubmitting} className="w-full">
+                  {t('setup.submit')}
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
@@ -405,11 +430,9 @@ export const SetupPage: React.FC = () => {
                   onClick={() => { toast.dismiss(); setErrors({}); setStep('token'); }}
                   disabled={isSubmitting}
                   leftIcon={<ArrowLeft className="w-4 h-4" />}
+                  className="w-full"
                 >
                   {t('setup.back')}
-                </Button>
-                <Button type="submit" variant="primary" size="lg" isLoading={isSubmitting} className="flex-1">
-                  {t('setup.submit')}
                 </Button>
               </div>
             </form>
@@ -486,11 +509,49 @@ export const SetupPage: React.FC = () => {
                 {t('setup.back')}
               </Button>
             </div>
-          ) : (
+          ) : step === 'config' ? (
             <SetupConfigStep
               selectedFeatures={selectedFeatures}
-              onDone={() => navigate('/admin/dashboard', { replace: true })}
+              onDone={() => setStep('community')}
             />
+          ) : (
+            <div className="space-y-6">
+              <p className="text-sm text-neutral-700">{t('setup.community.mission')}</p>
+
+              <div className="space-y-3">
+                {COMMUNITY_LINKS.map(({ key, href, icon: Icon }) => (
+                  <a
+                    key={key}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-3 rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50 transition-colors"
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-primary, #5C8762)' }} />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-neutral-800">
+                        {t(`setup.community.${key}Title`)}
+                      </span>
+                      <span className="block text-xs text-neutral-500">
+                        {t(`setup.community.${key}Desc`)}
+                      </span>
+                    </span>
+                    <ExternalLink className="w-4 h-4 flex-shrink-0 text-neutral-400 self-center" aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
+
+              <Button
+                type="button"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={() => navigate('/admin/dashboard', { replace: true })}
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+              >
+                {t('setup.community.finish')}
+              </Button>
+            </div>
           )}
         </Card>
       </div>
