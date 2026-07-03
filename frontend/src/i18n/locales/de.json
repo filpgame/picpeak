@@ -3572,6 +3572,19 @@
       "finish": "Einrichtung abschließen",
       "saveFailed": "Einige Einstellungen konnten nicht gespeichert werden — Sie können sie in den Einstellungen abschließen."
     },
+    "community": {
+      "subtitle": "Alles bereit",
+      "mission": "PicPeak gibt es, damit Fotografinnen und Fotografen ihre Galerien und Kundendaten selbst besitzen — auf dem eigenen Server, ohne monatliche SaaS-Gebühren. Danke, dass du es ausprobierst.",
+      "bugTitle": "Fehler gefunden?",
+      "bugDesc": "Melde ihn und wir sehen ihn uns an.",
+      "featureTitle": "Wunschfunktion?",
+      "featureDesc": "Sag uns, was PicPeak für dich besser machen würde.",
+      "starTitle": "Gefällt es dir? Erzähl davon",
+      "starDesc": "Empfiehl es anderen Fotografen, teile es und gib dem Projekt einen Stern auf GitHub.",
+      "supportTitle": "Entwicklung unterstützen",
+      "supportDesc": "Optional — spendier mir einen Kaffee, um PicPeak am Leben zu halten.",
+      "finish": "Fertig → Dashboard"
+    },
     "stepOf": "Schritt {{current}} von {{total}}",
     "continue": "Weiter",
     "back": "Zurück",

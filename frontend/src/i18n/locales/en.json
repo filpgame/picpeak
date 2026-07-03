@@ -3468,6 +3468,19 @@
       "finish": "Finish setup",
       "saveFailed": "Some settings could not be saved — you can finish them in Settings."
     },
+    "community": {
+      "subtitle": "You're all set",
+      "mission": "PicPeak exists so photographers can own their galleries and client data — on their own server, without monthly SaaS fees. Thanks for giving it a try.",
+      "bugTitle": "Found a bug?",
+      "bugDesc": "Open an issue and we'll take a look.",
+      "featureTitle": "Want a feature?",
+      "featureDesc": "Tell us what would make PicPeak better for you.",
+      "starTitle": "Like it? Spread the word",
+      "starDesc": "Tell other photographers, share it, and star the project on GitHub.",
+      "supportTitle": "Support development",
+      "supportDesc": "Optional — buy me a coffee to help keep PicPeak going.",
+      "finish": "Finish → Dashboard"
+    },
     "stepOf": "Step {{current}} of {{total}}",
     "continue": "Continue",
     "back": "Back",
