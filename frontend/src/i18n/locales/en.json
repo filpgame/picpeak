@@ -969,13 +969,14 @@
       "attemptWindowMinutesHelp": "How long to look back when counting failed login attempts",
       "lockoutDurationMinutes": "Lockout Duration (minutes)",
       "lockoutDurationMinutesHelp": "How long the gallery or account stays locked after too many failures",
-      "enable2FA": "Enable two-factor authentication for admins",
       "recaptchaSettings": "reCAPTCHA Settings",
       "enableRecaptcha": "Enable reCAPTCHA for login forms",
       "siteKey": "Site Key",
       "secretKey": "Secret Key",
       "recaptchaHelp": "Get your reCAPTCHA keys from",
-      "saveSecuritySettings": "Save Security Settings"
+      "saveSecuritySettings": "Save Security Settings",
+      "twoFactorTitle": "Two-factor authentication",
+      "twoFactorNote": "Two-factor authentication is now managed per admin from Settings → General → Admin Account. Each admin enables it for their own login."
     },
     "categories": {
       "title": "Categories",
@@ -1335,7 +1336,27 @@
       "title": "Email Settings"
     },
     "backup": {
-      "title": "Backup"
+      "title": "Backup",
+      "picpeak": {
+        "title": "Portable backup (.picpeak)",
+        "intro": "Download a single self-contained file, then upload it on another instance to clone this one — all through the browser.",
+        "includePhotos": "Include original gallery photos (larger file)",
+        "secretsWarning": "This file contains secrets in plain text (email password, admin credentials, API keys). Store it securely and only transfer it over trusted channels.",
+        "download": "Download .picpeak",
+        "downloadFailed": "Could not create the backup file.",
+        "restoreTitle": "Restore from a .picpeak",
+        "restoreIntro": "Upload a .picpeak taken from this or another instance. Same database engine only.",
+        "chooseFile": "Choose .picpeak file…",
+        "restoreDone": "Backup restored.",
+        "restoreFailed": "Restore failed.",
+        "restoreSummary": "{{tables}} tables and {{files}} files restored.",
+        "externalMediaNote": "This backup references an external-media library. Make sure external-media routing is configured on this instance.",
+        "externalMediaLink": "Setup guide",
+        "reload": "Reload app",
+        "confirmTitle": "Restore will delete all current data",
+        "confirmBody": "This permanently replaces ALL data on this instance with the uploaded backup, except your current account. This cannot be undone.",
+        "confirmRestore": "Delete & restore"
+      }
     },
     "branding": {
       "title": "Branding"
@@ -1567,6 +1588,42 @@
       "testSend": "Send test",
       "testSending": "Sending…",
       "testSentToast": "Test message sent (id: {{id}})."
+    },
+    "mfa": {
+      "title": "Two-factor authentication",
+      "description": "Add a second step to your admin sign-in using an authenticator app (TOTP).",
+      "notEnrolled": "Two-factor authentication is not enabled for your account.",
+      "setUp": "Set up",
+      "setupScanInstruction": "Scan this QR code with your authenticator app (e.g. Google Authenticator, 1Password, Authy).",
+      "manualEntry": "Or enter this secret manually:",
+      "qrAlt": "Two-factor setup QR code",
+      "enterCodeLabel": "Enter the 6-digit code from your app",
+      "codePlaceholder": "123456",
+      "enable": "Enable",
+      "enabledBadge": "Two-factor authentication is enabled.",
+      "recoveryCodesRemaining": "{{count}} recovery code remaining.",
+      "recoveryCodesRemaining_other": "{{count}} recovery codes remaining.",
+      "regenerate": "Regenerate recovery codes",
+      "regenerateHelp": "Enter a current authentication code to generate a new set of recovery codes. Your old codes will stop working.",
+      "regenerateConfirm": "Regenerate",
+      "disable": "Disable",
+      "disablePrompt": "Enter a current authentication or recovery code to disable two-factor authentication:",
+      "disableConfirmTitle": "Disable two-factor authentication?",
+      "disableConfirmMessage": "Your account will no longer require a second step at sign-in. You can re-enable it at any time.",
+      "disableConfirmButton": "Disable",
+      "disabledToast": "Two-factor authentication disabled.",
+      "codeRequired": "A code is required.",
+      "recoveryCodesWarning": "Save these recovery codes now. Each can be used once if you lose access to your authenticator app. They will not be shown again.",
+      "recoveryCodesAck": "I have saved my recovery codes in a safe place.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Failed to copy to clipboard.",
+      "download": "Download .txt",
+      "done": "Done",
+      "setupFailed": "Could not start two-factor setup. Please try again.",
+      "enableFailed": "Could not enable two-factor authentication. Check the code and try again.",
+      "disableFailed": "Could not disable two-factor authentication. Check the code and try again.",
+      "regenerateFailed": "Could not regenerate recovery codes. Check the code and try again."
     }
   },
   "analytics": {
@@ -3002,7 +3059,16 @@
         "upload": {
           "name": "Upload Backup",
           "description": "Upload a backup file",
-          "comingSoon": "Upload functionality coming soon"
+          "comingSoon": "Upload functionality coming soon",
+          "manifestComingSoon": "Manifest Upload functionality coming soon",
+          "picpeak": {
+            "name": ".picpeak backup",
+            "description": "Portable full backup — restores everything (full override, keeps your current account)."
+          },
+          "manifest": {
+            "name": "Manifest + files",
+            "description": "Upload a manifest and its backup files (legacy format)."
+          }
         },
         "configuration": {
           "s3": "S3 Configuration",
@@ -3363,6 +3429,45 @@
     "subtitle": "Create your administrator account to get started",
     "tokenStepSubtitle": "First, enter your one-time setup token",
     "accountStepSubtitle": "Now create your administrator account",
+    "usageSubtitle": "How will you use PicPeak?",
+    "usageAlwaysOn": "Galleries, analytics and user management are always included. Pick any extras below — you can change these anytime in Settings.",
+    "usageGroupCrm": "Client management",
+    "usageGroupAccounting": "Accounting",
+    "usageGroupAutomation": "Automation & delivery",
+    "usageDepsNote": "Invoices automatically enable the Accounting area.",
+    "usageSkip": "Continue with galleries only",
+    "finish": "Finish setup",
+    "featuresSaveFailed": "Could not save your feature choices — you can set them later in Settings → Features.",
+    "restoreStepSubtitle": "Restore from a backup",
+    "restoreEntry": "Migrating from another PicPeak?",
+    "restoreEntryHint": "Restore a .picpeak backup instead of setting up fresh.",
+    "restoreIntro": "Upload a .picpeak backup to clone another instance onto this one. This replaces everything except the account you just created.",
+    "config": {
+      "subtitle": "Set up your features",
+      "intro": "A few details for the features you picked. Anything you skip keeps its default and can be set later in Settings.",
+      "invoicing": "Invoicing details",
+      "invoicingDisclaimer": "Used on your invoices. Bank/IBAN and VAT details are your responsibility — verify them with your bank and Treuhänder/tax advisor.",
+      "companyName": "Company / legal name",
+      "addressLine1": "Street and number",
+      "postalCode": "Postal code",
+      "city": "City",
+      "countryCode": "Country code (e.g. CH)",
+      "currency": "Currency (e.g. CHF)",
+      "vatId": "VAT ID (or leave blank)",
+      "taxId": "Tax number (or VAT ID)",
+      "iban": "IBAN (for invoice payments)",
+      "email": "Email delivery (SMTP)",
+      "emailHint": "Required to send reminders, invoices and notifications.",
+      "smtpHost": "SMTP host",
+      "smtpPort": "Port",
+      "smtpUser": "Username",
+      "smtpPass": "Password",
+      "fromEmail": "From address",
+      "fromName": "From name",
+      "skip": "Skip for now",
+      "finish": "Finish setup",
+      "saveFailed": "Some settings could not be saved — you can finish them in Settings."
+    },
     "stepOf": "Step {{current}} of {{total}}",
     "continue": "Continue",
     "back": "Back",
@@ -3413,7 +3518,25 @@
     "generalError": "An error occurred. Please try again.",
     "needHelp": "Need help? Contact",
     "poweredBy": "Powered by PicPeak",
-    "devModeHint": "Development Mode: Use email: admin@example.com, password: admin123"
+    "devModeHint": "Development Mode: Use email: admin@example.com, password: admin123",
+    "mfa": {
+      "title": "Two-factor authentication",
+      "subtitle": "Enter the 6-digit code from your authenticator app.",
+      "recoverySubtitle": "Enter one of your recovery codes.",
+      "codeLabel": "Authentication code",
+      "codePlaceholder": "123456",
+      "recoveryCodeLabel": "Recovery code",
+      "recoveryCodePlaceholder": "awzq-jca3-va",
+      "verify": "Verify",
+      "back": "Back",
+      "useRecoveryCode": "Use a recovery code instead",
+      "useAuthenticator": "Use your authenticator app instead",
+      "codeRequired": "Enter your authentication code",
+      "invalidCode": "Invalid code. Please try again.",
+      "sessionExpired": "Your verification session expired. Please sign in again.",
+      "locked": "Account temporarily locked due to too many attempts. Try again later.",
+      "lockedRetry": "Account temporarily locked. Try again in {{seconds}} seconds."
+    }
   },
   "slideshow": {
     "adminTitle": "Live Slideshow",

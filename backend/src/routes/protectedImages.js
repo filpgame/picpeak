@@ -9,6 +9,7 @@ const { resolvePhotoStorageKey, resolvePhotoFilePath } = require('../services/ph
 const { withLocalCopy } = require('../services/imageProcessor');
 const crypto = require('crypto');
 const logger = require('../utils/logger');
+const { timingSafeEqualStr } = require('../utils/timingSafe');
 
 const router = express.Router();
 
@@ -33,9 +34,9 @@ function verifyImageToken(token) {
     const decoded = Buffer.from(data, 'base64').toString();
     const [photoId, expires] = decoded.split(':');
     
-    // Verify signature
+    // Verify signature (constant-time — avoids leaking the HMAC byte-by-byte)
     const expectedSignature = crypto.createHmac('sha256', secret).update(decoded).digest('hex');
-    if (signature !== expectedSignature) {
+    if (!timingSafeEqualStr(signature, expectedSignature)) {
       return null;
     }
     

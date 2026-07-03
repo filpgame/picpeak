@@ -634,7 +634,16 @@
         "upload": {
           "name": "Backup hochladen",
           "description": "Eine Backup-Datei hochladen",
-          "comingSoon": "Upload-Funktion kommt bald"
+          "comingSoon": "Upload-Funktion kommt bald",
+          "manifestComingSoon": "Manifest-Upload-Funktion kommt bald",
+          "picpeak": {
+            "name": ".picpeak-Backup",
+            "description": "Portables Voll-Backup — stellt alles wieder her (vollständige Überschreibung, Ihr aktuelles Konto bleibt erhalten)."
+          },
+          "manifest": {
+            "name": "Manifest + Dateien",
+            "description": "Ein Manifest und die zugehörigen Backup-Dateien hochladen (Legacy-Format)."
+          }
         },
         "configuration": {
           "s3": "S3-Konfiguration",
@@ -1413,13 +1422,14 @@
       "attemptWindowMinutesHelp": "Zeitraum, in dem fehlgeschlagene Anmeldeversuche gezählt werden",
       "lockoutDurationMinutes": "Sperrdauer (Minuten)",
       "lockoutDurationMinutesHelp": "Wie lange Galerie oder Konto nach zu vielen Fehlern gesperrt bleiben",
-      "enable2FA": "Zwei-Faktor-Authentifizierung für Admins aktivieren",
       "recaptchaSettings": "reCAPTCHA-Einstellungen",
       "enableRecaptcha": "reCAPTCHA für Anmeldeformulare aktivieren",
       "siteKey": "Site-Schlüssel",
       "secretKey": "Geheimer Schlüssel",
       "recaptchaHelp": "Holen Sie sich Ihre reCAPTCHA-Schlüssel von",
-      "saveSecuritySettings": "Sicherheitseinstellungen speichern"
+      "saveSecuritySettings": "Sicherheitseinstellungen speichern",
+      "twoFactorTitle": "Zwei-Faktor-Authentifizierung",
+      "twoFactorNote": "Die Zwei-Faktor-Authentifizierung wird jetzt pro Admin unter Einstellungen → Allgemein → Admin-Konto verwaltet. Jeder Admin aktiviert sie für seine eigene Anmeldung."
     },
     "events": {
       "title": "Veranstaltungserstellung",
@@ -1779,7 +1789,27 @@
       "title": "E-Mail-Einstellungen"
     },
     "backup": {
-      "title": "Backup"
+      "title": "Backup",
+      "picpeak": {
+        "title": "Portables Backup (.picpeak)",
+        "intro": "Laden Sie eine einzelne, in sich geschlossene Datei herunter und laden Sie sie auf einer anderen Instanz hoch, um diese zu klonen — komplett im Browser.",
+        "includePhotos": "Original-Galeriefotos einschließen (größere Datei)",
+        "secretsWarning": "Diese Datei enthält Geheimnisse im Klartext (E-Mail-Passwort, Admin-Zugangsdaten, API-Schlüssel). Bewahren Sie sie sicher auf und übertragen Sie sie nur über vertrauenswürdige Kanäle.",
+        "download": ".picpeak herunterladen",
+        "downloadFailed": "Die Backup-Datei konnte nicht erstellt werden.",
+        "restoreTitle": "Aus einer .picpeak wiederherstellen",
+        "restoreIntro": "Laden Sie eine .picpeak von dieser oder einer anderen Instanz hoch. Nur dieselbe Datenbank-Engine.",
+        "chooseFile": ".picpeak-Datei auswählen…",
+        "restoreDone": "Backup wiederhergestellt.",
+        "restoreFailed": "Wiederherstellung fehlgeschlagen.",
+        "restoreSummary": "{{tables}} Tabellen und {{files}} Dateien wiederhergestellt.",
+        "externalMediaNote": "Dieses Backup verweist auf eine externe Medienbibliothek. Stellen Sie sicher, dass das externe Medien-Routing auf dieser Instanz konfiguriert ist.",
+        "externalMediaLink": "Einrichtungsanleitung",
+        "reload": "App neu laden",
+        "confirmTitle": "Die Wiederherstellung löscht alle aktuellen Daten",
+        "confirmBody": "Dies ersetzt ALLE Daten auf dieser Instanz dauerhaft durch das hochgeladene Backup, mit Ausnahme Ihres aktuellen Kontos. Dies kann nicht rückgängig gemacht werden.",
+        "confirmRestore": "Löschen & wiederherstellen"
+      }
     },
     "branding": {
       "title": "Branding"
@@ -2011,6 +2041,42 @@
       "testSend": "Test senden",
       "testSending": "Senden…",
       "testSentToast": "Testnachricht gesendet (ID: {{id}})."
+    },
+    "mfa": {
+      "title": "Zwei-Faktor-Authentifizierung",
+      "description": "Sichere deine Admin-Anmeldung mit einem zweiten Schritt über eine Authenticator-App (TOTP).",
+      "notEnrolled": "Die Zwei-Faktor-Authentifizierung ist für dein Konto nicht aktiviert.",
+      "setUp": "Einrichten",
+      "setupScanInstruction": "Scanne diesen QR-Code mit deiner Authenticator-App (z. B. Google Authenticator, 1Password, Authy).",
+      "manualEntry": "Oder gib diesen Schlüssel manuell ein:",
+      "qrAlt": "QR-Code zur Zwei-Faktor-Einrichtung",
+      "enterCodeLabel": "Gib den 6-stelligen Code aus deiner App ein",
+      "codePlaceholder": "123456",
+      "enable": "Aktivieren",
+      "enabledBadge": "Die Zwei-Faktor-Authentifizierung ist aktiviert.",
+      "recoveryCodesRemaining": "Noch {{count}} Wiederherstellungscode übrig.",
+      "recoveryCodesRemaining_other": "Noch {{count}} Wiederherstellungscodes übrig.",
+      "regenerate": "Wiederherstellungscodes neu erzeugen",
+      "regenerateHelp": "Gib einen aktuellen Authentifizierungscode ein, um neue Wiederherstellungscodes zu erzeugen. Deine alten Codes werden ungültig.",
+      "regenerateConfirm": "Neu erzeugen",
+      "disable": "Deaktivieren",
+      "disablePrompt": "Gib einen aktuellen Authentifizierungs- oder Wiederherstellungscode ein, um die Zwei-Faktor-Authentifizierung zu deaktivieren:",
+      "disableConfirmTitle": "Zwei-Faktor-Authentifizierung deaktivieren?",
+      "disableConfirmMessage": "Für dein Konto ist bei der Anmeldung dann kein zweiter Schritt mehr erforderlich. Du kannst sie jederzeit wieder aktivieren.",
+      "disableConfirmButton": "Deaktivieren",
+      "disabledToast": "Zwei-Faktor-Authentifizierung deaktiviert.",
+      "codeRequired": "Ein Code ist erforderlich.",
+      "recoveryCodesWarning": "Speichere diese Wiederherstellungscodes jetzt. Jeder kann einmal verwendet werden, falls du den Zugriff auf deine Authenticator-App verlierst. Sie werden nicht erneut angezeigt.",
+      "recoveryCodesAck": "Ich habe meine Wiederherstellungscodes an einem sicheren Ort gespeichert.",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "copyFailed": "Kopieren in die Zwischenablage fehlgeschlagen.",
+      "download": ".txt herunterladen",
+      "done": "Fertig",
+      "setupFailed": "Zwei-Faktor-Einrichtung konnte nicht gestartet werden. Bitte versuche es erneut.",
+      "enableFailed": "Zwei-Faktor-Authentifizierung konnte nicht aktiviert werden. Prüfe den Code und versuche es erneut.",
+      "disableFailed": "Zwei-Faktor-Authentifizierung konnte nicht deaktiviert werden. Prüfe den Code und versuche es erneut.",
+      "regenerateFailed": "Wiederherstellungscodes konnten nicht neu erzeugt werden. Prüfe den Code und versuche es erneut."
     }
   },
   "branding": {
@@ -3467,6 +3533,45 @@
     "subtitle": "Erstellen Sie Ihr Administrator-Konto, um loszulegen",
     "tokenStepSubtitle": "Geben Sie zunächst Ihren einmaligen Setup-Token ein",
     "accountStepSubtitle": "Erstellen Sie nun Ihr Administrator-Konto",
+    "usageSubtitle": "Wie möchten Sie PicPeak nutzen?",
+    "usageAlwaysOn": "Galerien, Analysen und Benutzerverwaltung sind immer enthalten. Wählen Sie unten optionale Funktionen — Sie können dies jederzeit in den Einstellungen ändern.",
+    "usageGroupCrm": "Kundenverwaltung",
+    "usageGroupAccounting": "Buchhaltung",
+    "usageGroupAutomation": "Automatisierung & Versand",
+    "usageDepsNote": "Rechnungen aktivieren automatisch den Buchhaltungsbereich.",
+    "usageSkip": "Nur mit Galerien fortfahren",
+    "finish": "Einrichtung abschließen",
+    "featuresSaveFailed": "Ihre Funktionsauswahl konnte nicht gespeichert werden — Sie können sie später unter Einstellungen → Funktionen festlegen.",
+    "restoreStepSubtitle": "Aus einem Backup wiederherstellen",
+    "restoreEntry": "Wechsel von einer anderen PicPeak-Instanz?",
+    "restoreEntryHint": "Stellen Sie stattdessen ein .picpeak-Backup wieder her, anstatt neu einzurichten.",
+    "restoreIntro": "Laden Sie ein .picpeak-Backup hoch, um eine andere Instanz auf diese zu klonen. Dies ersetzt alles außer dem gerade erstellten Konto.",
+    "config": {
+      "subtitle": "Richten Sie Ihre Funktionen ein",
+      "intro": "Einige Angaben zu den gewählten Funktionen. Was Sie überspringen, behält den Standard und kann später in den Einstellungen festgelegt werden.",
+      "invoicing": "Rechnungsdaten",
+      "invoicingDisclaimer": "Erscheint auf Ihren Rechnungen. Bank-/IBAN- und Mehrwertsteuerangaben liegen in Ihrer Verantwortung — prüfen Sie sie mit Ihrer Bank und Ihrem Treuhänder/Steuerberater.",
+      "companyName": "Firma / rechtlicher Name",
+      "addressLine1": "Strasse und Nummer",
+      "postalCode": "PLZ",
+      "city": "Ort",
+      "countryCode": "Ländercode (z. B. CH)",
+      "currency": "Währung (z. B. CHF)",
+      "vatId": "MwSt-Nummer (oder leer lassen)",
+      "taxId": "Steuernummer (oder MwSt-Nummer)",
+      "iban": "IBAN (für Rechnungszahlungen)",
+      "email": "E-Mail-Versand (SMTP)",
+      "emailHint": "Erforderlich, um Erinnerungen, Rechnungen und Benachrichtigungen zu senden.",
+      "smtpHost": "SMTP-Host",
+      "smtpPort": "Port",
+      "smtpUser": "Benutzername",
+      "smtpPass": "Passwort",
+      "fromEmail": "Absenderadresse",
+      "fromName": "Absendername",
+      "skip": "Vorerst überspringen",
+      "finish": "Einrichtung abschließen",
+      "saveFailed": "Einige Einstellungen konnten nicht gespeichert werden — Sie können sie in den Einstellungen abschließen."
+    },
     "stepOf": "Schritt {{current}} von {{total}}",
     "continue": "Weiter",
     "back": "Zurück",
@@ -3517,7 +3622,25 @@
     "generalError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "needHelp": "Hilfe benötigt? Kontakt",
     "poweredBy": "Bereitgestellt von PicPeak",
-    "devModeHint": "Entwicklungsmodus: E-Mail: admin@example.com, Passwort: admin123"
+    "devModeHint": "Entwicklungsmodus: E-Mail: admin@example.com, Passwort: admin123",
+    "mfa": {
+      "title": "Zwei-Faktor-Authentifizierung",
+      "subtitle": "Gib den 6-stelligen Code aus deiner Authenticator-App ein.",
+      "recoverySubtitle": "Gib einen deiner Wiederherstellungscodes ein.",
+      "codeLabel": "Authentifizierungscode",
+      "codePlaceholder": "123456",
+      "recoveryCodeLabel": "Wiederherstellungscode",
+      "recoveryCodePlaceholder": "awzq-jca3-va",
+      "verify": "Bestätigen",
+      "back": "Zurück",
+      "useRecoveryCode": "Stattdessen Wiederherstellungscode verwenden",
+      "useAuthenticator": "Stattdessen Authenticator-App verwenden",
+      "codeRequired": "Gib deinen Authentifizierungscode ein",
+      "invalidCode": "Ungültiger Code. Bitte versuche es erneut.",
+      "sessionExpired": "Deine Bestätigungssitzung ist abgelaufen. Bitte melde dich erneut an.",
+      "locked": "Konto wegen zu vieler Versuche vorübergehend gesperrt. Versuche es später erneut.",
+      "lockedRetry": "Konto vorübergehend gesperrt. Versuche es in {{seconds}} Sekunden erneut."
+    }
   },
   "cssTemplates": {
     "title": "Benutzerdefinierte CSS-Vorlagen",

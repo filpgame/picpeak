@@ -8,6 +8,9 @@ import { useTranslation } from 'react-i18next';
 import { Button, Input, Card, Loading } from '../components/common';
 import { useAdminAuth } from '../contexts';
 import { setupService } from '../services/setup.service';
+import { featureFlagsService, type FeatureFlags, type FeatureKey } from '../services/featureFlags.service';
+import { PicpeakRestoreCard } from '../components/admin/PicpeakBackupCard';
+import { SetupConfigStep } from '../components/admin/SetupConfigStep';
 import { resolveLoginLogoClasses } from '../utils/loginLogoSize';
 import type { AdminUser } from '../types';
 
@@ -15,6 +18,19 @@ import type { AdminUser } from '../types';
 // have already rotated away and the admin can no longer grep the token out.
 const SETUP_DOCS_URL =
   'https://github.com/PicPeak/picpeak/blob/main/README.md#first-run--create-your-admin-account';
+
+// "How will you use PicPeak?" — the opt-in feature groups shown after the admin
+// account is created. galleries/analytics/userManagement are always on and not
+// listed. Labels/descriptions reuse the existing Settings→Features i18n keys
+// (`settings.features.<key>.title/description`) so translations stay in sync.
+// Server-side applyDependencyRules resolves dependencies (e.g. Invoices pulls in
+// Accounting) when we PUT the selection, so we only send the raw ticks.
+const USAGE_GROUPS: { id: string; titleKey: string; features: FeatureKey[] }[] = [
+  { id: 'crm', titleKey: 'setup.usageGroupCrm', features: ['quotes', 'contracts', 'bills', 'hoursLogging', 'customerPortal', 'calendar'] },
+  { id: 'accounting', titleKey: 'setup.usageGroupAccounting', features: ['taxReport', 'incomingInvoices', 'expenses'] },
+  { id: 'automation', titleKey: 'setup.usageGroupAutomation', features: ['reminderEmails', 'slideshow', 'workflows', 'whatsapp', 'incomingMail'] },
+];
+const ALL_USAGE_FEATURES: FeatureKey[] = USAGE_GROUPS.flatMap((g) => g.features);
 
 // First-run screen. Reached on a fresh instance where no admin account exists
 // yet — creates the first (super_admin) account from the browser using the
@@ -37,13 +53,15 @@ export const SetupPage: React.FC = () => {
     staleTime: Infinity,
   });
 
-  const [step, setStep] = useState<'token' | 'account'>('token');
+  const [step, setStep] = useState<'token' | 'account' | 'usage' | 'restore' | 'config'>('token');
   const [form, setForm] = useState({ token: '', email: '', password: '', confirm: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerifyingToken, setIsVerifyingToken] = useState(false);
   const [copied, setCopied] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFeatures, setSelectedFeatures] = useState<Set<FeatureKey>>(new Set());
+  const [isSavingFeatures, setIsSavingFeatures] = useState(false);
 
   if (statusLoading) {
     return <Loading fullScreen />;
@@ -144,7 +162,10 @@ export const SetupPage: React.FC = () => {
       };
       login('', adminUser);
       toast.success(t('setup.success'));
-      navigate('/admin/dashboard', { replace: true });
+      // Admin now exists and we're logged in (cookie set) — advance to the
+      // opt-in "How will you use PicPeak?" step rather than jumping straight to
+      // the dashboard. Authenticated calls (feature flags) work from here.
+      setStep('usage');
     } catch (error: any) {
       const httpStatus = error.response?.status;
       const data = error.response?.data;
@@ -184,10 +205,44 @@ export const SetupPage: React.FC = () => {
     }
   };
 
-  const stepNumber = step === 'token' ? 1 : 2;
+  const toggleFeature = (key: FeatureKey) => {
+    setSelectedFeatures((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // Persist the feature selection, then enter the app. Saving is best-effort —
+  // if it fails the admin can still flip features later in Settings, so we don't
+  // trap them on the setup screen.
+  const finishSetup = async () => {
+    setIsSavingFeatures(true);
+    try {
+      const flags: Partial<FeatureFlags> = {};
+      for (const key of ALL_USAGE_FEATURES) flags[key] = selectedFeatures.has(key);
+      await featureFlagsService.update(flags);
+    } catch (_) {
+      toast.warn(t('setup.featuresSaveFailed'));
+    } finally {
+      setIsSavingFeatures(false);
+      // If the chosen features need config the wizard can collect (invoicing,
+      // email), go to the config step; otherwise enter the app.
+      const needsConfig =
+        selectedFeatures.has('bills') ||
+        selectedFeatures.has('reminderEmails') ||
+        selectedFeatures.has('incomingMail') ||
+        selectedFeatures.has('whatsapp');
+      if (needsConfig) setStep('config');
+      else navigate('/admin/dashboard', { replace: true });
+    }
+  };
+
+  const stepNumber = step === 'token' ? 1 : step === 'account' ? 2 : 3;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--color-background, #fafafa)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#fafafa' }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           {/* On a fresh instance there are no branding settings yet, so use the
@@ -202,13 +257,23 @@ export const SetupPage: React.FC = () => {
               </div>
             );
           })()}
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text, #171717)' }}>{t('setup.title')}</h1>
-          <p className="mt-2" style={{ color: 'var(--color-text, #171717)', opacity: 0.7 }}>
-            {step === 'token' ? t('setup.tokenStepSubtitle') : t('setup.accountStepSubtitle')}
+          <h1 className="text-3xl font-bold" style={{ color: '#171717' }}>{t('setup.title')}</h1>
+          <p className="mt-2" style={{ color: '#171717', opacity: 0.7 }}>
+            {step === 'token'
+              ? t('setup.tokenStepSubtitle')
+              : step === 'account'
+                ? t('setup.accountStepSubtitle')
+                : step === 'restore'
+                  ? t('setup.restoreStepSubtitle')
+                  : step === 'config'
+                    ? t('setup.config.subtitle')
+                    : t('setup.usageSubtitle')}
           </p>
-          <p className="mt-3 text-xs font-medium tracking-wide uppercase" style={{ color: 'var(--color-text, #171717)', opacity: 0.5 }}>
-            {t('setup.stepOf', { current: stepNumber, total: 2 })}
-          </p>
+          {(step === 'token' || step === 'account' || step === 'usage') && (
+            <p className="mt-3 text-xs font-medium tracking-wide uppercase" style={{ color: '#171717', opacity: 0.5 }}>
+              {t('setup.stepOf', { current: stepNumber, total: 3 })}
+            </p>
+          )}
         </div>
 
         <Card padding="lg">
@@ -271,7 +336,7 @@ export const SetupPage: React.FC = () => {
                 {t('setup.continue')}
               </Button>
             </form>
-          ) : (
+          ) : step === 'account' ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="setup-email" className="block text-sm font-medium text-neutral-700 mb-1">
@@ -348,6 +413,84 @@ export const SetupPage: React.FC = () => {
                 </Button>
               </div>
             </form>
+          ) : step === 'usage' ? (
+            <div className="space-y-6">
+              <p className="rounded-lg bg-neutral-50 border border-neutral-200 px-3 py-2 text-xs text-neutral-600">
+                {t('setup.usageAlwaysOn')}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setStep('restore')}
+                className="w-full rounded-lg border border-dashed border-neutral-300 p-3 text-left hover:bg-neutral-50 transition-colors"
+              >
+                <span className="block text-sm font-medium text-neutral-800">{t('setup.restoreEntry')}</span>
+                <span className="block text-xs text-neutral-500">{t('setup.restoreEntryHint')}</span>
+              </button>
+
+              {USAGE_GROUPS.map((group) => (
+                <div key={group.id}>
+                  <h3 className="text-sm font-semibold text-neutral-800 mb-2">{t(group.titleKey)}</h3>
+                  <div className="space-y-2">
+                    {group.features.map((key) => (
+                      <label
+                        key={key}
+                        className="flex items-start gap-3 rounded-lg border border-neutral-200 p-3 cursor-pointer hover:bg-neutral-50 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 h-4 w-4 rounded border-neutral-300"
+                          checked={selectedFeatures.has(key)}
+                          onChange={() => toggleFeature(key)}
+                        />
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium text-neutral-800">
+                            {t(`settings.features.${key}.title`)}
+                          </span>
+                          <span className="block text-xs text-neutral-500">
+                            {t(`settings.features.${key}.description`)}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {selectedFeatures.has('bills') && !selectedFeatures.has('taxReport') && (
+                <p className="text-xs text-neutral-500">{t('setup.usageDepsNote')}</p>
+              )}
+
+              <Button
+                type="button"
+                variant="primary"
+                size="lg"
+                isLoading={isSavingFeatures}
+                className="w-full"
+                onClick={finishSetup}
+              >
+                {selectedFeatures.size > 0 ? t('setup.finish') : t('setup.usageSkip')}
+              </Button>
+            </div>
+          ) : step === 'restore' ? (
+            <div className="space-y-6">
+              <p className="text-sm text-neutral-600">{t('setup.restoreIntro')}</p>
+              <PicpeakRestoreCard />
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => setStep('usage')}
+                leftIcon={<ArrowLeft className="w-4 h-4" />}
+              >
+                {t('setup.back')}
+              </Button>
+            </div>
+          ) : (
+            <SetupConfigStep
+              selectedFeatures={selectedFeatures}
+              onDone={() => navigate('/admin/dashboard', { replace: true })}
+            />
           )}
         </Card>
       </div>

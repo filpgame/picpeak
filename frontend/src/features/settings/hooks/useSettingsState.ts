@@ -35,7 +35,6 @@ export interface GeneralSettings {
 export interface SecuritySettings {
   password_min_length: number;
   password_complexity: string;
-  enable_2fa: boolean;
   session_timeout_minutes: number;
   max_login_attempts: number;
   attempt_window_minutes: number;
@@ -134,7 +133,6 @@ export function useSettingsState() {
   const [securitySettings, setSecuritySettings] = useState<SecuritySettings>({
     password_min_length: 8,
     password_complexity: 'moderate',
-    enable_2fa: false,
     session_timeout_minutes: 60,
     max_login_attempts: 5,
     attempt_window_minutes: 15,
@@ -231,7 +229,6 @@ export function useSettingsState() {
       setSecuritySettings({
         password_min_length: toNumber(settings.security_password_min_length, 8),
         password_complexity: settings.security_password_complexity ?? 'moderate',
-        enable_2fa: toBoolean(settings.security_enable_2fa, false),
         session_timeout_minutes: toNumber(settings.security_session_timeout_minutes, 60),
         max_login_attempts: toNumber(settings.security_max_login_attempts, 5),
         attempt_window_minutes: toNumber(settings.security_attempt_window_minutes, 15),
