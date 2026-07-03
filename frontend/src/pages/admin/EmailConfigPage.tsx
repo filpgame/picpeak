@@ -22,7 +22,8 @@ import { SentEmailsPanel } from '../../components/admin/SentEmailsPanel';
 import { ReceivedEmailsPanel } from '../../components/admin/ReceivedEmailsPanel';
 import { IncomingMailConfigCard } from '../../components/admin/IncomingMailConfigCard';
 import { Palette, RefreshCw, Info } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useModal, useMutationWithToast } from '../../hooks';
 import { emailService, type EmailConfig, type EmailTemplate, type EmailTemplateTranslation } from '../../services/email.service';
 import { settingsService } from '../../services/settings.service';
 import { useTranslation } from 'react-i18next';
@@ -138,7 +139,7 @@ export const EmailConfigPage: React.FC = () => {
   const [editingLang, setEditingLang] = useState<string>('en');
   const [showPassword, setShowPassword] = useState(false);
   const [testEmail, setTestEmail] = useState('');
-  const [showPreview, setShowPreview] = useState(false);
+  const previewModal = useModal();
   const [previewData, setPreviewData] = useState<{ subject: string; htmlContent: string; textContent?: string }>({
     subject: '',
     htmlContent: '',
@@ -157,7 +158,6 @@ export const EmailConfigPage: React.FC = () => {
   const [emailBodyTextColor, setEmailBodyTextColor] = useState('#333333');
   const [emailMutedTextColor, setEmailMutedTextColor] = useState('#666666');
   const [emailButtonTextColor, setEmailButtonTextColor] = useState('#ffffff');
-  const queryClient = useQueryClient();
   const { flags: featureFlags } = useFeatureFlags();
 
   // SMTP Configuration state
@@ -239,25 +239,17 @@ export const EmailConfigPage: React.FC = () => {
     || e?.message
     || fallback;
 
-  const saveConfigMutation = useMutation({
+  const saveConfigMutation = useMutationWithToast({
     mutationFn: (config: EmailConfig) => emailService.updateConfig(config),
-    onSuccess: () => {
-      toast.success(t('toast.emailConfigSaved'));
-      queryClient.invalidateQueries({ queryKey: ['email-config'] });
-    },
-    onError: (e: any) => {
-      toast.error(errMsg(e, t('toast.saveError')));
-    }
+    successMessage: t('toast.emailConfigSaved'),
+    invalidateKeys: [['email-config']],
+    errorMessage: (e: any) => errMsg(e, t('toast.saveError')),
   });
 
-  const testEmailMutation = useMutation({
+  const testEmailMutation = useMutationWithToast({
     mutationFn: (email: string) => emailService.testEmail(email),
-    onSuccess: () => {
-      toast.success(t('email.testEmailSuccess'));
-    },
-    onError: (e: any) => {
-      toast.error(errMsg(e, t('toast.saveError')));
-    }
+    successMessage: t('email.testEmailSuccess'),
+    errorMessage: (e: any) => errMsg(e, t('toast.saveError')),
   });
 
   const flushQueueMutation = useMutation({
@@ -274,29 +266,20 @@ export const EmailConfigPage: React.FC = () => {
     }
   });
 
-  const saveTemplateMutation = useMutation({
+  const saveTemplateMutation = useMutationWithToast({
     mutationFn: ({ key, translations }: { key: string; translations: Record<string, EmailTemplateTranslation> }) =>
       emailService.updateTemplate(key, { translations }),
-    onSuccess: () => {
-      toast.success(t('toast.saveSuccess'));
-      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-      queryClient.invalidateQueries({ queryKey: ['email-template', selectedTemplateKey] });
-    },
-    onError: () => {
-      toast.error(t('toast.saveError'));
-    }
+    successMessage: t('toast.saveSuccess'),
+    invalidateKeys: [['email-templates'], ['email-template', selectedTemplateKey]],
+    errorMessage: () => t('toast.saveError'),
   });
 
-  const saveEmailColorsMutation = useMutation({
+  const saveEmailColorsMutation = useMutationWithToast({
     mutationFn: (colors: Record<string, string>) =>
       settingsService.updateSettings(colors),
-    onSuccess: () => {
-      toast.success(t('toast.saveSuccess'));
-      queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
-    },
-    onError: () => {
-      toast.error(t('toast.saveError'));
-    }
+    successMessage: t('toast.saveSuccess'),
+    invalidateKeys: [['admin-settings']],
+    errorMessage: () => t('toast.saveError'),
   });
 
   const handleSaveEmailColors = () => {
@@ -431,7 +414,7 @@ export const EmailConfigPage: React.FC = () => {
         htmlContent: preview.body_html,
         textContent: preview.body_text
       });
-      setShowPreview(true);
+      previewModal.open();
     } catch (error) {
       toast.error(t('toast.saveError'));
     }
@@ -1057,8 +1040,8 @@ export const EmailConfigPage: React.FC = () => {
 
       {/* Email Preview Modal */}
       <EmailPreviewModal
-        isOpen={showPreview}
-        onClose={() => setShowPreview(false)}
+        isOpen={previewModal.isOpen}
+        onClose={previewModal.close}
         subject={previewData.subject}
         htmlContent={previewData.htmlContent}
         textContent={previewData.textContent}

@@ -14,11 +14,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, X, ExternalLink, ChevronRight } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
+import { useModal } from '../../hooks';
 
 export const WhatsNewBanner: React.FC = () => {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const detailsModal = useModal();
   const [hidden, setHidden] = useState(false);
 
   const { data } = useQuery({
@@ -31,7 +32,7 @@ export const WhatsNewBanner: React.FC = () => {
     mutationFn: () => adminService.markWhatsNewSeen(),
     onSuccess: () => {
       setHidden(true);
-      setOpen(false);
+      detailsModal.close();
       qc.invalidateQueries({ queryKey: ['whatsnew'] });
     },
   });
@@ -56,7 +57,7 @@ export const WhatsNewBanner: React.FC = () => {
               </ul>
               <div className="mt-2">
                 <button
-                  onClick={() => setOpen(true)}
+                  onClick={detailsModal.open}
                   className="inline-flex items-center text-xs font-medium text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-md transition-colors"
                 >
                   {t('admin.whatsnew.viewAll', "What's new")}
@@ -75,10 +76,10 @@ export const WhatsNewBanner: React.FC = () => {
         </div>
       </div>
 
-      {open && (
+      {detailsModal.isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setOpen(false)}
+          onClick={detailsModal.close}
         >
           <div
             className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] overflow-auto p-6"
@@ -89,7 +90,7 @@ export const WhatsNewBanner: React.FC = () => {
                 <Sparkles className="w-5 h-5 text-green-600" />
                 {t('admin.whatsnew.modalTitle', "What's new")}
               </h3>
-              <button onClick={() => setOpen(false)} className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+              <button onClick={detailsModal.close} className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
                 <X className="w-5 h-5" />
               </button>
             </div>

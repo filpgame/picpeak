@@ -6,6 +6,7 @@ import { Save, RotateCcw, Code, AlertTriangle, Check } from 'lucide-react';
 import { Button, Card, Loading } from '../common';
 import { cssTemplatesService, CssTemplate } from '../../services/cssTemplates.service';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../hooks';
 
 export const CssTemplateEditor: React.FC = () => {
   const { t } = useTranslation();
@@ -57,15 +58,11 @@ export const CssTemplateEditor: React.FC = () => {
   });
 
   // Reset mutation
-  const resetMutation = useMutation({
+  const resetMutation = useMutationWithToast({
     mutationFn: () => cssTemplatesService.resetToDefault(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['css-templates'] });
-      toast.success(t('cssTemplates.reset', 'Template reset to default'));
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('cssTemplates.resetFailed', 'Failed to reset template'));
-    }
+    invalidateKeys: [['css-templates']],
+    successMessage: t('cssTemplates.reset', 'Template reset to default'),
+    errorMessage: (error: Error) => error.message || t('cssTemplates.resetFailed', 'Failed to reset template')
   });
 
   const activeTemplate = localTemplates.find(t => t.slot_number === activeSlot);

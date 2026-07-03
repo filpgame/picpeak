@@ -25,6 +25,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
 import { feedbackService } from '../../services/feedback.service';
 import type { PhotoFeedback, FeedbackAnalytics, FeedbackResponse } from '../../services/feedback.service';
+import { useMutationWithToast } from '../../hooks';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 export const EventFeedbackPage: React.FC = () => {
@@ -76,15 +77,11 @@ export const EventFeedbackPage: React.FC = () => {
   });
 
   // Update settings mutation
-  const updateSettingsMutation = useMutation({
+  const updateSettingsMutation = useMutationWithToast({
     mutationFn: (newSettings: any) => feedbackService.updateEventFeedbackSettings(id!, newSettings),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['feedback-settings', id] });
-      toast.success(t('feedback.settingsUpdated', 'Feedback settings updated'));
-    },
-    onError: () => {
-      toast.error(t('feedback.settingsUpdateError', 'Failed to update settings'));
-    }
+    invalidateKeys: [['feedback-settings', id]],
+    successMessage: t('feedback.settingsUpdated', 'Feedback settings updated'),
+    errorMessage: () => t('feedback.settingsUpdateError', 'Failed to update settings'),
   });
 
   // Moderate feedback mutation

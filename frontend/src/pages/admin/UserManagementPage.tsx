@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
+import { useQuery } from '@tanstack/react-query';
 import {
   Users,
   Mail,
@@ -23,7 +22,7 @@ import { parseISO, isPast } from 'date-fns';
 import { Button, Input, Card, Loading } from '../../components/common';
 import { userManagementService } from '../../services/userManagement.service';
 import type { AdminUser, AdminRole, AdminInvitation } from '../../types';
-import { useLocalizedDate } from "../../hooks";
+import { useLocalizedDate, useModal, useMutationWithToast } from "../../hooks";
 
 type TabType = 'users' | 'invitations';
 
@@ -369,14 +368,13 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
 export const UserManagementPage: React.FC = () => {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const { formatDistanceToNow } = useLocalizedDate()
 
   // State
   const [activeTab, setActiveTab] = useState<TabType>('users');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showCreateInvitationModal, setShowCreateInvitationModal] = useState(false);
-  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const createInvitationModal = useModal();
+  const editUserModal = useModal();
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -413,80 +411,68 @@ export const UserManagementPage: React.FC = () => {
   });
 
   // Mutations
-  const createInvitationMutation = useMutation({
+  const createInvitationMutation = useMutationWithToast({
     mutationFn: ({ email, roleId }: { email: string; roleId: number }) =>
       userManagementService.createInvitation({ email, role_id: roleId }),
+    invalidateKeys: [['admin-invitations']],
+    successMessage: t('userManagement.invitationSent'),
+    errorMessage: (error: Error) => error.message || t('userManagement.invitationError'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-invitations'] });
-      setShowCreateInvitationModal(false);
-      toast.success(t('userManagement.invitationSent'));
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('userManagement.invitationError'));
+      createInvitationModal.close();
     },
   });
 
-  const cancelInvitationMutation = useMutation({
+  const cancelInvitationMutation = useMutationWithToast({
     mutationFn: userManagementService.cancelInvitation,
+    invalidateKeys: [['admin-invitations']],
+    successMessage: t('userManagement.invitationCancelled'),
+    errorMessage: () => t('userManagement.cancelInvitationError'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-invitations'] });
       setConfirmDialog(null);
-      toast.success(t('userManagement.invitationCancelled'));
-    },
-    onError: () => {
-      toast.error(t('userManagement.cancelInvitationError'));
     },
   });
 
-  const updateUserMutation = useMutation({
+  const updateUserMutation = useMutationWithToast({
     mutationFn: ({ id, roleId }: { id: number; roleId: number }) =>
       userManagementService.updateUser(id, { roleId }),
+    invalidateKeys: [['admin-users']],
+    successMessage: t('userManagement.userUpdated'),
+    errorMessage: () => t('userManagement.updateUserError'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      setShowEditUserModal(false);
+      editUserModal.close();
       setSelectedUser(null);
-      toast.success(t('userManagement.userUpdated'));
-    },
-    onError: () => {
-      toast.error(t('userManagement.updateUserError'));
     },
   });
 
-  const deactivateUserMutation = useMutation({
+  const deactivateUserMutation = useMutationWithToast({
     mutationFn: userManagementService.deactivateUser,
+    invalidateKeys: [['admin-users']],
+    successMessage: t('userManagement.userDeactivated'),
+    errorMessage: () => t('userManagement.deactivateUserError'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       setConfirmDialog(null);
-      toast.success(t('userManagement.userDeactivated'));
-    },
-    onError: () => {
-      toast.error(t('userManagement.deactivateUserError'));
     },
   });
 
   // #574 follow-up: reactivate + delete actions for the rows the
   // deactivate button used to leave unmanageable.
-  const activateUserMutation = useMutation({
+  const activateUserMutation = useMutationWithToast({
     mutationFn: userManagementService.activateUser,
+    invalidateKeys: [['admin-users']],
+    successMessage: t('userManagement.userActivated', 'User reactivated successfully'),
+    errorMessage: () => t('userManagement.activateUserError', 'Failed to reactivate user'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       setConfirmDialog(null);
-      toast.success(t('userManagement.userActivated', 'User reactivated successfully'));
-    },
-    onError: () => {
-      toast.error(t('userManagement.activateUserError', 'Failed to reactivate user'));
     },
   });
 
-  const deleteUserMutation = useMutation({
+  const deleteUserMutation = useMutationWithToast({
     mutationFn: userManagementService.deleteUser,
+    invalidateKeys: [['admin-users']],
+    successMessage: t('userManagement.userDeleted', 'User deleted successfully'),
+    errorMessage: () => t('userManagement.deleteUserError', 'Failed to delete user'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       setConfirmDialog(null);
-      toast.success(t('userManagement.userDeleted', 'User deleted successfully'));
-    },
-    onError: () => {
-      toast.error(t('userManagement.deleteUserError', 'Failed to delete user'));
     },
   });
 
@@ -523,7 +509,7 @@ export const UserManagementPage: React.FC = () => {
 
   const handleEditUser = (user: AdminUser) => {
     setSelectedUser(user);
-    setShowEditUserModal(true);
+    editUserModal.open();
   };
 
   const handleUpdateUser = (userId: number, roleId: number) => {
@@ -641,7 +627,7 @@ export const UserManagementPage: React.FC = () => {
         <Button
           variant="primary"
           leftIcon={<Plus className="w-5 h-5" />}
-          onClick={() => setShowCreateInvitationModal(true)}
+          onClick={createInvitationModal.open}
         >
           {t('userManagement.inviteUser')}
         </Button>
@@ -983,8 +969,8 @@ export const UserManagementPage: React.FC = () => {
 
       {/* Create Invitation Modal */}
       <CreateInvitationModal
-        isOpen={showCreateInvitationModal}
-        onClose={() => setShowCreateInvitationModal(false)}
+        isOpen={createInvitationModal.isOpen}
+        onClose={createInvitationModal.close}
         onSubmit={handleCreateInvitation}
         roles={roles || []}
         isLoading={createInvitationMutation.isPending}
@@ -992,9 +978,9 @@ export const UserManagementPage: React.FC = () => {
 
       {/* Edit User Modal */}
       <EditUserModal
-        isOpen={showEditUserModal}
+        isOpen={editUserModal.isOpen}
         onClose={() => {
-          setShowEditUserModal(false);
+          editUserModal.close();
           setSelectedUser(null);
         }}
         onSubmit={handleUpdateUser}

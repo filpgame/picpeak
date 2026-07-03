@@ -13,15 +13,15 @@
  * VatCodesManager. Scoping each patch keeps the two from reverting each other.
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import { X, Plus, Pencil, Trash2, AlertCircle } from 'lucide-react';
 import { Button, Card, CardContent, Input, Loading } from '../common';
 import {
   ledgerService, type LedgerAccount, type AccountType, type LedgerSettings,
 } from '../../services/ledger.service';
 import { categoryLabel } from '../../services/accounting.service';
+import { useMutationWithToast } from '../../hooks';
 
 const ACCOUNT_TYPES: AccountType[] = ['asset', 'liability', 'equity', 'revenue', 'expense'];
 const labelCls = 'block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1';
@@ -39,10 +39,11 @@ const AccountModal: React.FC<{ account?: LedgerAccount; onClose: () => void; onD
   const [number, setNumber] = useState(account?.number ?? '');
   const [name, setName] = useState(account?.name ?? '');
   const [type, setType] = useState<AccountType>(account?.type ?? 'expense');
-  const save = useMutation({
+  const save = useMutationWithToast({
     mutationFn: () => isEdit ? ledgerService.updateAccount(account!.id, { number, name, type }) : ledgerService.createAccount({ number, name, type }),
-    onSuccess: () => { toast.success(t('common.saved', 'Saved.')); onDone(); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: t('common.saved', 'Saved.'),
+    onSuccess: () => onDone(),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
   });
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4">
@@ -85,27 +86,29 @@ export const ChartOfAccountsManager: React.FC = () => {
 
   const refetchAll = () => { qc.invalidateQueries({ queryKey: ['ledger-accounts'] }); qc.invalidateQueries({ queryKey: ['ledger-vat-codes'] }); qc.invalidateQueries({ queryKey: ['ledger-mappings'] }); };
 
-  const delAccount = useMutation({
+  const delAccount = useMutationWithToast({
     mutationFn: (id: number) => ledgerService.deleteAccount(id),
-    onSuccess: () => { toast.success(t('common.deleted', 'Deleted.')); refetchAll(); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: t('common.deleted', 'Deleted.'),
+    onSuccess: () => refetchAll(),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
   });
-  const setCat = useMutation({
+  const setCat = useMutationWithToast({
     mutationFn: ({ id, accId }: { id: number; accId: number | null }) => ledgerService.setCategoryAccount(id, accId),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ledger-mappings'] }); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    invalidateKeys: [['ledger-mappings']],
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
   });
   // Save ONLY the account keys — the VAT maps are owned by VatCodesManager and
   // updateSettings is a partial merge, so scoping the patch here prevents a
   // stale full-settings save from reverting the maps.
-  const saveSettings = useMutation({
+  const saveSettings = useMutationWithToast({
     mutationFn: () => {
       const patch: Partial<LedgerSettings> = {};
       for (const k of SETTING_ACCOUNT_KEYS) patch[k] = settings[k];
       return ledgerService.updateSettings(patch);
     },
-    onSuccess: () => { toast.success(t('ledger.settingsSaved', 'Mappings saved.')); qc.invalidateQueries({ queryKey: ['ledger-mappings'] }); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: t('ledger.settingsSaved', 'Mappings saved.'),
+    invalidateKeys: [['ledger-mappings']],
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
   });
 
   const setAcctSetting = (key: keyof LedgerSettings, value: string) => setSettings((s) => ({ ...s, [key]: value }));

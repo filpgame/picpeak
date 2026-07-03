@@ -16,10 +16,11 @@ import { format, parseISO, isValid } from 'date-fns';
 import { toast } from 'react-toastify';
 
 import { Button, Input, Card, Loading } from '../../components/common';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { archiveService } from '../../services/archive.service';
 import { useTranslation } from 'react-i18next';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../hooks';
 // import { useNavigate } from 'react-router-dom';
 
 export const ArchivesPage: React.FC = () => {
@@ -30,7 +31,6 @@ export const ArchivesPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'date' | 'size' | 'name'>('date');
   const [currentPage, setCurrentPage] = useState(1);
   // const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   // Helper function to safely format dates
   const formatDate = (dateString: string | null | undefined, formatStr: string): string => {
@@ -79,26 +79,18 @@ export const ArchivesPage: React.FC = () => {
   };
 
   // Mutations
-  const restoreMutation = useMutation({
+  const restoreMutation = useMutationWithToast({
     mutationFn: (id: number) => archiveService.restoreArchive(id),
-    onSuccess: () => {
-      toast.success(t('archives.restoreSuccess'));
-      queryClient.invalidateQueries({ queryKey: ['admin-archives'] });
-    },
-    onError: () => {
-      toast.error(t('errors.somethingWentWrong'));
-    }
+    successMessage: t('archives.restoreSuccess'),
+    errorMessage: () => t('errors.somethingWentWrong'),
+    invalidateKeys: [['admin-archives']],
   });
 
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutationWithToast({
     mutationFn: (id: number) => archiveService.deleteArchive(id),
-    onSuccess: () => {
-      toast.success(t('archives.deleteSuccess'));
-      queryClient.invalidateQueries({ queryKey: ['admin-archives'] });
-    },
-    onError: () => {
-      toast.error(t('errors.somethingWentWrong'));
-    }
+    successMessage: t('archives.deleteSuccess'),
+    errorMessage: () => t('errors.somethingWentWrong'),
+    invalidateKeys: [['admin-archives']],
   });
 
   const handleDownload = async (archive: typeof archives[0]) => {

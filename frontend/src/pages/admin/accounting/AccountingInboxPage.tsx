@@ -18,6 +18,7 @@ import { EventBookingSelect } from '../../../components/admin/EventBookingSelect
 import { formatMoneyMinor } from '../../../utils/money';
 import { sortedCountryOptions } from '../../../constants/countries';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../../hooks';
 import {
   accountingService, categoryLabel,
   type InboundDocument, type Disposition, type MarkupType, type PaymentMethod, type ExpenseCategory,
@@ -89,10 +90,11 @@ const PayModal: React.FC<{ doc: InboundDocument; onClose: () => void; onDone: ()
   const [paidAt, setPaidAt] = useState('');
   const [method, setMethod] = useState<PaymentMethod>('bank_transfer');
   const [reference, setReference] = useState(doc.paymentReference || '');
-  const save = useMutation({
+  const save = useMutationWithToast({
     mutationFn: () => accountingService.markInboundPaid(doc.id, { paid: true, paidAt: paidAt || undefined, paymentMethod: method, paymentReference: reference || undefined }),
-    onSuccess: () => { toast.success(t('accounting.incoming.paidToast', 'Marked as paid.')); onDone(); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: t('accounting.incoming.paidToast', 'Marked as paid.'),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
+    onSuccess: () => onDone(),
   });
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4">
@@ -205,7 +207,7 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
   // `pay` decides whether to also mark the supplier invoice paid in the same
   // step (#5/#1). When true we mark it paid directly (using the reference
   // entered) — no second dialog — so "Save & mark paid" actually pays.
-  const save = useMutation({
+  const save = useMutationWithToast({
     mutationFn: async (pay: boolean) => {
       await accountingService.updateInbound(doc.id, { supplierName: supplier || null, totalAmountMinor: totalMinor, currency: currency || null, invoiceDate: invoiceDate || null, paymentReference: reference || null, note: note || null, supplierCountry: supplierCountry || null });
       await accountingService.categorizeInbound(doc.id, {
@@ -221,11 +223,9 @@ const TriageModal: React.FC<{ doc: InboundDocument; categories: ExpenseCategory[
         await accountingService.markInboundPaid(doc.id, { paid: true, paymentReference: reference || undefined });
       }
     },
-    onSuccess: (_data, pay) => {
-      toast.success(pay ? t('accounting.incoming.categorizedPaidToast', 'Categorized and marked paid.') : t('accounting.incoming.categorizedToast', 'Categorized.'));
-      onDone();
-    },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: (_data, pay) => pay ? t('accounting.incoming.categorizedPaidToast', 'Categorized and marked paid.') : t('accounting.incoming.categorizedToast', 'Categorized.'),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
+    onSuccess: () => onDone(),
   });
 
   const rebillNeedsCustomer = disposition === 'rebill' && !customer[0];
@@ -342,10 +342,10 @@ export const AccountingInboxPage: React.FC = () => {
     onSuccess: (doc) => { toast.success(t('accounting.inbox.capturedToast', 'Document captured.')); qc.invalidateQueries({ queryKey: ['accounting-inbound'] }); if (doc.status === 'unsorted') setTriageDoc(doc); },
     onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Upload failed'),
   });
-  const unpay = useMutation({
+  const unpay = useMutationWithToast({
     mutationFn: (id: number) => accountingService.markInboundPaid(id, { paid: false }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['accounting-inbound'] }); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    invalidateKeys: [['accounting-inbound']],
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
   });
   const billPending = useMutation({
     mutationFn: (customerAccountId: number) => accountingService.billPendingRebills(customerAccountId),

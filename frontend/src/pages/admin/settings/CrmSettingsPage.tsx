@@ -9,13 +9,13 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Save as SaveIcon, Workflow as WorkflowIcon } from 'lucide-react';
 import { Button, Card, Loading, Input } from '../../../components/common';
 import { settingsService } from '../../../services/settings.service';
 import { quotesService } from '../../../services/quotes.service';
 import { useFeatureFlags } from '../../../contexts/FeatureFlagsContext';
-import { toast } from 'react-toastify';
+import { useMutationWithToast } from '../../../hooks';
 
 const SETTING_KEYS = [
   'crm_quotes_pdf_attachment_enabled',
@@ -76,7 +76,6 @@ const SETTING_KEYS = [
 
 export const CrmSettingsPage: React.FC = () => {
   const { t } = useTranslation();
-  const qc = useQueryClient();
   const { flags } = useFeatureFlags();
   // Show each section only when the corresponding master flag is on —
   // configuring Skonto on quotes is pointless when quotes itself is
@@ -116,7 +115,7 @@ export const CrmSettingsPage: React.FC = () => {
   const [values, setValues] = useState<Record<string, any>>({});
   useEffect(() => { if (data) setValues(data); }, [data]);
 
-  const saveAll = useMutation({
+  const saveAll = useMutationWithToast({
     mutationFn: async () => {
       const changed: Record<string, any> = {};
       for (const key of SETTING_KEYS) {
@@ -126,11 +125,9 @@ export const CrmSettingsPage: React.FC = () => {
         await settingsService.updateSettings(changed);
       }
     },
-    onSuccess: () => {
-      toast.success(t('crmSettings.savedToast', 'CRM settings saved.'));
-      qc.invalidateQueries({ queryKey: ['settings', 'crm'] });
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || 'Save failed'),
+    successMessage: t('crmSettings.savedToast', 'CRM settings saved.'),
+    invalidateKeys: [['settings', 'crm']],
+    errorMessage: 'Save failed',
   });
 
   if (isLoading) return <Loading />;

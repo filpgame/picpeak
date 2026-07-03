@@ -10,7 +10,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
   ReactFlow, Background, Controls, MiniMap, addEdge, useNodesState, useEdgesState,
@@ -22,6 +22,7 @@ import { ArrowLeft, Save, Trash2, Wand2, Code } from 'lucide-react';
 import { Button, Loading } from '../../../components/common';
 import { api } from '../../../config/api';
 import { useAdminDarkMode } from '../../../contexts/AdminDarkModeContext';
+import { useMutationWithToast } from '../../../hooks';
 import { workflowsService, type WorkflowNodeType } from '../../../services/workflows.service';
 import { NodeConfigPanel } from './NodeConfigPanel';
 
@@ -117,7 +118,6 @@ function layoutGraph(nodes: Node[], edges: Edge[]): Node[] {
 export const WorkflowEditorPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const { isDark } = useAdminDarkMode();
   const { id } = useParams<{ id: string }>();
   const workflowId = Number(id);
@@ -245,7 +245,7 @@ export const WorkflowEditorPage: React.FC = () => {
     setSelectedId(null);
   };
 
-  const saveMutation = useMutation({
+  const saveMutation = useMutationWithToast({
     mutationFn: () => workflowsService.update(workflowId, {
       name: name.trim() || 'Untitled',
       trigger_type: triggerType,
@@ -257,12 +257,9 @@ export const WorkflowEditorPage: React.FC = () => {
       })),
       edges: edges.map((e) => ({ from_node: e.source, from_handle: e.sourceHandle || null, to_node: e.target })),
     }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['workflow', workflowId] });
-      qc.invalidateQueries({ queryKey: ['workflows'] });
-      toast.success(t('workflows.editor.saved', 'Workflow saved') as string);
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || (t('workflows.editor.saveFailed', 'Could not save') as string)),
+    successMessage: t('workflows.editor.saved', 'Workflow saved') as string,
+    invalidateKeys: [['workflow', workflowId], ['workflows']],
+    errorMessage: t('workflows.editor.saveFailed', 'Could not save') as string,
   });
 
   if (isLoading) return <div className="p-10"><Loading /></div>;

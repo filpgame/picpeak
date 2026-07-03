@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { photosService, ExportOptions, FeedbackFilters } from '../../services/photos.service';
 import { ExportPreviewModal } from './ExportPreviewModal';
+import { useMutationWithToast, useModal } from '../../hooks';
 
 // TXT + CSV render through the preview modal (with copy-to-clipboard and a
 // fallback download button). XMP is a ZIP archive — no textarea preview makes
@@ -53,22 +54,20 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
   disabled = false
 }) => {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+  const menuModal = useModal();
   const [preview, setPreview] = useState<{
     format: 'txt' | 'csv';
     content: string;
     filename: string;
   } | null>(null);
 
-  const exportMutation = useMutation({
+  const exportMutation = useMutationWithToast({
     mutationFn: (options: ExportOptions) => photosService.exportPhotos(eventId, options),
+    successMessage: t('export.success', 'Export downloaded successfully'),
     onSuccess: () => {
-      toast.success(t('export.success', 'Export downloaded successfully'));
-      setIsOpen(false);
+      menuModal.close();
     },
-    onError: (error: Error) => {
-      toast.error(t('export.error', 'Export failed: ') + error.message);
-    }
+    errorMessage: (error: Error) => t('export.error', 'Export failed: ') + error.message
   });
 
   const previewMutation = useMutation({
@@ -79,7 +78,7 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
       })),
     onSuccess: (result) => {
       setPreview(result);
-      setIsOpen(false);
+      menuModal.close();
     },
     onError: (error: Error) => {
       toast.error(t('export.error', 'Export failed: ') + error.message);
@@ -145,7 +144,7 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
     <div className="relative">
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={menuModal.toggle}
         disabled={isDisabled || isWorking}
         className={`
           inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-medium text-sm
@@ -167,15 +166,15 @@ export const PhotoExportMenu: React.FC<PhotoExportMenuProps> = ({
             {selectedPhotoIds.length}
           </span>
         )}
-        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 transition-transform ${menuModal.isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {isOpen && !isDisabled && (
+      {menuModal.isOpen && !isDisabled && (
         <>
           {/* Backdrop */}
           <div
             className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
+            onClick={menuModal.close}
           />
 
           {/* Dropdown Menu */}

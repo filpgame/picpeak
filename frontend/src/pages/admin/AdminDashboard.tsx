@@ -17,14 +17,14 @@ import {
 } from 'lucide-react';
 import { differenceInDays, parseISO } from 'date-fns';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../hooks';
 
 import { Button, Card, Loading } from '../../components/common';
 import { UpdateNotification } from '../../components/admin/UpdateNotification';
 import { WhatsNewBanner } from '../../components/admin/WhatsNewBanner';
 import { CrmOverviewSection } from '../../components/admin/CrmOverviewSection';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
 import { adminService, ActivityType } from '../../services/admin.service';
 import { workflowsService } from '../../services/workflows.service';
@@ -82,19 +82,16 @@ export const AdminDashboard: React.FC = () => {
   // Pending workflow approvals — only when the workflow engine is live. These
   // are the human-in-the-loop gates (e.g. "review invoice before sending").
   const { flags } = useFeatureFlags();
-  const qc = useQueryClient();
   const { data: pendingApprovals } = useQuery({
     queryKey: ['workflow-approvals'],
     queryFn: () => workflowsService.approvals(),
     enabled: !!flags.workflows,
   });
-  const approvalMutation = useMutation({
+  const approvalMutation = useMutationWithToast({
     mutationFn: ({ id, action }: { id: number; action: 'confirm' | 'deny' }) => workflowsService.actApproval(id, action),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['workflow-approvals'] });
-      toast.success(t('workflows.approvals.acted', 'Done') as string);
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || (t('common.error', 'Something went wrong') as string)),
+    invalidateKeys: [['workflow-approvals']],
+    successMessage: t('workflows.approvals.acted', 'Done') as string,
+    errorMessage: t('common.error', 'Something went wrong') as string,
   });
 
   // Admin detail route for an approval's run entity, so clicking opens the

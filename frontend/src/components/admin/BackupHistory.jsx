@@ -20,10 +20,10 @@ import {
   RefreshCw,
   Loader2
 } from 'lucide-react';
-import { toast } from 'react-toastify';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Button, Card, Input, Loading } from '../common';
 import { api } from '../../config/api';
+import { useMutationWithToast } from '../../hooks';
 // Per [[feedback_respect_general_format_settings]]: route every displayed
 // date/time through useLocalizedDate so the admin's general_date_format +
 // general_time_format settings apply uniformly. Previously the backup
@@ -53,7 +53,6 @@ export const BackupHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const queryClient = useQueryClient();
   // Locale-aware formatters that respect admin's general_date_format +
   // general_time_format settings. See useLocalizedDate.ts for the full
   // contract; formatTime gives "HH:mm" (24h) or "h:mm a" (12h) based on
@@ -77,18 +76,14 @@ export const BackupHistory = () => {
   });
 
   // Delete backup mutation
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutationWithToast({
     mutationFn: async (backupId) => {
       const response = await api.delete(`/admin/backup/runs/${backupId}`);
       return response.data;
     },
-    onSuccess: () => {
-      toast.success('Backup deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['backup-history'] });
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.error || 'Failed to delete backup');
-    }
+    successMessage: 'Backup deleted successfully',
+    invalidateKeys: [['backup-history']],
+    errorMessage: 'Failed to delete backup'
   });
 
   const toggleRowExpansion = (id) => {
