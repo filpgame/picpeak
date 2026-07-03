@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { db } = require('../database/db');
 const { getAdminTokenFromRequest } = require('../utils/tokenUtils');
+const logger = require('../utils/logger');
 
 // In-memory session tracking (in production, use Redis)
 const sessions = new Map();
@@ -69,7 +70,7 @@ async function getSessionTimeout() {
   } catch (error) {
     // Only log if it's not a connection error (to avoid spam)
     if (error.code !== 'ECONNRESET' && !error.message?.includes('Connection terminated')) {
-      console.error('Error getting session timeout:', error.message);
+      logger.error('Error getting session timeout:', error.message);
     }
   }
   

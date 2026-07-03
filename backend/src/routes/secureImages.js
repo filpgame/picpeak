@@ -412,7 +412,7 @@ async function getRecentAccessStats() {
       return acc;
     }, {});
   } catch (error) {
-    console.error('Error getting recent access stats:', error);
+    logger.error('Error getting recent access stats:', error);
     return {};
   }
 }
@@ -440,7 +440,7 @@ async function getSuspiciousActivityStats() {
       uniqueIPs: parseInt(uniqueIPs.count)
     };
   } catch (error) {
-    console.error('Error getting suspicious activity stats:', error);
+    logger.error('Error getting suspicious activity stats:', error);
     return { suspiciousEvents: 0, uniqueIPs: 0 };
   }
 }

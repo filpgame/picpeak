@@ -14,6 +14,7 @@ const { buildShareLinkVariants } = require('../services/shareLinkService');
 const { parseBooleanInput, parseStringInput } = require('../utils/parsers');
 const eventTypeService = require('../services/eventTypeService');
 const { IDENTITY_PRESERVING_NORMALIZE_EMAIL } = require('../utils/emailNormalization');
+const logger = require('../utils/logger');
 
 // Use parseStringInput from shared parsers for customer data extraction
 const getCustomerNameFromPayload = (payload = {}) => parseStringInput(payload.customer_name);
@@ -235,7 +236,7 @@ router.post('/', adminAuth, [
           });
         }
       } catch (waError) {
-        console.warn('Failed to queue WhatsApp notification on create', waError.message);
+        logger.warn('Failed to queue WhatsApp notification on create', waError.message);
       }
     }
 
@@ -271,7 +272,7 @@ router.post('/', adminAuth, [
       customer_email: customerEmail
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ error: 'Failed to create event' });
   }
 });

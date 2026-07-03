@@ -19,6 +19,7 @@ const { db, logActivity } = require('../database/db');
 const { formatBoolean } = require('../utils/dbCompat');
 const { getBcryptRounds } = require('../utils/passwordValidation');
 const logger = require('../utils/logger');
+const { errorResponse } = require('../utils/routeHelpers');
 const { getClientIp } = require('../utils/requestIp');
 const { customerAuth } = require('../middleware/customerAuth');
 const { setGalleryAuthCookies } = require('../utils/tokenUtils');
@@ -117,8 +118,7 @@ router.get('/events', customerAuth, async (req, res) => {
       })),
     });
   } catch (error) {
-    logger.error('Customer event list error:', error);
-    res.status(500).json({ error: 'Failed to load events' });
+    errorResponse(res, error, 500, 'Failed to load events');
   }
 });
 
@@ -225,8 +225,7 @@ router.get('/events/:slug/access-token', [
       },
     });
   } catch (error) {
-    logger.error('Customer access-token exchange error:', error);
-    res.status(500).json({ error: 'Failed to issue access token' });
+    errorResponse(res, error, 500, 'Failed to issue access token');
   }
 });
 
@@ -248,8 +247,7 @@ router.get('/profile', customerAuth, async (req, res) => {
     }
     res.json({ profile: shapeProfile(row) });
   } catch (error) {
-    logger.error('Customer profile read error:', error);
-    res.status(500).json({ error: 'Failed to load profile' });
+    errorResponse(res, error, 500, 'Failed to load profile');
   }
 });
 
@@ -316,8 +314,7 @@ router.put('/profile', [
 
     res.json({ profile: shapeProfile(row) });
   } catch (error) {
-    logger.error('Customer profile update error:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
+    errorResponse(res, error, 500, 'Failed to update profile');
   }
 });
 
@@ -376,8 +373,7 @@ router.post('/profile/password', [
 
     res.json({ message: 'Password updated' });
   } catch (error) {
-    logger.error('Customer password change error:', error);
-    res.status(500).json({ error: 'Failed to change password' });
+    errorResponse(res, error, 500, 'Failed to change password');
   }
 });
 
@@ -457,8 +453,7 @@ router.get('/quotes', customerAuth, async (req, res) => {
       })),
     });
   } catch (error) {
-    logger.error('Customer quotes list error:', error);
-    res.status(500).json({ error: 'Failed to load quotes' });
+    errorResponse(res, error, 500, 'Failed to load quotes');
   }
 });
 
@@ -545,8 +540,7 @@ router.get('/invoices', customerAuth, async (req, res) => {
       })),
     });
   } catch (error) {
-    logger.error('Customer invoice list error:', error);
-    res.status(500).json({ error: 'Failed to load invoices' });
+    errorResponse(res, error, 500, 'Failed to load invoices');
   }
 });
 
@@ -582,8 +576,7 @@ router.get('/quotes/:id/pdf', customerAuth, async (req, res) => {
     res.set('Content-Disposition', `inline; filename="${filename}"`);
     res.send(buf);
   } catch (error) {
-    logger.error('Customer quote PDF error:', error);
-    res.status(500).json({ error: 'Failed to render quote PDF' });
+    errorResponse(res, error, 500, 'Failed to render quote PDF');
   }
 });
 
@@ -614,8 +607,7 @@ router.get('/invoices/:id/pdf', customerAuth, async (req, res) => {
     res.set('Content-Disposition', `inline; filename="${filename}"`);
     res.send(buf);
   } catch (error) {
-    logger.error('Customer invoice PDF error:', error);
-    res.status(500).json({ error: 'Failed to render invoice PDF' });
+    errorResponse(res, error, 500, 'Failed to render invoice PDF');
   }
 });
 
@@ -679,8 +671,7 @@ router.get('/contracts', customerAuth, async (req, res) => {
       })),
     });
   } catch (error) {
-    logger.error('Customer contracts list error:', error);
-    res.status(500).json({ error: 'Failed to load contracts' });
+    errorResponse(res, error, 500, 'Failed to load contracts');
   }
 });
 
@@ -717,8 +708,7 @@ router.get('/contracts/:id/pdf', customerAuth, async (req, res) => {
     res.set('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
     fs.createReadStream(filePath).pipe(res);
   } catch (error) {
-    logger.error('Customer contract PDF error:', error);
-    res.status(500).json({ error: 'Failed to render contract PDF' });
+    errorResponse(res, error, 500, 'Failed to render contract PDF');
   }
 });
 

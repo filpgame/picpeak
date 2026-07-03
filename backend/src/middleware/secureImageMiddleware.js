@@ -333,7 +333,7 @@ class SecureImageMiddleware {
         await db('security_logs').insert(logData).catch(console.error);
       }
     } catch (error) {
-      console.error('Error logging security event:', error);
+      logger.error('Error logging security event:', error);
     }
   }
 
@@ -363,7 +363,7 @@ class SecureImageMiddleware {
         perHour: config.perHour || 500
       };
     } catch (error) {
-      console.error('Error getting rate limit settings:', error);
+      logger.error('Error getting rate limit settings:', error);
       return { perMinute: 30, per5Minutes: 100, perHour: 500 };
     }
   }

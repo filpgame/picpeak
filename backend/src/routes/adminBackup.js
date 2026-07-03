@@ -4,6 +4,7 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const { triggerManualBackup, getBackupStatus, cleanupOldBackupRuns, getBackupManifest, validateBackupManifest } = require('../services/backupService');
 const logger = require('../utils/logger');
+const { errorResponse, getPagination } = require('../utils/routeHelpers');
 const { formatBytes } = require('../utils/formatBytes');
 const fs = require('fs').promises;
 const path = require('path');
@@ -31,8 +32,7 @@ router.get('/config', adminAuth, requirePermission('backup.view'), async (req, r
     
     res.json(config);
   } catch (error) {
-    logger.error('Failed to get backup configuration:', error);
-    res.status(500).json({ error: 'Failed to get backup configuration' });
+    errorResponse(res, error, 500, 'Failed to get backup configuration');
   }
 });
 
@@ -93,21 +93,19 @@ router.put('/config', adminAuth, requirePermission('backup.create'), async (req,
     
     res.json({ success: true, message: 'Backup configuration updated' });
   } catch (error) {
-    logger.error('Failed to update backup configuration:', error);
-    res.status(500).json({ error: 'Failed to update backup configuration' });
+    errorResponse(res, error, 500, 'Failed to update backup configuration');
   }
 });
 
 // Get backup status and history
 router.get('/status', adminAuth, requirePermission('backup.view'), async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
+    const { limit } = getPagination(req, { limit: 10 });
     const status = await getBackupStatus(limit);
     
     res.json(status);
   } catch (error) {
-    logger.error('Failed to get backup status:', error);
-    res.status(500).json({ error: 'Failed to get backup status' });
+    errorResponse(res, error, 500, 'Failed to get backup status');
   }
 });
 
@@ -127,8 +125,7 @@ router.post('/run', adminAuth, requirePermission('backup.create'), async (req, r
     
     res.json({ success: true, message: 'Backup started' });
   } catch (error) {
-    logger.error('Failed to trigger manual backup:', error);
-    res.status(500).json({ error: 'Failed to trigger backup' });
+    errorResponse(res, error, 500, 'Failed to trigger backup');
   }
 });
 
@@ -156,8 +153,7 @@ router.get('/runs/:id', adminAuth, requirePermission('backup.view'), async (req,
     
     res.json(run);
   } catch (error) {
-    logger.error('Failed to get backup run details:', error);
-    res.status(500).json({ error: 'Failed to get backup run details' });
+    errorResponse(res, error, 500, 'Failed to get backup run details');
   }
 });
 
@@ -191,8 +187,7 @@ router.get('/files', adminAuth, requirePermission('backup.view'), async (req, re
       }
     });
   } catch (error) {
-    logger.error('Failed to get backup file states:', error);
-    res.status(500).json({ error: 'Failed to get file states' });
+    errorResponse(res, error, 500, 'Failed to get file states');
   }
 });
 
@@ -205,8 +200,7 @@ router.delete('/cleanup', adminAuth, requirePermission('backup.delete'), async (
     
     res.json({ success: true, message: `Cleaned up backup runs older than ${days} days` });
   } catch (error) {
-    logger.error('Failed to cleanup old backup runs:', error);
-    res.status(500).json({ error: 'Failed to cleanup backup runs' });
+    errorResponse(res, error, 500, 'Failed to cleanup backup runs');
   }
 });
 
@@ -337,8 +331,7 @@ router.post('/test-connection', adminAuth, requirePermission('backup.create'), a
         res.status(400).json({ error: 'Invalid destination type' });
     }
   } catch (error) {
-    logger.error('Failed to test backup connection:', error);
-    res.status(500).json({ error: 'Failed to test connection' });
+    errorResponse(res, error, 500, 'Failed to test connection');
   }
 });
 
@@ -381,8 +374,7 @@ router.post('/manifest/validate', adminAuth, requirePermission('backup.view'), a
       manifestPath
     });
   } catch (error) {
-    logger.error('Failed to validate manifest:', error);
-    res.status(500).json({ error: 'Failed to validate manifest' });
+    errorResponse(res, error, 500, 'Failed to validate manifest');
   }
 });
 
@@ -494,8 +486,7 @@ router.post('/manifests/validate', adminAuth, requirePermission('backup.view'), 
       manifestPath
     });
   } catch (error) {
-    logger.error('Failed to validate manifest:', error);
-    res.status(500).json({ error: 'Failed to validate manifest' });
+    errorResponse(res, error, 500, 'Failed to validate manifest');
   }
 });
 
@@ -526,8 +517,7 @@ router.get('/s3/buckets', adminAuth, requirePermission('backup.view'), async (re
       owner: result.Owner || null
     });
   } catch (error) {
-    logger.error('Failed to list S3 buckets:', error);
-    res.status(500).json({ error: 'Failed to list S3 buckets' });
+    errorResponse(res, error, 500, 'Failed to list S3 buckets');
   }
 });
 
@@ -563,8 +553,7 @@ router.get('/s3/files', adminAuth, requirePermission('backup.view'), async (req,
       prefix: prefix
     });
   } catch (error) {
-    logger.error('Failed to list S3 files:', error);
-    res.status(500).json({ error: 'Failed to list S3 files' });
+    errorResponse(res, error, 500, 'Failed to list S3 files');
   }
 });
 
@@ -625,8 +614,7 @@ router.delete('/s3/cleanup', adminAuth, requirePermission('backup.delete'), asyn
       message: `Cleaned up ${deletedCount} S3 backup files older than ${retentionDays} days`
     });
   } catch (error) {
-    logger.error('Failed to cleanup S3 backups:', error);
-    res.status(500).json({ error: 'Failed to cleanup S3 backups' });
+    errorResponse(res, error, 500, 'Failed to cleanup S3 backups');
   }
 });
 
@@ -677,8 +665,7 @@ router.post('/s3/test-upload', adminAuth, requirePermission('backup.create'), as
       message: 'S3 upload test completed successfully'
     });
   } catch (error) {
-    logger.error('S3 upload test failed:', error);
-    res.status(500).json({ error: 'S3 upload test failed' });
+    errorResponse(res, error, 500, 'S3 upload test failed');
   }
 });
 
@@ -765,8 +752,7 @@ router.get('/download/:backupId', adminAuth, requirePermission('backup.view'), a
         return res.status(400).json({ error: 'Unknown backup type' });
     }
   } catch (error) {
-    logger.error('Failed to download backup:', error);
-    res.status(500).json({ error: 'Failed to download backup' });
+    errorResponse(res, error, 500, 'Failed to download backup');
   }
 });
 
@@ -838,8 +824,7 @@ router.get('/checksums', adminAuth, requirePermission('backup.view'), async (req
       path: targetPath || '/'
     });
   } catch (error) {
-    logger.error('Failed to get file checksums:', error);
-    res.status(500).json({ error: 'Failed to get file checksums' });
+    errorResponse(res, error, 500, 'Failed to get file checksums');
   }
 });
 
@@ -941,8 +926,7 @@ router.post('/estimate', adminAuth, requirePermission('backup.view'), async (req
       warnings: totalSize > 10 * 1024 * 1024 * 1024 ? ['Backup size exceeds 10GB, may take significant time'] : []
     });
   } catch (error) {
-    logger.error('Failed to estimate backup size:', error);
-    res.status(500).json({ error: 'Failed to estimate backup size' });
+    errorResponse(res, error, 500, 'Failed to estimate backup size');
   }
 });
 

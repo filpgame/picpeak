@@ -1,5 +1,6 @@
 const express = require('express');
 const { db, withRetry } = require('../database/db');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 // Get public settings (branding and theme)
@@ -205,7 +206,7 @@ router.get('/', async (req, res) => {
 
     res.json(publicSettings);
   } catch (error) {
-    console.error('Public settings fetch error:', error);
+    logger.error('Public settings fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch settings' });
   }
 });

@@ -11,7 +11,9 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const { requireEventOwnership } = require('../middleware/ownership');
 const { PhotoFilterBuilder } = require('../utils/photoFilterBuilder');
+const { getPagination } = require('../utils/routeHelpers');
 const { PhotoExportService } = require('../services/photoExportService');
+const logger = require('../utils/logger');
 
 const exportService = new PhotoExportService();
 
@@ -66,8 +68,7 @@ router.get('/:eventId/filtered', adminAuth, requirePermission('photos.view'), re
 
     const sort = req.query.sort || 'date';
     const order = req.query.order || 'desc';
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const { page, limit } = getPagination(req, { limit: 50 });
 
     // Build filtered query
     const filterBuilder = new PhotoFilterBuilder(
@@ -124,7 +125,7 @@ router.get('/:eventId/filtered', adminAuth, requirePermission('photos.view'), re
       }
     });
   } catch (error) {
-    console.error('Filter photos error:', error);
+    logger.error('Filter photos error:', error);
     res.status(500).json({ error: 'Failed to filter photos' });
   }
 });
@@ -146,7 +147,7 @@ router.get('/:eventId/filter-summary', adminAuth, requirePermission('photos.view
       data: summary
     });
   } catch (error) {
-    console.error('Filter summary error:', error);
+    logger.error('Filter summary error:', error);
     res.status(500).json({ error: 'Failed to get filter summary' });
   }
 });
@@ -206,7 +207,7 @@ router.post('/:eventId/export', adminAuth, requirePermission('photos.download'),
       res.send(result.content);
     }
   } catch (error) {
-    console.error('Export photos error:', error);
+    logger.error('Export photos error:', error);
     res.status(500).json({ error: error.message || 'Failed to export photos' });
   }
 });

@@ -5,6 +5,8 @@ const { db, logActivity } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const { wrapEmailHtml, processEmailQueue } = require('../services/emailProcessor');
+const { errorResponse } = require('../utils/routeHelpers');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 // Get email configuration
@@ -31,8 +33,7 @@ router.get('/config', adminAuth, requirePermission('email.view'), async (req, re
       smtp_pass: config.smtp_pass ? '********' : ''
     });
   } catch (error) {
-    console.error('Email config fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch email configuration' });
+    errorResponse(res, error, 500, 'Failed to fetch email configuration');
   }
 });
 
@@ -113,8 +114,7 @@ router.post('/config', [
 
     res.json({ message: 'Email configuration updated successfully' });
   } catch (error) {
-    console.error('Email config update error:', error);
-    res.status(500).json({ error: 'Failed to update email configuration' });
+    errorResponse(res, error, 500, 'Failed to update email configuration');
   }
 });
 
@@ -131,8 +131,7 @@ router.get('/incoming-config', adminAuth, requirePermission('email.view'), async
       imap_folder: c?.imap_folder || 'INBOX',
     });
   } catch (error) {
-    console.error('Incoming mail config fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch incoming mail configuration' });
+    errorResponse(res, error, 500, 'Failed to fetch incoming mail configuration');
   }
 });
 
@@ -168,8 +167,7 @@ router.post('/incoming-config', [
     await logActivity('incoming_mail_config_updated', { imap_host }, null, { type: 'admin', id: req.admin.id, name: req.admin.username });
     res.json({ message: 'Incoming mail configuration updated successfully' });
   } catch (error) {
-    console.error('Incoming mail config update error:', error);
-    res.status(500).json({ error: 'Failed to update incoming mail configuration' });
+    errorResponse(res, error, 500, 'Failed to update incoming mail configuration');
   }
 });
 
@@ -192,7 +190,7 @@ router.post('/incoming-config/folders', adminAuth, requirePermission('email.view
     );
     res.json({ folders });
   } catch (error) {
-    console.error('IMAP folder detection error:', error);
+    logger.error('IMAP folder detection error:', error);
     res.status(422).json({ error: `Could not connect to the mailbox (${error.message}). Check host, port (IMAP is usually 993) and credentials.` });
   }
 });
@@ -217,7 +215,7 @@ router.post('/incoming-config/test', adminAuth, requirePermission('email.view'),
     }
     res.json(result);
   } catch (error) {
-    console.error('IMAP connection test error:', error);
+    logger.error('IMAP connection test error:', error);
     res.status(422).json({ error: `Could not connect to the mailbox (${error.message}). Check host, port (IMAP is usually 993), credentials and folder.` });
   }
 });
@@ -239,7 +237,7 @@ router.post('/incoming-config/roundtrip', adminAuth, requirePermission('email.se
     return res.status(result.reason === 'not_received' ? 504 : 400)
       .json({ error: map[result.reason] || 'Round-trip test failed.', sent: !!result.sent, recipient: result.recipient });
   } catch (error) {
-    console.error('Round-trip test error:', error);
+    logger.error('Round-trip test error:', error);
     res.status(422).json({ error: `Round-trip test failed (${error.message}) — check both SMTP and IMAP settings.` });
   }
 });
@@ -253,7 +251,7 @@ router.post('/incoming-config/poll', adminAuth, requirePermission('email.view'),
     const result = await emailIntakeService.pollOnce();
     res.json(result); // { processed } or { skipped: 'disabled'|'unconfigured'|'busy' }
   } catch (error) {
-    console.error('Manual poll error:', error);
+    logger.error('Manual poll error:', error);
     res.status(422).json({ error: `Mailbox poll failed (${error.message}).` });
   }
 });
@@ -268,8 +266,7 @@ router.get('/received', adminAuth, requirePermission('email.view'), async (req, 
     const items = await base.clone().orderBy('received_at', 'desc').limit(pageSize).offset((page - 1) * pageSize);
     res.json({ items, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
   } catch (error) {
-    console.error('Received emails fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch received emails' });
+    errorResponse(res, error, 500, 'Failed to fetch received emails');
   }
 });
 
@@ -322,7 +319,7 @@ router.post('/test', adminAuth, requirePermission('email.send'), async (req, res
       debug: process.env.NODE_ENV === 'development'
     };
 
-    console.log('Creating email transporter with config:', {
+    logger.info('Creating email transporter with config:', {
       host: transportConfig.host,
       port: transportConfig.port,
       secure: transportConfig.secure,
@@ -356,8 +353,8 @@ router.post('/test', adminAuth, requirePermission('email.send'), async (req, res
 
     res.json({ message: 'Test email sent successfully' });
   } catch (error) {
-    console.error('Test email error:', error);
-    console.error('Error stack:', error.stack);
+    logger.error('Test email error:', error);
+    logger.error('Error stack:', error.stack);
 
     // Provide more specific error messages with translation keys
     let errorMessage = 'Error sending email';
@@ -428,7 +425,7 @@ router.post('/flush-queue', adminAuth, requirePermission('email.send'), async (r
     } catch (_) { /* activity logging is best-effort */ }
     res.json({ message: 'Email queue flushed', ...summary });
   } catch (error) {
-    console.error('Flush email queue error:', error);
+    logger.error('Flush email queue error:', error);
     res.status(500).json({ error: 'Failed to flush email queue', details: error.message });
   }
 });
@@ -516,7 +513,7 @@ router.get('/queue', adminAuth, requirePermission('email.view'), [
       pagination: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) || 1 },
     });
   } catch (error) {
-    console.error('List email queue error:', error);
+    logger.error('List email queue error:', error);
     res.status(500).json({ error: 'Failed to load email queue', details: error.message });
   }
 });
@@ -528,7 +525,7 @@ function parseVariables(template) {
     if (typeof template.variables === 'object') return template.variables;
     return JSON.parse(template.variables);
   } catch (e) {
-    console.warn('Failed to parse variables for template:', template.template_key, e.message);
+    logger.warn('Failed to parse variables for template:', template.template_key, e.message);
     return [];
   }
 }
@@ -611,8 +608,7 @@ router.get('/templates', adminAuth, requirePermission('email.view'), async (req,
 
     res.json(formattedTemplates);
   } catch (error) {
-    console.error('Email templates fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch email templates' });
+    errorResponse(res, error, 500, 'Failed to fetch email templates');
   }
 });
 
@@ -641,8 +637,7 @@ router.get('/templates/:key', adminAuth, requirePermission('email.view'), async 
       updated_at: template.updated_at,
     });
   } catch (error) {
-    console.error('Email template fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch email template' });
+    errorResponse(res, error, 500, 'Failed to fetch email template');
   }
 });
 
@@ -730,8 +725,7 @@ router.put('/templates/:key', [
 
     res.json({ message: 'Email template updated successfully' });
   } catch (error) {
-    console.error('Email template update error:', error);
-    res.status(500).json({ error: 'Failed to update email template' });
+    errorResponse(res, error, 500, 'Failed to update email template');
   }
 });
 
@@ -818,8 +812,7 @@ router.post('/templates', [
 
     return res.status(201).json({ template_key: templateKey, id: templateId });
   } catch (error) {
-    console.error('Email template create error:', error);
-    return res.status(500).json({ error: 'Failed to create email template' });
+    return errorResponse(res, error, 500, 'Failed to create email template');
   }
 });
 
@@ -897,8 +890,7 @@ router.post('/templates/:key/preview', adminAuth, requirePermission('email.view'
       language
     });
   } catch (error) {
-    console.error('Email template preview error:', error);
-    res.status(500).json({ error: 'Failed to preview email template' });
+    errorResponse(res, error, 500, 'Failed to preview email template');
   }
 });
 

@@ -18,6 +18,7 @@ const { escapeLikePattern } = require('../utils/sqlSecurity');
 // formatDate import removed - dates are formatted by email processor
 const { validatePasswordInContext, getBcryptRounds } = require('../utils/passwordValidation');
 const logger = require('../utils/logger');
+const { errorResponse } = require('../utils/routeHelpers');
 const { buildShareLinkVariants } = require('../services/shareLinkService');
 const { parseBooleanInput, parseStringInput } = require('../utils/parsers');
 const eventTypeService = require('../services/eventTypeService');
@@ -441,7 +442,7 @@ router.post('/', adminAuth, requirePermission('events.create'), [
     logger.debug('Create event request body', { body: req.body });
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.error('Validation errors:', errors.array());
+      logger.error('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -923,8 +924,7 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       created_at: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error creating event:', error);
-    res.status(500).json({ error: 'Failed to create event' });
+    errorResponse(res, error, 500, 'Failed to create event');
   }
 });
 
@@ -1022,8 +1022,7 @@ router.get('/', adminAuth, requirePermission('events.view'), async (req, res) =>
       }
     });
   } catch (error) {
-    console.error('Error fetching events:', error);
-    res.status(500).json({ error: 'Failed to fetch events' });
+    errorResponse(res, error, 500, 'Failed to fetch events');
   }
 });
 
@@ -1105,8 +1104,7 @@ router.get('/:id', adminAuth, requirePermission('events.view'), async (req, res)
       })),
     }));
   } catch (error) {
-    console.error('Error fetching event:', error);
-    res.status(500).json({ error: 'Failed to fetch event details' });
+    errorResponse(res, error, 500, 'Failed to fetch event details');
   }
 });
 
@@ -1264,8 +1262,7 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), require
 
     res.json({ message: 'Event published successfully', is_draft: false });
   } catch (error) {
-    logger.error('Error publishing event:', { error: error.message });
-    res.status(500).json({ error: 'Failed to publish event' });
+    errorResponse(res, error, 500, 'Failed to publish event');
   }
 });
 
@@ -1451,8 +1448,7 @@ router.post('/:id/duplicate', adminAuth, requirePermission('events.create'), req
       is_draft: true,
     });
   } catch (error) {
-    logger.error('Error duplicating event:', { error: error.message });
-    res.status(500).json({ error: 'Failed to duplicate event' });
+    errorResponse(res, error, 500, 'Failed to duplicate event');
   }
 });
 
@@ -1831,8 +1827,7 @@ router.put('/:id', adminAuth, requirePermission('events.edit'), requireEventOwne
 
     res.json({ message: 'Event updated successfully' });
   } catch (error) {
-    console.error('Error updating event:', error);
-    res.status(500).json({ error: 'Failed to update event' });
+    errorResponse(res, error, 500, 'Failed to update event');
   }
 });
 
@@ -1891,8 +1886,7 @@ router.post('/:id/toggle-status', adminAuth, requirePermission('events.edit'), r
       is_active: newStatus
     });
   } catch (error) {
-    console.error('Error toggling event status:', error);
-    res.status(500).json({ error: 'Failed to toggle event status' });
+    errorResponse(res, error, 500, 'Failed to toggle event status');
   }
 });
 
@@ -1958,8 +1952,7 @@ router.post('/:id/slideshow/generate', adminAuth, requirePermission('events.edit
       slideshow_url: await buildSlideshowUrl(event.slug, token)
     });
   } catch (error) {
-    logger.error('Error generating slideshow link', { error: error.message });
-    res.status(500).json({ error: 'Failed to generate slideshow link' });
+    errorResponse(res, error, 500, 'Failed to generate slideshow link');
   }
 });
 
@@ -1984,8 +1977,7 @@ router.post('/:id/slideshow/disable', adminAuth, requirePermission('events.edit'
 
     res.json({ show_share_token: null });
   } catch (error) {
-    logger.error('Error disabling slideshow link', { error: error.message });
-    res.status(500).json({ error: 'Failed to disable slideshow link' });
+    errorResponse(res, error, 500, 'Failed to disable slideshow link');
   }
 });
 
@@ -2036,8 +2028,7 @@ router.patch('/:id/slideshow', adminAuth, requirePermission('events.edit'), requ
       show_colorfilter: updates.show_colorfilter ?? event.show_colorfilter ?? 'none'
     });
   } catch (error) {
-    logger.error('Error updating slideshow settings', { error: error.message });
-    res.status(500).json({ error: 'Failed to update slideshow settings' });
+    errorResponse(res, error, 500, 'Failed to update slideshow settings');
   }
 });
 
@@ -2125,8 +2116,7 @@ router.post('/:id/reset-password', adminAuth, requirePermission('events.edit'), 
       emailSent: sendEmail
     });
   } catch (error) {
-    console.error('Error resetting password:', error);
-    res.status(500).json({ error: 'Failed to reset password' });
+    errorResponse(res, error, 500, 'Failed to reset password');
   }
 });
 
@@ -2202,7 +2192,7 @@ router.post('/:id/resend-email', adminAuth, requirePermission('events.edit'), re
         name: req.admin.username
       });
     } catch (logError) {
-      console.error('Warning: Failed to log activity:', logError);
+      logger.error('Warning: Failed to log activity:', logError);
       // Don't fail the request if activity logging fails
     }
     
@@ -2211,9 +2201,8 @@ router.post('/:id/resend-email', adminAuth, requirePermission('events.edit'), re
       message: 'Creation email has been queued for sending'
     });
   } catch (error) {
-    console.error('Error resending creation email:', error);
-    console.error('Stack trace:', error.stack);
-    res.status(500).json({ error: 'Failed to resend creation email' });
+    logger.error('Error resending creation email:', error);
+    errorResponse(res, error, 500, 'Failed to resend creation email');
   }
 });
 
@@ -2243,8 +2232,7 @@ router.post('/:id/archive', adminAuth, requirePermission('events.archive'), requ
 
     res.json({ message: 'Event archived successfully' });
   } catch (error) {
-    console.error('Error archiving event:', error);
-    res.status(500).json({ error: 'Failed to archive event' });
+    errorResponse(res, error, 500, 'Failed to archive event');
   }
 });
 
@@ -2297,7 +2285,7 @@ router.post('/bulk-archive', adminAuth, requirePermission('events.archive'), [
           name: event.event_name
         });
       } catch (error) {
-        console.error(`Failed to archive event ${event.id}:`, error);
+        logger.error(`Failed to archive event ${event.id}:`, error);
         results.failed.push({
           id: event.id,
           name: event.event_name,
@@ -2322,8 +2310,7 @@ router.post('/bulk-archive', adminAuth, requirePermission('events.archive'), [
       results
     });
   } catch (error) {
-    console.error('Error in bulk archive:', error);
-    res.status(500).json({ error: 'Failed to perform bulk archive' });
+    errorResponse(res, error, 500, 'Failed to perform bulk archive');
   }
 });
 
@@ -2391,8 +2378,7 @@ router.post('/bulk-delete', adminAuth, requirePermission('events.delete'), [
       results
     });
   } catch (error) {
-    logger.error('Error in bulk delete', { error: error.message });
-    res.status(500).json({ error: 'Failed to perform bulk delete' });
+    errorResponse(res, error, 500, 'Failed to perform bulk delete');
   }
 });
 
@@ -2446,8 +2432,7 @@ router.post('/:id/logo', adminAuth, requirePermission('events.edit'), requireEve
       hero_logo_url: logoUrl
     });
   } catch (error) {
-    logger.error('Error uploading event logo:', { error: error.message, eventId: req.params.id });
-    res.status(500).json({ error: 'Failed to upload event logo' });
+    errorResponse(res, error, 500, 'Failed to upload event logo');
   }
 });
 
@@ -2490,8 +2475,7 @@ router.delete('/:id/logo', adminAuth, requirePermission('events.edit'), requireE
 
     res.json({ message: 'Event logo removed successfully' });
   } catch (error) {
-    logger.error('Error deleting event logo:', { error: error.message, eventId: req.params.id });
-    res.status(500).json({ error: 'Failed to delete event logo' });
+    errorResponse(res, error, 500, 'Failed to delete event logo');
   }
 });
 
