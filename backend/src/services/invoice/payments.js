@@ -278,7 +278,7 @@ async function queuePaymentCheckEmail(invoiceId, { skipThrottle = false } = {}) 
     : null;
 
   await emailProcessor.queueEmail(invoice.event_id || null, adminContact.email,
-    'invoice_payment_check_admin', {
+    'invoice_payment_check', {
       invoice_number: invoice.invoice_number,
       customer_name: customer?.company_name
         || customer?.display_name
