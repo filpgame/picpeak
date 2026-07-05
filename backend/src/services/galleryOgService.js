@@ -34,7 +34,29 @@ const SOCIAL_CRAWLER_PATTERNS = [
   // messaging stacks (Twilio, LinkPreview.net, etc.). Match the
   // canonical lowercase substring; the /i flag handles case.
   /LinkPreview/i,
-  /Slack-ImgProxy/i
+  /Slack-ImgProxy/i,
+  // Viber's link-preview fetcher — was never detected, so shared links
+  // showed no rich preview in Viber (#699 follow-up). Keep in sync with the
+  // UA list in frontend/nginx.conf.
+  /Viber/i,
+  // Broader crawler coverage (#699 follow-up, from alexvaltchev's field list).
+  // IMPORTANT: only CRAWLER-EXCLUSIVE tokens are added here. Our OG response is
+  // meta-only (no client redirect), so a UA shared with a real human in-app
+  // browser would serve that human the bare stub. That rules out WeChat
+  // (MicroMessenger), LINE (Line/), Zalo, and generic strings like
+  // "InAppBrowser"/"preview"/"unfurl" — deliberately NOT added.
+  /Cardyb/i, // Bluesky's link-card service (the actual fetcher UA)
+  /facebookcatalog/i, // Facebook catalog crawler
+  /Signal/i, // Signal link preview
+  /Misskey/i, // fediverse (server-side preview fetch)
+  /Pleroma/i, // fediverse
+  /Synapse/i, // Matrix homeserver URL preview
+  /Nextcloud/i, // Nextcloud Talk/News link crawler
+  /Rocket\.Chat/i, // Rocket.Chat server preview
+  /kakaotalk-scrap/i, // KakaoTalk's scraper (NOT the in-app browser UA)
+  /Google-PageRenderer/i, // Google Chat previews (not Search)
+  /OdklBot/i, // Odnoklassniki
+  /ZoomBot/i // Zoom Team Chat
 ];
 
 function isSocialCrawler(userAgent) {
