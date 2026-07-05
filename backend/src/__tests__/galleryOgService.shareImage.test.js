@@ -343,11 +343,31 @@ describe('isSocialCrawler — extended bot coverage (#521)', () => {
       // 3rd-party preview services used by business-messaging stacks
       'LinkPreview/1.0',
       'Slack-ImgProxy/1.0',
-      // Viber link-preview fetcher (#699 follow-up)
+      // Viber + broader crawler set (#699 follow-up)
       'Mozilla/5.0 (compatible; Viber)',
+      'Mozilla/5.0 (compatible; Bluesky Cardyb/1.1)',
+      'facebookcatalog/1.0',
+      'kakaotalk-scrap/1.0',
+      'Mozilla/5.0 (compatible; Synapse/1.98)',
+      'Rocket.Chat/6.0',
     ];
     for (const ua of knownBots) {
       expect(isSocialCrawler(ua)).toBe(true);
+    }
+  });
+
+  it('does NOT match human in-app-browser UAs (our OG response is meta-only, no redirect)', () => {
+    // These share a token with a preview bot but are also sent by real users
+    // browsing inside the app's webview — matching them would serve a human
+    // the bare OG stub. Deliberately excluded; guard against re-adding them.
+    const inAppBrowsers = [
+      'Mozilla/5.0 (iPhone) AppleWebKit MicroMessenger/8.0.0',        // WeChat in-app
+      'Mozilla/5.0 (iPhone) AppleWebKit Line/13.0.0',                // LINE in-app
+      'Mozilla/5.0 (Linux; Android) Zalo',                          // Zalo in-app
+      'Mozilla/5.0 (Macintosh) Chrome/120.0 Safari/537.36 boxing',  // "XING" substring trap
+    ];
+    for (const ua of inAppBrowsers) {
+      expect(isSocialCrawler(ua)).toBe(false);
     }
   });
 
