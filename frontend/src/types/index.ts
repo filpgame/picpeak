@@ -43,8 +43,8 @@ export interface Event {
   enable_devtools_protection?: boolean;
   use_canvas_rendering?: boolean;
   // Hero logo customization fields
-  hero_logo_visible?: boolean;
-  hero_logo_size?: 'small' | 'medium' | 'large' | 'xlarge';
+  hero_logo_visible?: boolean | null;
+  hero_logo_size?: 'small' | 'medium' | 'large' | 'xlarge' | null;
   hero_logo_position?: 'top' | 'center' | 'bottom';
   hero_logo_url?: string | null;
   // Per-event opt-in for using the hero photo as the social-share
@@ -188,8 +188,8 @@ export interface GalleryData {
     fragmentation_level?: number;
     overlay_protection?: boolean;
     // Hero logo customization fields
-    hero_logo_visible?: boolean;
-    hero_logo_size?: 'small' | 'medium' | 'large' | 'xlarge';
+    hero_logo_visible?: boolean | null;
+    hero_logo_size?: 'small' | 'medium' | 'large' | 'xlarge' | null;
     hero_logo_position?: 'top' | 'center' | 'bottom';
     hero_logo_url?: string | null;
     // Header style settings (decoupled from layout)

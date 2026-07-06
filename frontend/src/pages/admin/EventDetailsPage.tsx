@@ -306,9 +306,11 @@ export const EventDetailsPage: React.FC = () => {
       allow_presigned_download: (event as { allow_presigned_download?: boolean }).allow_presigned_download ?? false,
       enable_devtools_protection: event.enable_devtools_protection ?? true,
       use_canvas_rendering: event.use_canvas_rendering ?? false,
-      // Load hero logo settings from event
-      hero_logo_visible: event.hero_logo_visible ?? true,
-      hero_logo_size: event.hero_logo_size || 'medium',
+      // Load hero logo settings from event. Preserve null = "inherit global"
+      // (#756) — don't collapse it to true, or saving would snapshot an override.
+      hero_logo_visible: event.hero_logo_visible ?? null,
+      // Preserve null = "inherit global size" (#756) — don't collapse to medium.
+      hero_logo_size: event.hero_logo_size ?? null,
       hero_logo_position: event.hero_logo_position || 'top',
       // Hero image anchor position (#162)
       hero_image_anchor: event.hero_image_anchor || 'center',
