@@ -235,7 +235,7 @@ export const FeaturesTab: React.FC = () => {
             title={t('settings.features.messaging.title', 'Messaging')}
             description={t(
               'settings.features.messaging.description',
-              'An Outlook-style Messages area: your sent + automated mail, the accounting inbox, and a customer mailbox (hello@) in one place — with reply and create-from-template composing. Configure the customer mailbox under Settings → Email; incoming mailboxes need the Incoming mail toggle too.',
+              'A unified Messages area: your sent + automated mail, the accounting inbox, and a customer mailbox (hello@) in one place — with reply and create-from-template composing. Configure the customer mailbox under Settings → Email; incoming mailboxes need the Incoming mail toggle too.',
             )}
             status="new"
             statusLabel={statusLabel('new')}
