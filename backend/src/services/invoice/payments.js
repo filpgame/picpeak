@@ -185,6 +185,8 @@ async function queueInvoicePaidAdminNotification({
         || [customer?.first_name, customer?.last_name].filter(Boolean).join(' ')
         || customer?.email || '',
       event_name: invoice.event_name || '',
+      // Keep the body language consistent with the locale-formatted amounts.
+      __language: locale,
       total_amount: formatMajor(invoice.total_amount_minor, invoice.currency, locale),
       paid_amount: formatMajor(paidTotalMinor, invoice.currency, locale),
       payment_method: paymentMethod || '',
@@ -285,6 +287,9 @@ async function queuePaymentCheckEmail(invoiceId, { skipThrottle = false } = {}) 
         || [customer?.first_name, customer?.last_name].filter(Boolean).join(' ')
         || customer?.email || '',
       event_name: invoice.event_name || '',
+      // Keep the body language consistent with the locale the amounts are
+      // formatted in, instead of event-first resolution (admin-facing gate).
+      __language: locale,
       due_date: formatShortDate(invoice.due_date),
       total_amount: formatMajor(invoice.total_amount_minor, invoice.currency, locale),
       paid_amount: formatMajor(paidMinor, invoice.currency, locale),

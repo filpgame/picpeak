@@ -127,6 +127,9 @@ async function sendInvoice(id, adminId) {
     installment_label: invoice.installment_label || '',
     installment_index: invoice.installment_index + 1,
     installment_total: invoice.installment_total,
+    // Send in the customer's language (matches the ctx.locale-formatted amounts
+    // above) rather than the event-first default resolution.
+    __language: ctx.locale,
     cc: invoiceCc,
     attachments: [{
       filename: `${invoice.invoice_number}.pdf`,
@@ -368,6 +371,8 @@ async function sendStorno(stornoId, adminId) {
     original_issue_date: originalRow?.issue_date ? formatShortDate(originalRow.issue_date) : '',
     customer_name: customer.display_name || customer.first_name || customer.email.split('@')[0],
     total_amount: formatMajor(Math.abs(storno.total_amount_minor), storno.currency, ctx.locale),
+    // Match the customer's language (as with the ctx.locale-formatted amount).
+    __language: ctx.locale,
     cc: stornoCc,
     attachments: [{
       filename: `${storno.invoice_number}.pdf`,
