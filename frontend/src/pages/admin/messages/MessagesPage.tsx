@@ -55,6 +55,12 @@ const fmt = (s?: string | null) =>
 // narrow sidebar); full address stays in the hover title.
 const localPart = (addr?: string | null) => (addr ? `${addr.split('@')[0]}@` : '');
 
+// Escape untrusted text before it goes into an HTML string. The inbound From
+// header carries an attacker-controlled display name; the reply stub builds raw
+// HTML for the (contentEditable) composer, so this MUST be escaped there.
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => (({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c]));
+
 const STATUS_STYLES: Record<string, string> = {
   sent: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
   ingested: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
@@ -527,7 +533,7 @@ const ReadingPane: React.FC<{
     ? () => {
         const it = selection.item;
         const subj = /^re:/i.test(it.subject || '') ? (it.subject || '') : `Re: ${it.subject || ''}`;
-        const quoted = `<p><br></p><p style="color:#888;font-size:12px">${t('messages.onWrote', 'On')} ${fmt(it.received_at)}, ${it.from_address}:</p>`;
+        const quoted = `<p><br></p><p style="color:#888;font-size:12px">${t('messages.onWrote', 'On')} ${fmt(it.received_at)}, ${escapeHtml(it.from_address || '')}:</p>`;
         onCompose({ to: it.from_address || '', subject: subj, html: quoted, replyToReceivedId: it.id }, t('messages.reply', 'Reply'));
       }
     : undefined;

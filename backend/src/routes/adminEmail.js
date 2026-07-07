@@ -4,6 +4,10 @@ const { body, query, validationResult } = require('express-validator');
 const { db, logActivity } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
+// Gate the NEW Messages routes on the `messaging` flag (per-route, NOT the whole
+// /email mount — the pre-existing config/queue/received endpoints stay ungated).
+const { requireFeatureFlag } = require('../middleware/requireFeatureFlag');
+const messagingGate = requireFeatureFlag('messaging');
 const { wrapEmailHtml, processEmailQueue } = require('../services/emailProcessor');
 const { errorResponse } = require('../utils/routeHelpers');
 const logger = require('../utils/logger');
@@ -287,7 +291,7 @@ router.get('/received', adminAuth, requirePermission('email.view'), async (req, 
 // Single received email WITH its captured (server-sanitized) body — Messages
 // reading pane. body_html was already sanitized on ingest; the viewer renders
 // it in a script-less sandboxed iframe as well.
-router.get('/received/:id', adminAuth, requirePermission('email.view'), async (req, res) => {
+router.get('/received/:id', adminAuth, messagingGate, requirePermission('email.view'), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
@@ -302,7 +306,7 @@ router.get('/received/:id', adminAuth, requirePermission('email.view'), async (r
 // Move an email between mailbox states: Archive / Delete (soft) or Restore
 // (back to active). kind = 'queue' | 'received'. Delete is a soft move to the
 // trash; the row is only removed for good by the DELETE handler below.
-router.post('/item/:kind/:id/state', adminAuth, requirePermission('email.view'), async (req, res) => {
+router.post('/item/:kind/:id/state', adminAuth, messagingGate, requirePermission('email.view'), async (req, res) => {
   try {
     const table = req.params.kind === 'received' ? 'received_emails' : req.params.kind === 'queue' ? 'email_queue' : null;
     if (!table) return res.status(400).json({ error: 'Invalid kind' });
@@ -319,7 +323,7 @@ router.post('/item/:kind/:id/state', adminAuth, requirePermission('email.view'),
 });
 
 // Permanently delete an email row — only offered from the Deleted folder.
-router.delete('/item/:kind/:id', adminAuth, requirePermission('email.edit'), async (req, res) => {
+router.delete('/item/:kind/:id', adminAuth, messagingGate, requirePermission('email.edit'), async (req, res) => {
   try {
     const table = req.params.kind === 'received' ? 'received_emails' : req.params.kind === 'queue' ? 'email_queue' : null;
     if (!table) return res.status(400).json({ error: 'Invalid kind' });
@@ -334,7 +338,7 @@ router.delete('/item/:kind/:id', adminAuth, requirePermission('email.edit'), asy
 
 // Additional inbound mailboxes (beyond the primary accounting IMAP in
 // email_configs) — e.g. the customer hello@ box. Passwords are masked out.
-router.get('/accounts', adminAuth, requirePermission('email.view'), async (req, res) => {
+router.get('/accounts', adminAuth, messagingGate, requirePermission('email.view'), async (req, res) => {
   try {
     const rows = await db('mail_accounts').orderBy('id');
     res.json({ items: rows.map((a) => ({
@@ -351,7 +355,7 @@ router.get('/accounts', adminAuth, requirePermission('email.view'), async (req, 
 // the REAL configured addresses instead of hardcoded placeholders. Accounting =
 // the primary IMAP login (rechnungen@); customers = the hello@ mailbox; the
 // automated stream sends from the global SMTP from-address.
-router.get('/identities', adminAuth, requirePermission('email.view'), async (req, res) => {
+router.get('/identities', adminAuth, messagingGate, requirePermission('email.view'), async (req, res) => {
   try {
     const cfg = await db('email_configs').first();
     let customers = null;
@@ -371,7 +375,7 @@ router.get('/identities', adminAuth, requirePermission('email.view'), async (req
 
 // Upsert a mailbox by account_key. A masked password ('********') keeps the
 // stored value so the admin never has to re-type it.
-router.post('/accounts', adminAuth, requirePermission('email.edit'), async (req, res) => {
+router.post('/accounts', adminAuth, messagingGate, requirePermission('email.edit'), async (req, res) => {
   try {
     const b = req.body || {};
     if (!b.account_key) return res.status(400).json({ error: 'account_key is required' });
@@ -423,7 +427,7 @@ router.post('/accounts', adminAuth, requirePermission('email.edit'), async (req,
 
 // Test an inbound mailbox's IMAP connection (before or after saving). Resolves
 // a masked/blank password from the stored row for the given account_key.
-router.post('/accounts/test', adminAuth, requirePermission('email.view'), async (req, res) => {
+router.post('/accounts/test', adminAuth, messagingGate, requirePermission('email.view'), async (req, res) => {
   try {
     const b = req.body || {};
     const { isPrivateIP } = require('../utils/networkValidation');
@@ -710,7 +714,7 @@ router.get('/queue', adminAuth, requirePermission('email.view'), [
 // 119); rows sent before that migration have none. Attachment disk paths in
 // `email_data` are never exposed — only the filenames, so the pane can list
 // attachments without leaking storage paths (same PII posture as the list).
-router.get('/queue/:id', adminAuth, requirePermission('email.view'), async (req, res) => {
+router.get('/queue/:id', adminAuth, messagingGate, requirePermission('email.view'), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
@@ -760,7 +764,7 @@ router.get('/queue/:id', adminAuth, requirePermission('email.view'), async (req,
 // edited the body (reply or document message), so it is sent as-is — no
 // template render — after a sanitize pass. Recorded in email_queue as a
 // 'manual' send so it surfaces under Customers > Sent.
-router.post('/send', adminAuth, requirePermission('email.send'), async (req, res) => {
+router.post('/send', adminAuth, messagingGate, requirePermission('email.send'), async (req, res) => {
   try {
     const b = req.body || {};
     const to = String(b.to || '').trim();

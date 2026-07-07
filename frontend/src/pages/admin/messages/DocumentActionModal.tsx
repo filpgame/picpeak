@@ -48,7 +48,15 @@ export const DocumentActionModal: React.FC<{
     let cancelled = false;
     setResolving(true);
     customerAdminService.search(senderEmail)
-      .then((rows) => { if (!cancelled && rows.length) pick(rows[0]); })
+      .then((rows) => {
+        if (cancelled) return;
+        // search matches email/name/company PREFIXES — only auto-pick on an
+        // EXACT email match so a spoofed/partial sender can't prefill the wrong
+        // customer. Otherwise leave the picker for the admin to choose.
+        const target = senderEmail.trim().toLowerCase();
+        const exact = rows.find((r) => (r.email || '').toLowerCase() === target);
+        if (exact) pick(exact);
+      })
       .catch(() => {})
       .finally(() => { if (!cancelled) setResolving(false); });
     return () => { cancelled = true; };

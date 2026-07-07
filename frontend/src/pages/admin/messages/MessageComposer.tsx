@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import DOMPurify from 'dompurify';
 import { X, Send as SendIcon } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { emailService } from '../../../services/email.service';
@@ -35,7 +36,9 @@ export const MessageComposer: React.FC<{
   const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (bodyRef.current) bodyRef.current.innerHTML = init.html || '';
+    // Sanitize before it hits the contentEditable innerHTML — the initial body
+    // can include untrusted text (e.g. an inbound sender name in a reply stub).
+    if (bodyRef.current) bodyRef.current.innerHTML = DOMPurify.sanitize(init.html || '');
     // Load initial body exactly once; further edits are the admin's.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
