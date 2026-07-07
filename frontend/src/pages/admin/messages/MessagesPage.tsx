@@ -480,8 +480,9 @@ const QueueDetail: React.FC<{ d: import('../../../services/email.service').Email
 
     {d.renderedHtml ? (
       <div className="mt-4 rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white" style={{ height: '52vh' }}>
-        {/* rendered_html is our own template output — sandboxed, scripts blocked */}
-        <iframe title="Email body" sandbox="allow-same-origin" srcDoc={d.renderedHtml} className="w-full h-full border-0" />
+        {/* Our own template output, but rendered with a strict script-less,
+            no-same-origin sandbox anyway — matches the inbound-mail pane. */}
+        <iframe title="Email body" sandbox="" srcDoc={d.renderedHtml} className="w-full h-full border-0" />
       </div>
     ) : (
       <div className="mt-4 text-sm text-neutral-500 dark:text-neutral-400 italic">

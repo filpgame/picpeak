@@ -798,6 +798,7 @@ async function sendRawEmail({ to, cc, subject, html, text, attachments, accountK
         port: parseInt(acct.smtp_port, 10) || 587,
         secure: acct.smtp_secure === true || acct.smtp_secure === 1,
         auth: acct.smtp_user && acct.smtp_pass ? { user: acct.smtp_user, pass: acct.smtp_pass } : undefined,
+        tls: { rejectUnauthorized: true },
       });
       fromEmail = acct.from_email || acct.smtp_user;
       fromName = acct.from_name || '';

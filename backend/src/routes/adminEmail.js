@@ -338,6 +338,15 @@ router.post('/accounts', adminAuth, requirePermission('email.edit'), async (req,
   try {
     const b = req.body || {};
     if (!b.account_key) return res.status(400).json({ error: 'account_key is required' });
+    // SSRF guard — mirror /config + /incoming-config: neither the IMAP nor the
+    // SMTP host may point at a private/internal address.
+    const { isPrivateIP } = require('../utils/networkValidation');
+    if (b.imap_host && isPrivateIP(b.imap_host)) {
+      return res.status(400).json({ error: 'IMAP host cannot point to a private or internal network address' });
+    }
+    if (b.smtp_host && isPrivateIP(b.smtp_host)) {
+      return res.status(400).json({ error: 'SMTP host cannot point to a private or internal network address' });
+    }
     const patch = {
       label: b.label || null,
       imap_host: b.imap_host || null,
@@ -380,6 +389,10 @@ router.post('/accounts', adminAuth, requirePermission('email.edit'), async (req,
 router.post('/accounts/test', adminAuth, requirePermission('email.view'), async (req, res) => {
   try {
     const b = req.body || {};
+    const { isPrivateIP } = require('../utils/networkValidation');
+    if (b.imap_host && isPrivateIP(b.imap_host)) {
+      return res.status(400).json({ error: 'IMAP host cannot point to a private or internal network address' });
+    }
     let pass = b.imap_pass;
     if ((!pass || pass === '********') && b.account_key) {
       const stored = await db('mail_accounts').where({ account_key: b.account_key }).first();
@@ -716,14 +729,16 @@ router.post('/send', adminAuth, requirePermission('email.send'), async (req, res
     if (!subject) return res.status(400).json({ error: 'A subject is required.' });
 
     const sanitizeHtml = require('sanitize-html');
+    // Match the stricter inbound sanitizeBody allowlist: no <style> tag, no
+    // data: scheme — inline style/class attributes are enough for composed mail.
     const html = sanitizeHtml(String(b.html || ''), {
-      allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'style']),
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
       allowedAttributes: {
         ...sanitizeHtml.defaults.allowedAttributes,
         img: ['src', 'alt', 'width', 'height'],
         '*': ['style', 'class'],
       },
-      allowedSchemes: ['http', 'https', 'mailto', 'cid', 'data'],
+      allowedSchemes: ['http', 'https', 'mailto', 'cid'],
     });
     const cc = b.cc ? String(b.cc).trim() : null;
     const accountKey = b.accountKey ? String(b.accountKey) : undefined;
