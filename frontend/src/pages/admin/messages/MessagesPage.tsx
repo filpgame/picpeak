@@ -12,6 +12,8 @@ import { emailService, type ReceivedEmail, type MailIdentities } from '../../../
 import { accountingService } from '../../../services/accounting.service';
 import { Loading } from '../../../components/common';
 import { MessageComposer, type ComposerInit } from './MessageComposer';
+import { DocumentActionModal, type DocType } from './DocumentActionModal';
+import { useFeatureFlags } from '../../../contexts/FeatureFlagsContext';
 
 /**
  * Admin "Messages" — read-only viewer over the mail picpeak already
@@ -63,12 +65,14 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export const MessagesPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeFolder, setActiveFolder] = useState('auto-sent');
   const [selection, setSelection] = useState<Selection>(null);
   const [pdfDocId, setPdfDocId] = useState<number | null>(null);
   const [composer, setComposer] = useState<{ init: ComposerInit; title?: string; accountKey?: string } | null>(null);
+  const [docAction, setDocAction] = useState<{ docType: DocType; senderEmail: string } | null>(null);
+  const { flags } = useFeatureFlags();
 
   // "Sync" = poll the inbound mailboxes now instead of waiting for the 60s loop.
   const sync = useMutation({
@@ -265,11 +269,12 @@ export const MessagesPage: React.FC = () => {
           <ReadingPane
             selection={selection}
             account={folder.a}
-            lang={i18n.language}
             identities={identities}
+            flags={flags}
             onViewDoc={setPdfDocId}
             onOpenAccounting={() => navigate('/admin/accounting/inbox')}
             onCompose={(init, title) => setComposer({ init, title, accountKey: 'customers' })}
+            onOpenDoc={(docType, senderEmail) => setDocAction({ docType, senderEmail })}
             t={t}
           />
         </section>
@@ -283,6 +288,15 @@ export const MessagesPage: React.FC = () => {
           accountKey={composer.accountKey}
           onClose={() => setComposer(null)}
           onSent={() => { queueQuery.refetch(); setActiveFolder('cust-sent'); }}
+          t={t}
+        />
+      )}
+      {docAction && (
+        <DocumentActionModal
+          docType={docAction.docType}
+          senderEmail={docAction.senderEmail}
+          onCompose={(init) => { setDocAction(null); setComposer({ init: { to: init.to, subject: init.subject, html: init.html }, title: init.subject, accountKey: 'customers' }); }}
+          onClose={() => setDocAction(null)}
           t={t}
         />
       )}
@@ -375,13 +389,14 @@ const MessageList: React.FC<{
 const ReadingPane: React.FC<{
   selection: Selection;
   account: Account;
-  lang: string;
   identities?: MailIdentities | null;
+  flags: Record<string, boolean>;
   onViewDoc: (id: number) => void;
   onOpenAccounting: () => void;
   onCompose: (init: ComposerInit, title?: string) => void;
+  onOpenDoc: (docType: DocType, senderEmail: string) => void;
   t: (k: string, d?: string) => string;
-}> = ({ selection, account, lang, identities, onViewDoc, onOpenAccounting, onCompose, t }) => {
+}> = ({ selection, account, identities, flags, onViewDoc, onOpenAccounting, onCompose, onOpenDoc, t }) => {
   const detailQuery = useQuery({
     queryKey: ['messages', 'queue', selection?.kind === 'queue' ? selection.id : null],
     queryFn: () => emailService.getQueueItem((selection as { kind: 'queue'; id: number }).id),
@@ -419,23 +434,15 @@ const ReadingPane: React.FC<{
       }
     : undefined;
 
-  // Create-from-template opens the composer with the rendered template loaded
-  // (freely editable); empty key = blank compose (gallery has no send template).
-  const onCreate = !isAcct
-    ? async (key: string, label: string) => {
-        if (!key) { onCompose({ to: recipient, subject: '', html: '' }, label); return; }
-        try {
-          const p = await emailService.previewTemplate(key, { customer_name: recipient.split('@')[0] || '' }, lang || 'en');
-          onCompose({ to: recipient, subject: p.subject, html: p.body_html }, label);
-        } catch {
-          onCompose({ to: recipient, subject: label, html: '' }, label);
-        }
-      }
+  // Quote/Contract/Invoice/Gallery open the document-action flow (resolve the
+  // customer, then create-new or select-existing). Customer-facing streams only.
+  const onDoc = !isAcct && recipient
+    ? (docType: DocType) => onOpenDoc(docType, recipient)
     : undefined;
 
   return (
     <div className="flex flex-col min-h-0 flex-1">
-      <Toolbar isAcct={isAcct} onReply={onReply} onCreate={onCreate} t={t} />
+      <Toolbar isAcct={isAcct} flags={flags} onReply={onReply} onDoc={onDoc} t={t} />
       <div className="flex-1 overflow-y-auto p-6">
         {selection.kind === 'queue' ? (
           detailQuery.isLoading ? <Loading /> : detailQuery.data ? (
@@ -570,10 +577,11 @@ const ReceivedDetail: React.FC<{
 // ─────────────────────────────────────────────────────────────── toolbar ──
 const Toolbar: React.FC<{
   isAcct: boolean;
+  flags: Record<string, boolean>;
   onReply?: () => void;
-  onCreate?: (key: string, label: string) => void;
+  onDoc?: (docType: DocType) => void;
   t: (k: string, d?: string) => string;
-}> = ({ isAcct, onReply, onCreate, t }) => {
+}> = ({ isAcct, flags, onReply, onDoc, t }) => {
   const Tb: React.FC<{ icon: LucideIcon; label: string; accent?: boolean; onClick?: () => void }> = ({ icon: Icon, label, accent, onClick }) => {
     const enabled = !!onClick;
     return (
@@ -589,8 +597,7 @@ const Toolbar: React.FC<{
       </button>
     );
   };
-  const create = (key: string, labelKey: string, fallback: string) =>
-    onCreate ? () => onCreate(key, t(labelKey, fallback)) : undefined;
+  const doc = (docType: DocType) => (onDoc ? () => onDoc(docType) : undefined);
   return (
     <div className="flex items-center gap-1 flex-wrap px-3 py-2 border-b border-neutral-200 dark:border-neutral-800 flex-none">
       <Tb icon={Reply} label={t('messages.reply', 'Reply')} onClick={onReply} />
@@ -604,10 +611,10 @@ const Toolbar: React.FC<{
         </>
       ) : (
         <>
-          <Tb icon={Quote} label={t('messages.createQuote', 'Quote')} accent onClick={create('quote_sent', 'messages.createQuote', 'Quote')} />
-          <Tb icon={FileSignature} label={t('messages.createContract', 'Contract')} accent onClick={create('contract_sent', 'messages.createContract', 'Contract')} />
-          <Tb icon={ImageIcon} label={t('messages.createGallery', 'Gallery')} accent onClick={create('', 'messages.createGallery', 'Gallery')} />
-          <Tb icon={FileText} label={t('messages.createInvoice', 'Invoice')} accent onClick={create('invoice_sent', 'messages.createInvoice', 'Invoice')} />
+          {flags.quotes && <Tb icon={Quote} label={t('messages.createQuote', 'Quote')} accent onClick={doc('quote')} />}
+          {flags.contracts && <Tb icon={FileSignature} label={t('messages.createContract', 'Contract')} accent onClick={doc('contract')} />}
+          <Tb icon={ImageIcon} label={t('messages.createGallery', 'Gallery')} accent onClick={doc('gallery')} />
+          {flags.bills && <Tb icon={FileText} label={t('messages.createInvoice', 'Invoice')} accent onClick={doc('invoice')} />}
         </>
       )}
       <span className="flex-1" />
