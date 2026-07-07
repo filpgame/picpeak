@@ -49,6 +49,10 @@ const friendlyType = (t: string) =>
 const fmt = (s?: string | null) =>
   s ? new Date(s).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
+// Compact mailbox label — just the local part + '@' (the domain clutters the
+// narrow sidebar); full address stays in the hover title.
+const localPart = (addr?: string | null) => (addr ? `${addr.split('@')[0]}@` : '');
+
 const STATUS_STYLES: Record<string, string> = {
   sent: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
   ingested: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
@@ -206,7 +210,7 @@ export const MessagesPage: React.FC = () => {
               <div className="flex items-center gap-2 px-2 py-1.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200">
                 <span className="w-2 h-2 rounded-full flex-none" style={{ background: a.color }} />
                 <span>{a.name}</span>
-                {a.addr && <span className="ml-auto text-[11px] font-medium font-mono text-neutral-400 dark:text-neutral-500">{a.addr}</span>}
+                {a.addr && <span title={a.addr} className="ml-auto text-[11px] font-medium font-mono text-neutral-400 dark:text-neutral-500 truncate max-w-[7rem]">{localPart(a.addr)}</span>}
               </div>
               <div className="flex flex-col gap-0.5">
                 {a.folders.map((f) => {
