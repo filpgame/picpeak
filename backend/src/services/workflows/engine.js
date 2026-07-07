@@ -52,7 +52,10 @@ function computeWakeAt(config = {}, vars = {}) {
   // Anchor to a context var when given (e.g. dueDate), plus any delay offset —
   // so `{ untilVar: 'dueDate', delayDays: 7 }` means "due date + 7 days"
   // (absolute), and an already-past anchor resumes immediately. Backward
-  // compatible: untilVar-only → the var; delay-only → now + delay.
+  // compatible: untilVar-only → the var; delay-only → now + delay. Behaviour
+  // change for the both-fields case (untilVar + delay): previously the delay was
+  // ignored and only the var returned; now they add (this is the intended
+  // waitGrace semantics — no seeded node relied on the old both-fields path).
   const base = (cfg.untilVar && vars[cfg.untilVar]) ? new Date(vars[cfg.untilVar]) : new Date();
   return new Date(base.getTime() + ms).toISOString();
 }
@@ -432,8 +435,13 @@ async function isBuiltinFlowActive(builtinKey) {
  * Idempotent: emitWorkflowEvent's per-(flow, entity) dedup means at most one
  * run per invoice, so re-enabling is safe. Paired with the due-date-anchored
  * grace wait, already-overdue invoices dun on their real timeline immediately.
+ *
+ * Scoped to `targetWorkflowId` (the dunning flow being enabled) so the backfill
+ * only enrolls invoices into dunning — never into unrelated custom `invoice.sent`
+ * flows an admin may have built, which would fire their actions for every
+ * historical invoice.
  */
-async function backfillDunningRuns() {
+async function backfillDunningRuns(targetWorkflowId) {
   let enrolled = 0;
   try {
     if (!(await db.schema.hasTable('invoices'))) return 0;
@@ -445,6 +453,7 @@ async function backfillDunningRuns() {
       const ids = await emitWorkflowEvent('invoice.sent', {
         entityType: 'invoice',
         entityId: inv.id,
+        targetWorkflowId,
         payload: {
           invoiceId: inv.id,
           invoiceNumber: inv.invoice_number,
