@@ -90,6 +90,13 @@ export const LocalizedDateInput: React.FC<LocalizedDateInputProps> = ({
       [d, mo, y] = [a, b, c];
     }
     if (!/^\d{1,2}$/.test(d) || !/^\d{1,2}$/.test(mo) || !/^\d{4}$/.test(y)) return '';
+    // Reject impossible calendar dates (day 00, month 13, 31 Feb…) — a partial
+    // value mid-backspace like "0/07/2026" is otherwise coerced to "2026-07-00",
+    // which is a valid string but an Invalid Date that crashes date-fns format()
+    // downstream. Round-trip through Date to confirm the components survive.
+    const yy = Number(y), mm = Number(mo), dd = Number(d);
+    const probe = new Date(yy, mm - 1, dd);
+    if (probe.getFullYear() !== yy || probe.getMonth() !== mm - 1 || probe.getDate() !== dd) return '';
     return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
   };
 
