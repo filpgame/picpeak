@@ -260,13 +260,104 @@ router.get('/received', adminAuth, requirePermission('email.view'), async (req, 
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 25));
-    const base = db('received_emails');
-    const countRow = await base.clone().count({ c: '*' }).first();
+    const account = req.query.account ? String(req.query.account) : null;
+    // 'accounting' matches legacy rows too (account_key was NULL before mig 154).
+    const applyAccount = (qb) => {
+      if (account === 'accounting') qb.where((b) => b.where('account_key', 'accounting').orWhereNull('account_key'));
+      else if (account) qb.where('account_key', account);
+      return qb;
+    };
+    const countRow = await applyAccount(db('received_emails')).count({ c: '*' }).first();
     const total = parseInt(countRow?.c || 0, 10);
-    const items = await base.clone().orderBy('received_at', 'desc').limit(pageSize).offset((page - 1) * pageSize);
+    // Bodies are excluded from the list (can be large); fetched per-message.
+    const items = await applyAccount(db('received_emails'))
+      .select('id', 'message_id', 'account_key', 'from_address', 'to_address', 'subject',
+        'received_at', 'attachment_count', 'status', 'inbound_document_id', 'error')
+      .orderBy('received_at', 'desc').limit(pageSize).offset((page - 1) * pageSize);
     res.json({ items, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
   } catch (error) {
     errorResponse(res, error, 500, 'Failed to fetch received emails');
+  }
+});
+
+// Single received email WITH its captured (server-sanitized) body — Messages
+// reading pane. body_html was already sanitized on ingest; the viewer renders
+// it in a script-less sandboxed iframe as well.
+router.get('/received/:id', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+    const row = await db('received_emails').where({ id }).first();
+    if (!row) return res.status(404).json({ error: 'Email not found' });
+    res.json(row);
+  } catch (error) {
+    errorResponse(res, error, 500, 'Failed to fetch email');
+  }
+});
+
+// Additional inbound mailboxes (beyond the primary accounting IMAP in
+// email_configs) — e.g. the customer hello@ box. Passwords are masked out.
+router.get('/accounts', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const rows = await db('mail_accounts').orderBy('id');
+    res.json({ items: rows.map((a) => ({ ...a, imap_pass: a.imap_pass ? '********' : '' })) });
+  } catch (error) {
+    errorResponse(res, error, 500, 'Failed to load mail accounts');
+  }
+});
+
+// Upsert a mailbox by account_key. A masked password ('********') keeps the
+// stored value so the admin never has to re-type it.
+router.post('/accounts', adminAuth, requirePermission('email.edit'), async (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.account_key) return res.status(400).json({ error: 'account_key is required' });
+    const patch = {
+      label: b.label || null,
+      imap_host: b.imap_host || null,
+      imap_port: b.imap_port ? parseInt(b.imap_port, 10) : 993,
+      imap_secure: b.imap_secure !== false,
+      imap_user: b.imap_user || null,
+      imap_folder: b.imap_folder || 'INBOX',
+      enabled: !!b.enabled,
+      updated_at: new Date(),
+    };
+    if (b.imap_pass && b.imap_pass !== '********') patch.imap_pass = b.imap_pass;
+    const existing = await db('mail_accounts').where({ account_key: b.account_key }).first();
+    if (existing) {
+      await db('mail_accounts').where({ account_key: b.account_key }).update(patch);
+    } else {
+      await db('mail_accounts').insert({
+        account_key: b.account_key,
+        imap_pass: (b.imap_pass && b.imap_pass !== '********') ? b.imap_pass : '',
+        created_at: new Date(),
+        ...patch,
+      });
+    }
+    res.json({ ok: true });
+  } catch (error) {
+    errorResponse(res, error, 500, 'Failed to save mail account');
+  }
+});
+
+// Test an inbound mailbox's IMAP connection (before or after saving). Resolves
+// a masked/blank password from the stored row for the given account_key.
+router.post('/accounts/test', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const b = req.body || {};
+    let pass = b.imap_pass;
+    if ((!pass || pass === '********') && b.account_key) {
+      const stored = await db('mail_accounts').where({ account_key: b.account_key }).first();
+      pass = stored?.imap_pass || '';
+    }
+    const emailIntakeService = require('../services/emailIntakeService');
+    const result = await emailIntakeService.testConnection({
+      host: b.imap_host, port: b.imap_port, secure: b.imap_secure,
+      user: b.imap_user, pass, folder: b.imap_folder || 'INBOX',
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(422).json({ ok: false, error: `Mailbox test failed (${error.message}).` });
   }
 });
 
@@ -438,6 +529,7 @@ router.post('/flush-queue', adminAuth, requirePermission('email.send'), async (r
 router.get('/queue', adminAuth, requirePermission('email.view'), [
   query('status').optional({ values: 'falsy' }).isIn(['pending', 'sent', 'failed']),
   query('emailType').optional({ values: 'falsy' }).isString().isLength({ max: 64 }),
+  query('origin').optional({ values: 'falsy' }).isIn(['system', 'manual']),
   query('q').optional({ values: 'falsy' }).isString().isLength({ max: 255 }),
   query('from').optional({ values: 'falsy' }).isISO8601(),
   query('to').optional({ values: 'falsy' }).isISO8601(),
@@ -456,6 +548,9 @@ router.get('/queue', adminAuth, requirePermission('email.view'), [
     const applyFilters = (qb) => {
       if (req.query.status) qb.where('email_queue.status', req.query.status);
       if (req.query.emailType) qb.where('email_queue.email_type', req.query.emailType);
+      // 'system' includes legacy rows (origin was NULL before migration 155).
+      if (req.query.origin === 'manual') qb.where('email_queue.origin', 'manual');
+      else if (req.query.origin === 'system') qb.where((b) => b.where('email_queue.origin', 'system').orWhereNull('email_queue.origin'));
       if (req.query.from) qb.where('email_queue.created_at', '>=', new Date(req.query.from));
       if (req.query.to) qb.where('email_queue.created_at', '<=', new Date(req.query.to));
       if (req.query.q) {
@@ -484,6 +579,7 @@ router.get('/queue', adminAuth, requirePermission('email.view'), [
           'email_queue.sent_at',
           'email_queue.error_message',
           'email_queue.retry_count',
+          'email_queue.origin',
           'email_queue.event_id',
           'events.event_name as event_name',
           'events.slug as event_slug'
@@ -503,6 +599,7 @@ router.get('/queue', adminAuth, requirePermission('email.view'), [
       sentAt: r.sent_at,
       errorMessage: r.error_message,
       retryCount: r.retry_count,
+      origin: r.origin || 'system',
       eventId: r.event_id,
       eventName: r.event_name || null,
       eventSlug: r.event_slug || null,
@@ -515,6 +612,108 @@ router.get('/queue', adminAuth, requirePermission('email.view'), [
   } catch (error) {
     logger.error('List email queue error:', error);
     res.status(500).json({ error: 'Failed to load email queue', details: error.message });
+  }
+});
+
+// Single queued/sent email WITH its rendered body — powers the Messages
+// reading pane. `rendered_html` is the exact HTML that was sent (migration
+// 119); rows sent before that migration have none. Attachment disk paths in
+// `email_data` are never exposed — only the filenames, so the pane can list
+// attachments without leaking storage paths (same PII posture as the list).
+router.get('/queue/:id', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+    const row = await db('email_queue')
+      .leftJoin('events', 'events.id', 'email_queue.event_id')
+      .select('email_queue.*', 'events.event_name as event_name', 'events.slug as event_slug')
+      .where('email_queue.id', id)
+      .first();
+    if (!row) return res.status(404).json({ error: 'Email not found' });
+
+    let cc = null;
+    let attachments = [];
+    try {
+      const data = row.email_data ? JSON.parse(row.email_data) : {};
+      if (data.cc) cc = Array.isArray(data.cc) ? data.cc.join(', ') : String(data.cc);
+      if (Array.isArray(data.attachments)) {
+        attachments = data.attachments
+          .filter((a) => a && a.filename)
+          .map((a) => ({ filename: a.filename, contentType: a.contentType || null }));
+      }
+    } catch (_) { /* malformed email_data → no cc/attachments, still return the body */ }
+
+    res.json({
+      id: row.id,
+      recipientEmail: row.recipient_email,
+      emailType: row.email_type,
+      status: row.status,
+      createdAt: row.created_at,
+      scheduledAt: row.scheduled_at,
+      sentAt: row.sent_at,
+      errorMessage: row.error_message,
+      retryCount: row.retry_count,
+      eventId: row.event_id,
+      eventName: row.event_name || null,
+      eventSlug: row.event_slug || null,
+      renderedHtml: row.rendered_html || null,
+      cc,
+      attachments,
+    });
+  } catch (error) {
+    logger.error('Get email queue item error:', error);
+    res.status(500).json({ error: 'Failed to load email', details: error.message });
+  }
+});
+
+// Send a human-composed email from the Messages composer. The admin already
+// edited the body (reply or document message), so it is sent as-is — no
+// template render — after a sanitize pass. Recorded in email_queue as a
+// 'manual' send so it surfaces under Customers > Sent.
+router.post('/send', adminAuth, requirePermission('email.send'), async (req, res) => {
+  try {
+    const b = req.body || {};
+    const to = String(b.to || '').trim();
+    const subject = String(b.subject || '').trim();
+    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      return res.status(400).json({ error: 'A valid recipient email is required.' });
+    }
+    if (!subject) return res.status(400).json({ error: 'A subject is required.' });
+
+    const sanitizeHtml = require('sanitize-html');
+    const html = sanitizeHtml(String(b.html || ''), {
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'style']),
+      allowedAttributes: {
+        ...sanitizeHtml.defaults.allowedAttributes,
+        img: ['src', 'alt', 'width', 'height'],
+        '*': ['style', 'class'],
+      },
+      allowedSchemes: ['http', 'https', 'mailto', 'cid', 'data'],
+    });
+    const cc = b.cc ? String(b.cc).trim() : null;
+
+    const emailProcessor = require('../services/emailProcessor');
+    const result = await emailProcessor.sendRawEmail({ to, cc, subject, html });
+
+    await db('email_queue').insert({
+      recipient_email: to,
+      email_type: 'manual_message',
+      email_data: JSON.stringify({
+        subject,
+        cc: cc || undefined,
+        replyToReceivedId: b.replyToReceivedId || undefined,
+        messageId: result.messageId,
+      }),
+      status: 'sent',
+      origin: 'manual',
+      rendered_html: html,
+      created_at: new Date(),
+      sent_at: new Date(),
+    });
+    res.json({ ok: true });
+  } catch (error) {
+    logger.error('Manual send error:', error);
+    res.status(500).json({ error: 'Failed to send message', details: error.message });
   }
 });
 
