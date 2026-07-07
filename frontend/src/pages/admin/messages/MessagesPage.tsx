@@ -20,7 +20,7 @@ import { Loading } from '../../../components/common';
  */
 
 type FolderSrc = 'queue' | 'received' | 'empty';
-interface Folder { id: string; name: string; icon: LucideIcon; src: FolderSrc; note?: string; }
+interface Folder { id: string; name: string; icon: LucideIcon; src: FolderSrc; account?: string; note?: string; }
 interface Account { id: string; name: string; addr?: string; color: string; folders: Folder[]; }
 
 type Selection =
@@ -50,6 +50,7 @@ const fmt = (s?: string | null) =>
 const STATUS_STYLES: Record<string, string> = {
   sent: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
   ingested: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+  received: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
   pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
   failed: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
   error: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
@@ -67,14 +68,20 @@ export const MessagesPage: React.FC = () => {
     queryFn: () => emailService.listQueue({ pageSize: 100 }),
     refetchInterval: 60000,
   });
-  const receivedQuery = useQuery({
-    queryKey: ['messages', 'received'],
-    queryFn: () => emailService.listReceived({ pageSize: 100 }),
+  const acctQuery = useQuery({
+    queryKey: ['messages', 'received', 'accounting'],
+    queryFn: () => emailService.listReceived({ account: 'accounting', pageSize: 100 }),
+    refetchInterval: 60000,
+  });
+  const custQuery = useQuery({
+    queryKey: ['messages', 'received', 'customers'],
+    queryFn: () => emailService.listReceived({ account: 'customers', pageSize: 100 }),
     refetchInterval: 60000,
   });
 
   const queueTotal = queueQuery.data?.pagination.total;
-  const receivedTotal = receivedQuery.data?.pagination.total;
+  const acctTotal = acctQuery.data?.pagination.total;
+  const custTotal = custQuery.data?.pagination.total;
 
   const accounts: Account[] = useMemo(() => [
     { id: 'all', name: t('messages.account.all', 'All mail'), color: '#64748b', folders: [
@@ -82,13 +89,12 @@ export const MessagesPage: React.FC = () => {
       { id: 'all-sent', name: t('messages.folder.sent', 'Sent'), icon: Send, src: 'queue' },
     ] },
     { id: 'cust', name: t('messages.account.customers', 'Customers'), addr: 'hello@', color: '#2563c9', folders: [
-      { id: 'cust-in', name: t('messages.folder.inbox', 'Inbox'), icon: Inbox, src: 'empty',
-        note: t('messages.empty.customerInbox', 'Connect the hello@ mailbox to see customer replies here (next phase).') },
+      { id: 'cust-in', name: t('messages.folder.inbox', 'Inbox'), icon: Inbox, src: 'received', account: 'customers' },
       { id: 'cust-sent', name: t('messages.folder.sent', 'Sent'), icon: Send, src: 'empty',
-        note: t('messages.empty.customerSent', 'Your hand-written replies will appear here once compose ships.') },
+        note: t('messages.empty.customerSent', 'Your hand-written replies will appear here once compose ships (next phase).') },
     ] },
     { id: 'acct', name: t('messages.account.accounting', 'Accounting'), addr: 'rechnungen@', color: '#12876a', folders: [
-      { id: 'acct-in', name: t('messages.folder.inbox', 'Inbox'), icon: Inbox, src: 'received' },
+      { id: 'acct-in', name: t('messages.folder.inbox', 'Inbox'), icon: Inbox, src: 'received', account: 'accounting' },
     ] },
     { id: 'auto', name: t('messages.account.automated', 'Automated'), addr: 'no-reply@', color: '#7a52d6', folders: [
       { id: 'auto-sent', name: t('messages.folder.sent', 'Sent'), icon: Send, src: 'queue' },
@@ -100,8 +106,31 @@ export const MessagesPage: React.FC = () => {
     return { a: accounts[0], f: accounts[0].folders[0] };
   }, [accounts, activeFolder]);
 
-  const countFor = (src: FolderSrc) =>
-    src === 'queue' ? queueTotal : src === 'received' ? receivedTotal : undefined;
+  const countFor = (f: Folder): number | undefined => {
+    if (f.src === 'queue') return queueTotal;
+    if (f.src === 'received') {
+      if (f.account === 'customers') return custTotal;
+      if (f.account === 'accounting') return acctTotal;
+      return (acctTotal || 0) + (custTotal || 0);
+    }
+    return undefined;
+  };
+
+  // Which received rows feed the active folder (customer / accounting / union).
+  const receivedItems = useMemo(() => {
+    if (folder.f.src !== 'received') return undefined;
+    const a = acctQuery.data?.items || [];
+    const c = custQuery.data?.items || [];
+    if (folder.f.account === 'customers') return c;
+    if (folder.f.account === 'accounting') return a;
+    return [...a, ...c].sort((x, y) => (y.received_at || '').localeCompare(x.received_at || ''));
+  }, [folder, acctQuery.data, custQuery.data]);
+
+  const receivedLoading = folder.f.account === 'customers'
+    ? custQuery.isLoading
+    : folder.f.account === 'accounting'
+      ? acctQuery.isLoading
+      : acctQuery.isLoading || custQuery.isLoading;
 
   return (
     <div className="flex flex-col h-[calc(100vh-8.5rem)] min-h-[540px]">
@@ -129,7 +158,7 @@ export const MessagesPage: React.FC = () => {
               </div>
               <div className="flex flex-col gap-0.5">
                 {a.folders.map((f) => {
-                  const c = countFor(f.src);
+                  const c = countFor(f);
                   const active = f.id === activeFolder;
                   return (
                     <button
@@ -166,8 +195,8 @@ export const MessagesPage: React.FC = () => {
             <MessageList
               folder={folder.f}
               queue={queueQuery.data?.items}
-              received={receivedQuery.data?.items}
-              loading={folder.f.src === 'queue' ? queueQuery.isLoading : folder.f.src === 'received' ? receivedQuery.isLoading : false}
+              received={receivedItems}
+              loading={folder.f.src === 'queue' ? queueQuery.isLoading : folder.f.src === 'received' ? receivedLoading : false}
               selection={selection}
               onSelect={setSelection}
               t={t}
@@ -298,7 +327,11 @@ const ReadingPane: React.FC<{
     );
   }
 
-  const isAcct = account.id === 'acct' || (selection.kind === 'received');
+  // Accounting toolbar only for the rechnungen@ stream; customer mail (inbound
+  // or the automated/sent streams) gets the CRM action set.
+  const isAcct = selection.kind === 'received'
+    ? selection.item.account_key !== 'customers'
+    : account.id === 'acct';
   return (
     <div className="flex flex-col min-h-0 flex-1">
       <Toolbar isAcct={isAcct} readonly={selection.kind === 'queue'} t={t} />
@@ -368,44 +401,64 @@ const ReceivedDetail: React.FC<{
   onViewDoc: (id: number) => void;
   onOpenAccounting: () => void;
   t: (k: string, d?: string) => string;
-}> = ({ item, onViewDoc, onOpenAccounting, t }) => (
-  <>
-    <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100" style={{ textWrap: 'balance' } as React.CSSProperties}>
-      {item.subject || t('messages.noSubject', '(no subject)')}
-    </h2>
-    <div className="mt-3 pb-4 border-b border-neutral-200 dark:border-neutral-800 text-sm">
-      <div className="text-neutral-600 dark:text-neutral-300">
-        {t('messages.from', 'from')} <span className="font-semibold text-neutral-800 dark:text-neutral-100">{item.from_address || '—'}</span>
-        {' · '}{t('messages.to', 'to')} <span className="font-mono text-xs">rechnungen@</span>
+}> = ({ item, onViewDoc, onOpenAccounting, t }) => {
+  const detail = useQuery({
+    queryKey: ['messages', 'received', 'item', item.id],
+    queryFn: () => emailService.getReceivedItem(item.id),
+  });
+  const toAddr = detail.data?.to_address || item.to_address
+    || (item.account_key === 'customers' ? 'hello@' : 'rechnungen@');
+  return (
+    <>
+      <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100" style={{ textWrap: 'balance' } as React.CSSProperties}>
+        {item.subject || t('messages.noSubject', '(no subject)')}
+      </h2>
+      <div className="mt-3 pb-4 border-b border-neutral-200 dark:border-neutral-800 text-sm">
+        <div className="text-neutral-600 dark:text-neutral-300">
+          {t('messages.from', 'from')} <span className="font-semibold text-neutral-800 dark:text-neutral-100">{item.from_address || '—'}</span>
+          {' · '}{t('messages.to', 'to')} <span className="font-mono text-xs">{toAddr}</span>
+        </div>
+        <div className="text-neutral-400 dark:text-neutral-500 text-xs mt-0.5 tabular-nums">{fmt(item.received_at)}</div>
       </div>
-      <div className="text-neutral-400 dark:text-neutral-500 text-xs mt-0.5 tabular-nums">{fmt(item.received_at)}</div>
-    </div>
 
-    <div className="mt-4 text-sm text-neutral-500 dark:text-neutral-400 italic">
-      {t('messages.inboundBodyPending', 'Full message bodies are captured from the next phase. For now this shows the envelope and any attached document.')}
-    </div>
+      {detail.isLoading ? (
+        <div className="mt-4"><Loading /></div>
+      ) : detail.data?.body_html ? (
+        <div className="mt-4 rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white" style={{ height: '48vh' }}>
+          {/* Sanitized server-side; rendered with a strict (script-less, no
+              same-origin) sandbox as a second layer against untrusted mail. */}
+          <iframe title="Email body" sandbox="" srcDoc={detail.data.body_html} className="w-full h-full border-0" />
+        </div>
+      ) : detail.data?.body_text ? (
+        <pre className="mt-4 whitespace-pre-wrap text-sm text-neutral-700 dark:text-neutral-300 font-sans">{detail.data.body_text}</pre>
+      ) : (
+        <div className="mt-4 text-sm text-neutral-500 dark:text-neutral-400 italic">
+          {t('messages.noInboundBody', 'No message body was captured for this email.')}
+        </div>
+      )}
 
-    {item.inbound_document_id != null && (
-      <div className="mt-5 flex flex-wrap gap-2">
-        <button
-          onClick={() => onViewDoc(item.inbound_document_id as number)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
-        >
-          <FileText className="w-4 h-4" />{t('messages.viewDocument', 'View document')}
-        </button>
-        <button
-          onClick={onOpenAccounting}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800"
-        >
-          <Link2 className="w-4 h-4" />{t('messages.openInAccounting', 'Open in Accounting inbox')}
-        </button>
-      </div>
-    )}
-    {item.error && (
-      <div className="mt-4 text-sm text-red-600 dark:text-red-400">{item.error}</div>
-    )}
-  </>
-);
+      {item.inbound_document_id != null && (
+        <div className="mt-5 flex flex-wrap gap-2">
+          <button
+            onClick={() => onViewDoc(item.inbound_document_id as number)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
+          >
+            <FileText className="w-4 h-4" />{t('messages.viewDocument', 'View document')}
+          </button>
+          <button
+            onClick={onOpenAccounting}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800"
+          >
+            <Link2 className="w-4 h-4" />{t('messages.openInAccounting', 'Open in Accounting inbox')}
+          </button>
+        </div>
+      )}
+      {item.error && (
+        <div className="mt-4 text-sm text-red-600 dark:text-red-400">{item.error}</div>
+      )}
+    </>
+  );
+};
 
 // ─────────────────────────────────────────────────────────────── toolbar ──
 const Toolbar: React.FC<{ isAcct: boolean; readonly: boolean; t: (k: string, d?: string) => string }> = ({ isAcct, readonly, t }) => {

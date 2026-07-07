@@ -260,13 +260,104 @@ router.get('/received', adminAuth, requirePermission('email.view'), async (req, 
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 25));
-    const base = db('received_emails');
-    const countRow = await base.clone().count({ c: '*' }).first();
+    const account = req.query.account ? String(req.query.account) : null;
+    // 'accounting' matches legacy rows too (account_key was NULL before mig 154).
+    const applyAccount = (qb) => {
+      if (account === 'accounting') qb.where((b) => b.where('account_key', 'accounting').orWhereNull('account_key'));
+      else if (account) qb.where('account_key', account);
+      return qb;
+    };
+    const countRow = await applyAccount(db('received_emails')).count({ c: '*' }).first();
     const total = parseInt(countRow?.c || 0, 10);
-    const items = await base.clone().orderBy('received_at', 'desc').limit(pageSize).offset((page - 1) * pageSize);
+    // Bodies are excluded from the list (can be large); fetched per-message.
+    const items = await applyAccount(db('received_emails'))
+      .select('id', 'message_id', 'account_key', 'from_address', 'to_address', 'subject',
+        'received_at', 'attachment_count', 'status', 'inbound_document_id', 'error')
+      .orderBy('received_at', 'desc').limit(pageSize).offset((page - 1) * pageSize);
     res.json({ items, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
   } catch (error) {
     errorResponse(res, error, 500, 'Failed to fetch received emails');
+  }
+});
+
+// Single received email WITH its captured (server-sanitized) body — Messages
+// reading pane. body_html was already sanitized on ingest; the viewer renders
+// it in a script-less sandboxed iframe as well.
+router.get('/received/:id', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+    const row = await db('received_emails').where({ id }).first();
+    if (!row) return res.status(404).json({ error: 'Email not found' });
+    res.json(row);
+  } catch (error) {
+    errorResponse(res, error, 500, 'Failed to fetch email');
+  }
+});
+
+// Additional inbound mailboxes (beyond the primary accounting IMAP in
+// email_configs) — e.g. the customer hello@ box. Passwords are masked out.
+router.get('/accounts', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const rows = await db('mail_accounts').orderBy('id');
+    res.json({ items: rows.map((a) => ({ ...a, imap_pass: a.imap_pass ? '********' : '' })) });
+  } catch (error) {
+    errorResponse(res, error, 500, 'Failed to load mail accounts');
+  }
+});
+
+// Upsert a mailbox by account_key. A masked password ('********') keeps the
+// stored value so the admin never has to re-type it.
+router.post('/accounts', adminAuth, requirePermission('email.edit'), async (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.account_key) return res.status(400).json({ error: 'account_key is required' });
+    const patch = {
+      label: b.label || null,
+      imap_host: b.imap_host || null,
+      imap_port: b.imap_port ? parseInt(b.imap_port, 10) : 993,
+      imap_secure: b.imap_secure !== false,
+      imap_user: b.imap_user || null,
+      imap_folder: b.imap_folder || 'INBOX',
+      enabled: !!b.enabled,
+      updated_at: new Date(),
+    };
+    if (b.imap_pass && b.imap_pass !== '********') patch.imap_pass = b.imap_pass;
+    const existing = await db('mail_accounts').where({ account_key: b.account_key }).first();
+    if (existing) {
+      await db('mail_accounts').where({ account_key: b.account_key }).update(patch);
+    } else {
+      await db('mail_accounts').insert({
+        account_key: b.account_key,
+        imap_pass: (b.imap_pass && b.imap_pass !== '********') ? b.imap_pass : '',
+        created_at: new Date(),
+        ...patch,
+      });
+    }
+    res.json({ ok: true });
+  } catch (error) {
+    errorResponse(res, error, 500, 'Failed to save mail account');
+  }
+});
+
+// Test an inbound mailbox's IMAP connection (before or after saving). Resolves
+// a masked/blank password from the stored row for the given account_key.
+router.post('/accounts/test', adminAuth, requirePermission('email.view'), async (req, res) => {
+  try {
+    const b = req.body || {};
+    let pass = b.imap_pass;
+    if ((!pass || pass === '********') && b.account_key) {
+      const stored = await db('mail_accounts').where({ account_key: b.account_key }).first();
+      pass = stored?.imap_pass || '';
+    }
+    const emailIntakeService = require('../services/emailIntakeService');
+    const result = await emailIntakeService.testConnection({
+      host: b.imap_host, port: b.imap_port, secure: b.imap_secure,
+      user: b.imap_user, pass, folder: b.imap_folder || 'INBOX',
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(422).json({ ok: false, error: `Mailbox test failed (${error.message}).` });
   }
 });
 

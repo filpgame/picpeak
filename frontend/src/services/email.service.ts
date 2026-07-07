@@ -125,7 +125,9 @@ export interface ImapPollResult {
 export interface ReceivedEmail {
   id: number;
   message_id: string | null;
+  account_key?: string | null;
   from_address: string | null;
+  to_address?: string | null;
   subject: string | null;
   received_at: string | null;
   attachment_count: number;
@@ -134,9 +136,29 @@ export interface ReceivedEmail {
   error: string | null;
 }
 
+/** Single received email including its captured, server-sanitized body. */
+export interface ReceivedEmailDetail extends ReceivedEmail {
+  body_html: string | null;
+  body_text: string | null;
+}
+
 export interface ReceivedEmailsResponse {
   items: ReceivedEmail[];
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
+/** An additional inbound mailbox beyond the primary accounting IMAP. */
+export interface MailAccount {
+  id?: number;
+  account_key: string;
+  label?: string | null;
+  imap_host?: string | null;
+  imap_port?: number;
+  imap_secure?: boolean;
+  imap_user?: string | null;
+  imap_pass?: string;
+  imap_folder?: string;
+  enabled?: boolean;
 }
 
 export const emailService = {
@@ -181,8 +203,24 @@ export const emailService = {
     const response = await api.post<ImapPollResult>('/admin/email/incoming-config/poll', {});
     return response.data;
   },
-  async listReceived(params: { page?: number; pageSize?: number } = {}): Promise<ReceivedEmailsResponse> {
+  async listReceived(params: { page?: number; pageSize?: number; account?: string } = {}): Promise<ReceivedEmailsResponse> {
     const response = await api.get<ReceivedEmailsResponse>('/admin/email/received', { params });
+    return response.data;
+  },
+  async getReceivedItem(id: number): Promise<ReceivedEmailDetail> {
+    const response = await api.get<ReceivedEmailDetail>(`/admin/email/received/${id}`);
+    return response.data;
+  },
+  // Additional inbound mailboxes (e.g. the customer hello@ box).
+  async listMailAccounts(): Promise<MailAccount[]> {
+    const response = await api.get<{ items: MailAccount[] }>('/admin/email/accounts');
+    return response.data.items;
+  },
+  async saveMailAccount(account: MailAccount): Promise<void> {
+    await api.post('/admin/email/accounts', account);
+  },
+  async testMailAccount(account: Partial<MailAccount>): Promise<ImapTestResult> {
+    const response = await api.post<ImapTestResult>('/admin/email/accounts/test', account);
     return response.data;
   },
 
