@@ -307,6 +307,9 @@ async function deleteEventCascade(eventId, adminContext) {
 const SLIDESHOW_TRANSITIONS = ['crossfade', 'cut', 'slide', 'kenburns', 'dipwhite', 'dipblack'];
 // Allowed per-slide color filters.
 const SLIDESHOW_COLORFILTERS = ['none', 'bw', 'sepia', 'warm', 'cool', 'vignette'];
+// Allowed slideshow play orders (#202). 'chronological' = upload order,
+// 'random' = client-side shuffle.
+const SLIDESHOW_ORDERS = ['chronological', 'random'];
 module.exports = {
   validateHeroImageAnchor,
   getStoragePath,
@@ -321,6 +324,7 @@ module.exports = {
   mapEventForApi,
   hasCustomerContactColumns,
   deleteEventCascade,
+  SLIDESHOW_ORDERS,
   SLIDESHOW_TRANSITIONS,
   SLIDESHOW_COLORFILTERS,
 };

@@ -243,8 +243,8 @@ router.get('/:slug/info', async (req, res) => {
 
 // Photos a slideshow may display: published, finished, non-hidden. Mirrors the
 // guest filter in GET /:slug/photos so the live count matches the rendered set.
-function slideshowPhotosQuery(eventId) {
-  return db('photos')
+function slideshowPhotosQuery(eventId, categoryId = null) {
+  const q = db('photos')
     .where('photos.event_id', eventId)
     .where(function() {
       this.where('photos.processing_status', 'complete').orWhereNull('photos.processing_status');
@@ -252,6 +252,10 @@ function slideshowPhotosQuery(eventId) {
     .where(function() {
       this.where('photos.visibility', 'visible').orWhereNull('photos.visibility');
     });
+  // Category filter (#202) — keep the /session + /state count in sync with the
+  // photos the kiosk actually renders.
+  if (categoryId) q.where('photos.category_id', categoryId);
+  return q;
 }
 
 // Resolve an active slideshow by slug + token. Returns the event row, or null
@@ -324,6 +328,9 @@ async function slideshowSettings(event) {
     transition: event.show_transition || 'crossfade',
     transition_ms: event.show_transition_ms || 800,
     colorfilter: event.show_colorfilter || 'none',
+    // Play order (#202): 'chronological' | 'random'. The client shuffles when
+    // 'random' so live-appended uploads keep working.
+    order: event.show_order || 'chronological',
     fit: g.fit,
     watermark,
   };
@@ -356,7 +363,7 @@ router.get('/:slug/show/:token/session', handleAsync(async (req, res) => {
   // here so the kiosk's image requests are authorized with zero extra wiring.
   setGalleryAuthCookies(res, sessionToken, event.slug);
 
-  const [{ count }] = await slideshowPhotosQuery(event.id).count('* as count');
+  const [{ count }] = await slideshowPhotosQuery(event.id, event.show_category_id).count('* as count');
 
   res.json({
     token: sessionToken,
@@ -382,7 +389,7 @@ router.get('/:slug/show/:token/state', handleAsync(async (req, res) => {
     throw new NotFoundError('Slideshow');
   }
 
-  const [{ count }] = await slideshowPhotosQuery(event.id).count('* as count');
+  const [{ count }] = await slideshowPhotosQuery(event.id, event.show_category_id).count('* as count');
 
   res.json({
     ...(await slideshowSettings(event)),
@@ -424,6 +431,13 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
       photosQuery = photosQuery.where(function() {
         this.where('photos.visibility', 'visible').orWhereNull('photos.visibility');
       });
+    }
+
+    // Live Slideshow category filter (#202). Enforced server-side so the kiosk
+    // viewer can't widen the set: when the event pins show_category_id, the
+    // slideshow only sees that category. NULL = all photos (unchanged).
+    if (req.accessLevel === 'slideshow' && req.event.show_category_id) {
+      photosQuery = photosQuery.where('photos.category_id', req.event.show_category_id);
     }
 
     // Apply sort option
