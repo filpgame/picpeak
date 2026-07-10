@@ -3476,6 +3476,13 @@
       "cool": "Kühl",
       "vignette": "Vignette"
     },
+    "orderLabel": "Reihenfolge",
+    "order": {
+      "chronological": "Chronologisch",
+      "random": "Zufällig (mischen)"
+    },
+    "categoryLabel": "Nur Kategorie zeigen",
+    "categoryAll": "Alle Fotos",
     "watermarkToggle": "Logo-Wasserzeichen anzeigen",
     "watermarkDescription": "Blendet ein weißes, halbtransparentes Logo in einer Ecke ein (wie ein Senderlogo im TV).",
     "watermarkSourceLabel": "Logo",

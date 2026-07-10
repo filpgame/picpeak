@@ -158,6 +158,8 @@ export const eventsService = {
       show_transition_ms?: number;
       show_watermark?: boolean | null;
       show_colorfilter?: string;
+      show_order?: string;
+      show_category_id?: number | null;
     }
   ): Promise<Record<string, unknown>> {
     const response = await api.patch(`/admin/events/${id}/slideshow`, settings);

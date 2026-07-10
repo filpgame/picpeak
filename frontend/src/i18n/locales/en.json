@@ -3604,6 +3604,13 @@
       "cool": "Cool",
       "vignette": "Vignette"
     },
+    "orderLabel": "Play order",
+    "order": {
+      "chronological": "Chronological",
+      "random": "Random (shuffle)"
+    },
+    "categoryLabel": "Show only category",
+    "categoryAll": "All photos",
     "watermarkToggle": "Show logo watermark",
     "watermarkDescription": "Overlay a white, semi-transparent logo in a corner (like a TV station ident).",
     "watermarkSourceLabel": "Logo",
