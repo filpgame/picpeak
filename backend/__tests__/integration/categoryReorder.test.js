@@ -2,9 +2,9 @@
  * Layered per-event category ordering (#782).
  *
  * Two ordering layers, resolved per event:
- *   - GLOBAL default   — photo_categories.display_order (migration 158),
+ *   - GLOBAL default   — photo_categories.display_order (migration 159),
  *                        set via POST /reorder-global; applies everywhere.
- *   - PER-EVENT override — event_category_order (migration 159), set via
+ *   - PER-EVENT override — event_category_order (migration 160), set via
  *                        POST /reorder; overrides the default for one gallery.
  *   - DELETE /reorder/:eventId clears an event's override.
  *
@@ -58,7 +58,7 @@ describe('category ordering (#782)', () => {
 
   const getEvent = (eventId) => auth(request(app).get(`/api/admin/categories/event/${eventId}`)).expect(200);
 
-  describe('migration 158 backfill', () => {
+  describe('migration 159 backfill', () => {
     it('seeds display_order from alphabetical order, scoped per event', async () => {
       const eventId = await insertEvent('backfill-ev');
       await insertCat('Reception', { event_id: eventId });
@@ -67,7 +67,7 @@ describe('category ordering (#782)', () => {
 
       // Re-run the migration: addColumn is guarded (no-op); the backfill loop
       // re-runs and assigns per-scope alphabetical order — what an upgrade does.
-      await require('../../migrations/core/158_add_category_display_order').up(db);
+      await require('../../migrations/core/159_add_category_display_order').up(db);
 
       const evCats = await db('photo_categories').where({ event_id: eventId }).orderBy('display_order', 'asc');
       expect(evCats.map((c) => c.name)).toEqual(['Ceremony', 'Pre-Ceremony', 'Reception']);
@@ -151,6 +151,47 @@ describe('category ordering (#782)', () => {
       const res = await auth(request(app).delete(`/api/admin/categories/reorder/${eventId}`)).expect(200);
       expect(res.body.every((c) => c.override_position == null)).toBe(true);
       expect(await db('event_category_order').where({ event_id: eventId }).first()).toBeUndefined();
+    });
+  });
+
+  describe('event ownership (PR #790 review)', () => {
+    let limitedToken;
+    let foreignEventId;
+
+    beforeAll(async () => {
+      const bcrypt = require('bcrypt');
+      // A non-super_admin role that DOES hold settings.view + settings.edit —
+      // the exact case the review flagged (settings.edit is grantable).
+      const roleRes = await db('roles').insert({ name: 'gallery-mgr', display_name: 'Gallery Mgr' }).returning('id');
+      const roleId = roleRes[0]?.id ?? roleRes[0];
+      const permIds = await db('permissions').whereIn('name', ['settings.view', 'settings.edit']).pluck('id');
+      await db('role_permissions').insert(permIds.map((permission_id) => ({ role_id: roleId, permission_id })));
+
+      const a2 = await db('admin_users').insert({
+        username: 'limited', email: 'limited@example.com',
+        password_hash: await bcrypt.hash('x', 4), role_id: roleId,
+        must_change_password: false, created_at: new Date(),
+      }).returning('id');
+      limitedToken = mintAdminToken(a2[0]?.id ?? a2[0]);
+
+      // An event owned by a DIFFERENT admin (the seeded super_admin).
+      const owner = (await db('admin_users').where({ username: 'tester' }).first()).id;
+      await db('events').insert({
+        event_type: 'wedding', password_hash: 'x',
+        expires_at: new Date(Date.now() + 9e9).toISOString(),
+        is_active: true, is_archived: false, slug: 'owned-ev', share_link: 'owned-ev',
+        event_name: 'Owned', event_date: '2026-01-01', created_by: owner,
+      });
+      foreignEventId = (await db('events').where({ slug: 'owned-ev' }).first()).id;
+    });
+
+    const limitedAuth = (r) => r.set('Authorization', `Bearer ${limitedToken}`);
+
+    it('blocks a non-owner from reading, reordering or resetting another event', async () => {
+      await limitedAuth(request(app).get(`/api/admin/categories/event/${foreignEventId}`)).expect(403);
+      await limitedAuth(request(app).post('/api/admin/categories/reorder'))
+        .send({ event_id: foreignEventId, orderedIds: [1] }).expect(403);
+      await limitedAuth(request(app).delete(`/api/admin/categories/reorder/${foreignEventId}`)).expect(403);
     });
   });
 

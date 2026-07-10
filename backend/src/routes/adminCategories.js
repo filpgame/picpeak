@@ -4,6 +4,7 @@ const { db, logActivity } = require('../database/db');
 const { formatBoolean } = require('../utils/dbCompat');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
+const { requireEventOwnership } = require('../middleware/ownership');
 const { getEventCategoriesOrdered } = require('../utils/categoryOrder');
 const logger = require('../utils/logger');
 const router = express.Router();
@@ -26,7 +27,7 @@ router.get('/global', adminAuth, requirePermission('settings.view'), async (req,
 // Get categories for a specific event (global + event-specific), resolved to
 // the event's effective order: per-event override, else global default, else
 // name (#782). Each row carries `override_position` (null when not customised).
-router.get('/event/:eventId', adminAuth, requirePermission('settings.view'), async (req, res) => {
+router.get('/event/:eventId', adminAuth, requirePermission('settings.view'), requireEventOwnership, async (req, res) => {
   try {
     const categories = await getEventCategoriesOrdered(req.params.eventId);
     res.json(categories);
@@ -282,6 +283,20 @@ router.post('/reorder', adminAuth, requirePermission('settings.edit'), [
     const eventId = parseInt(req.body.event_id, 10);
     const orderedIds = req.body.orderedIds.map((id) => parseInt(id, 10));
 
+    // Event ownership (event_id comes from the body, so requireEventOwnership —
+    // which reads req.params — can't be used here). Mirror it: super_admins
+    // bypass; other admins may only reorder events they own (ownerless
+    // legacy/system events allowed).
+    if (req.admin.roleName !== 'super_admin') {
+      const event = await db('events').where('id', eventId).first();
+      if (!event) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+      if (event.created_by && event.created_by !== req.admin.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    }
+
     // Every id must be a category available to this event: a shared global OR
     // one of the event's own categories. Anything else is out of scope.
     const available = await db('photo_categories')
@@ -317,7 +332,7 @@ router.post('/reorder', adminAuth, requirePermission('settings.edit'), [
 });
 
 // Clear an event's override — revert this gallery to the global default order.
-router.delete('/reorder/:eventId', adminAuth, requirePermission('settings.edit'), async (req, res) => {
+router.delete('/reorder/:eventId', adminAuth, requirePermission('settings.edit'), requireEventOwnership, async (req, res) => {
   try {
     const eventId = parseInt(req.params.eventId, 10);
     await db('event_category_order').where('event_id', eventId).del();

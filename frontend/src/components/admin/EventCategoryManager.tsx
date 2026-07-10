@@ -177,7 +177,7 @@ export const EventCategoryManager: React.FC<EventCategoryManagerProps> = ({ even
       <p className="text-xs text-neutral-500 dark:text-neutral-400 italic">
         {isCustomised
           ? t('categories.orderCustomisedHint', 'This gallery uses a custom order. Reset to follow the global default (Settings → Photo Categories).')
-          : t('categories.orderDefaultHint', 'Drag the arrows to set the order for this gallery. Otherwise it follows the global default (Settings → Photo Categories).')}
+          : t('categories.orderDefaultHint', 'Use the arrows to set the order for this gallery. Otherwise it follows the global default (Settings → Photo Categories).')}
       </p>
 
       {/* Add new category form */}
@@ -378,7 +378,7 @@ export const EventCategoryManager: React.FC<EventCategoryManagerProps> = ({ even
                           />
                         </div>
                         {isSelected && (
-                          <div className="absolute top-2 right-2 bg-accent-dark/150 text-white rounded-full p-1">
+                          <div className="absolute top-2 right-2 bg-accent-dark text-white rounded-full p-1">
                             <Check className="w-4 h-4" />
                           </div>
                         )}

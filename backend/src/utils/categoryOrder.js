@@ -4,7 +4,7 @@
  * Resolves an event's categories into their effective display order, layering:
  *   1. per-event override — event_category_order.position, when the event has
  *      been customised;
- *   2. the global default — photo_categories.display_order (migration 158);
+ *   2. the global default — photo_categories.display_order (migration 159);
  *   3. name.
  *
  * Globals and event-specific categories are ordered together so a custom order

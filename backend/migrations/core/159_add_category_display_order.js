@@ -1,5 +1,5 @@
 /**
- * Migration 158: per-event category ordering (#782).
+ * Migration 159: per-event category ordering (#782).
  *
  * Adds a `display_order` integer to `photo_categories` so photographers can
  * arrange an event's categories in the flow of the day (Pre-Ceremony →

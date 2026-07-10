@@ -1,7 +1,7 @@
 /**
- * Migration 159: per-event category order override (#782).
+ * Migration 160: per-event category order override (#782).
  *
- * Builds on migration 158 (photo_categories.display_order = the GLOBAL default
+ * Builds on migration 159 (photo_categories.display_order = the GLOBAL default
  * order) by adding a per-event OVERRIDE layer. Global categories are shared
  * across every event, so a single display_order can only express one order for
  * them. This table lets a single gallery arrange its categories — globals AND
