@@ -282,9 +282,10 @@ jobs:
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
           type=semver,pattern={{major}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
-          type=semver,pattern=v{{version}}
-          type=semver,pattern=v{{major}}.{{minor}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
-          type=semver,pattern=v{{major}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
+          # #668/#783: publish the git-tag name verbatim (v3.45.0 / v3.84.0-beta.0)
+          # so users can pin the same string as the GitHub release. metadata-action's
+          # `pattern=v{{version}}` silently dropped it on prereleases, so use type=ref.
+          type=ref,event=tag
           type=sha,format=short
           # `:latest` + `:stable` follow the stable channel (the `stable` branch +
           # stable release tags). The default branch is now `main` (active dev),
@@ -502,9 +503,10 @@ jobs:
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
           type=semver,pattern={{major}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
-          type=semver,pattern=v{{version}}
-          type=semver,pattern=v{{major}}.{{minor}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
-          type=semver,pattern=v{{major}},enable=${{ steps.context.outputs.is_prerelease == 'false' }}
+          # #668/#783: publish the git-tag name verbatim (v3.45.0 / v3.84.0-beta.0)
+          # so users can pin the same string as the GitHub release. metadata-action's
+          # `pattern=v{{version}}` silently dropped it on prereleases, so use type=ref.
+          type=ref,event=tag
           type=sha,format=short
           # `:latest` + `:stable` follow the stable channel (the `stable` branch +
           # stable release tags). The default branch is now `main` (active dev),
