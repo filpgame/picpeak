@@ -29,6 +29,8 @@ const SETTING_KEYS = [
   'crm_quotes_tos_url',
   'crm_invoices_qr_enabled',
   'crm_invoice_round_total',
+  // Free-text VAT/legal note printed under the MwSt. line on invoice PDFs (#794).
+  'crm_invoices_vat_note_text',
   'crm_invoices_reminders_enabled',
   'crm_invoices_reminder_first_days',
   'crm_invoices_reminder_second_days',
@@ -248,6 +250,25 @@ export const CrmSettingsPage: React.FC = () => {
         <h3 className="font-semibold mb-3">{t('crmSettings.section.invoices', 'Invoices')}</h3>
         {checkbox('crm_invoices_qr_enabled', 'Render payment QR on invoice PDFs')}
         {checkbox('crm_invoice_round_total', 'Reconcile sub-cent rounding to a clean total (adds a "Rundung" row when per-line rounding drifts from qty × rate)')}
+
+        {/* Free-text VAT / legal note (#794) — printed directly under the MwSt.
+            line on every invoice PDF. Data-driven: the admin types the exact
+            wording (Austrian Kleinunternehmer, German §19, reverse-charge, …). */}
+        <div className="mt-3">
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+            {t('crmSettings.crm_invoices_vat_note_text.label', 'VAT / free-text note on invoices')}
+          </label>
+          <textarea
+            value={values.crm_invoices_vat_note_text ?? ''}
+            onChange={(e) => setVal('crm_invoices_vat_note_text', e.target.value)}
+            rows={2}
+            placeholder={t('crmSettings.crm_invoices_vat_note_text.placeholder', 'e.g. Gemäß § 6 Abs. 1 Z 27 UStG 1994 wird keine Umsatzsteuer berechnet (Kleinunternehmer).') as string}
+            className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+          />
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            {t('crmSettings.crm_invoices_vat_note_text.help', 'Printed directly under the MwSt. line on every invoice PDF. Leave empty to hide. Please confirm the exact wording with your tax advisor.')}
+          </p>
+        </div>
 
         {/* Reminder TIMING: owned by the Invoice dunning workflow when the
             engine is live (callout); otherwise the legacy schedule controls. The

@@ -851,6 +851,18 @@ function drawTotals(doc, ctx, x, y, width) {
   doc.text(formatMinor(totals.vatAmountMinor, currency, intlLocale), valueX, y, { width: valueCol, align: 'right' });
   y = doc.y + 4;
 
+  // Free-text VAT / legal note (#794) — printed directly under the MwSt. line
+  // (Benedikt's requested spot). The admin sets the exact wording in
+  // Settings → CRM → Invoices (e.g. the Austrian Kleinunternehmer statement).
+  // Optional; wraps across the totals column. Font size is restored to the row
+  // scale so the Mahngebühr / Rundung / grand-total rows below are unaffected.
+  if (ctx.vatNote) {
+    doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).fontSize(8).fillColor('#555');
+    doc.text(ctx.vatNote, labelX, y, { width: right - labelX });
+    doc.fillColor('#000').fontSize(10);
+    y = doc.y + 4;
+  }
+
   // Mahngebühr row — only rendered when a late fee has been added
   // (second reminder onwards). Sits between VAT and the grand-total
   // divider so the customer sees a clear "VAT + late fee → Total"
@@ -1670,7 +1682,16 @@ function renderDocument(type, context) {
       //                          VAT + middle divider + Total)
       const FOOTER_RESERVE = 30;
       const PAYMENT_BLOCK_HEIGHT = ctx.paymentTerm ? 80 : 50;
-      const TOTALS_BLOCK_HEIGHT  = 90;
+      let TOTALS_BLOCK_HEIGHT  = 90;
+      // A free-text VAT note (#794) adds a wrapped row under the MwSt. line —
+      // grow the reserved totals height by its measured height so a long note
+      // can't push the grand total / payment block into the footer.
+      if (ctx.vatNote) {
+        doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).fontSize(8);
+        const noteWidth = PAGE.contentWidth - ((PAGE.contentWidth - 20) / 2 + 20);
+        TOTALS_BLOCK_HEIGHT += doc.heightOfString(ctx.vatNote, { width: noteWidth }) + 4;
+        doc.fontSize(10);
+      }
       const desiredPaymentY = PAGE.height - PAGE.marginBottom - FOOTER_RESERVE - PAYMENT_BLOCK_HEIGHT;
       const desiredTotalsY  = desiredPaymentY - 12 - TOTALS_BLOCK_HEIGHT;
 
@@ -1746,14 +1767,23 @@ function renderDocument(type, context) {
         // grey line in the bottom corner) is negligible.
         for (let i = 0; i < total; i++) {
           doc.switchToPage(range.start + i);
+          // Drop this page's bottom margin to 0 so writing the label INTO the
+          // margin band (below the content area the line-item table fills) can't
+          // trigger PDFKit's auto-page-break. Previously the label sat at
+          // marginBottom-12 — INSIDE the content area — so on a full multi-page
+          // invoice the table's last row overlapped the "Seite X von Y" stamp
+          // (#794). The page is already fully laid out (buffered), so zeroing the
+          // margin here is safe.
+          doc.page.margins.bottom = 0;
           doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).fontSize(8).fillColor('#888');
           const label = t(ctx.locale, 'page_of', {
             current: i + 1,
             total,
           });
-          // Bottom-right corner, just above the bottom margin so
-          // it doesn't trigger PDFKit's auto-paging.
-          const labelY = doc.page.height - PAGE.marginBottom - 12;
+          // Bottom-right corner, INSIDE the bottom margin (below the content
+          // edge the table fills), so a full continuation page's last row can't
+          // overlap it.
+          const labelY = doc.page.height - PAGE.marginBottom + 8;
           const labelW = 120;
           const labelX = doc.page.width - PAGE.marginRight - labelW;
           doc.text(label, labelX, labelY, {
@@ -1793,6 +1823,8 @@ function normaliseContext(type, ctx) {
     totals: ctx.totals || {},
     doc: ctx.doc || {},
     qrFormat: ctx.qrFormat || 'none',
+    // Free-text VAT/legal note printed under the MwSt. line on invoices (#794).
+    vatNote: (typeof ctx.vatNote === 'string' && ctx.vatNote.trim()) ? ctx.vatNote.trim() : null,
     // Date-format config from the `general_date_format` app setting.
     // Shape: `{ format: 'DD.MM.YYYY' | 'DD/MM/YYYY' | 'MM/DD/YYYY' |
     // 'YYYY-MM-DD', locale?: string }`. The service layer hydrates
