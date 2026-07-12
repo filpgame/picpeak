@@ -1,13 +1,13 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { body } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 const { db, logActivity } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { endSession } = require('../middleware/sessionTimeout');
 const { validatePasswordStrength } = require('../utils/passwordGenerator');
 const { handleAsync, validateRequest, successResponse } = require('../utils/routeHelpers');
-const { NotFoundError, ConflictError, ValidationError } = require('../utils/errors');
+const { NotFoundError, ValidationError, ConflictError } = require('../utils/errors');
 const { setAdminAuthCookie } = require('../utils/tokenUtils');
 const { IDENTITY_PRESERVING_NORMALIZE_EMAIL } = require('../utils/emailNormalization');
 const mfaService = require('../services/mfaService');
@@ -40,55 +40,59 @@ router.put('/profile', [
     .withMessage('A valid email address is required')
     .normalizeEmail(IDENTITY_PRESERVING_NORMALIZE_EMAIL)
 ], handleAsync(async (req, res) => {
-  validateRequest(req);
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
   const username = req.body.username.trim();
   const email = req.body.email.trim().toLowerCase();
   const adminId = req.admin.id;
 
-  // Check for username conflict
-  const existingUsername = await db('admin_users')
-    .where('username', username)
+  // Single conflict check across both fields — we surface the
+  // specific failing field by inspecting the matched row.
+  const conflict = await db('admin_users')
+    .where(function () {
+      this.where('username', username).orWhere('email', email);
+    })
     .whereNot('id', adminId)
     .first();
 
-  if (existingUsername) {
-    throw new ConflictError('Username is already in use', 'username');
+  if (conflict) {
+    const field = conflict.username === username ? 'username' : 'email';
+    const errorMsg = field === 'username'
+      ? 'Username is already in use by another admin'
+      : 'Email is already in use by another admin';
+    return res.status(409).json({ error: errorMsg });
   }
 
-  // Check for email conflict
-  const existingEmail = await db('admin_users')
-    .where('email', email)
-    .whereNot('id', adminId)
-    .first();
-
-  if (existingEmail) {
-    throw new ConflictError('Email address is already in use', 'email');
+  const current = await db('admin_users').where('id', adminId).first();
+  const updatedFields = [];
+  const patch = { updated_at: new Date() };
+  if (!current || current.username !== username) {
+    patch.username = username;
+    updatedFields.push('username');
+  }
+  if (!current || current.email !== email) {
+    patch.email = email;
+    updatedFields.push('email');
   }
 
-  await db('admin_users')
-    .where('id', adminId)
-    .update({
-      username,
-      email,
-      updated_at: new Date()
-    });
-
-  await logActivity('admin_profile_updated',
-    { username, email },
-    null,
-    { type: 'admin', id: adminId, name: req.admin.username }
-  );
+  if (updatedFields.length > 0) {
+    await db('admin_users').where('id', adminId).update(patch);
+    await logActivity('admin_profile_updated',
+      { admin_id: adminId, updated_fields: updatedFields },
+      null,
+      { type: 'admin', id: adminId, name: username }
+    );
+  }
 
   const updatedAdmin = await db('admin_users')
     .where('id', adminId)
     .select('id', 'username', 'email', 'must_change_password as mustChangePassword')
     .first();
 
-  successResponse(res, {
-    message: 'Admin profile updated successfully',
-    user: updatedAdmin
-  });
+  res.json({ user: updatedAdmin });
 }));
 
 // Change password

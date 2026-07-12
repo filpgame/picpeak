@@ -379,6 +379,10 @@ router.post('/:eventId/upload', adminAuth, requirePermission('photos.upload'), r
             mime_type: file.mimetype,
             processing_status: 'pending',
             upload_id: uploadId,
+            // Reference-mode events can hold a mix of imported external
+            // photos (source_origin='external') and admin uploads like this
+            // one. Tag the row so downstream consumers can branch.
+            source_origin: 'managed',
           })
           .returning('id');
         const photoId = inserted[0]?.id || inserted[0];
@@ -738,13 +742,13 @@ router.patch('/:eventId/photos/:photoId', adminAuth, requirePermission('photos.e
     if (category_id === 'individual' || category_id === 'collage') {
       updateData.type = category_id;
       updateData.category_id = null; // Clear legacy category_id
-    } else if (category_id === null || category_id === undefined) {
-      // Explicitly clear category
+    } else if (category_id === null || category_id === undefined || category_id === '0' || category_id === 0) {
+      // Explicitly clear category (0 from a form is also "no category")
       updateData.category_id = null;
     } else {
       // Handle numeric category IDs from photo_categories table
       const numericCategoryId = parseInt(category_id, 10);
-      if (!isNaN(numericCategoryId)) {
+      if (!isNaN(numericCategoryId) && numericCategoryId !== 0) {
         updateData.category_id = numericCategoryId;
       } else {
         updateData.category_id = null;
