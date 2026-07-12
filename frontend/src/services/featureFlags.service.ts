@@ -66,7 +66,11 @@ export type FeatureKey =
   | 'whatsapp'
   // Live Slideshow ("Diashow") — per-event fullscreen kiosk link + presets +
   // global watermark settings tab. Strictly opt-in; gates all slideshow UI.
-  | 'slideshow';
+  | 'slideshow'
+  // Workflow / automation engine — admin-configurable visual flows (triggers,
+  // conditions, branches, loops, approval gates) built on a canvas. Strictly
+  // opt-in; gates the Workflows admin area and the engine runtime.
+  | 'workflows';
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 

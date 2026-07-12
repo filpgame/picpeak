@@ -15,7 +15,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFeatureFlags } from '../../../contexts/FeatureFlagsContext';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { billsService } from '../../../services/bills.service';
 import { quotesService } from '../../../services/quotes.service';
@@ -32,6 +32,7 @@ import {
   type ContractStatus,
 } from '../../../services/contracts.service';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../../hooks';
 
 function statusBadgeClass(status: ContractStatus): string {
   return status === 'fully_signed'         ? 'bg-green-100 text-green-800'
@@ -90,25 +91,21 @@ export const ContractDetailPage: React.FC = () => {
     select: (res) => res?.invoices?.filter((i) => i.sourceContractId === numericId) || [],
   });
 
-  const sendMutation = useMutation({
+  const sendMutation = useMutationWithToast({
     mutationFn: () => contractsService.send(numericId as number),
-    onSuccess: () => {
-      toast.success(t('contracts.detail.sentToast', 'Contract sent.') as string);
-      queryClient.invalidateQueries({ queryKey: ['contract', numericId] });
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || t('contracts.detail.sendError', 'Send failed') as string),
+    successMessage: t('contracts.detail.sentToast', 'Contract sent.') as string,
+    invalidateKeys: [['contract', numericId]],
+    errorMessage: t('contracts.detail.sendError', 'Send failed') as string,
   });
 
-  const cancelMutation = useMutation({
+  const cancelMutation = useMutationWithToast({
     mutationFn: () => contractsService.cancel(numericId as number),
-    onSuccess: () => {
-      toast.success(t('contracts.detail.cancelledToast', 'Contract cancelled.') as string);
-      queryClient.invalidateQueries({ queryKey: ['contract', numericId] });
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || t('contracts.detail.cancelError', 'Cancel failed') as string),
+    successMessage: t('contracts.detail.cancelledToast', 'Contract cancelled.') as string,
+    invalidateKeys: [['contract', numericId]],
+    errorMessage: t('contracts.detail.cancelError', 'Cancel failed') as string,
   });
 
-  const countersignMutation = useMutation({
+  const countersignMutation = useMutationWithToast({
     mutationFn: () => {
       // Capture the canvas signature (if drawn) at submit time so we
       // send a fresh data URL, not a stale one from an earlier mount.
@@ -119,55 +116,45 @@ export const ContractDetailPage: React.FC = () => {
         signatureDataUrl,
       });
     },
+    successMessage: t('contracts.detail.countersignedToast', 'Counter-signed.') as string,
+    invalidateKeys: [['contract', numericId]],
+    errorMessage: t('contracts.detail.countersignError', 'Counter-sign failed') as string,
     onSuccess: () => {
-      toast.success(t('contracts.detail.countersignedToast', 'Counter-signed.') as string);
       setCountersignName('');
       countersignPadRef.current?.clear();
-      queryClient.invalidateQueries({ queryKey: ['contract', numericId] });
     },
-    onError: (err: any) => toast.error(err?.response?.data?.error || t('contracts.detail.countersignError', 'Counter-sign failed') as string),
   });
 
-  const uploadMutation = useMutation({
+  const uploadMutation = useMutationWithToast({
     mutationFn: (file: File) => contractsService.uploadSignedPdf(numericId as number, file),
-    onSuccess: () => {
-      toast.success(t('contracts.detail.uploadedToast', 'Signed PDF uploaded.') as string);
-      queryClient.invalidateQueries({ queryKey: ['contract', numericId] });
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || t('contracts.detail.uploadError', 'Upload failed') as string),
+    successMessage: t('contracts.detail.uploadedToast', 'Signed PDF uploaded.') as string,
+    invalidateKeys: [['contract', numericId]],
+    errorMessage: t('contracts.detail.uploadError', 'Upload failed') as string,
   });
 
-  const resendSignedMutation = useMutation({
+  const resendSignedMutation = useMutationWithToast({
     mutationFn: () => contractsService.resendSigned(numericId as number),
-    onSuccess: () => {
-      toast.success(t('contracts.detail.resentSignedToast',
-        'Signed contract re-sent to both parties.') as string);
-      queryClient.invalidateQueries({ queryKey: ['contract', numericId] });
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error
-      || t('contracts.detail.resendError', 'Resend failed') as string),
+    successMessage: t('contracts.detail.resentSignedToast',
+      'Signed contract re-sent to both parties.') as string,
+    invalidateKeys: [['contract', numericId]],
+    errorMessage: t('contracts.detail.resendError', 'Resend failed') as string,
   });
 
-  const convertToEventMutation = useMutation({
+  const convertToEventMutation = useMutationWithToast({
     mutationFn: () => contractsService.convertToEvent(numericId as number),
-    onSuccess: (result) => {
-      toast.success(result.alreadyConverted
-        ? (t('contracts.detail.alreadyEventToast', 'Already linked to an event.') as string)
-        : (t('contracts.detail.convertedToEventToast', 'Contract converted to event #{{id}}', { id: result.eventId }) as string));
-      queryClient.invalidateQueries({ queryKey: ['contract', numericId] });
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || t('contracts.detail.convertError', 'Convert failed') as string),
+    successMessage: (result) => result.alreadyConverted
+      ? (t('contracts.detail.alreadyEventToast', 'Already linked to an event.') as string)
+      : (t('contracts.detail.convertedToEventToast', 'Contract converted to event #{{id}}', { id: result.eventId }) as string),
+    invalidateKeys: [['contract', numericId]],
+    errorMessage: t('contracts.detail.convertError', 'Convert failed') as string,
   });
 
-  const convertToInvoiceMutation = useMutation({
+  const convertToInvoiceMutation = useMutationWithToast({
     mutationFn: () => contractsService.convertToInvoice(numericId as number),
-    onSuccess: (result) => {
-      toast.success(t('contracts.detail.convertedToInvoiceToast',
-        '{{count}} invoice(s) created from this contract', { count: result.installmentsCreated }) as string);
-      queryClient.invalidateQueries({ queryKey: ['contract', numericId] });
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || t('contracts.detail.convertError', 'Convert failed') as string),
+    successMessage: (result) => t('contracts.detail.convertedToInvoiceToast',
+      '{{count}} invoice(s) created from this contract', { count: result.installmentsCreated }) as string,
+    invalidateKeys: [['contract', numericId], ['invoices']],
+    errorMessage: t('contracts.detail.convertError', 'Convert failed') as string,
   });
 
   if (isLoading) return <Loading />;
@@ -1003,7 +990,7 @@ const RestampSignaturesCard: React.FC<RestampCardProps> = ({ contract, onSuccess
     return () => { cleanupCustomer(); cleanupAdmin(); };
   }, []);
 
-  const mutation = useMutation({
+  const mutation = useMutationWithToast({
     mutationFn: () => {
       const customerPad = customerPadRef.current;
       const adminPad = adminPadRef.current;
@@ -1017,16 +1004,16 @@ const RestampSignaturesCard: React.FC<RestampCardProps> = ({ contract, onSuccess
         adminSignatureDataUrl,
       });
     },
+    successMessage: t('contracts.detail.restampedToast',
+      'Signatures re-stamped and PDF re-rendered.') as string,
+    errorMessage: (err: any) => err?.response?.data?.error
+      || err?.message
+      || t('contracts.detail.restampError', 'Re-stamp failed') as string,
     onSuccess: () => {
-      toast.success(t('contracts.detail.restampedToast',
-        'Signatures re-stamped and PDF re-rendered.') as string);
       customerPadRef.current?.clear();
       adminPadRef.current?.clear();
       onSuccess();
     },
-    onError: (err: any) => toast.error(err?.response?.data?.error
-      || err?.message
-      || t('contracts.detail.restampError', 'Re-stamp failed') as string),
   });
 
   const missingCustomer = !contract.signedCustomerSignaturePath && contract.signedByCustomerAt;

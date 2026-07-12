@@ -2,6 +2,7 @@ const express = require('express');
 const { db, logActivity } = require('../database/db');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 // Get notifications (unread activity logs)
@@ -39,7 +40,7 @@ router.get('/', adminAuth, requirePermission('settings.view'), async (req, res) 
           if (typeof notification.metadata === 'object') return notification.metadata;
           return JSON.parse(notification.metadata);
         } catch (e) {
-          console.warn('Failed to parse metadata for notification:', notification.id, e.message);
+          logger.warn('Failed to parse metadata for notification:', notification.id, e.message);
           return {};
         }
       })(),
@@ -59,7 +60,7 @@ router.get('/', adminAuth, requirePermission('settings.view'), async (req, res) 
       unreadCount: unreadCount.count || 0
     });
   } catch (error) {
-    console.error('Notifications fetch error:', error);
+    logger.error('Notifications fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch notifications' });
   }
 });
@@ -77,7 +78,7 @@ router.put('/:id/read', adminAuth, requirePermission('settings.edit'), async (re
 
     res.json({ message: 'Notification marked as read' });
   } catch (error) {
-    console.error('Mark notification read error:', error);
+    logger.error('Mark notification read error:', error);
     res.status(500).json({ error: 'Failed to mark notification as read' });
   }
 });
@@ -93,7 +94,7 @@ router.put('/read-all', adminAuth, requirePermission('settings.edit'), async (re
 
     res.json({ message: 'All notifications marked as read' });
   } catch (error) {
-    console.error('Mark all notifications read error:', error);
+    logger.error('Mark all notifications read error:', error);
     res.status(500).json({ error: 'Failed to mark all notifications as read' });
   }
 });
@@ -112,7 +113,7 @@ router.delete('/clear-all', adminAuth, requirePermission('settings.edit'), async
     const deletedCount = await db('activity_logs').delete();
     res.json({ message: 'All notifications cleared', deletedCount });
   } catch (error) {
-    console.error('Clear notifications error:', error);
+    logger.error('Clear notifications error:', error);
     res.status(500).json({ error: 'Failed to clear notifications' });
   }
 });

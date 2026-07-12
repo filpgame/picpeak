@@ -7,6 +7,7 @@ const path = require('path');
 const stream = require('stream');
 const crypto = require('crypto');
 const logger = require('../../utils/logger');
+const { formatBytes } = require('../../utils/formatBytes');
 
 /**
  * S3 Storage Adapter for handling file uploads to S3 and S3-compatible services
@@ -738,15 +739,7 @@ class S3StorageAdapter extends stream.EventEmitter {
    * @private
    */
   _formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    return formatBytes(bytes, decimals);
   }
 }
 

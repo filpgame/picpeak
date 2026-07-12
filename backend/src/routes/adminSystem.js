@@ -8,7 +8,9 @@ const path = require('path');
 const os = require('os');
 const { formatBoolean } = require('../utils/dbCompat');
 const logger = require('../utils/logger');
-const { checkForUpdates, getCurrentChannel, getReleasesSince } = require('../services/updateCheckService');
+const { checkForUpdates, getCurrentChannel, getCurrentVersion, getReleasesSince, compareVersions } = require('../services/updateCheckService');
+const { getAppSetting, upsertAppSetting } = require('../utils/appSettings');
+const { parseWhatsNew } = require('../utils/whatsNew');
 const { detectEnvironment, generateUpdateInstructions } = require('../services/environmentService');
 const {
   checkAndNotifyUpdates,
@@ -89,7 +91,7 @@ router.get('/version', adminAuth, requirePermission('settings.view'), async (req
       const packageJson = JSON.parse(packageContent);
       backendVersion = packageJson.version || '1.0.0';
     } catch (err) {
-      console.error('Could not read package.json:', err);
+      logger.error('Could not read package.json:', err);
     }
 
     const channel = getCurrentChannel(backendVersion);
@@ -102,7 +104,7 @@ router.get('/version', adminAuth, requirePermission('settings.view'), async (req
       channel: channel
     });
   } catch (error) {
-    console.error('Error fetching version:', error);
+    logger.error('Error fetching version:', error);
     res.status(500).json({ error: 'Failed to fetch version information' });
   }
 });
@@ -123,13 +125,87 @@ router.get('/updates', adminAuth, requirePermission('settings.view'), async (req
     const forceRefresh = req.query.refresh === 'true';
     const updateInfo = await checkForUpdates(forceRefresh);
 
+    // Pre-update teaser: the target version's top highlights, so the
+    // "Update Available" banner can show "New features include …".
+    let latestHighlights = [];
+    if (updateInfo.updateAvailable) {
+      try {
+        const newer = await getReleasesSince(updateInfo.current, updateInfo.channel);
+        if (newer[0]) latestHighlights = parseWhatsNew(newer[0].body);
+      } catch (_) { /* teaser is best-effort */ }
+    }
+
     res.json({
       enabled: true,
-      ...updateInfo
+      ...updateInfo,
+      latestHighlights
     });
   } catch (error) {
     logger.error('Error checking for updates:', error);
     res.status(500).json({ error: 'Failed to check for updates' });
+  }
+});
+
+// What's New — after-update highlights. Returns the curated bullets for
+// every release the instance moved THROUGH since it last acknowledged one
+// (lastSeen < version <= running). Seen-tracking is per-INSTANCE: the first
+// admin to dismiss clears it for everyone (a single app_settings row). A
+// brand-new install initialises the marker silently so it never pops
+// "what's new" with nothing to compare against. Best-effort: any failure
+// (GitHub unreachable, etc.) returns hasNews:false, never errors.
+router.get('/updates/whatsnew', adminAuth, requirePermission('settings.view'), async (req, res) => {
+  try {
+    if (process.env.UPDATE_CHECK_ENABLED === 'false') {
+      return res.json({ enabled: false, hasNews: false });
+    }
+    const running = await getCurrentVersion();
+    const channel = getCurrentChannel(running);
+    const lastSeen = await getAppSetting('whatsnew_last_seen_version', null);
+
+    if (!lastSeen) {
+      await upsertAppSetting('whatsnew_last_seen_version', JSON.stringify(running), 'system');
+      return res.json({ enabled: true, hasNews: false, running });
+    }
+    if (compareVersions(running, lastSeen) <= 0) {
+      return res.json({ enabled: true, hasNews: false, running });
+    }
+
+    // Releases in (lastSeen, running], newest-first, with their highlights.
+    const releases = (await getReleasesSince(lastSeen, channel))
+      .filter((r) => compareVersions(r.version, running) <= 0);
+    const versions = releases
+      .map((r) => ({
+        version: r.version,
+        name: r.name,
+        publishedAt: r.publishedAt,
+        htmlUrl: r.htmlUrl,
+        bullets: parseWhatsNew(r.body),
+      }))
+      .filter((v) => v.bullets.length > 0);
+
+    return res.json({
+      enabled: true,
+      hasNews: versions.length > 0,
+      fromVersion: lastSeen,
+      toVersion: running,
+      versions,
+    });
+  } catch (error) {
+    logger.error('Error building what\'s-new:', error);
+    res.json({ enabled: true, hasNews: false });
+  }
+});
+
+// Acknowledge the What's New — advance the per-instance marker to the
+// running version so it stops showing for every admin.
+router.post('/updates/whatsnew/seen', adminAuth, requirePermission('settings.view'), async (req, res) => {
+  try {
+    const running = await getCurrentVersion();
+    await upsertAppSetting('whatsnew_last_seen_version', JSON.stringify(running), 'system');
+    res.json({ ok: true, lastSeen: running });
+  } catch (error) {
+    logger.error('Error marking what\'s-new seen:', error);
+    res.status(500).json({ error: 'Failed to update marker' });
   }
 });
 
@@ -192,7 +268,7 @@ router.get('/updates/instructions', adminAuth, requirePermission('settings.view'
       targetVersion: updateInfo.latest.forChannel,
       channel: updateInfo.channel,
       environment: env,
-      instructions,
+instructions,
       releaseNotesUrl: `https://github.com/${RELEASES_REPO}/releases/tag/v${updateInfo.latest.forChannel}`
     });
   } catch (error) {
@@ -217,7 +293,7 @@ router.get('/status', adminAuth, requirePermission('settings.view'), async (req,
         `, [dbName]);
         dbSize = result.rows[0]?.size || 0;
       } catch (error) {
-        console.error('Error getting PostgreSQL database size:', error);
+        logger.error('Error getting PostgreSQL database size:', error);
       }
     } else {
       // SQLite - check file size
@@ -226,7 +302,7 @@ router.get('/status', adminAuth, requirePermission('settings.view'), async (req,
         const stats = await fs.stat(dbPath);
         dbSize = stats.size;
       } catch (error) {
-        console.error('Error getting SQLite database size:', error);
+        logger.error('Error getting SQLite database size:', error);
       }
     }
 
@@ -271,7 +347,7 @@ router.get('/status', adminAuth, requirePermission('settings.view'), async (req,
           const stats = await fs.stat(fullArchivePath);
           archiveStorage += stats.size;
         } catch (error) {
-          console.error('Archive file not found:', archive.archive_path);
+          logger.error('Archive file not found:', archive.archive_path);
         }
       }
     }
@@ -331,7 +407,7 @@ router.get('/status', adminAuth, requirePermission('settings.view'), async (req,
 
     res.json(status);
   } catch (error) {
-    console.error('Error fetching system status:', error);
+    logger.error('Error fetching system status:', error);
     res.status(500).json({ error: 'Failed to fetch system status' });
   }
 });
@@ -393,7 +469,7 @@ router.get('/database', adminAuth, requirePermission('settings.view'), async (re
       timestamp: new Date()
     });
   } catch (error) {
-    console.error('Error fetching database info:', error);
+    logger.error('Error fetching database info:', error);
     res.status(500).json({ error: 'Failed to fetch database information' });
   }
 });

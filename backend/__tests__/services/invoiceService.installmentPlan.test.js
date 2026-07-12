@@ -72,9 +72,16 @@ jest.mock('../../src/services/businessProfileService', () => ({
   resolveBankAccountForCurrency: jest.fn(async () => null),
 }));
 
-jest.mock('../../src/utils/documentSequences', () => ({
-  claimNextSequence: jest.fn(async () => 42),
-}));
+jest.mock('../../src/utils/documentSequences', () => {
+  const claimNextSequence = jest.fn(async () => 42);
+  // Delegates to the claimNextSequence mock so call-count assertions
+  // below keep observing sequence claims.
+  const nextDocumentNumber = jest.fn(async (kind, settingKey, defaultFormat, trx) => {
+    const seq = await claimNextSequence(kind, 2026, trx);
+    return `R-2026-${String(seq).padStart(4, '0')}`;
+  });
+  return { claimNextSequence, nextDocumentNumber };
+});
 
 jest.mock('../../src/services/pdfService', () => ({
   renderInvoiceToBuffer: jest.fn(async () => Buffer.from('pdf')),

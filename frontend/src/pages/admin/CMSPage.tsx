@@ -13,6 +13,7 @@ import type { CMSPage as CMSPageType } from '../../services/cms.service';
 import { settingsService, PublicSiteBranding } from '../../services/settings.service';
 import { buildResourceUrl } from '../../utils/url';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../hooks';
 
 export const CMSPage: React.FC = () => {
   const { t } = useTranslation();
@@ -221,14 +222,14 @@ export const CMSPage: React.FC = () => {
     },
     onError: () => toast.error(t('toast.uploadError')),
   });
-  const clearLogoMutation = useMutation({
+  const clearLogoMutation = useMutationWithToast({
     mutationFn: async () => cmsService.clearPageLogo(selectedPage),
+    successMessage: t('cms.logoCleared', 'Logo cleared'),
+    errorMessage: () => t('toast.saveError'),
+    invalidateKeys: [['cms-pages']],
     onSuccess: () => {
       setEditForm(prev => ({ ...prev, logo_url: null }));
-      queryClient.invalidateQueries({ queryKey: ['cms-pages'] });
-      toast.success(t('cms.logoCleared', 'Logo cleared'));
     },
-    onError: () => toast.error(t('toast.saveError')),
   });
 
   // Warn before leaving with unsaved changes

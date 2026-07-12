@@ -7,6 +7,8 @@ interface PublishGalleryDialogProps {
   eventName: string;
   requirePassword: boolean;
   customerEmail?: string | null;
+  /** Assigned customer accounts — notified via the account "your galleries" email when there's no inline email. */
+  assignedCustomerCount?: number;
   isPublishing: boolean;
   onConfirm: (password?: string) => void;
   onClose: () => void;
@@ -28,24 +30,33 @@ export const PublishGalleryDialog: React.FC<PublishGalleryDialogProps> = ({
   eventName,
   requirePassword,
   customerEmail,
+  assignedCustomerCount = 0,
   isPublishing,
   onConfirm,
   onClose,
 }) => {
   const { t } = useTranslation();
+  // Someone gets notified if there's an inline email OR an assigned account
+  // (the latter via the account "your galleries" email).
+  const willNotify = !!customerEmail || assignedCustomerCount > 0;
+  // The password is only collected (and required) on the inline-email path,
+  // because the gallery_created email carries it. With no inline email the field
+  // is hidden and the existing hash is kept — so don't gate submit on it, or a
+  // password-protected gallery without an email could never be published.
+  const needsPassword = requirePassword && !!customerEmail;
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
   const handleSubmit = () => {
-    if (requirePassword) {
+    if (needsPassword) {
       if (!password || password.trim().length < 6) {
         setError(t('events.publishDialog.errorMinLength', 'Password must be at least 6 characters long.'));
         return;
       }
     }
     setError(undefined);
-    onConfirm(requirePassword ? password : undefined);
+    onConfirm(needsPassword ? password : undefined);
   };
 
   return (
@@ -72,14 +83,21 @@ export const PublishGalleryDialog: React.FC<PublishGalleryDialogProps> = ({
                 defaultValue:
                   'Publishing "{{eventName}}" makes the gallery accessible and sends the notification email to {{customerEmail}}.',
               })
-            : t('events.publishDialog.descriptionNoEmail', {
-                eventName,
-                defaultValue:
-                  'Publishing "{{eventName}}" makes the gallery accessible. No customer email is set, so no notification will be sent.',
-              })}
+            : assignedCustomerCount > 0
+              ? t('events.publishDialog.descriptionAssignedAccount', {
+                  eventName,
+                  count: assignedCustomerCount,
+                  defaultValue:
+                    'Publishing "{{eventName}}" makes the gallery accessible. The assigned customer account(s) will be notified by email (in their language) that it is available.',
+                })
+              : t('events.publishDialog.descriptionNoEmail', {
+                  eventName,
+                  defaultValue:
+                    'Publishing "{{eventName}}" makes the gallery accessible. No customer email is set, so no notification will be sent.',
+                })}
         </p>
 
-        {requirePassword && customerEmail && (
+        {needsPassword && (
           <div className="space-y-3 mb-4">
             <Input
               type={showPassword ? 'text' : 'password'}
@@ -110,12 +128,21 @@ export const PublishGalleryDialog: React.FC<PublishGalleryDialogProps> = ({
           </div>
         )}
 
-        <div className="flex gap-3">
+        {/* Stack both buttons vertically (always). The German primary label
+            "Veröffentlichen & Kunden benachrichtigen" is ~40 chars including
+            the icon — at max-w-md, no side-by-side row layout fits it on one
+            line, and the base .btn class has @apply whitespace-nowrap (see
+            index.css:149) which overrides a whitespace-normal className via
+            CSS cascade order, so the text won't wrap either. Side-by-side
+            would silently push the button past the modal frame (#670).
+            col-reverse keeps the DOM order semantically secondary-then-primary
+            while putting the primary action visually on top — standard
+            confirmation-dialog pattern. */}
+        <div className="flex flex-col-reverse gap-3">
           <Button
             variant="outline"
             onClick={onClose}
             disabled={isPublishing}
-            className="flex-1"
           >
             {t('common.cancel', 'Cancel')}
           </Button>
@@ -124,10 +151,9 @@ export const PublishGalleryDialog: React.FC<PublishGalleryDialogProps> = ({
             onClick={handleSubmit}
             disabled={isPublishing}
             isLoading={isPublishing}
-            leftIcon={<Send className="w-4 h-4" />}
-            className="flex-1"
+            leftIcon={willNotify ? <Send className="w-4 h-4" /> : undefined}
           >
-            {t('events.publishAndNotify')}
+            {willNotify ? t('events.publishAndNotify') : t('events.publishDialog.justPublish', 'Publish')}
           </Button>
         </div>
       </Card>

@@ -5,34 +5,33 @@
  */
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
+import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, RefreshCw, Trash2, CheckCircle } from 'lucide-react';
 import { Button, Card, Loading } from '../../components/common';
+import { useMutationWithToast } from '../../hooks';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 import { systemHealthService } from '../../services/systemHealth.service';
 
 export const SystemHealthPage: React.FC = () => {
   const { t } = useTranslation();
   const { formatDateTime: fmtDateTime } = useLocalizedDate();
-  const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['system-health-failures'],
     queryFn: () => systemHealthService.getFailures(),
   });
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['system-health-failures'] });
-
-  const retryMutation = useMutation({
+  const retryMutation = useMutationWithToast({
     mutationFn: (id: number) => systemHealthService.retryEmail(id),
-    onSuccess: () => { toast.success(t('systemHealth.retriedToast', 'Email re-queued.')); invalidate(); },
-    onError: () => toast.error(t('toast.saveError')),
+    invalidateKeys: [['system-health-failures']],
+    successMessage: t('systemHealth.retriedToast', 'Email re-queued.'),
+    errorMessage: () => t('toast.saveError'),
   });
-  const dismissMutation = useMutation({
+  const dismissMutation = useMutationWithToast({
     mutationFn: (id: number) => systemHealthService.dismissEmail(id),
-    onSuccess: () => { toast.success(t('systemHealth.dismissedToast', 'Dismissed.')); invalidate(); },
-    onError: () => toast.error(t('toast.saveError')),
+    invalidateKeys: [['system-health-failures']],
+    successMessage: t('systemHealth.dismissedToast', 'Dismissed.'),
+    errorMessage: () => t('toast.saveError'),
   });
 
   const stuckEmails = data?.stuckEmails ?? [];

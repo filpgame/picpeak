@@ -24,6 +24,7 @@ import {
 } from '../../../services/projects.service';
 import { eventsService } from '../../../services/events.service';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../../hooks';
 import { formatMoneyMinor } from '../../../utils/money';
 import { useFeatureFlags, type FeatureKey } from '../../../contexts/FeatureFlagsContext';
 
@@ -121,29 +122,24 @@ export const ProjectCockpitPage: React.FC = () => {
     enabled: projectId !== null,
   });
 
-  const renameMutation = useMutation({
+  const renameMutation = useMutationWithToast({
     mutationFn: (name: string) => projectsService.update(projectId as number, { name }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['project-overview', projectId] });
-      qc.invalidateQueries({ queryKey: ['projects'] });
-      setEditName(null);
-      toast.success(t('projects.toast.saved', 'Project saved') as string);
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || (t('projects.toast.saveFailed', 'Save failed') as string)),
+    successMessage: t('projects.toast.saved', 'Project saved') as string,
+    invalidateKeys: [['project-overview', projectId], ['projects']],
+    errorMessage: t('projects.toast.saveFailed', 'Save failed') as string,
+    onSuccess: () => setEditName(null),
   });
 
-  const emailActionMutation = useMutation({
+  const emailActionMutation = useMutationWithToast({
     mutationFn: ({ action, emailId }: { action: 'resend' | 'cancel' | 'retry' | 'sendNow'; emailId: number }) => {
       if (action === 'resend') return projectsService.resendEmail(emailId);
       if (action === 'cancel') return projectsService.cancelEmail(emailId);
       if (action === 'retry') return projectsService.retryEmail(emailId);
       return projectsService.sendEmailNow(emailId);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['project-overview', projectId] });
-      toast.success(t('projects.toast.emailAction', 'Done') as string);
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || (t('projects.toast.emailActionFailed', 'Action failed') as string)),
+    successMessage: t('projects.toast.emailAction', 'Done') as string,
+    invalidateKeys: [['project-overview', projectId]],
+    errorMessage: t('projects.toast.emailActionFailed', 'Action failed') as string,
   });
 
   // Event search for the "attach event" control (results exclude events

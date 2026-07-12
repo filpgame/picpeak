@@ -2,9 +2,21 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { db } = require('../database/db');
 const { formatBoolean } = require('../utils/dbCompat');
+const { getAppSetting } = require('../utils/appSettings');
 const archiver = require('archiver');
 const path = require('path');
 const router = express.Router();
+
+// #756: a NULL per-event hero_logo_visible means "inherit the global
+// branding_logo_display_hero toggle". Only an explicit true/false is a
+// per-gallery override. `globalDefault` is branding_logo_display_hero
+// (defaults true when unset).
+function resolveHeroLogoVisible(perEvent, globalDefault) {
+  if (perEvent === null || perEvent === undefined) {
+    return globalDefault !== false;
+  }
+  return perEvent !== false && perEvent !== 0 && perEvent !== '0';
+}
 const watermarkService = require('../services/watermarkService');
 const watermarkGeneratorService = require('../services/watermarkGeneratorService');
 const { verifyGalleryAccess, denySlideshowToken, isAdminPreview } = require('../middleware/gallery');
@@ -13,8 +25,9 @@ const { generateGuestIdentifier } = require('../middleware/feedbackRateLimit');
 const secureImageService = require('../services/secureImageService');
 const logger = require('../utils/logger');
 const { resolvePhotoFilePath } = require('../services/photoResolver');
+const { getEventCategoriesOrdered } = require('../utils/categoryOrder');
 const { getEventShareToken, resolveShareIdentifier, buildShareLinkVariants } = require('../services/shareLinkService');
-const { handleAsync } = require('../utils/routeHelpers');
+const { handleAsync, errorResponse } = require('../utils/routeHelpers');
 const { NotFoundError } = require('../utils/errors');
 const { ensureThumbnail, ensureHeroImage, ensurePreviewImage, withLocalCopy } = require('../services/imageProcessor');
 const downloadZipService = require('../services/downloadZipService');
@@ -182,6 +195,8 @@ router.get('/:slug/info', async (req, res) => {
     }
     
     const requiresPassword = !(event.require_password === false || event.require_password === 0 || event.require_password === '0');
+    const globalHeroLogoVisible = await getAppSetting('branding_logo_display_hero', true);
+    const globalLogoSize = await getAppSetting('branding_logo_size', 'medium');
 
     res.json({
       event_name: event.event_name,
@@ -199,8 +214,9 @@ router.get('/:slug/info', async (req, res) => {
       watermark_text: event.watermark_text,
       enable_devtools_protection: event.enable_devtools_protection === true || event.enable_devtools_protection === 1 || event.enable_devtools_protection === '1',
       use_canvas_rendering: event.use_canvas_rendering === true || event.use_canvas_rendering === 1 || event.use_canvas_rendering === '1',
-      hero_logo_visible: event.hero_logo_visible !== false && event.hero_logo_visible !== 0 && event.hero_logo_visible !== '0',
-      hero_logo_size: event.hero_logo_size || 'medium',
+      hero_logo_visible: resolveHeroLogoVisible(event.hero_logo_visible, globalHeroLogoVisible),
+      // #756: NULL per-event size inherits the global branding_logo_size.
+      hero_logo_size: event.hero_logo_size || globalLogoSize || 'medium',
       hero_logo_position: event.hero_logo_position || 'top',
       hero_logo_url: event.hero_logo_url || null,
       header_style: event.header_style || 'standard',
@@ -213,8 +229,7 @@ router.get('/:slug/info', async (req, res) => {
       promo_markdown: event.promo_markdown || null
     });
   } catch (error) {
-    console.error('Error fetching gallery info:', error);
-    res.status(500).json({ error: 'Failed to fetch gallery info' });
+    errorResponse(res, error, 500, 'Failed to fetch gallery info');
   }
 });
 
@@ -229,8 +244,8 @@ router.get('/:slug/info', async (req, res) => {
 
 // Photos a slideshow may display: published, finished, non-hidden. Mirrors the
 // guest filter in GET /:slug/photos so the live count matches the rendered set.
-function slideshowPhotosQuery(eventId) {
-  return db('photos')
+function slideshowPhotosQuery(eventId, categoryId = null) {
+  const q = db('photos')
     .where('photos.event_id', eventId)
     .where(function() {
       this.where('photos.processing_status', 'complete').orWhereNull('photos.processing_status');
@@ -238,6 +253,10 @@ function slideshowPhotosQuery(eventId) {
     .where(function() {
       this.where('photos.visibility', 'visible').orWhereNull('photos.visibility');
     });
+  // Category filter (#202) — keep the /session + /state count in sync with the
+  // photos the kiosk actually renders.
+  if (categoryId) q.where('photos.category_id', categoryId);
+  return q;
 }
 
 // Resolve an active slideshow by slug + token. Returns the event row, or null
@@ -310,6 +329,9 @@ async function slideshowSettings(event) {
     transition: event.show_transition || 'crossfade',
     transition_ms: event.show_transition_ms || 800,
     colorfilter: event.show_colorfilter || 'none',
+    // Play order (#202): 'chronological' | 'random'. The client shuffles when
+    // 'random' so live-appended uploads keep working.
+    order: event.show_order || 'chronological',
     fit: g.fit,
     watermark,
   };
@@ -342,7 +364,7 @@ router.get('/:slug/show/:token/session', handleAsync(async (req, res) => {
   // here so the kiosk's image requests are authorized with zero extra wiring.
   setGalleryAuthCookies(res, sessionToken, event.slug);
 
-  const [{ count }] = await slideshowPhotosQuery(event.id).count('* as count');
+  const [{ count }] = await slideshowPhotosQuery(event.id, event.show_category_id).count('* as count');
 
   res.json({
     token: sessionToken,
@@ -368,7 +390,7 @@ router.get('/:slug/show/:token/state', handleAsync(async (req, res) => {
     throw new NotFoundError('Slideshow');
   }
 
-  const [{ count }] = await slideshowPhotosQuery(event.id).count('* as count');
+  const [{ count }] = await slideshowPhotosQuery(event.id, event.show_category_id).count('* as count');
 
   res.json({
     ...(await slideshowSettings(event)),
@@ -410,6 +432,13 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
       photosQuery = photosQuery.where(function() {
         this.where('photos.visibility', 'visible').orWhereNull('photos.visibility');
       });
+    }
+
+    // Live Slideshow category filter (#202). Enforced server-side so the kiosk
+    // viewer can't widen the set: when the event pins show_category_id, the
+    // slideshow only sees that category. NULL = all photos (unchanged).
+    if (req.accessLevel === 'slideshow' && req.event.show_category_id) {
+      photosQuery = photosQuery.where('photos.category_id', req.event.show_category_id);
     }
 
     // Apply sort option
@@ -559,10 +588,12 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
     // Fetch category details from photo_categories table
     let categories = [];
     if (usedCategoryIds.length > 0) {
-      const categoryDetails = await db('photo_categories')
-        .whereIn('id', usedCategoryIds)
-        .select('id', 'name', 'slug', 'is_global', 'hero_photo_id', 'allow_downloads')
-        .orderBy('name', 'asc');
+      // Resolved category order (#782): per-event override, else global
+      // default, else name — restricted to categories that have photos.
+      const categoryDetails = await getEventCategoriesOrdered(req.event.id, {
+        onlyIds: usedCategoryIds,
+        select: ['c.id', 'c.name', 'c.slug', 'c.is_global', 'c.hero_photo_id', 'c.allow_downloads'],
+      });
 
       categories = categoryDetails.map(cat => ({
         id: cat.id,
@@ -636,7 +667,8 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
     // selection back to source files. Tied to the same toggle as downloads —
     // one switch controls both surfaces.
     const useOriginalFilenames = await getUseOriginalFilenames();
-    
+    const globalHeroLogoVisible = await getAppSetting('branding_logo_display_hero', true);
+    const globalLogoSize = await getAppSetting('branding_logo_size', 'medium');
 
     res.json({
       event: {
@@ -655,8 +687,8 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
         watermark_text: req.event.watermark_text,
         enable_devtools_protection: req.event.enable_devtools_protection === true,
         use_canvas_rendering: req.event.use_canvas_rendering === true,
-        hero_logo_visible: req.event.hero_logo_visible !== false && req.event.hero_logo_visible !== 0 && req.event.hero_logo_visible !== '0',
-        hero_logo_size: req.event.hero_logo_size || 'medium',
+        hero_logo_visible: resolveHeroLogoVisible(req.event.hero_logo_visible, globalHeroLogoVisible),
+        hero_logo_size: req.event.hero_logo_size || globalLogoSize || 'medium',
         hero_logo_position: req.event.hero_logo_position || 'top',
         hero_logo_url: req.event.hero_logo_url || null,
         header_style: req.event.header_style || 'standard',
@@ -739,8 +771,7 @@ router.get('/:slug/photos', verifyGalleryAccess, resolveGuest, async (req, res) 
       })
     });
   } catch (error) {
-    console.error('Error fetching photos:', error);
-    res.status(500).json({ error: 'Failed to fetch photos' });
+    errorResponse(res, error, 500, 'Failed to fetch photos');
   }
 });
 
@@ -772,8 +803,7 @@ router.patch('/:slug/photos/:photoId/visibility', verifyGalleryAccess, async (re
 
     res.json({ message: 'Photo visibility updated', visibility });
   } catch (error) {
-    logger.error('Error updating photo visibility:', error);
-    res.status(500).json({ error: 'Failed to update photo visibility' });
+    errorResponse(res, error, 500, 'Failed to update photo visibility');
   }
 });
 
@@ -801,8 +831,7 @@ router.patch('/:slug/photos/visibility/bulk', verifyGalleryAccess, async (req, r
 
     res.json({ message: `${count} photos updated`, visibility });
   } catch (error) {
-    logger.error('Error bulk updating photo visibility:', error);
-    res.status(500).json({ error: 'Failed to update photo visibility' });
+    errorResponse(res, error, 500, 'Failed to update photo visibility');
   }
 });
 
@@ -916,13 +945,7 @@ router.get('/:slug/download/:photoId', verifyGalleryAccess, denySlideshowToken, 
       });
     }
   } catch (error) {
-    logger.error('Unexpected error processing gallery download', {
-      slug: req.params.slug,
-      photoId: req.params.photoId,
-      eventId: req.event?.id,
-      error: error.message,
-    });
-    res.status(500).json({ error: 'Failed to download photo' });
+    errorResponse(res, error, 500, 'Failed to download photo');
   }
 });
 
@@ -1093,12 +1116,7 @@ router.get('/:slug/download-all', verifyGalleryAccess, denySlideshowToken, async
       action: 'download_all'
     });
   } catch (error) {
-    logger.error('Error creating bulk gallery download', {
-      slug: req.params.slug,
-      eventId: req.event?.id,
-      error: error.message,
-    });
-    res.status(500).json({ error: 'Failed to create download archive' });
+    errorResponse(res, error, 500, 'Failed to create download archive');
   }
 });
 
@@ -1215,12 +1233,7 @@ router.post('/:slug/download-selected', verifyGalleryAccess, denySlideshowToken,
       action: 'download_selected'
     });
   } catch (error) {
-    logger.error('Error in download-selected:', {
-      slug: req.params.slug,
-      eventId: req.event?.id,
-      error: error.message,
-    });
-    res.status(500).json({ error: 'Failed to download selected photos' });
+    errorResponse(res, error, 500, 'Failed to download selected photos');
   }
 });
 
@@ -1452,13 +1465,7 @@ router.get('/:slug/photo/:photoId',
         }
       }
     } catch (error) {
-      logger.error('Error serving photo:', {
-        error: error.message,
-        stack: error.stack,
-        photoId: req.params.photoId,
-        eventId: req.event?.id
-      });
-      res.status(500).json({ error: 'Failed to serve photo' });
+      errorResponse(res, error, 500, 'Failed to serve photo');
     }
   }
 );
@@ -1549,12 +1556,7 @@ router.get('/:slug/thumbnail/:photoId',
         stream.pipe(res);
       }
     } catch (error) {
-      logger.error('Error serving thumbnail:', {
-        error: error.message,
-        photoId: req.params.photoId,
-        eventId: req.event?.id
-      });
-      res.status(500).json({ error: 'Failed to serve thumbnail' });
+      errorResponse(res, error, 500, 'Failed to serve thumbnail');
     }
   }
 );
@@ -1763,8 +1765,7 @@ router.get('/:slug/feedback-settings', verifyGalleryAccess, async (req, res) => 
       identity_mode: settings.identity_mode || 'simple'
     });
   } catch (error) {
-    console.error('Error fetching feedback settings:', error);
-    res.status(500).json({ error: 'Failed to fetch feedback settings' });
+    errorResponse(res, error, 500, 'Failed to fetch feedback settings');
   }
 });
 
@@ -1826,8 +1827,7 @@ router.post('/:eventId/upload', verifyGalleryAccess, denySlideshowToken, async (
         fs.mkdirSync(tempUploadDir, { recursive: true, mode: 0o755 });
         logger.info('Created temp upload directory:', tempUploadDir);
       } catch (mkdirErr) {
-        logger.error('Failed to create temp upload directory:', mkdirErr);
-        return res.status(500).json({ error: 'Server configuration error: unable to create upload directory' });
+        return errorResponse(res, mkdirErr, 500, 'Server configuration error: unable to create upload directory');
       }
     }
 
@@ -1877,7 +1877,7 @@ router.post('/:eventId/upload', verifyGalleryAccess, denySlideshowToken, async (
     // Handle upload
     upload(req, res, async (err) => {
       if (err) {
-        console.error('Upload error:', err);
+        logger.error('Upload error:', err);
         return res.status(400).json({ error: err.message });
       }
       
@@ -1911,13 +1911,11 @@ router.post('/:eventId/upload', verifyGalleryAccess, denySlideshowToken, async (
           errors: result.errors.length > 0 ? result.errors : undefined,
         });
       } catch (processError) {
-        console.error('Photo processing error:', processError);
-        res.status(500).json({ error: 'Failed to process photos' });
+        errorResponse(res, processError, 500, 'Failed to process photos');
       }
     });
   } catch (error) {
-    console.error('Upload route error:', error);
-    res.status(500).json({ error: 'Failed to upload photos' });
+    errorResponse(res, error, 500, 'Failed to upload photos');
   }
 });
 
@@ -1955,7 +1953,7 @@ router.get('/:slug/css-template', async (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour cache
     res.send(template.css_content);
   } catch (error) {
-    console.error('Get CSS template error:', error);
+    logger.error('Get CSS template error:', error);
     res.status(500).send('/* Error loading template */');
   }
 });

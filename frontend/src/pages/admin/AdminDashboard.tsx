@@ -10,18 +10,25 @@ import {
   HardDrive,
   Image,
   Archive,
-  Heart
+  Heart,
+  Inbox,
+  Check,
+  X
 } from 'lucide-react';
 import { differenceInDays, parseISO } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../hooks';
 
 import { Button, Card, Loading } from '../../components/common';
-
+import { UpdateNotification } from '../../components/admin/UpdateNotification';
+import { WhatsNewBanner } from '../../components/admin/WhatsNewBanner';
 import { CrmOverviewSection } from '../../components/admin/CrmOverviewSection';
 import { useQuery } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
 import { adminService, ActivityType } from '../../services/admin.service';
+import { workflowsService } from '../../services/workflows.service';
+import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
 
 interface StatCard {
   title: string;
@@ -71,6 +78,32 @@ export const AdminDashboard: React.FC = () => {
     queryKey: ['admin-events-summary', 'expiring'],
     queryFn: () => eventsService.getEvents(1, 5, 'expiring'),
   });
+
+  // Pending workflow approvals — only when the workflow engine is live. These
+  // are the human-in-the-loop gates (e.g. "review invoice before sending").
+  const { flags } = useFeatureFlags();
+  const { data: pendingApprovals } = useQuery({
+    queryKey: ['workflow-approvals'],
+    queryFn: () => workflowsService.approvals(),
+    enabled: !!flags.workflows,
+  });
+  const approvalMutation = useMutationWithToast({
+    mutationFn: ({ id, action }: { id: number; action: 'confirm' | 'deny' }) => workflowsService.actApproval(id, action),
+    invalidateKeys: [['workflow-approvals']],
+    successMessage: t('workflows.approvals.acted', 'Done') as string,
+    errorMessage: t('common.error', 'Something went wrong') as string,
+  });
+
+  // Admin detail route for an approval's run entity, so clicking opens the
+  // document under review. Mirrors WorkflowApprovalsPage (`invoice` → /bills).
+  const approvalEntityHref = (a: { entity_type?: string | null; entity_id?: number | null }): string | null => {
+    if (!a.entity_type || a.entity_id == null) return null;
+    const base: Record<string, string> = {
+      quote: 'quotes', invoice: 'bills', event: 'events', contract: 'contracts', customer: 'customers',
+    };
+    const seg = base[a.entity_type];
+    return seg ? `/admin/${seg}/${a.entity_id}` : null;
+  };
 
   const isLoading = statsLoading || eventsLoading;
 
@@ -149,6 +182,11 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div>
+      {/* After-update "What's New" highlights (above the update banner) */}
+      <WhatsNewBanner />
+      {/* Update Notification */}
+      <UpdateNotification />
+
       {/* Page Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -238,6 +276,67 @@ export const AdminDashboard: React.FC = () => {
               </button>
             )}
           </Card>
+
+          {/* Pending workflow approvals — the human-in-the-loop gates. Only
+              rendered when the workflow engine is live and something is waiting. */}
+          {!!flags.workflows && pendingApprovals && pendingApprovals.length > 0 && (
+            <Card padding="md" className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('workflows.approvals.pendingTitle', 'Pending approvals')}</h2>
+                <Inbox className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="space-y-3">
+                {pendingApprovals.slice(0, 5).map((a) => {
+                  const prompt = (a.payload as any)?.prompt as string | undefined;
+                  const href = approvalEntityHref(a);
+                  const info = (
+                    <>
+                      <h3 className="font-medium text-neutral-900 dark:text-neutral-100 truncate">{a.workflow_name}</h3>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 truncate">
+                        {prompt || a.type}{a.entity_type ? ` · ${a.entity_type} #${a.entity_id}` : ''}
+                      </p>
+                    </>
+                  );
+                  return (
+                    <div key={a.id} className="flex items-center justify-between gap-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                      {href ? (
+                        <button
+                          type="button"
+                          onClick={() => navigate(href)}
+                          className="min-w-0 text-left rounded -m-1 p-1 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 transition-colors cursor-pointer"
+                          title={t('workflows.approvals.openEntity', 'Open {{type}} #{{id}}', { type: a.entity_type, id: a.entity_id }) as string}
+                        >
+                          {info}
+                        </button>
+                      ) : (
+                        <div className="min-w-0">{info}</div>
+                      )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button variant="primary" size="sm" isLoading={approvalMutation.isPending}
+                          onClick={() => approvalMutation.mutate({ id: a.id, action: 'confirm' })}
+                          leftIcon={<Check className="w-4 h-4" />}>
+                          {t('workflows.approvals.confirm', 'Confirm')}
+                        </Button>
+                        <Button variant="outline" size="sm" isLoading={approvalMutation.isPending}
+                          onClick={() => approvalMutation.mutate({ id: a.id, action: 'deny' })}
+                          leftIcon={<X className="w-4 h-4" />}>
+                          {t('workflows.approvals.deny', 'Deny')}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {pendingApprovals.length > 5 && (
+                <button
+                  onClick={() => navigate('/admin/workflows/approvals')}
+                  className="w-full mt-4 text-sm text-accent hover:opacity-80 font-medium"
+                >
+                  {t('workflows.approvals.viewAll', 'View all approvals')} →
+                </button>
+              )}
+            </Card>
+          )}
         </div>
 
         {/* Recent Activity */}

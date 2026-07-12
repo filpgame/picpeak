@@ -360,6 +360,70 @@ Rechnung {{invoice_number}} für {{customer_name}}{{#if event_name}} ({{event_na
 Automatische Benachrichtigung — keine Aktion erforderlich.`,
     },
   },
+  invoice_collections_handoff: {
+    category: 'billing', feature_flag: 'bills',
+    variables: ['invoice_number', 'customer_name', 'customer_email', 'customer_address', 'event_name', 'original_amount', 'late_fee_amount', 'paid_amount', 'outstanding_amount', 'due_date', 'reminder_level'],
+    en: {
+  subject: 'Collections handoff: invoice {{invoice_number}} still unpaid after dunning',
+  body_html: `<h2>Ready to hand to collections</h2>
+<p>Invoice <strong>{{invoice_number}}</strong>{{#if event_name}} ({{event_name}}){{/if}} is still unpaid after {{reminder_level}} reminders. The invoice PDF is attached for forwarding.</p>
+<table role="presentation" cellpadding="6" cellspacing="0" border="0" style="border-collapse: collapse; margin: 16px 0;">
+  <tr><td style="color:#666;">Customer</td><td><strong>{{customer_name}}</strong></td></tr>
+  {{#if customer_email}}<tr><td style="color:#666;">Email</td><td>{{customer_email}}</td></tr>{{/if}}
+  {{#if customer_address}}<tr><td style="color:#666;">Address</td><td>{{customer_address}}</td></tr>{{/if}}
+  <tr><td style="color:#666;">Due date</td><td>{{due_date}}</td></tr>
+  <tr><td style="color:#666;">Original amount</td><td>{{original_amount}}</td></tr>
+  {{#if late_fee_amount}}<tr><td style="color:#666;">Late fees</td><td>{{late_fee_amount}}</td></tr>{{/if}}
+  <tr><td style="color:#666;">Paid</td><td>{{paid_amount}}</td></tr>
+  <tr><td style="color:#666;"><strong>Outstanding</strong></td><td><strong>{{outstanding_amount}}</strong></td></tr>
+</table>
+<p style="font-size:13px;color:#666;">Forward to your collections agency / for Betreibung. Automatic notification.</p>`,
+  body_text: `Ready to hand to collections
+
+Invoice {{invoice_number}}{{#if event_name}} ({{event_name}}){{/if}} is still unpaid after {{reminder_level}} reminders. The invoice PDF is attached.
+
+  Customer:        {{customer_name}}{{#if customer_email}}
+  Email:           {{customer_email}}{{/if}}{{#if customer_address}}
+  Address:         {{customer_address}}{{/if}}
+  Due date:        {{due_date}}
+  Original amount: {{original_amount}}{{#if late_fee_amount}}
+  Late fees:       {{late_fee_amount}}{{/if}}
+  Paid:            {{paid_amount}}
+  Outstanding:     {{outstanding_amount}}
+
+Forward to your collections agency / for Betreibung.`,
+},
+    de: {
+  subject: 'Inkasso-Übergabe: Rechnung {{invoice_number}} trotz Mahnungen offen',
+  body_html: `<h2>Bereit zur Inkasso-Übergabe</h2>
+<p>Rechnung <strong>{{invoice_number}}</strong>{{#if event_name}} ({{event_name}}){{/if}} ist nach {{reminder_level}} Mahnungen weiterhin offen. Das Rechnungs-PDF ist zur Weiterleitung angehängt.</p>
+<table role="presentation" cellpadding="6" cellspacing="0" border="0" style="border-collapse: collapse; margin: 16px 0;">
+  <tr><td style="color:#666;">Kunde</td><td><strong>{{customer_name}}</strong></td></tr>
+  {{#if customer_email}}<tr><td style="color:#666;">E-Mail</td><td>{{customer_email}}</td></tr>{{/if}}
+  {{#if customer_address}}<tr><td style="color:#666;">Adresse</td><td>{{customer_address}}</td></tr>{{/if}}
+  <tr><td style="color:#666;">Fälligkeit</td><td>{{due_date}}</td></tr>
+  <tr><td style="color:#666;">Rechnungsbetrag</td><td>{{original_amount}}</td></tr>
+  {{#if late_fee_amount}}<tr><td style="color:#666;">Mahngebühren</td><td>{{late_fee_amount}}</td></tr>{{/if}}
+  <tr><td style="color:#666;">Bezahlt</td><td>{{paid_amount}}</td></tr>
+  <tr><td style="color:#666;"><strong>Offen</strong></td><td><strong>{{outstanding_amount}}</strong></td></tr>
+</table>
+<p style="font-size:13px;color:#666;">Zur Weiterleitung an das Inkasso / für die Betreibung. Automatische Benachrichtigung.</p>`,
+  body_text: `Bereit zur Inkasso-Übergabe
+
+Rechnung {{invoice_number}}{{#if event_name}} ({{event_name}}){{/if}} ist nach {{reminder_level}} Mahnungen weiterhin offen. Das Rechnungs-PDF ist angehängt.
+
+  Kunde:           {{customer_name}}{{#if customer_email}}
+  E-Mail:          {{customer_email}}{{/if}}{{#if customer_address}}
+  Adresse:         {{customer_address}}{{/if}}
+  Fälligkeit:      {{due_date}}
+  Rechnungsbetrag: {{original_amount}}{{#if late_fee_amount}}
+  Mahngebühren:    {{late_fee_amount}}{{/if}}
+  Bezahlt:         {{paid_amount}}
+  Offen:           {{outstanding_amount}}
+
+Zur Weiterleitung an das Inkasso / für die Betreibung.`,
+},
+  },
 };
 
 let _seeded = false;

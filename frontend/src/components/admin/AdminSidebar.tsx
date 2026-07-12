@@ -11,13 +11,17 @@ import {
   Users,
   Briefcase,
   Landmark,
+  Mail,
+  Workflow,
   PanelLeftClose,
   PanelLeftOpen,
+  Github,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { settingsService } from '../../services/settings.service';
 import { VersionInfo } from './VersionInfo';
+import { repoUrl } from '../../utils/githubReleaseUrl';
 import { usePermissions } from '../../contexts/PermissionsContext';
 import { useAdminDarkMode } from '../../contexts/AdminDarkModeContext';
 import { useFeatureFlags, type FeatureKey } from '../../contexts/FeatureFlagsContext';
@@ -63,6 +67,7 @@ const navigation: NavItem[] = [
   { nameKey: 'navigation.dashboard', href: '/admin/dashboard', icon: LayoutDashboard, permission: false },
   { nameKey: 'navigation.events',    href: '/admin/events',    icon: Calendar,        permission: 'events.view' },
   { nameKey: 'navigation.archives',  href: '/admin/archives',  icon: Archive,         permission: 'archives.view' },
+  { nameKey: 'navigation.messages',  href: '/admin/messages', icon: Mail,             permission: 'email.view',     featureFlag: 'messaging' },
   { nameKey: 'admin.analytics',      href: '/admin/analytics', icon: BarChart3,       permission: 'analytics.view', featureFlag: 'analytics' },
   { nameKey: 'navigation.settings',  href: '/admin/settings',  icon: Settings,        permission: 'settings.view' },
   { nameKey: 'navigation.systemHealth', href: '/admin/system-health', icon: Activity,  permission: 'settings.view' },
@@ -109,6 +114,12 @@ const navigation: NavItem[] = [
     nameKey: 'navigation.accounting', href: '/admin/accounting', icon: Landmark,
     permission: 'accounting.view',
     featureFlag: 'accounting',
+  },
+  // Workflows (automation engine) — top-level, gated by the `workflows` flag.
+  {
+    nameKey: 'navigation.workflows', href: '/admin/workflows', icon: Workflow,
+    permission: 'workflows.view',
+    featureFlag: 'workflows',
   },
 ];
 
@@ -315,6 +326,20 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose, col
 
             {/* Storage Info */}
             <StorageInfo />
+
+            {/* Link to the project on GitHub (#778). Subtle footer row so
+                admins can reach the repo — star, source, report an issue —
+                from anywhere in the dashboard, not just the setup screen. */}
+            <a
+              href={repoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mx-4 mb-3 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
+              title={t('admin.viewOnGithub', 'View PicPeak on GitHub')}
+            >
+              <Github className="w-3.5 h-3.5" />
+              <span>{t('admin.viewOnGithub', 'View PicPeak on GitHub')}</span>
+            </a>
           </div>
         )}
       </div>
