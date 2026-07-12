@@ -383,9 +383,12 @@ async function getDatabaseBackupInfoInternal() {
 async function scanDirectory(dirPath, fileList, basePath, excludePatterns = []) {
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    const baseRel = basePath.replace(/\\/g, '/');
     for (const entry of entries) {
       const fullPath = path.join(dirPath, entry.name);
-      const relativePath = path.relative(basePath, fullPath);
+      // Use POSIX separators so database-stored paths (and tests / S3
+      // keys that compare against them) match consistently across OSes.
+      const relativePath = path.relative(basePath, fullPath).split(path.sep).join('/');
 
       const isExcluded = excludePatterns.some(pattern => {
         if (pattern.includes('*')) {

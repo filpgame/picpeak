@@ -36,6 +36,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const pathPosix = path.posix;
 const crypto = require('crypto');
 const { getStoragePath } = require('../config/storage');
 const { getAppSetting } = require('./appSettings');
@@ -56,17 +57,20 @@ function generateCandidates(raw, storageRoot) {
   const value = String(raw || '').trim();
   if (!value) return [];
   const stripped = value.replace(/^\/+/, '');
-  const baseName = path.basename(value);
+  const baseName = pathPosix.basename(value);
   // Build candidate set; dedup at the end so we don't stat the same
   // file twice when the inputs overlap.
+  // Paths are normalised to POSIX separators so the same string matches
+  // both Windows backslash storage and POSIX-style URL/DB values.
+  const join = (root, ...rest) => pathPosix.join(root.replace(/\\/g, '/'), ...rest);
   const candidates = [
-    path.isAbsolute(value) ? value : null,
-    path.join(storageRoot, stripped),
-    path.join(storageRoot, 'uploads', 'logos', baseName),
-    path.join(storageRoot, 'branding', baseName),
-    path.join(process.cwd(), 'storage', stripped),
-    path.join(process.cwd(), 'storage', 'uploads', 'logos', baseName),
-    path.join(process.cwd(), 'storage', 'branding', baseName),
+    pathPosix.isAbsolute(value) ? value : null,
+    join(storageRoot, stripped),
+    join(storageRoot, 'uploads', 'logos', baseName),
+    join(storageRoot, 'branding', baseName),
+    join(process.cwd(), 'storage', stripped),
+    join(process.cwd(), 'storage', 'uploads', 'logos', baseName),
+    join(process.cwd(), 'storage', 'branding', baseName),
   ].filter(Boolean);
   return [...new Set(candidates)];
 }

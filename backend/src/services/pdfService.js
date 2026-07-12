@@ -243,25 +243,48 @@ function formatCurrencyLabel(currency) {
 
 function formatDate(value, dateFormat) {
   if (!value) return '';
-  const d = (value instanceof Date) ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) return '';
+  let yyyy, mm, dd;
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return '';
+    yyyy = value.getFullYear();
+    mm = value.getMonth() + 1;
+    dd = value.getDate();
+  } else {
+    const s = String(value);
+    // Bare ISO date (YYYY-MM-DD) — parse in local time so the rendered
+    // day matches what the caller typed, instead of the previous day
+    // caused by JS parsing it as UTC midnight and then being read back
+    // via local-time getters west of UTC.
+    const bare = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (bare) {
+      yyyy = Number(bare[1]);
+      mm = Number(bare[2]);
+      dd = Number(bare[3]);
+    } else {
+      const d = new Date(s);
+      if (Number.isNaN(d.getTime())) return '';
+      yyyy = d.getFullYear();
+      mm = d.getMonth() + 1;
+      dd = d.getDate();
+    }
+  }
   // Respect the `general_date_format` app setting (read once in the
   // service layer and passed through ctx.dateFormat). We build the
   // string by hand instead of going through Intl.DateTimeFormat so
   // a chosen "DD.MM.YYYY" actually renders with dots even when the
   // customer's preferred_language maps to a locale that prints
   // slashes (en-GB → 02/12/2025).
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = String(d.getFullYear());
+  const ddStr = String(dd).padStart(2, '0');
+  const mmStr = String(mm).padStart(2, '0');
+  const yyyyStr = String(yyyy);
   const format = (dateFormat && dateFormat.format) || 'DD.MM.YYYY';
   switch (format) {
-  case 'MM/DD/YYYY': return `${mm}/${dd}/${yyyy}`;
-  case 'DD/MM/YYYY': return `${dd}/${mm}/${yyyy}`;
-  case 'YYYY-MM-DD': return `${yyyy}-${mm}-${dd}`;
+  case 'MM/DD/YYYY': return `${mmStr}/${ddStr}/${yyyyStr}`;
+  case 'DD/MM/YYYY': return `${ddStr}/${mmStr}/${yyyyStr}`;
+  case 'YYYY-MM-DD': return `${yyyyStr}-${mmStr}-${ddStr}`;
   case 'DD.MM.YYYY':
   default:
-    return `${dd}.${mm}.${yyyy}`;
+    return `${ddStr}.${mmStr}.${yyyyStr}`;
   }
 }
 
