@@ -10,7 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Eye, Send, CheckCircle, BellRing, XCircle, Truck, Edit2, RefreshCw } from 'lucide-react';
 import { Button, Card, Loading, Input, LocalizedDateInput } from '../../../components/common';
 import { DocumentLineageCard } from '../../../components/admin/DocumentLineageCard';
-import { billsService } from '../../../services/bills.service';
+import { billsService, isDraftInvoice } from '../../../services/bills.service';
 import { formatMoney } from '../../../components/admin/LineItemsTable';
 import { useLocalizedDate } from '../../../hooks/useLocalizedDate';
 import { toast } from 'react-toastify';
@@ -264,7 +264,10 @@ export const BillDetailPage: React.FC = () => {
               </span>
             )}
             <span className="ml-2 text-xs font-medium px-2 py-0.5 rounded bg-neutral-100 text-neutral-700">
-              {t(`bills.status.${inv.status}`, inv.status)}
+              {/* Held invoice ('scheduled' with no send date, incl. the
+                  monthly/manual accumulator) never auto-ships — read it as
+                  "Draft", matching the Bills list. */}
+              {isDraftInvoice(inv) ? t('bills.status.draft', 'Draft') : t(`bills.status.${inv.status}`, inv.status)}
             </span>
           </h2>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -523,6 +526,7 @@ export const BillDetailPage: React.FC = () => {
                   className="w-full px-3 py-2 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-accent-dark"
                 >
                   <option value="">{t('bills.payment.methodPlaceholder', 'Select method…')}</option>
+                  <option value="bank_transfer">{t('bills.payment.methods.bankTransfer', 'Bank transfer')}</option>
                   <option value="cash">{t('bills.payment.methods.cash', 'Cash')}</option>
                   <option value="card">{t('bills.payment.methods.card', 'Card')}</option>
                   <option value="paypal">{t('bills.payment.methods.paypal', 'PayPal')}</option>

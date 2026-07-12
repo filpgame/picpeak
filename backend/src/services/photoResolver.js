@@ -64,12 +64,15 @@ function resolvePhotoFilePath(event, photo) {
     // Normalize duplicate leaf segments (e.g., event.external_path ends with 'individual'
     // and external_relpath starts with 'individual/') to avoid double segment like
     // '/external-media/.../individual/individual/file.jpg'
+    // external_relpath always uses POSIX separators — use path.posix.sep so the
+    // dedup works on Windows where path.sep is '\'.
     let rel = photo.external_relpath;
     try {
-      const lastSeg = path.basename(event.external_path || '');
-      const firstSeg = rel.split(path.sep)[0];
+      const lastSeg = path.posix.basename((event.external_path || '').replace(/\\/g, '/'));
+      const segs = rel.replace(/\\/g, '/').split('/');
+      const firstSeg = segs[0];
       if (lastSeg && firstSeg && lastSeg === firstSeg) {
-        rel = rel.split(path.sep).slice(1).join(path.sep) || '';
+        rel = segs.slice(1).join('/') || '';
       }
     } catch (_) {
       // ignore normalization errors

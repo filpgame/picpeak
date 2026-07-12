@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { Button, Card, Input, ErrorBoundary, Loading, MarkdownContent } from '../../components/common';
 import { ThemeCustomizerEnhanced, GalleryPreview } from '../../components/admin';
 import { useTheme, type ThemeConfig, GALLERY_THEME_PRESETS } from '../../contexts/ThemeContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { settingsService, type BrandingSettings } from '../../services/settings.service';
 import { businessProfileService } from '../../services/businessProfile.service';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ import { useFeatureEnabled, useFeatureFlags } from '../../contexts/FeatureFlagsC
 import { CustomerDashboardBrandingCard } from '../../components/admin/CustomerDashboardBrandingCard';
 import { PdfTypographyCard } from '../../components/admin/PdfTypographyCard';
 import { usePublicSettings } from '../../hooks/usePublicSettings';
+import { useMutationWithToast } from '../../hooks';
 
 export const BrandingPage: React.FC = () => {
   const { t } = useTranslation();
@@ -88,33 +89,23 @@ export const BrandingPage: React.FC = () => {
   // Update branding mutation
   const queryClient = useQueryClient();
   
-  const brandingMutation = useMutation({
+  const brandingMutation = useMutationWithToast({
     mutationFn: settingsService.updateBranding,
-    onSuccess: () => {
-      toast.success(t('toast.brandingUpdated'));
-      // Invalidate all settings queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
-      queryClient.invalidateQueries({ queryKey: ['public-settings'] });
-    },
-    onError: () => {
-      toast.error(t('toast.saveError'));
-    },
+    successMessage: t('toast.brandingUpdated'),
+    errorMessage: () => t('toast.saveError'),
+    // Invalidate all settings queries to refresh data
+    invalidateKeys: [['admin-settings'], ['public-settings']],
   });
 
   // Update theme mutation
-  const themeMutation = useMutation({
+  const themeMutation = useMutationWithToast({
     mutationFn: settingsService.updateTheme,
-    onSuccess: () => {
-      toast.success(t('toast.themeUpdated'));
-      // Refresh both the admin settings cache (which the page reads from) and
-      // the public-settings cache (which the gallery reads from) so the saved
-      // theme is reflected without a manual reload (#317).
-      queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
-      queryClient.invalidateQueries({ queryKey: ['public-settings'] });
-    },
-    onError: () => {
-      toast.error(t('toast.saveError'));
-    },
+    successMessage: t('toast.themeUpdated'),
+    errorMessage: () => t('toast.saveError'),
+    // Refresh both the admin settings cache (which the page reads from) and
+    // the public-settings cache (which the gallery reads from) so the saved
+    // theme is reflected without a manual reload (#317).
+    invalidateKeys: [['admin-settings'], ['public-settings']],
   });
 
   // Initialize settings from database

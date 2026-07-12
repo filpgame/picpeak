@@ -7,6 +7,7 @@ import { useSessionTimeout } from '../../hooks/useSessionTimeout';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
 import { MaintenanceBanner } from './MaintenanceBanner';
+import { MigrationBanner } from './MigrationBanner';
 import { MandatoryPasswordChangeModal } from './MandatoryPasswordChangeModal';
 
 const SIDEBAR_COLLAPSED_KEY = 'admin-sidebar-collapsed';
@@ -113,6 +114,11 @@ const AdminLayoutInner: React.FC<AdminLayoutInnerProps> = ({ sidebarOpen, setSid
 
         {/* Maintenance mode banner */}
         <MaintenanceBanner />
+
+        {/* One-time migration banner — flip the constant in MigrationBanner.tsx
+            (or remove this mount) after operators have had time to update their
+            docker-compose.yml. See #669. */}
+        <MigrationBanner />
 
         {/* Page content - disabled when password change required.
             overflow moved up to the column so the scrollbar gutter is

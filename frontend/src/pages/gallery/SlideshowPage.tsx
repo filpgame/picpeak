@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: SlideshowSettings = {
   transition: 'crossfade',
   transition_ms: 800,
   colorfilter: 'none',
+  order: 'chronological',
   fit: 'cover',
   watermark: null,
 };
@@ -64,6 +65,17 @@ function watermarkCorner(position: string): React.CSSProperties {
 }
 
 type Phase = 'splash' | 'running' | 'ended';
+
+// Fisher–Yates shuffle for the 'random' play order (#202). Used once on the
+// initial photo set; live-appended uploads keep landing at the end.
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 export function SlideshowPage() {
   const { slug = '', token = '' } = useParams<{ slug: string; token: string }>();
@@ -159,13 +171,15 @@ export function SlideshowPage() {
       storeGalleryToken(slug, session.token);
       setActiveGallerySlug(slug);
       setEventName(session.event.event_name || '');
-      setSettings(session.settings || DEFAULT_SETTINGS);
+      const settings = session.settings || DEFAULT_SETTINGS;
+      setSettings(settings);
 
       // Load the list and DECODE the first slide (and the next) before we flip
       // to running, so playback starts on an already-rasterised image instead
       // of struggling on the first transition.
       const data = await galleryService.getGalleryPhotos(slug);
-      const list = data.photos || [];
+      // 'random' shuffles the initial set once; new uploads still append (#202).
+      const list = settings.order === 'random' ? shuffle(data.photos || []) : (data.photos || []);
       setPhotos(list);
       await preloadDecode(list[0]);
       void preloadDecode(list[1]);

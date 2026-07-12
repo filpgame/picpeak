@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { GeneralSettings } from '../hooks/useSettingsState';
 import { MAX_FILES_PER_UPLOAD_LIMIT } from '../hooks/useSettingsState';
 import { SUPPORTED_LANGUAGES } from "../../../components/common/LanguageSelector.tsx";
+import { MfaSettingsCard } from '../components/MfaSettingsCard';
 
 interface GeneralTabProps {
   generalSettings: GeneralSettings;
@@ -93,6 +94,10 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           </form>
         )}
       </Card>
+
+      {/* Per-user two-factor authentication (issue #738) — lives beside the
+          admin's own account details rather than the admin-wide Security tab. */}
+      <MfaSettingsCard />
 
       <Card padding="md">
         <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{t('settings.general.siteConfiguration')}</h2>

@@ -5,6 +5,14 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **Note (4.5.1-beta.0)**: This release includes a merge from upstream
+> [`the-luap/picpeak`](https://github.com/the-luap/picpeak) at `v3.87.0-beta.0`
+> ([#30](https://github.com/filpgame/picpeak/pull/30)). The fork retains its
+> own `4.x.y-beta.z` version line; this is a patch bump on the fork series and
+> bundles all upstream changes since the previous fork sync at `v3.68.0-beta.0`.
+> For the full upstream changelog see
+> [the-luap/picpeak/CHANGELOG.md](https://github.com/the-luap/picpeak/blob/main/CHANGELOG.md).
+
 ## [4.5.1-beta.0](https://github.com/filpgame/picpeak/compare/v4.5.0-beta.0...v4.5.1-beta.0) (2026-06-27)
 
 

@@ -16,13 +16,13 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import {
   UserPlus, UserCog, Trash2, Search, X, AlertTriangle, CheckCircle2, Clock,
 } from 'lucide-react';
 import { InlineCustomerCreate } from '../../components/admin/InlineCustomerCreate';
+import { useMutationWithToast } from '../../hooks';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 import { Button, Card, Input, Loading } from '../../components/common';
@@ -96,22 +96,18 @@ export const CustomerManagementPage: React.FC = () => {
     return list.filter((i) => i.email.toLowerCase().includes(term));
   }, [invitations, debouncedTerm]);
 
-  const deactivateMutation = useMutation({
+  const deactivateMutation = useMutationWithToast({
     mutationFn: (id: number) => customerAdminService.deactivate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-customers'] });
-      toast.success(t('customers.deactivate.success', 'Customer deactivated'));
-    },
-    onError: () => toast.error(t('customers.deactivate.error', 'Could not deactivate customer')),
+    invalidateKeys: [['admin-customers']],
+    successMessage: t('customers.deactivate.success', 'Customer deactivated'),
+    errorMessage: () => t('customers.deactivate.error', 'Could not deactivate customer'),
   });
 
-  const cancelInviteMutation = useMutation({
+  const cancelInviteMutation = useMutationWithToast({
     mutationFn: (id: number) => customerAdminService.cancelInvitation(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-customer-invitations'] });
-      toast.success(t('customers.cancelInvitation.success', 'Invitation cancelled'));
-    },
-    onError: () => toast.error(t('customers.cancelInvitation.error', 'Could not cancel invitation')),
+    invalidateKeys: [['admin-customer-invitations']],
+    successMessage: t('customers.cancelInvitation.success', 'Invitation cancelled'),
+    errorMessage: () => t('customers.cancelInvitation.error', 'Could not cancel invitation'),
   });
 
   const renderCustomerName = (c: CustomerAccountSummary) => {

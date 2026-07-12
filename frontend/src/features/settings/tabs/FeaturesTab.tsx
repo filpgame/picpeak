@@ -23,6 +23,7 @@ import {
   Wallet,
   FolderKanban,
   MonitorPlay,
+  Workflow,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../../../components/common';
@@ -134,6 +135,24 @@ export const FeaturesTab: React.FC = () => {
           />
         </Section>
 
+        {/* Automation — the visual workflow engine. Master kill-switch for the
+            Workflows admin area and the runtime; off by default. */}
+        <Section title={t('settings.features.sections.automation', 'Automation')}>
+          <FeatureCard
+            icon={Workflow}
+            title={t('settings.features.workflows.title', 'Workflows')}
+            description={t(
+              'settings.features.workflows.description',
+              'Build visual automations on a canvas — triggers, conditions, branches, loops and admin approval gates. Your reminder ladder and booking steps become editable flows. Strictly opt-in.',
+            )}
+            status="new"
+            statusLabel={statusLabel('new')}
+            sidebarLabel={t('settings.features.workflows.sidebar', 'Workflows')}
+            enabled={staged.workflows}
+            onToggle={(next) => setFlag('workflows', next)}
+          />
+        </Section>
+
         {/* Clients (#354 follow-up). Visual grouping for the CRM-area
             sub-features. The "Clients" sidebar section itself is gated
             by a derived `clients` flag (computed from whether any
@@ -216,15 +235,13 @@ export const FeaturesTab: React.FC = () => {
             title={t('settings.features.messaging.title', 'Messaging')}
             description={t(
               'settings.features.messaging.description',
-              'In-app threads with guests, attached to a gallery. Email is genuinely fine for most teams — this is for studios that want everything in one place. Coming soon.',
+              'A unified Messages area: your sent + automated mail, the accounting inbox, and a customer mailbox (hello@) in one place — with reply and create-from-template composing. Configure the customer mailbox under Settings → Email; incoming mailboxes need the Incoming mail toggle too.',
             )}
-            status="roadmap"
-            statusLabel={statusLabel('roadmap')}
+            status="new"
+            statusLabel={statusLabel('new')}
             sidebarLabel={t('settings.features.messaging.sidebar', 'Messages')}
             enabled={staged.messaging}
-            onToggle={() => { /* locked */ }}
-            disabled
-            lockedReason={NOT_YET_AVAILABLE}
+            onToggle={(next) => setFlag('messaging', next)}
           />
         </Section>
 

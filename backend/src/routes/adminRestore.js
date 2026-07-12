@@ -5,6 +5,7 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const { body, query, validationResult } = require('express-validator');
 const logger = require('../utils/logger');
+const { getPagination } = require('../utils/routeHelpers');
 const { db } = require('../database/db');
 const path = require('path');
 const fs = require('fs').promises;
@@ -48,7 +49,7 @@ function transformS3Config(body) {
  */
 router.get('/status', requirePermission('backup.view'), async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
+    const { limit } = getPagination(req, { limit: 10 });
     const history = await restoreService.getRestoreHistory(limit);
     
     const status = {

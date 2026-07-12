@@ -92,6 +92,24 @@ export interface InvoiceSummary {
    *  (migration 111). Hide line-item editing on these rows; the
    *  uploaded PDF is the source of truth. */
   isImported?: boolean;
+  /** True for the running monthly/manual accumulator draft
+   *  (migration 128). Carries status 'scheduled' but never auto-sends
+   *  (manual) — shown with a "Draft" badge in the list. */
+  isMonthlyDraft?: boolean;
+}
+
+/**
+ * A "scheduled" invoice with no send date is HELD — the scheduler only
+ * picks up rows whose `scheduled_send_at <= now`, so a null send date
+ * means it never auto-ships and is waiting on the admin (Send now /
+ * Trigger invoice now). Those, plus monthly/manual accumulators, read as
+ * "Draft" everywhere instead of the misleading "Scheduled". A scheduled
+ * invoice WITH a future send date is genuinely scheduled and keeps that
+ * label.
+ */
+export function isDraftInvoice(inv: Pick<InvoiceSummary, 'status' | 'scheduledSendAt' | 'isMonthlyDraft'>): boolean {
+  if (inv.isMonthlyDraft) return true;
+  return inv.status === 'scheduled' && !inv.scheduledSendAt;
 }
 
 export interface InvoiceDetail extends InvoiceSummary {
@@ -225,6 +243,10 @@ export const billsService = {
     sort?: InvoiceSort;
     page?: number;
     pageSize?: number;
+    /** Include the running monthly/manual accumulator drafts that the
+     *  main list hides by default (migration 128). Only the Bills list
+     *  opts in; pickers/sub-lists leave it off. */
+    includeDrafts?: boolean;
   } = {}): Promise<InvoiceListResponse> {
     const { data } = await api.get('/admin/invoices', {
       params: {
@@ -378,6 +400,9 @@ export interface CrmOverviewStats {
     monthMinor: number;
     quarterMinor: number;
     yearMinor: number;
+    /** Revenue since Jan 1 of the current year (calendar YTD). The
+     *  dashboard's "year" tile toggles between this and yearMinor. */
+    calendarYearMinor: number;
   };
   outstanding: {
     totalMinor: number;

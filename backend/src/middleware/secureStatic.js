@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const { safePathJoin, isPathSafe } = require('../utils/fileSecurityUtils');
+const logger = require('../utils/logger');
 
 /**
  * Create a secure static file serving middleware that prevents path traversal attacks
@@ -17,7 +18,7 @@ function secureStatic(basePath, options = {}) {
     
     // Validate the path doesn't contain dangerous patterns
     if (!isPathSafe(requestedPath)) {
-      console.warn(`Potential path traversal attempt blocked: ${requestedPath}`);
+      logger.warn(`Potential path traversal attempt blocked: ${requestedPath}`);
       return res.status(403).json({ error: 'Access denied' });
     }
     
@@ -52,7 +53,7 @@ function secureStatic(basePath, options = {}) {
       return staticMiddleware(req, res, next);
     } catch (error) {
       // Path traversal detected
-      console.error(`Path traversal blocked: ${requestedPath}`, error.message);
+      logger.error(`Path traversal blocked: ${requestedPath}`, error.message);
       return res.status(403).json({ error: 'Access denied' });
     }
   };

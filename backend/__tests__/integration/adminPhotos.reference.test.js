@@ -49,6 +49,14 @@ describe('Admin photos in reference mode', () => {
       validateUploadedFiles: (_req, _res, next) => next()
     }));
 
+    jest.doMock('../../src/middleware/permissions', () => ({
+      requirePermission: () => (_req, _res, next) => next()
+    }));
+
+    jest.doMock('../../src/middleware/ownership', () => ({
+      requireEventOwnership: (_req, _res, next) => next()
+    }));
+
     jest.doMock('../../src/utils/fileSecurityUtils', () => {
       const actual = jest.requireActual('../../src/utils/fileSecurityUtils');
       return {
@@ -100,10 +108,34 @@ describe('Admin photos in reference mode', () => {
       table.integer('category_id');
       table.string('source_origin');
       table.string('external_relpath');
+      table.string('mime_type');
+      table.string('media_type').defaultTo('image');
+      table.string('original_filename');
+      table.string('processing_status').defaultTo('pending');
+      table.string('upload_id');
       table.datetime('uploaded_at').defaultTo(db.fn.now());
       table.float('average_rating').defaultTo(0);
       table.integer('like_count').defaultTo(0);
       table.integer('favorite_count').defaultTo(0);
+      table.datetime('captured_at').nullable();
+    });
+
+    await db.schema.createTable('activity_logs', (table) => {
+      table.increments('id').primary();
+      table.string('activity_type');
+      table.string('actor_type');
+      table.integer('actor_id');
+      table.string('actor_name');
+      table.integer('event_id');
+      table.text('metadata');
+      table.datetime('created_at').defaultTo(db.fn.now());
+    });
+
+    await db.schema.createTable('app_settings', (table) => {
+      table.string('setting_key').primary();
+      table.text('setting_value');
+      table.string('setting_type');
+      table.datetime('updated_at').defaultTo(db.fn.now());
     });
 
     await db.schema.createTable('photo_feedback', (table) => {
@@ -153,7 +185,7 @@ describe('Admin photos in reference mode', () => {
       .field('category_id', String(categoryId))
       .attach('photos', Buffer.from('fake image data'), 'photo.jpg');
 
-    expect(uploadResponse.status).toBe(200);
+    expect(uploadResponse.status).toBe(202);
     expect(uploadResponse.body).toHaveProperty('photos');
     expect(Array.isArray(uploadResponse.body.photos)).toBe(true);
 
