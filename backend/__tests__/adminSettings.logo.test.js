@@ -42,6 +42,10 @@ describe('Admin settings logo upload flow', () => {
           filters.push({ column, value });
           return this;
         },
+        whereIn(column, values) {
+          filters.push({ column, value: values, op: 'in' });
+          return this;
+        },
         first() {
           if (table === 'app_settings') {
             const rows = applyFilters(Array.from(settingsStore.values()).map(makeRow));
@@ -50,7 +54,7 @@ describe('Admin settings logo upload flow', () => {
           return Promise.resolve(undefined);
         },
         select() {
-          return Promise.resolve([]);
+          return this;
         },
         sum() {
           return Promise.resolve({ total: 0 });
@@ -65,6 +69,22 @@ describe('Admin settings logo upload flow', () => {
           return this;
         },
         limit() {
+          return this;
+        },
+        update(payload) {
+          if (table === 'app_settings' && Array.isArray(payload) === false) {
+            filters.forEach((f) => {
+              for (const [k, v] of settingsStore) {
+                if (v[f.column] === f.value) {
+                  settingsStore.set(k, { ...v, ...payload });
+                }
+              }
+            });
+          }
+          return Promise.resolve(1);
+        },
+        whereNot(column, value) {
+          filters.push({ column, value, op: 'not' });
           return this;
         },
         insert(payload) {
@@ -108,6 +128,10 @@ describe('Admin settings logo upload flow', () => {
         req.admin = { id: 1, username: 'tester' };
         next();
       }
+    }));
+
+    jest.doMock('../src/middleware/permissions', () => ({
+      requirePermission: () => (_req, _res, next) => next()
     }));
 
     jest.doMock('../src/services/publicSiteService', () => ({

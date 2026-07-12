@@ -5,677 +5,754 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.5.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.4.1-beta.0...v4.5.0-beta.0) (2026-06-21)
+## [3.87.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.86.0-beta.0...v3.87.0-beta.0) (2026-07-11)
 
 
 ### Features
 
-* **accounting:** Accounting nav section + relocate Tax report out of CRM ([30c0007](https://github.com/filpgame/picpeak/commit/30c0007f40594e679f5d997219985107de784cf4))
-* **accounting:** Accounting settings tab (km / per-diem rate, require-proof) ([2b7495e](https://github.com/filpgame/picpeak/commit/2b7495e4dc46c6033f581a0ce2ffde83b9ef89b4))
-* **accounting:** add a Banana "Income & Expense" (cash-book) export format ([445d6d7](https://github.com/filpgame/picpeak/commit/445d6d7b6d6b0692d5b7c0a3dd0ca8b71dfad6ef))
-* **accounting:** backend rework - incoming invoices vs internal expenses (stage 2) ([5e78fb6](https://github.com/filpgame/picpeak/commit/5e78fb6475513cbda38257b406493eb649a5e33c))
-* **accounting:** bill editor VAT dropdown + GET returns vat_code snapshot ([2479d87](https://github.com/filpgame/picpeak/commit/2479d87afc5b094a5323bca0b67e6404ce05a4e2))
-* **accounting:** clearer tax-export window + gate journal export on accounting flag ([3edd832](https://github.com/filpgame/picpeak/commit/3edd8321035c48d6b3e8b157d4b94075657fc7a0))
-* **accounting:** consolidate VAT/financial config into Settings → Accounting ([dc7b87b](https://github.com/filpgame/picpeak/commit/dc7b87bb874e22ac6902fd2d48531ecdb6108c88))
-* **accounting:** data-driven revenue-rate VAT map (multi-country) ([873be91](https://github.com/filpgame/picpeak/commit/873be910a5e88a6d942f116c2bcfecfef9161024))
-* **accounting:** event booking via dropdown (Company or an event) ([81af445](https://github.com/filpgame/picpeak/commit/81af4453e796285df05446cfd333e53b6b1cc19e))
-* **accounting:** expense invoiced/paid lifecycle + edit-until-invoiced; decouple tax report from bills flag ([2e8e4a0](https://github.com/filpgame/picpeak/commit/2e8e4a0f86d5b7a4dc0fa712bcb4cbab4fbe9861))
-* **accounting:** expenses ledger + supplier-payment toggle ([0c35ac4](https://github.com/filpgame/picpeak/commit/0c35ac43e616e4b49da8089c95239ac06ec402c5))
-* **accounting:** explain dispositions inline, drop markup from pass-through ([9a023c0](https://github.com/filpgame/picpeak/commit/9a023c019750ebcd8d21e005aaf9a77a32cb34a3))
-* **accounting:** frontend rework - separate Incoming invoices vs Expenses (stage 2) ([f305541](https://github.com/filpgame/picpeak/commit/f305541f903c02329309a5d2513eded9792c58c5))
-* **accounting:** inbound supplier-invoice capture + expense re-bill (backend) ([c305492](https://github.com/filpgame/picpeak/commit/c3054928453a23c599894b669b6ac3c623fa4183))
-* **accounting:** incoming-invoice triage refinements (paid badge, click-to-categorize, reference, categorize+pay) ([72b784c](https://github.com/filpgame/picpeak/commit/72b784c9d751d2c98014cf35ce3035c60664056a))
-* **accounting:** incoming-invoice workflow v2 + VAT/financial settings consolidation ([b527915](https://github.com/filpgame/picpeak/commit/b5279155ea4c545e13bab8bde46a39cfccf107fe))
-* **accounting:** incoming-invoices inbox with camera capture + triage/re-bill ([2b5efeb](https://github.com/filpgame/picpeak/commit/2b5efebaff0ed05b99b84802811ee662911e9468))
-* **accounting:** invoices force-enable the Accounting master ([51837c3](https://github.com/filpgame/picpeak/commit/51837c3a88f711b164fafe2c7677e1a91c7542f9))
-* **accounting:** Layer A backend — chart of accounts, VAT codes, Treuhänder export ([03cc250](https://github.com/filpgame/picpeak/commit/03cc250b47518573d2cd4fa45da331a3e47ea3fd))
-* **accounting:** Layer A frontend — chart of accounts CRUD + Treuhänder export UI ([7e0098e](https://github.com/filpgame/picpeak/commit/7e0098edcd42dc9d6b91c39f60627122d8394bff))
-* **accounting:** manual "add expense" (no document) on the ledger ([703f727](https://github.com/filpgame/picpeak/commit/703f72742ddc9028a3214e108563320679ec4ade))
-* **accounting:** move Chart of accounts into Settings → Accounting ([97795f6](https://github.com/filpgame/picpeak/commit/97795f6d1ed25d23396a76b63c225b110ddc315e))
-* **accounting:** move Treuhänder export onto the Tax page ([b1f73c1](https://github.com/filpgame/picpeak/commit/b1f73c1df9408ddae821760eb8ed57c726d2e056))
-* **accounting:** PDF/image preview in triage, opened at the QR-bill (no OCR) ([502fbad](https://github.com/filpgame/picpeak/commit/502fbad5a8cb11e075cb098ad05fd94a78aae396))
-* **accounting:** rasterise inbound PDFs server-side (never serve raw to browser) ([e111522](https://github.com/filpgame/picpeak/commit/e111522415c21ca8ef47f0d8be48c95bd8ab8c69))
-* **accounting:** re-categorize incoming invoices, note field, pending re-bill pool ([36a8e42](https://github.com/filpgame/picpeak/commit/36a8e42f90f15a1ba96d9c4f004fa542d33e4937))
-* **accounting:** re-viewable incoming invoices + expense invoiced/paid lifecycle UI ([727bdab](https://github.com/filpgame/picpeak/commit/727bdab6e087e1a3611295417a05f61939204487))
-* **accounting:** relocate VAT codes + rate maps into Settings → Accounting ([4ff5b84](https://github.com/filpgame/picpeak/commit/4ff5b84cb66e40be960c2be7a67334cf0cc98be2))
-* **accounting:** scope the tax-report export to income-only or cost-only ([9f3b286](https://github.com/filpgame/picpeak/commit/9f3b28684ff36b131420cd975df634a29d660323))
-* **accounting:** snapshot the chosen VAT code on quote/invoice create + storno ([5b52969](https://github.com/filpgame/picpeak/commit/5b52969e36a41bbc08a98e0bca1ce0e937d77f56))
-* **accounting:** snapshot vat_code on quotes/invoices + export prefers it (foundation) ([0a7dc1c](https://github.com/filpgame/picpeak/commit/0a7dc1cf5da17a5bef204f6680844c8ab2b44269))
-* **accounting:** split Incoming invoices vs Expenses - flags, schema, settings (stage 1) ([c59df52](https://github.com/filpgame/picpeak/commit/c59df52d407fec86168aa7a2087c1a29c7660ab8))
-* **accounting:** supplier-country tax default + configurable default output VAT code ([267b121](https://github.com/filpgame/picpeak/commit/267b121d66994bc57b10cd0694ab0e4320b163d9))
-* **accounting:** tax report VAT-payable honours registration + reclaim ([d7107aa](https://github.com/filpgame/picpeak/commit/d7107aaf0adf5e03f08085c7691b6530b15ed702))
-* **accounting:** tax window shows all costs (incoming invoices + expenses) alongside revenue ([545ef33](https://github.com/filpgame/picpeak/commit/545ef334f42d3cb09e63ffc77a80dd684ab5a807))
-* **accounting:** unify tax report into one signed, typed, sortable ledger ([fd1dd81](https://github.com/filpgame/picpeak/commit/fd1dd81e8dfc790d960a7e6d888beba895a23461))
-* **accounting:** VAT registration + reclaim-country settings in the Accounting tab ([4d87684](https://github.com/filpgame/picpeak/commit/4d876848823bce2c79e629308c92206c64d9893d))
-* **accounting:** VAT registration/reclaim settings + un-gated VAT-codes read ([fbbbb8a](https://github.com/filpgame/picpeak/commit/fbbbb8ab7335f07ecf48e217632c7011bd7c88cd))
-* **accounting:** VAT-code dropdown in the quote editor (+ reusable VatRateSelect) ([6e1924b](https://github.com/filpgame/picpeak/commit/6e1924bae8b50dbb8460e151c1d9a79553fddb19))
-* **admin/exports:** inline preview modal with copy-to-clipboard ([#631](https://github.com/filpgame/picpeak/issues/631)) ([fc5c1ae](https://github.com/filpgame/picpeak/commit/fc5c1ae93f87678fcc16bc84a14a60a59b1a3c7b))
-* **admin/exports:** inline preview modal with copy-to-clipboard ([#631](https://github.com/filpgame/picpeak/issues/631)) ([27b5f7e](https://github.com/filpgame/picpeak/commit/27b5f7e4b68e43345cd99dd5cc77308dcd7ec98b))
-* **branding:** force color mode = standard look; hide overridden theme controls ([4749e22](https://github.com/filpgame/picpeak/commit/4749e222dc41695a2494a3b740952745bb854d4e))
-* **categories:** per-category download permissions ([#640](https://github.com/filpgame/picpeak/issues/640) part B) ([820f483](https://github.com/filpgame/picpeak/commit/820f4835f1f5a41cbef6816c387ef9ec3dafd526))
-* **common:** generic Promise-based ConfirmDialog primitive ([#640](https://github.com/filpgame/picpeak/issues/640) part C) ([a3fcb5b](https://github.com/filpgame/picpeak/commit/a3fcb5bc9e82849ebe1f55620e8aa7e60ccd973f))
-* **email:** add 'Test connection' to incoming mail + tidy IMAP label ([f017649](https://github.com/filpgame/picpeak/commit/f017649bd5072d6d23a251fedeba473fe0bf57bf))
-* **email:** incoming mail (IMAP) intake - backend + standalone flag ([5645c30](https://github.com/filpgame/picpeak/commit/5645c304ab876f42bf6187d624c256f07e62e482))
-* **email:** incoming mail UI - IMAP config block + Received emails tab ([31280e1](https://github.com/filpgame/picpeak/commit/31280e1f7ab374f3ebd6e2b3efa5313cbde860ab))
-* **email:** round-trip test — send via SMTP to the IMAP mailbox and confirm arrival ([04be51a](https://github.com/filpgame/picpeak/commit/04be51a008d8e9e050557783fb2f5104e140847e))
-* **events:** duplicate-gallery action ([#626](https://github.com/filpgame/picpeak/issues/626)) ([e985d25](https://github.com/filpgame/picpeak/commit/e985d25207671cbfefcdda9775a96eadf2fe0698))
-* **feedback:** export shape toggle — per-action vs per-guest pivot ([#640](https://github.com/filpgame/picpeak/issues/640) part E) ([fabd67a](https://github.com/filpgame/picpeak/commit/fabd67aecd6caf308956e5b4cb9df7dd44452142))
-* Live Slideshow ("Diashow") — fullscreen, auto-updating projector view for live events ([4356393](https://github.com/filpgame/picpeak/commit/4356393b4433dd6b4147388688766b9464294c89))
-* **projects:** Project Overview cockpit — link (multiple) quotes/contracts/hours into projects ([58f93ae](https://github.com/filpgame/picpeak/commit/58f93ae71350cc4a100f15a1a11f478750dace91))
-* **slideshow:** add image fit setting (fill vs black bars) ([b5c73e0](https://github.com/filpgame/picpeak/commit/b5c73e05bd41b262f864e8c700b1d38582b3817f))
-* **slideshow:** admin ui for live slideshow ([385b05a](https://github.com/filpgame/picpeak/commit/385b05adcf6a4acb7939e372328a55df7dae5e08))
-* **slideshow:** backend api for live slideshow ([dea5e0f](https://github.com/filpgame/picpeak/commit/dea5e0f8a6421c056868c2d9bea11e5bf1ee106a))
-* **slideshow:** db columns for live slideshow ([1029dd0](https://github.com/filpgame/picpeak/commit/1029dd05bdb9ca0a97ad86100145221850648651))
-* **slideshow:** en/de strings for live slideshow ([cb761ee](https://github.com/filpgame/picpeak/commit/cb761ee621aa553cf210c4224b6cbbf7bf2ef0cb))
-* **slideshow:** gate behind a feature flag + move globals to a Settings tab ([69367b4](https://github.com/filpgame/picpeak/commit/69367b45be1c13d87e73e72da34a1f41a5849dfe))
-* **slideshow:** public fullscreen slideshow viewer ([fd02254](https://github.com/filpgame/picpeak/commit/fd02254f78bd1860780355ebaa68293d58ce18b3))
-* **whatsapp:** admin-selectable template parameters + reorder ([#647](https://github.com/filpgame/picpeak/issues/647) follow-up) ([80e8ec5](https://github.com/filpgame/picpeak/commit/80e8ec5bc71f0653d56f1087521f5207aee0ba8f))
-* **whatsapp:** admin-selectable template parameters + reorder ([#647](https://github.com/filpgame/picpeak/issues/647) follow-up) ([16055cd](https://github.com/filpgame/picpeak/commit/16055cdc413f0aa560c2b2a792b4e2ae8f5cbfd3))
-* **whatsapp:** WhatsApp Business API notification channel ([#640](https://github.com/filpgame/picpeak/issues/640) part D) ([78c8e9d](https://github.com/filpgame/picpeak/commit/78c8e9d9f91d56e07e04df4ed90fb05ccdfb69d2))
+* **invoices:** configurable VAT note under MwSt. line + fix multi-page page-number overlap ([#794](https://github.com/PicPeak/picpeak/issues/794)) ([ffd4a7e](https://github.com/PicPeak/picpeak/commit/ffd4a7eee64b6418df1c9cc6843d86dc0f41d2ec))
+* **invoices:** configurable VAT/free-text note + fix multi-page page-number overlap ([#794](https://github.com/PicPeak/picpeak/issues/794)) ([1476884](https://github.com/PicPeak/picpeak/commit/1476884dd04202f5f18d50d458b6176b0535c71b))
+
+## [3.86.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.85.0-beta.0...v3.86.0-beta.0) (2026-07-10)
+
+
+### Features
+
+* **categories:** per-event category ordering — global default + override ([#782](https://github.com/PicPeak/picpeak/issues/782)) ([d51112e](https://github.com/PicPeak/picpeak/commit/d51112e761d2fd83f1939841fbf4c05e625fc34d))
+* **categories:** per-event category ordering — global default + override ([#782](https://github.com/PicPeak/picpeak/issues/782)) ([4698402](https://github.com/PicPeak/picpeak/commit/4698402b5493cfbdb1e2b6d81c6f58829e17a703))
 
 
 ### Bug Fixes
 
-* **accounting:** 'Save & mark paid' actually pays; incoming invoices appear in tax/export ([3b70a09](https://github.com/filpgame/picpeak/commit/3b70a09773f22e942ae80962b9b69a7712b08ff3))
-* **accounting:** address the-luap PR [#636](https://github.com/filpgame/picpeak/issues/636) review ([707c5d0](https://github.com/filpgame/picpeak/commit/707c5d027798bdafb9fe09d7efcbd9ea65330076))
-* **accounting:** always show Income/Costs/Result summary on tax page (even with zero costs) ([663daf5](https://github.com/filpgame/picpeak/commit/663daf50ff92293adcc93aed42333eeba2d08849))
-* **accounting:** Banana export is now a tab-separated .txt (actually importable) ([a195067](https://github.com/filpgame/picpeak/commit/a19506749a449ec0a628da776af5a5bea8a2e46e))
-* **accounting:** Banana I&E export uses the 'Category' column (not 'ContraAccount') ([53a16f9](https://github.com/filpgame/picpeak/commit/53a16f9f6f9b11c224b3ff5f337f8a7fe4dbfc38))
-* **accounting:** distinguish Categorized (purple) from Paid (green) ([9514f5c](https://github.com/filpgame/picpeak/commit/9514f5cb8eadd293d4c85a3849073b59ea93161a))
-* **accounting:** emit ISO dates in exports (Postgres returns Date objects) ([0c0fb29](https://github.com/filpgame/picpeak/commit/0c0fb29770d7559b8b35a1b2a0aae1315485d875))
-* **accounting:** label the outgoing-invoice totals block in the tax summary ([f3e77e7](https://github.com/filpgame/picpeak/commit/f3e77e78079c6869a3a5de062a90f1a04fecde3c))
-* **accounting:** lock company-expense to company, first-page categorise preview, auto-refresh inbox ([cee692c](https://github.com/filpgame/picpeak/commit/cee692c10a1a96ada00a62dbcfc9f998af2c53f7))
-* **accounting:** migration 127 must not insert created_at/updated_at into app_settings ([31867ef](https://github.com/filpgame/picpeak/commit/31867efcb9b9c4f19ca8a7e59dfcbd8eb6157525))
-* **accounting:** PDF pager always shown, click categorized→pay, drop duplicate Paid chip ([5fcb96c](https://github.com/filpgame/picpeak/commit/5fcb96c723a3e5bdf2e93ff3786dfb7ba77b3d24))
-* **accounting:** PR [#622](https://github.com/filpgame/picpeak/issues/622) blockers — CSV formula injection + IMAP double-ingest race ([cd6d578](https://github.com/filpgame/picpeak/commit/cd6d57839b4753b2848620c5960332cc945580ce))
-* **accounting:** PR [#622](https://github.com/filpgame/picpeak/issues/622) concerns — flag-cache, customer master gate, VAT-unconfigured, helpers, page cap ([a93b6dc](https://github.com/filpgame/picpeak/commit/a93b6dc232375e1362e091c8868a409b1335dcae))
-* **accounting:** tax report 500 on Postgres — drop SQL date() from cost queries ([ea8f6bc](https://github.com/filpgame/picpeak/commit/ea8f6bc88a4d4ed39c93f80bcfcfbab283fca230))
-* **accounting:** tax report cost side queried a non-existent column ([ab65a47](https://github.com/filpgame/picpeak/commit/ab65a470a009d33558a7167dd2c3c649f785e686))
-* **accounting:** tax report degrades gracefully if cost side fails (+ surface the error) ([9f85111](https://github.com/filpgame/picpeak/commit/9f8511114a78c4c6bca2666b9c59e8325fc66dfb))
-* **accounting:** tax-report storno totals + hours-line date on Postgres ([db9e41d](https://github.com/filpgame/picpeak/commit/db9e41d19846b31b29c5c1be2ee06a7958bb43b0))
-* **accounting:** tidy the tax-export scope selector styling ([8deb7e0](https://github.com/filpgame/picpeak/commit/8deb7e0741a5bf559cb9f9b78350821dc84bdb53))
-* **accounting:** UTF-8 BOM on the ledger export so Banana reads it correctly ([74144da](https://github.com/filpgame/picpeak/commit/74144da45fc0a7a2c2e88d17a23b584ba77e9262))
-* **admin/exports:** Lightroom TXT export joins with comma + drops extension ([#623](https://github.com/filpgame/picpeak/issues/623)) ([a239fec](https://github.com/filpgame/picpeak/commit/a239fec9d7b6c01c9649c075a40427b8844f83b8))
-* **archives:** stream-extract restore for &gt;2 GiB + preserve original_filename via manifest ([#640](https://github.com/filpgame/picpeak/issues/640)) ([e4e79a0](https://github.com/filpgame/picpeak/commit/e4e79a0b3a6d3ddbbc2f3cebdcadc89307147248))
-* **branding+whatsapp:** preserve customCss through preset switches ([#645](https://github.com/filpgame/picpeak/issues/645)) + admin-pinned WhatsApp template language ([#647](https://github.com/filpgame/picpeak/issues/647)) ([cde028e](https://github.com/filpgame/picpeak/commit/cde028e9199a9ddb09957a87590732f4bd4d7a7b))
-* **branding:** force lock = light/dark only; Branding stays the full preset, galleries hide color+mode ([a7c1913](https://github.com/filpgame/picpeak/commit/a7c19135bb9645a7f95d5fe76581098db305394f))
-* **branding:** preserve customCss through preset switches + theme changes ([#645](https://github.com/filpgame/picpeak/issues/645)) ([7cf2679](https://github.com/filpgame/picpeak/commit/7cf26795ec12845743a30d48956381f25c6e181c))
-* **branding:** when a force lock is active, collapse the theme customizer to just the Force control ([1ac653a](https://github.com/filpgame/picpeak/commit/1ac653ad1b9f47af8cb24cb53ffa60a1e95192fc))
-* **crm:** admin surfaces follow the admin light/dark toggle, not the gallery theme ([#620](https://github.com/filpgame/picpeak/issues/620)) ([d3266a0](https://github.com/filpgame/picpeak/commit/d3266a0d1c458e8ae9c57ccd2f650e699544d2d6))
-* **crm:** editor totals box computed VAT 100× too small ([e9b297c](https://github.com/filpgame/picpeak/commit/e9b297c162a19da31d53de377b90bfd5cda1b0a7))
-* **deps:** bump qs/brace-expansion overrides + add uuid override for node-cron ([d705059](https://github.com/filpgame/picpeak/commit/d705059d3c2904184f037bbe0208fe128fdb9b63))
-* **email:** always log incoming mail to received_emails (was lost on insert error) ([9c18dcf](https://github.com/filpgame/picpeak/commit/9c18dcf377fca1e3650b0e20c926ecd7728aec9a))
-* **email:** fail-fast IMAP timeouts + manual 'Check now' poll ([8a54c6f](https://github.com/filpgame/picpeak/commit/8a54c6f6b115513ba88a51dea43fad5f8e114c86))
-* **email:** guard round-trip test when IMAP username isn't an email ([e258472](https://github.com/filpgame/picpeak/commit/e258472391b7f91b07a916b7edb6ecc5e5c3c048))
-* **email:** IMAP Security dropdown auto-fills the conventional port ([bd402d2](https://github.com/filpgame/picpeak/commit/bd402d2e89bcb88b1cabdcf3a59a206116a968f9))
-* **email:** IMAP Security dropdown matches outgoing — no port in label, manual port ([d04a697](https://github.com/filpgame/picpeak/commit/d04a6978e9c5df0af5c570df8f35a1a690a0ae9c))
-* **email:** log all received mail, not just unseen (90-day lookback + dedup) ([c36797d](https://github.com/filpgame/picpeak/commit/c36797db2db265ad49049c06cee543b1b528a759))
-* **email:** mark required fields on incoming mail to match outgoing SMTP ([fb48ba4](https://github.com/filpgame/picpeak/commit/fb48ba4cb4cbd2ec5836fc3adaffb79ea8d20787))
-* **email:** match IMAP card to SMTP styling + auto-detect mailbox folders ([abb23f0](https://github.com/filpgame/picpeak/commit/abb23f01c745d4285fbc07994c136a719a66b1d0))
-* **events:** publish-from-draft email carries the real password ([#627](https://github.com/filpgame/picpeak/issues/627)) ([83b568e](https://github.com/filpgame/picpeak/commit/83b568ee2ddc007b7d981fd4b46b69810f0165c3))
-* **flags:** close CRM/accounting feature-gating gaps from the audit ([03fa3d8](https://github.com/filpgame/picpeak/commit/03fa3d82962d6d6f3cd9630e01258013d567865e))
-* **gallery:** admin edits to welcome_message land for returning guests ([#625](https://github.com/filpgame/picpeak/issues/625)) ([ea6245c](https://github.com/filpgame/picpeak/commit/ea6245cfdea67bd4668e2100f295433a3d29f7f1))
-* **gallery:** leave a visible gap between filter bar and hero header ([#624](https://github.com/filpgame/picpeak/issues/624)) ([178d6da](https://github.com/filpgame/picpeak/commit/178d6dafb18cd4d30229d745a82af9ce27c41f08))
-* **hours:** move logActivity out of the entry transactions (SQLite deadlock) ([348955b](https://github.com/filpgame/picpeak/commit/348955b261713fc9f0b48391a1d4117f6f8c873f))
-* **i18n:** sweep activity-type translations + Events / API Tokens / Webhooks settings tabs ([f17c654](https://github.com/filpgame/picpeak/commit/f17c654e146683683f347ae2cd46de9cf3e47989))
-* **i18n:** sweep activity-type translations + smart notification fallback ([bc8d333](https://github.com/filpgame/picpeak/commit/bc8d3330bbe02041760063dcbf5cb5984945a25f))
-* **i18n:** sweep Events / API Tokens / Webhooks settings tabs ([997a412](https://github.com/filpgame/picpeak/commit/997a41293ef7de9bdef1546634cb7e549f9c1331))
-* **i18n:** wrap WhatsApp token show/hide aria-label through t() ([a8bb7b4](https://github.com/filpgame/picpeak/commit/a8bb7b439f6f57af9653ce283c951070bd52f3c2))
-* **maintenance:** enabling maintenance mode no longer locks admins out ([2493130](https://github.com/filpgame/picpeak/commit/249313072b08ad79146b397bc08436e9de366d22))
-* **maintenance:** never block /admin/* with the maintenance screen ([fdde469](https://github.com/filpgame/picpeak/commit/fdde4696e7025d7e41dd85eeda26b946f6713e13))
-* **projects:** "one customer matches" rule for deal-lineage attach ([f74d8d4](https://github.com/filpgame/picpeak/commit/f74d8d4e8cd9fa040e067ffd751b183a9673161b))
-* **projects:** address review — cross-customer guards + email/queue hardening ([9d13880](https://github.com/filpgame/picpeak/commit/9d13880f2b177a1a090c4685798e199a1f47b5ec))
-* **projects:** enforce single-customer projects (guard event attach + re-label) ([4b1e85c](https://github.com/filpgame/picpeak/commit/4b1e85c8555b03cbed4abbd80e9cb45b831df6bf))
-* **security:** close BOLA on photo-export + NAT64 SSRF in URL guard ([b8211e9](https://github.com/filpgame/picpeak/commit/b8211e9944da9e7b1c43a25e2f24c8a2425000cf))
-* **security:** close NAT64 SSRF + photo-export BOLA + sweep Trivy alerts (GHSA-wmjx-pc37-272r, GHSA-9v4w-jrhx-g5wr) ([6f40db8](https://github.com/filpgame/picpeak/commit/6f40db859751efc2c931bc981a48148808fd3701))
-* **settings:** don't insert non-existent created_at into app_settings ([8621338](https://github.com/filpgame/picpeak/commit/8621338c489cbd5194da6ac22d1fe1bd9d730cb0))
-* **settings:** hoist tab-visibility useEffect above isLoading early return ([49bfb45](https://github.com/filpgame/picpeak/commit/49bfb45332993b919ad4f949a0cd912a85888620))
-* **slideshow:** deny display-only token on download/upload/feedback (PR [#646](https://github.com/filpgame/picpeak/issues/646) review) ([e36b330](https://github.com/filpgame/picpeak/commit/e36b3309ca66404d189d5b218cc1f0eba925e4c7))
-* **slideshow:** dip-to-white/black no longer flickers the image ([db8388c](https://github.com/filpgame/picpeak/commit/db8388c79e44f5d254d984810bd62bfb11effd0f))
-* **slideshow:** drop updated_at from event writes ([1e40f82](https://github.com/filpgame/picpeak/commit/1e40f8296ca59ff0395f6cc09ee452ab62653cdc))
-* **slideshow:** feature flag is a master kill-switch, not just admin UI ([759784a](https://github.com/filpgame/picpeak/commit/759784a4d1cfe7e67c825293760169ad6904f090))
-* **slideshow:** fill the viewport instead of black bars ([6ec46de](https://github.com/filpgame/picpeak/commit/6ec46de0e7bb821ea4e4a7fc2318792b810c3f36))
-* **slideshow:** read globals from app_settings, not the missing settings table ([0f4388d](https://github.com/filpgame/picpeak/commit/0f4388d68ab85049c46e7af566d35f4fbf6e4d02))
-* **slideshow:** surface backend error in the live slideshow card ([056f938](https://github.com/filpgame/picpeak/commit/056f9381de5dbe90243bea409b587b4910050cbf))
-* **upload:** auto-throttle on low-memory hosts + correct documented RAM minimum ([#628](https://github.com/filpgame/picpeak/issues/628)) ([714a9f6](https://github.com/filpgame/picpeak/commit/714a9f6fb1f48ba1316cc240054d5128749581d8))
-* **whatsapp:** admin-pinned template language + Arabic locale support ([#647](https://github.com/filpgame/picpeak/issues/647)) ([4fd7709](https://github.com/filpgame/picpeak/commit/4fd7709596e7a0dd3fedef63772ddd52ce5561c9))
+* **categories:** address PR [#790](https://github.com/PicPeak/picpeak/issues/790) review — event ownership, migration renumber, nits ([a4b4485](https://github.com/PicPeak/picpeak/commit/a4b4485d322514690c5400ca7ab9a91bc25c3e48))
+
+## [3.85.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.84.1-beta.0...v3.85.0-beta.0) (2026-07-10)
+
+
+### Features
+
+* **slideshow:** per-event play order + category filter ([#202](https://github.com/PicPeak/picpeak/issues/202)) ([5467642](https://github.com/PicPeak/picpeak/commit/54676424f2f7ed50e74cb8e144cbdaa5a96e65c3))
+
+## [3.84.1-beta.0](https://github.com/PicPeak/picpeak/compare/v3.84.0-beta.0...v3.84.1-beta.0) (2026-07-10)
+
+
+### Bug Fixes
+
+* **ci:** publish v-prefixed image tags via type=ref,event=tag ([#668](https://github.com/PicPeak/picpeak/issues/668)) ([1f3bc3c](https://github.com/PicPeak/picpeak/commit/1f3bc3c3430414b5b6cb2141d887a8b5855a04af))
+* **ci:** publish v-prefixed image tags via type=ref,event=tag ([#668](https://github.com/PicPeak/picpeak/issues/668)) ([39db7bf](https://github.com/PicPeak/picpeak/commit/39db7bf6cb5c39fcdf71c875a4aaf704f34447fa))
+
+## [3.84.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.83.1-beta.0...v3.84.0-beta.0) (2026-07-10)
+
+
+### Features
+
+* **admin:** GitHub repo button in the sidebar footer ([#778](https://github.com/PicPeak/picpeak/issues/778)) ([279e047](https://github.com/PicPeak/picpeak/commit/279e0472c71c6a37ba091a9c7a31f5571c0a8df6))
+* **admin:** GitHub repo button in the sidebar footer ([#778](https://github.com/PicPeak/picpeak/issues/778)) ([d3d7df4](https://github.com/PicPeak/picpeak/commit/d3d7df46f214028ba89063079d356bc0430083f5))
+
+
+### Bug Fixes
+
+* **ci:** publish v-prefixed image tags so :vX.Y.Z resolves ([#668](https://github.com/PicPeak/picpeak/issues/668)) ([2ee4146](https://github.com/PicPeak/picpeak/commit/2ee4146d9a6fd026e7b7be3ba774de9a0cf6e96a))
+* **ci:** publish v-prefixed image tags so :vX.Y.Z resolves ([#668](https://github.com/PicPeak/picpeak/issues/668)) ([784d059](https://github.com/PicPeak/picpeak/commit/784d059c3da5b36e2b6794ebf2e34bc15c8a9824))
+
+
+### Documentation
+
+* **releasing:** align stable version to main on promote (Option A) ([df5aeab](https://github.com/PicPeak/picpeak/commit/df5aeaba416726cc0123f32ddf88e4a30dc28908))
+* **releasing:** align stable version to main on promote (Option A) ([5dea0c9](https://github.com/PicPeak/picpeak/commit/5dea0c969558f50833973ff742257780f5842612))
+
+## [3.83.1-beta.0](https://github.com/PicPeak/picpeak/compare/v3.83.0-beta.0...v3.83.1-beta.0) (2026-07-09)
+
+
+### Bug Fixes
+
+* **release:** target stable in release-please + undo bogus 2.7.0 bump ([274ef0c](https://github.com/PicPeak/picpeak/commit/274ef0cd731765b057a5d62d5f41c14cb3a1564b))
+* **release:** target stable in release-please.yml + undo the bogus 2.7.0 bump ([65ac6ed](https://github.com/PicPeak/picpeak/commit/65ac6eddacb79857e9a9651d3c869e7bfdd92887))
+
+## [3.83.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.82.6-beta.0...v3.83.0-beta.0) (2026-07-08)
+
+
+### Features
+
+* **messages:** create/select quote, contract, invoice, gallery from a message ([0dbf863](https://github.com/PicPeak/picpeak/commit/0dbf863f60b919560b766f78b107ebac9612bd9d))
+* **messages:** search bar + Archive/Delete with Archived & Deleted folders ([99d5996](https://github.com/PicPeak/picpeak/commit/99d5996561a2dcff2d431692d5bab5c7286d1f6f))
+* **messages:** unified Messages email client (flag-gated, default off) ([a71b9b5](https://github.com/PicPeak/picpeak/commit/a71b9b5ed721df17b61062ae3a2361d448c95cf7))
+
+
+### Bug Fixes
+
+* **messages:** PR [#769](https://github.com/PicPeak/picpeak/issues/769) nits — server-side search, bare-email recipient, DE i18n ([1e08a4f](https://github.com/PicPeak/picpeak/commit/1e08a4fb156d34ee8ddff69b0a7612001aa6d67e))
+* **messages:** PR [#769](https://github.com/PicPeak/picpeak/issues/769) review — escape reply sender (XSS), gate backend routes, exact customer match ([bb235e7](https://github.com/PicPeak/picpeak/commit/bb235e72e58359f55f8aeccf2f22c671584fdbd7))
+* **messages:** show the resolved customer's name in the doc-action modal ([2c5c1d5](https://github.com/PicPeak/picpeak/commit/2c5c1d561bbe567b9d7615e7c2d071d08bb6d63c))
+
+## [3.82.6-beta.0](https://github.com/PicPeak/picpeak/compare/v3.82.5-beta.0...v3.82.6-beta.0) (2026-07-07)
+
+
+### Bug Fixes
+
+* **workflows:** backfill existing invoices + anchor dunning grace to due date when enabled ([#750](https://github.com/PicPeak/picpeak/issues/750)) ([9596342](https://github.com/PicPeak/picpeak/commit/9596342d6a9ef107193cfc123487a8061f4a91ca))
+* **workflows:** scope dunning backfill to its own flow via targetWorkflowId ([da3a77d](https://github.com/PicPeak/picpeak/commit/da3a77dac40a892158167aec939a1458d488a951))
+
+## [3.82.5-beta.0](https://github.com/PicPeak/picpeak/compare/v3.82.4-beta.0...v3.82.5-beta.0) (2026-07-07)
+
+
+### Bug Fixes
+
+* **admin:** stop the event-date field crashing the page on backspace ([760a201](https://github.com/PicPeak/picpeak/commit/760a201b6070a4edfe8192bcddce948c5f0c3fec))
+
+## [3.82.4-beta.0](https://github.com/PicPeak/picpeak/compare/v3.82.3-beta.0...v3.82.4-beta.0) (2026-07-07)
+
+
+### Bug Fixes
+
+* **email,ui:** billing emails follow customer language + readable payment-check confirmation ([0c2d319](https://github.com/PicPeak/picpeak/commit/0c2d319fc1ed67843cc60afdcaea5807ea49226f))
+* **email,ui:** billing emails follow customer language + readable payment-check confirmation ([fcc3e91](https://github.com/PicPeak/picpeak/commit/fcc3e9195d6f63b2dffddfa72a867a3e32325e81))
+* **email:** sibling billing emails follow customer language too ([c0008be](https://github.com/PicPeak/picpeak/commit/c0008be39bc8a9d354e48ce8d6bd89662bc53ebb))
+
+## [3.82.3-beta.0](https://github.com/PicPeak/picpeak/compare/v3.82.2-beta.0...v3.82.3-beta.0) (2026-07-06)
+
+
+### Bug Fixes
+
+* **branding:** make 'Show logo in hero' a true global toggle with per-event override ([#756](https://github.com/PicPeak/picpeak/issues/756)) ([a88da99](https://github.com/PicPeak/picpeak/commit/a88da99c8d35c0c7cb7f96a235e984edad74ac7c))
+* **branding:** make 'Show logo in hero' a true global toggle with per-event override ([#756](https://github.com/PicPeak/picpeak/issues/756)) ([96fe478](https://github.com/PicPeak/picpeak/commit/96fe478bf87a3350185206b3d6f15133138b995d))
+* **branding:** unify hero logo SIZE the same way as visibility ([#756](https://github.com/PicPeak/picpeak/issues/756)) ([60b03b1](https://github.com/PicPeak/picpeak/commit/60b03b17287539b3ad5e5d32f4eda8622f0575e4))
+
+## [3.82.2-beta.0](https://github.com/PicPeak/picpeak/compare/v3.82.1-beta.0...v3.82.2-beta.0) (2026-07-05)
+
+
+### Bug Fixes
+
+* **og:** broaden social-crawler coverage (Bluesky Cardyb, WeChat-scraper, fediverse, etc.) ([a0a28a4](https://github.com/PicPeak/picpeak/commit/a0a28a47777db9ca9e60a5134c8d86503c060e79))
+* **og:** route branded short URLs + slideshow links to OG, add Viber ([#699](https://github.com/PicPeak/picpeak/issues/699)) ([0dffe0c](https://github.com/PicPeak/picpeak/commit/0dffe0ce92339e0608b3ef660e84c31a62f4a98c))
+* **og:** route branded short URLs + slideshow to OG handler, add Viber ([#699](https://github.com/PicPeak/picpeak/issues/699)) ([a87ad77](https://github.com/PicPeak/picpeak/commit/a87ad77d8d5215c88f5d95cc7aebaa1769938ec0))
+
+## [3.82.1-beta.0](https://github.com/PicPeak/picpeak/compare/v3.82.0-beta.0...v3.82.1-beta.0) (2026-07-05)
+
+
+### Bug Fixes
+
+* **invoices:** correct payment-check email template key so dunning email sends ([9a76333](https://github.com/PicPeak/picpeak/commit/9a763337b658299aae0d7c985071c4a775000f99))
+* **invoices:** correct payment-check email template key so dunning email sends ([3682de1](https://github.com/PicPeak/picpeak/commit/3682de195b46eae692db3ff4a1476b00d3a6e216))
+
+## [3.82.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.81.0-beta.0...v3.82.0-beta.0) (2026-07-03)
+
+
+### Features
+
+* **setup:** final community step ([#732](https://github.com/PicPeak/picpeak/issues/732)) + fix create-admin button overflow ([#730](https://github.com/PicPeak/picpeak/issues/730)) ([a5f49e3](https://github.com/PicPeak/picpeak/commit/a5f49e32350564ee4d3894f33e9611e9244cc994))
+* **setup:** final community/thank-you step ([#732](https://github.com/PicPeak/picpeak/issues/732)); fix create-admin button overflow ([#730](https://github.com/PicPeak/picpeak/issues/730)) ([dadaaee](https://github.com/PicPeak/picpeak/commit/dadaaeea7781cb62811256b512003e5c4d6ad95e))
+
+## [3.81.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.80.0-beta.0...v3.81.0-beta.0) (2026-07-03)
+
+
+### Features
+
+* admin two-factor authentication (TOTP) with recovery codes + CLI reset ([cf07361](https://github.com/PicPeak/picpeak/commit/cf073615effa8a91e19374ad3e9924e6e7322950))
+* **admin-ui:** TOTP MFA enrollment + two-step login; remove stub 2FA toggle ([96e3c68](https://github.com/PicPeak/picpeak/commit/96e3c68b9d6b35a82abcad664a6da7b19150b4fd))
+* **auth:** admin TOTP MFA — enrollment, login challenge, recovery, CLI reset ([72e2ef6](https://github.com/PicPeak/picpeak/commit/72e2ef6721b0572ed34455de901aa357eacd8c76))
+
+
+### Bug Fixes
+
+* event creation 500s on PostgreSQL (NaN slideshow seed) + stray "0" boolean renders ([b187f58](https://github.com/PicPeak/picpeak/commit/b187f588b4d12af7a7849f8558c0085573d4af76))
+* **security:** close cross-event thumbnail leak, bulk-op ownership bypass, + hardening ([081f3ed](https://github.com/PicPeak/picpeak/commit/081f3edcdffc65a77000cc638e364ea9dc03767f))
+* **security:** cross-event thumbnail leak, bulk-op ownership bypass + auth hardening ([b732974](https://github.com/PicPeak/picpeak/commit/b732974779803b67097c81ae6bce2de0f2910794))
+
+## [3.80.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.79.1-beta.0...v3.80.0-beta.0) (2026-07-03)
+
+
+### Features
+
+* **backup:** fold .picpeak restore into the Restore wizard's Upload source ([86324e7](https://github.com/PicPeak/picpeak/commit/86324e7da75069e61686b1b77495f02c33b12e1a))
+* first-run setup wizard (feature selection + config) and portable .picpeak backup roundtrip ([e513e83](https://github.com/PicPeak/picpeak/commit/e513e8345b73e37ebedc9c9ec09665ffc5773e23))
+* **setup:** add restore-from-backup branch to the first-run wizard ([a95ee47](https://github.com/PicPeak/picpeak/commit/a95ee473ae7fb2bf3c94c610724476701145d113))
+* **setup:** per-feature config step after feature selection ([07b450a](https://github.com/PicPeak/picpeak/commit/07b450a954a53781d23a71749552e4101c637777))
+
+
+### Bug Fixes
+
+* **backup:** address .picpeak review — table filter, superuser guard, tests ([fa7665c](https://github.com/PicPeak/picpeak/commit/fa7665c5b1ad18a4db4f0b59eb4c197a3c9a36e2))
+* **setup:** keep the first-run wizard light regardless of dark mode ([d4b143f](https://github.com/PicPeak/picpeak/commit/d4b143f313d00f2a30abcbc1a880c140d7455e7b))
+
+## [3.79.1-beta.0](https://github.com/PicPeak/picpeak/compare/v3.79.0-beta.0...v3.79.1-beta.0) (2026-07-02)
+
+
+### Bug Fixes
+
+* **settings:** remove duplicate Mail import that broke the dev server ([5b535f8](https://github.com/PicPeak/picpeak/commit/5b535f86580275eda768fa2d85a8c94bd701f832))
+* **settings:** remove duplicate Mail import that crashes the dev server ([4aa6583](https://github.com/PicPeak/picpeak/commit/4aa6583baef55e2c12e9cde7d391156436de518f))
+
+## [3.79.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.78.0-beta.0...v3.79.0-beta.0) (2026-07-02)
+
+
+### Features
+
+* setup wizard + argument-driven unattended install ([681619f](https://github.com/PicPeak/picpeak/commit/681619f0a14070309342a9f908a5bbc8a57d47d8))
+* **setup:** step-by-step wizard + argument-driven unattended install ([d35c413](https://github.com/PicPeak/picpeak/commit/d35c413651bc10f177a683a8057ad92c03b1cf00))
+
+## [3.78.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.77.3-beta.0...v3.78.0-beta.0) (2026-07-02)
+
+
+### Features
+
+* zero-config first run — in-browser admin bootstrap + auto-generated secrets ([bafc96f](https://github.com/PicPeak/picpeak/commit/bafc96f468e3b5cca2ec3291e7b568886755099d))
+
+
+### Bug Fixes
+
+* **ci:** enable release-PR auto-merge with the PAT, not GITHUB_TOKEN ([e08a33d](https://github.com/PicPeak/picpeak/commit/e08a33d9ea273dc18877743f71f59d64bfc3dfb5))
+* enable release-PR auto-merge with the PAT so releases actually publish ([97b9853](https://github.com/PicPeak/picpeak/commit/97b9853709fb59a900d70bb2a6bf365d98ae4f86))
+
+## [3.77.3-beta.0](https://github.com/PicPeak/picpeak/compare/v3.77.2-beta.0...v3.77.3-beta.0) (2026-07-02)
+
+
+### Bug Fixes
+
+* set GH_REPO in release-please auto-merge step ([d00d52a](https://github.com/PicPeak/picpeak/commit/d00d52a2215dfcae34086cf3e10fe4da0aef09c9))
+
+## [3.77.2-beta.0](https://github.com/PicPeak/picpeak/compare/v3.77.1-beta.0...v3.77.2-beta.0) (2026-07-02)
+
+
+### Bug Fixes
+
+* auto-publish release-please PRs without manual approval ([fb64ec0](https://github.com/PicPeak/picpeak/commit/fb64ec0910f8c3ecffb40d85e4f3a08f73503671))
+* **ci:** auto-publish release-please PRs without manual approval ([#719](https://github.com/PicPeak/picpeak/issues/719)) ([a3e7232](https://github.com/PicPeak/picpeak/commit/a3e7232b8ed012b8449a76d3e4ea3c5daddd5514))
+
+## [3.77.1-beta.0](https://github.com/PicPeak/picpeak/compare/v3.77.0-beta.0...v3.77.1-beta.0) (2026-07-02)
+
+
+### Documentation
+
+* require screenshots for UI changes in PRs ([f5b4aa7](https://github.com/PicPeak/picpeak/commit/f5b4aa7a5bc321ffbd33f1c1b92003435a7ee842))
+* require screenshots for UI changes in PRs ([8ca7477](https://github.com/PicPeak/picpeak/commit/8ca74776f4d3f7be930a713afe4ac4de594adedd))
+
+## [3.77.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.76.2-beta.0...v3.77.0-beta.0) (2026-07-01)
+
+
+### Features
+
+* admin photos list/grid toggle + upload failure report ([#707](https://github.com/PicPeak/picpeak/issues/707), [#708](https://github.com/PicPeak/picpeak/issues/708)) ([e873f7c](https://github.com/PicPeak/picpeak/commit/e873f7c98ce108b090d70a3b7df2d2929699e997))
+* admin photos list/grid toggle + upload failure report ([#707](https://github.com/PicPeak/picpeak/issues/707), [#708](https://github.com/PicPeak/picpeak/issues/708)) ([6f95796](https://github.com/PicPeak/picpeak/commit/6f95796b7c19829197eaff0d4934ad9b84d0e2f3))
+
+## [3.76.2-beta.0](https://github.com/PicPeak/picpeak/compare/v3.76.1-beta.0...v3.76.2-beta.0) (2026-06-30)
+
+
+### Bug Fixes
+
+* **ci:** whatsnew highlights — set GH_REPO so gh runs without a checkout ([3feed0f](https://github.com/PicPeak/picpeak/commit/3feed0fae6a5792a7192a529942e08d9872b7e6e))
+* **ci:** whatsnew highlights — set GH_REPO so gh runs without a checkout ([2a5f0a8](https://github.com/PicPeak/picpeak/commit/2a5f0a8601ba5cb28243b39278ecdc0892388a96))
+
+## [3.76.1-beta.0](https://github.com/PicPeak/picpeak/compare/v3.76.0-beta.0...v3.76.1-beta.0) (2026-06-30)
+
+
+### Bug Fixes
+
+* **whatsnew:** decode HTML entities and trim em-dash detail in fallback bullets ([5582644](https://github.com/PicPeak/picpeak/commit/5582644dc49330549be2a3a4cdd5b1ba0f21a294))
+
+## [3.76.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.75.1-beta.0...v3.76.0-beta.0) (2026-06-30)
+
+
+### Features
+
+* **gallery:** branded URL shortener — /s/&lt;slug&gt; with OG injection ([#699](https://github.com/PicPeak/picpeak/issues/699)) ([a0f7033](https://github.com/PicPeak/picpeak/commit/a0f7033ffc812f92d56e2eac7bd2f498b95ef83b))
+
+## [3.75.1-beta.0](https://github.com/PicPeak/picpeak/compare/v3.75.0-beta.0...v3.75.1-beta.0) (2026-06-30)
+
+
+### Bug Fixes
+
+* **og:** rich social previews for share-token + slideshow URLs ([#699](https://github.com/PicPeak/picpeak/issues/699)) ([25bf7bb](https://github.com/PicPeak/picpeak/commit/25bf7bb5239420da078749bac270196df6968581))
+* **og:** rich social previews for share-token + slideshow URLs ([#699](https://github.com/PicPeak/picpeak/issues/699)) ([1b8747d](https://github.com/PicPeak/picpeak/commit/1b8747dc82763ba6b4da3a55045cab8740da2a13))
+
+## [3.75.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.74.0-beta.0...v3.75.0-beta.0) (2026-06-30)
+
+
+### Features
+
+* **updates:** "What's New" highlights after update + pre-update teaser ([a1a73bf](https://github.com/PicPeak/picpeak/commit/a1a73bf75ff3fcd0833fdf7922a35ad09f19439b))
+* **updates:** "What's New" highlights after update + pre-update teaser ([500cf85](https://github.com/PicPeak/picpeak/commit/500cf8522e556575bd74d4c71d38a83fb2596b5e))
+
+
+### Documentation
+
+* **readme:** credit [@the-luap](https://github.com/the-luap) as creator/lead maintainer ([3528f6b](https://github.com/PicPeak/picpeak/commit/3528f6b8b7e2b537b111f7787d48459a976ef744))
+* **readme:** credit [@the-luap](https://github.com/the-luap) as creator/lead maintainer ([748238e](https://github.com/PicPeak/picpeak/commit/748238e8caf198e3899954804e61a2e179058957))
+
+## [3.74.0-beta.0](https://github.com/PicPeak/picpeak/compare/v3.73.0-beta.0...v3.74.0-beta.0) (2026-06-29)
+
+
+### Features
+
+* **admin:** in-app migration banner for the org rename ([0213347](https://github.com/PicPeak/picpeak/commit/02133478bd2684c562d11cc122cf5059832ff76a))
+* **admin:** in-app migration banner for the org rename ([#669](https://github.com/PicPeak/picpeak/issues/669)) ([2a4bf3b](https://github.com/PicPeak/picpeak/commit/2a4bf3b868c6733d0b865c8c0e977ba84d6e6453))
+
+
+### Documentation
+
+* branch model + migration-to-org guide + PR template ([166ef47](https://github.com/PicPeak/picpeak/commit/166ef47611a248c4d517e26d390d87d21f077ca1))
+* branch model + migration-to-org guide + PR-template target hint ([d606fcd](https://github.com/PicPeak/picpeak/commit/d606fcd5a425fed3c968ec06b071a386bf558c28))
+* prominent migration banner at the top of README ([14bd3e1](https://github.com/PicPeak/picpeak/commit/14bd3e1a6c6cf74378d6f316024584d8941cbcd5))
+* prominent migration banner at the top of README ([#669](https://github.com/PicPeak/picpeak/issues/669)) ([5839bba](https://github.com/PicPeak/picpeak/commit/5839bba72a56cc29077f63f7daa038995fb09dfb))
+
+## [3.73.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.72.0-beta.0...v3.73.0-beta.0) (2026-06-29)
+
+
+### Features
+
+* **dashboard:** revenue "year" tile toggles 365 days ↔ calendar YTD ([d1c9e02](https://github.com/the-luap/picpeak/commit/d1c9e02bcf50b6c08eebc85acdbfba29bfee84ac))
+* **invoices:** surface monthly/manual accumulator drafts in the Bills list ([e457656](https://github.com/the-luap/picpeak/commit/e457656b9d06bb420c9d0985fe15c30d6c88aed9))
+
+
+### Bug Fixes
+
+* **invoices:** add bank transfer to the mark-paid method list ([e96ef4c](https://github.com/the-luap/picpeak/commit/e96ef4c5a35bc9e575bc3419fb318a3ee9df1bd6))
+* **invoices:** badge held (unsent, no send date) invoices as "Draft" ([e4367e0](https://github.com/the-luap/picpeak/commit/e4367e028a5228ef50c4bbd522d0777bc7340b52))
+* **invoices:** show "Draft" on the invoice detail page for accumulator drafts ([ca09442](https://github.com/the-luap/picpeak/commit/ca0944293f66b6465a577340e63d592598915092))
+* **reminders:** wrap is_active/is_archived wheres in formatBoolean ([b9d9138](https://github.com/the-luap/picpeak/commit/b9d91385b43de7ede508884f7cf78b5cf785f853))
+
+## [3.72.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.71.3-beta.0...v3.72.0-beta.0) (2026-06-28)
+
+
+### Features
+
+* **workflows:** booking cutover — wire booking actions + hold documents behind approval gates ([ec33ec7](https://github.com/the-luap/picpeak/commit/ec33ec7670a4feb1108d1bcbfe34727f63cc8cf9))
+
+
+### Bug Fixes
+
+* **workflows:** defer quote.accepted/declined emit until the 15-min response window locks ([539a837](https://github.com/the-luap/picpeak/commit/539a83711d1996dc9c262365f2c511e7bc445add))
+* **workflows:** make the dashboard pending-approvals card items clickable too ([6e20d58](https://github.com/the-luap/picpeak/commit/6e20d58487c5e20b08e1d1b4ddd4e76f9e922a79))
+
+## [3.71.3-beta.0](https://github.com/the-luap/picpeak/compare/v3.71.2-beta.0...v3.71.3-beta.0) (2026-06-27)
+
+
+### Bug Fixes
+
+* **events:** wire customer notifications into both public API entry points ([#647](https://github.com/the-luap/picpeak/issues/647)) ([f017542](https://github.com/the-luap/picpeak/commit/f01754247cdb94c5935ad5abbda116841f6c7fba))
+
+## [3.71.2-beta.0](https://github.com/the-luap/picpeak/compare/v3.71.1-beta.0...v3.71.2-beta.0) (2026-06-27)
+
+
+### Bug Fixes
+
+* event-reminder, email-language & gallery-publish bugs surfaced during workflow testing ([c8714ca](https://github.com/the-luap/picpeak/commit/c8714ca42f4d82d50fe611b2a630260ebecbe740))
+
+## [3.71.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.71.0-beta.0...v3.71.1-beta.0) (2026-06-26)
+
+
+### Bug Fixes
+
+* **admin:** stack publish-gallery dialog CTAs so the German label fits ([#670](https://github.com/the-luap/picpeak/issues/670)) ([748af98](https://github.com/the-luap/picpeak/commit/748af98f3d3f8c00695b82e94d741a0e10a39a81))
+
+## [3.71.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.70.0-beta.0...v3.71.0-beta.0) (2026-06-25)
+
+
+### Features
+
+* admin-configurable workflow engine + dunning/Mahngebühr rework (RFC — feedback welcome) ([15be3b8](https://github.com/the-luap/picpeak/commit/15be3b8d32965eedc08d46ccc525c65a3bf34de6))
+* **workflows:** per-quote booking-workflow picker + quote→invoice (no gallery) built-in ([d14f1d8](https://github.com/the-luap/picpeak/commit/d14f1d850cc995b2cb1119ba0424f123feba50ec))
+* **workflows:** pre-event reminder picks the template GROUP on the block, type stays automatic ([10d091b](https://github.com/the-luap/picpeak/commit/10d091b55e0c44738b4001a71def6416a8f0aeb0))
+* **workflows:** route webhook node through the delivery pipeline (full Option 1) ([675e41a](https://github.com/the-luap/picpeak/commit/675e41a2f72c8c23fa5c36b13bc6b95abcb9d570))
+* **workflows:** warn when disabling a built-in (reverts to legacy, not off) ([c5f131c](https://github.com/the-luap/picpeak/commit/c5f131cec32826331722ef3705c5f5422e31726d))
+
+
+### Bug Fixes
+
+* **crm:** pre-event reminder resolves recipient from the event row, not a non-existent column ([5fbe514](https://github.com/the-luap/picpeak/commit/5fbe514db6e386eee2eeade548bccbb5bbc5b422))
+* **event-types:** renaming a type's slug cascades to events, quotes + reminder template ([415c93a](https://github.com/the-luap/picpeak/commit/415c93a512f74898d0225ce2e9298f24cc12f60d))
+* **workflows:** close review blockers — prefetch-safe approvals + loud gate-edge failure ([98ab717](https://github.com/the-luap/picpeak/commit/98ab717043e3fdefac0934bf8f4621d523b15e9a))
+* **workflows:** harden graph validation + refuse enabling unimplemented flows ([d927464](https://github.com/the-luap/picpeak/commit/d927464778272bd862aa01903179672f4d47368a))
+* **workflows:** matchFilter strict equality + accurate comment ([dee8d40](https://github.com/the-luap/picpeak/commit/dee8d40bb3235a908bba514a97a62d3a91a6e131))
+* **workflows:** ship built-ins disabled for first beta + enabled-based mutex + admin sentinel ([5893ecb](https://github.com/the-luap/picpeak/commit/5893ecb27a0365a79ec04336c5a122b31d31db0e))
+* **workflows:** wire a real, SSRF-guarded webhook action (was a silent no-op) ([af7eea8](https://github.com/the-luap/picpeak/commit/af7eea8b43e37905a79138bcde4b1026dea13050))
+
+## [3.70.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.69.1-beta.0...v3.70.0-beta.0) (2026-06-23)
+
+
+### Features
+
+* **analytics:** pluggable trackers — Umami + Rybbit + Custom ([#663](https://github.com/the-luap/picpeak/issues/663) Phase 1) ([83461fe](https://github.com/the-luap/picpeak/commit/83461fe5d4d44006482167464d92e70546cf7377))
+
+## [3.69.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.69.0-beta.0...v3.69.1-beta.0) (2026-06-23)
+
+
+### Bug Fixes
+
+* **analytics:** admin dashboard reads correct fields + Umami device API ([#661](https://github.com/the-luap/picpeak/issues/661)) ([349f566](https://github.com/the-luap/picpeak/commit/349f566e87b33c59f61eb28b8abc5f889e6285d6))
+* **analytics:** admin dashboard reads correct fields + Umami device API ([#661](https://github.com/the-luap/picpeak/issues/661)) ([7534447](https://github.com/the-luap/picpeak/commit/7534447b6c0df4290fd8dac12270673097096f1b))
+
+## [3.69.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.68.1-beta.0...v3.69.0-beta.0) (2026-06-22)
+
+
+### Features
+
+* **feedback:** per-guest favorite + like caps with mobile-friendly limit modal ([#655](https://github.com/the-luap/picpeak/issues/655)) ([3ac7017](https://github.com/the-luap/picpeak/commit/3ac70177efc237b8169278208983b0de3629bc72))
+* **feedback:** per-guest favorite + like caps with mobile-friendly limit modal ([#655](https://github.com/the-luap/picpeak/issues/655)) ([f2814e4](https://github.com/the-luap/picpeak/commit/f2814e4a4ce3aa9affc232243d615a15a1aae0c0))
+
+
+### Bug Fixes
+
+* **i18n:** replace ASCII quote with U+201D in DE perGuestLimitsDesc ([98e97e3](https://github.com/the-luap/picpeak/commit/98e97e3cf214c96cdefd99bfedd6724f0b85c41c))
+
+## [3.68.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.68.0-beta.0...v3.68.1-beta.0) (2026-06-22)
+
+
+### Bug Fixes
+
+* **gallery:** unbreak password entry in Instagram in-app browser ([#654](https://github.com/the-luap/picpeak/issues/654)) ([6193ab7](https://github.com/the-luap/picpeak/commit/6193ab7f6aafd94b6e2e432ddf170361fd306d4e))
+* **gallery:** unbreak password entry in Instagram in-app browser ([#654](https://github.com/the-luap/picpeak/issues/654)) ([b1bfd48](https://github.com/the-luap/picpeak/commit/b1bfd4838e7104e4f85695e180b20222206073ac))
+* **test:** raise bootCrmDb beforeAll timeout on slideshow suites ([f4b6b89](https://github.com/the-luap/picpeak/commit/f4b6b8941a30a20615cc87627a0663ff6d03c932))
+
+## [3.68.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.67.1-beta.0...v3.68.0-beta.0) (2026-06-21)
+
+
+### Features
+
+* **whatsapp:** admin-selectable template parameters + reorder ([#647](https://github.com/the-luap/picpeak/issues/647) follow-up) ([80e8ec5](https://github.com/the-luap/picpeak/commit/80e8ec5bc71f0653d56f1087521f5207aee0ba8f))
+
+## [3.67.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.67.0-beta.0...v3.67.1-beta.0) (2026-06-21)
+
+
+### Bug Fixes
+
+* **branding+whatsapp:** preserve customCss through preset switches ([#645](https://github.com/the-luap/picpeak/issues/645)) + admin-pinned WhatsApp template language ([#647](https://github.com/the-luap/picpeak/issues/647)) ([cde028e](https://github.com/the-luap/picpeak/commit/cde028e9199a9ddb09957a87590732f4bd4d7a7b))
+
+## [3.67.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.66.1-beta.0...v3.67.0-beta.0) (2026-06-21)
+
+
+### Features
+
+* Live Slideshow ("Diashow") — fullscreen, auto-updating projector view for live events ([4356393](https://github.com/the-luap/picpeak/commit/4356393b4433dd6b4147388688766b9464294c89))
+* **slideshow:** add image fit setting (fill vs black bars) ([b5c73e0](https://github.com/the-luap/picpeak/commit/b5c73e05bd41b262f864e8c700b1d38582b3817f))
+* **slideshow:** admin ui for live slideshow ([385b05a](https://github.com/the-luap/picpeak/commit/385b05adcf6a4acb7939e372328a55df7dae5e08))
+* **slideshow:** backend api for live slideshow ([dea5e0f](https://github.com/the-luap/picpeak/commit/dea5e0f8a6421c056868c2d9bea11e5bf1ee106a))
+* **slideshow:** db columns for live slideshow ([1029dd0](https://github.com/the-luap/picpeak/commit/1029dd05bdb9ca0a97ad86100145221850648651))
+* **slideshow:** en/de strings for live slideshow ([cb761ee](https://github.com/the-luap/picpeak/commit/cb761ee621aa553cf210c4224b6cbbf7bf2ef0cb))
+* **slideshow:** gate behind a feature flag + move globals to a Settings tab ([69367b4](https://github.com/the-luap/picpeak/commit/69367b45be1c13d87e73e72da34a1f41a5849dfe))
+* **slideshow:** public fullscreen slideshow viewer ([fd02254](https://github.com/the-luap/picpeak/commit/fd02254f78bd1860780355ebaa68293d58ce18b3))
+
+
+### Bug Fixes
+
+* **slideshow:** deny display-only token on download/upload/feedback (PR [#646](https://github.com/the-luap/picpeak/issues/646) review) ([e36b330](https://github.com/the-luap/picpeak/commit/e36b3309ca66404d189d5b218cc1f0eba925e4c7))
+* **slideshow:** dip-to-white/black no longer flickers the image ([db8388c](https://github.com/the-luap/picpeak/commit/db8388c79e44f5d254d984810bd62bfb11effd0f))
+* **slideshow:** drop updated_at from event writes ([1e40f82](https://github.com/the-luap/picpeak/commit/1e40f8296ca59ff0395f6cc09ee452ab62653cdc))
+* **slideshow:** feature flag is a master kill-switch, not just admin UI ([759784a](https://github.com/the-luap/picpeak/commit/759784a4d1cfe7e67c825293760169ad6904f090))
+* **slideshow:** fill the viewport instead of black bars ([6ec46de](https://github.com/the-luap/picpeak/commit/6ec46de0e7bb821ea4e4a7fc2318792b810c3f36))
+* **slideshow:** read globals from app_settings, not the missing settings table ([0f4388d](https://github.com/the-luap/picpeak/commit/0f4388d68ab85049c46e7af566d35f4fbf6e4d02))
+* **slideshow:** surface backend error in the live slideshow card ([056f938](https://github.com/the-luap/picpeak/commit/056f9381de5dbe90243bea409b587b4910050cbf))
 
 
 ### Performance Improvements
 
-* **slideshow:** cache global settings to cut /state DB reads (PR [#646](https://github.com/filpgame/picpeak/issues/646) review) ([a995131](https://github.com/filpgame/picpeak/commit/a995131f4266e112c96c6e8cedd5158995ebe899))
+* **slideshow:** cache global settings to cut /state DB reads (PR [#646](https://github.com/the-luap/picpeak/issues/646) review) ([a995131](https://github.com/the-luap/picpeak/commit/a995131f4266e112c96c6e8cedd5158995ebe899))
 
 
 ### Documentation
 
-* **readme:** add CRM + accounting to features, tax disclaimer, update contributor ([116743b](https://github.com/filpgame/picpeak/commit/116743ba438505a52b021f80f678c5a0094d20d4))
-* **slideshow:** add Live Slideshow guide + README entries ([16013d1](https://github.com/filpgame/picpeak/commit/16013d1cf9ad82ee052f905f9702feffde7b67eb))
+* **slideshow:** add Live Slideshow guide + README entries ([16013d1](https://github.com/the-luap/picpeak/commit/16013d1cf9ad82ee052f905f9702feffde7b67eb))
 
-## [4.4.1-beta.0](https://github.com/filpgame/picpeak/compare/v4.4.0-beta.0...v4.4.1-beta.0) (2026-06-10)
+## [3.66.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.66.0-beta.0...v3.66.1-beta.0) (2026-06-19)
 
 
 ### Bug Fixes
 
-* **updater:** reset in-progress guard when launcher fails to start ([8dcc5eb](https://github.com/filpgame/picpeak/commit/8dcc5eb6463398905baf8b8d8e181f4d13bbbeb3))
-* **updater:** run setup script in own systemd unit so service stop doesn't kill it ([d29b61a](https://github.com/filpgame/picpeak/commit/d29b61aedf43e0e2ec9002841e2427e917ddfabf))
-* **updater:** run setup script in own systemd unit so service stop doesn't kill it ([4f8e569](https://github.com/filpgame/picpeak/commit/4f8e5696d42cb9799e74b75c71e0f314f9f07e71))
+* **deps:** bump qs/brace-expansion overrides + add uuid override for node-cron ([d705059](https://github.com/the-luap/picpeak/commit/d705059d3c2904184f037bbe0208fe128fdb9b63))
+* **security:** close BOLA on photo-export + NAT64 SSRF in URL guard ([b8211e9](https://github.com/the-luap/picpeak/commit/b8211e9944da9e7b1c43a25e2f24c8a2425000cf))
+* **security:** close NAT64 SSRF + photo-export BOLA + sweep Trivy alerts (GHSA-wmjx-pc37-272r, GHSA-9v4w-jrhx-g5wr) ([6f40db8](https://github.com/the-luap/picpeak/commit/6f40db859751efc2c931bc981a48148808fd3701))
 
-## [4.4.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.3.1-beta.0...v4.4.0-beta.0) (2026-06-09)
+## [3.66.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.65.1-beta.0...v3.66.0-beta.0) (2026-06-19)
 
 
 ### Features
 
-* **admin/users:** reactivate + delete actions for deactivated admin users ([17e728a](https://github.com/filpgame/picpeak/commit/17e728a06b369374de4a075dafda0552f5560e7b))
-* **admin:** link version numbers in sidebar to GitHub release notes ([#566](https://github.com/filpgame/picpeak/issues/566)) ([11e9191](https://github.com/filpgame/picpeak/commit/11e9191cf8de3c1673354fb20e0852d11f80352f))
-* **admin:** System health page surfacing stuck/failed emails ([575ca9d](https://github.com/filpgame/picpeak/commit/575ca9d2cbd102109e3e6a24a105f00c8bf1867b))
-* **admin:** update-available modal with aggregated changelog + upgrade command ([#567](https://github.com/filpgame/picpeak/issues/567)) ([42fda7e](https://github.com/filpgame/picpeak/commit/42fda7e581b573e103ba31037cccb53f2b2c5071))
-* **backup-stats:** per-Stage-B-path counters in backup statistics ([828f021](https://github.com/filpgame/picpeak/commit/828f021caf0b9c5370115da917ee8ff328051282))
-* **backup:** admin endpoint to verify CRM document-artefact integrity ([18d29cf](https://github.com/filpgame/picpeak/commit/18d29cfb4ccf9b0983f6423e05584aefafbdd6fd))
-* **backup:** config-driven walker via backup_paths table ([dc486d0](https://github.com/filpgame/picpeak/commit/dc486d0c7f3ab5e8c416fd363594852da804d417))
-* **backup:** coverage diagnostic — what will the next backup miss? ([f6bab03](https://github.com/filpgame/picpeak/commit/f6bab03963eab4c6043080dff8f2aeb682935db7))
-* **backup:** UI for backup-integrity verifier — tab + post-restore CTA ([64654f5](https://github.com/filpgame/picpeak/commit/64654f5add68582b043d6133350f8d02dc481ce9))
-* **billing:** manual cadence + fix admin date inputs ignoring date-format setting ([dac03e1](https://github.com/filpgame/picpeak/commit/dac03e16356baa1291a7b5adf58557f9968187c6))
-* **bills:** capture event name/date when importing historical invoices ([f45fc66](https://github.com/filpgame/picpeak/commit/f45fc668ee84beb565e0824321d1f2db89564532))
-* **bills:** link event label to its event detail page ([cd0ffd0](https://github.com/filpgame/picpeak/commit/cd0ffd0de58bea97bac9e1f921fb7b218e117d83))
-* **branding:** dark-mode logo variant ([69233f3](https://github.com/filpgame/picpeak/commit/69233f3f30c6697e2049332135bf0d931b22b88a))
-* **branding:** symmetric light/dark logo fallback + customer surface ([b31ffd9](https://github.com/filpgame/picpeak/commit/b31ffd9074f5872f9d1de9f312995683ef620624))
-* **contracts:** preview PDF before sending ([c1f1f40](https://github.com/filpgame/picpeak/commit/c1f1f40065565a6c246f15f025fe2712327249c1))
-* **crm:** add event_reminder_* templates to dev email tester ([d9db41c](https://github.com/filpgame/picpeak/commit/d9db41c625f5225b440cd024f314895adabba46e))
-* **crm:** allow negative line items for manual discount/Rabatt rows ([6767814](https://github.com/filpgame/picpeak/commit/67678142cd6e2035e074bb8e1c306ff5486e6f08))
-* **crm:** backend code — services + routes + utilities + tests ([bcb0350](https://github.com/filpgame/picpeak/commit/bcb035011f6f3a1f07b3d7a5a1074f8094d1afc9))
-* **crm:** cash-basis revenue + backdatable payment date on mark-paid ([3e87bd6](https://github.com/filpgame/picpeak/commit/3e87bd6c8c68037f0f9aaa892831fd79aa337501))
-* **crm:** country dropdown + name guard for customer create/edit ([af80026](https://github.com/filpgame/picpeak/commit/af80026953a03f4bafd740f9c30dbf6ab2952adf))
-* **crm:** cross-link to CRM settings from quote + invoice editors ([8c47449](https://github.com/filpgame/picpeak/commit/8c474491752a83ca90b2eac5ef864e876ca2424f))
-* **crm:** Finder-style sortable column headers, default sort by issue date ([afc5462](https://github.com/filpgame/picpeak/commit/afc5462dff1734c5e59848b665f90292daba4d7d))
-* **crm:** frontend code — pages + services + components ([37d759f](https://github.com/filpgame/picpeak/commit/37d759ff8599a36daa2ae7ef6da681b377f0cfb8))
-* **crm:** i18n EN + DE for CRM, machine fr/nl/pt/ru fallbacks ([a7afa71](https://github.com/filpgame/picpeak/commit/a7afa715b44e52e8fcf6dbf0df15a80dcef393b8))
-* **crm:** per-customer Skonto opt-out ([f8c6fd8](https://github.com/filpgame/picpeak/commit/f8c6fd8ec4ecc338116f5622f69329a9bdbe580c))
-* **crm:** route billing docs to billing_email when set ([4b6c947](https://github.com/filpgame/picpeak/commit/4b6c9479397286168b77b6437be8125ab86b1dce))
-* **crm:** unlock reminderEmails feature flag in Features tab ([f938bd0](https://github.com/filpgame/picpeak/commit/f938bd0c18d714a88c988049c9947e3d81d1f1df))
-* **email:** hold relationship mail to business hours ([0517a0f](https://github.com/filpgame/picpeak/commit/0517a0f3069b405093e96b94b4723940b17c70ea))
-* **email:** per-weekday business hours + manual queue flush ([8eaeafc](https://github.com/filpgame/picpeak/commit/8eaeafc899489b8ffa7624c61430726b7e08bffb))
-* **email:** read-only "Sent emails" tab over email_queue ([e7a1bb8](https://github.com/filpgame/picpeak/commit/e7a1bb809c463e565b5d60ffe66cde8d20852b88))
-* **events:** "Create invoice" action on the event detail page ([92b9e6e](https://github.com/filpgame/picpeak/commit/92b9e6ea28a4f01f7d319b6c3af5552a9e06450d))
-* **hours:** aggregate open-hours landing view on /admin/clients/hours ([f231675](https://github.com/filpgame/picpeak/commit/f231675bb271539d84e82e5579334066cb6e9f8e))
-* **hours:** install-wide default rate + inline missing-rate CTA ([621e3ca](https://github.com/filpgame/picpeak/commit/621e3ca0f54294faee0027dfaf47e9d91cb9a656))
-* **hours:** open the hours invoice in the editor to add items ([1d926ef](https://github.com/filpgame/picpeak/commit/1d926ef0fffae522eeb071dc93e3c450c3cc9089))
-* **i18n:** add Slovenian (sl) language support ([3c65a74](https://github.com/filpgame/picpeak/commit/3c65a741a6ede935a80636d917ca8222f88a89ff))
-* **installer:** install picpeak directly from a backup via trigger file ([1fb9855](https://github.com/filpgame/picpeak/commit/1fb98556604905c11e36a7c069fb112ccde5a1db))
-* **quotes:** admin decline-on-behalf with optional reason ([c7e66f1](https://github.com/filpgame/picpeak/commit/c7e66f18cee678f304abea06b0bb578cb59e9aef))
-* **restore:** docker-logs visibility + ADMIN_CREDENTIALS.txt restore notice ([7adbdf3](https://github.com/filpgame/picpeak/commit/7adbdf32d17c13ec48cac77ce7e1edce0d56984f))
-* **restore:** self-heal restore_allow_force default ON at boot ([8fdad95](https://github.com/filpgame/picpeak/commit/8fdad954cd65fa6e576b4245d21f2a0f5a13d592))
+* **categories:** per-category download permissions ([#640](https://github.com/the-luap/picpeak/issues/640) part B) ([820f483](https://github.com/the-luap/picpeak/commit/820f4835f1f5a41cbef6816c387ef9ec3dafd526))
+* **common:** generic Promise-based ConfirmDialog primitive ([#640](https://github.com/the-luap/picpeak/issues/640) part C) ([a3fcb5b](https://github.com/the-luap/picpeak/commit/a3fcb5bc9e82849ebe1f55620e8aa7e60ccd973f))
+* **feedback:** export shape toggle — per-action vs per-guest pivot ([#640](https://github.com/the-luap/picpeak/issues/640) part E) ([fabd67a](https://github.com/the-luap/picpeak/commit/fabd67aecd6caf308956e5b4cb9df7dd44452142))
+* **whatsapp:** WhatsApp Business API notification channel ([#640](https://github.com/the-luap/picpeak/issues/640) part D) ([78c8e9d](https://github.com/the-luap/picpeak/commit/78c8e9d9f91d56e07e04df4ed90fb05ccdfb69d2))
 
 
 ### Bug Fixes
 
-* **admin-header:** hide wordmark on &lt;sm when logo also shows ([#523](https://github.com/filpgame/picpeak/issues/523)) ([97eb8a9](https://github.com/filpgame/picpeak/commit/97eb8a9bca83ca413701e3976093c09d75c4b176))
-* **admin-header:** skeleton brand block + move LanguageSelector into profile menu on &lt;sm ([#523](https://github.com/filpgame/picpeak/issues/523) follow-up) ([eeb27d5](https://github.com/filpgame/picpeak/commit/eeb27d5d487795bc1b1bcc38206350e21c57f80b))
-* **admin-header:** truncate long company names on narrow widths ([#523](https://github.com/filpgame/picpeak/issues/523) regression) ([2528ecc](https://github.com/filpgame/picpeak/commit/2528ecce81de927a5ff663ae1b166cc25aec694c))
-* **admin-ui:** backup download button hits API path, not SPA route ([4309117](https://github.com/filpgame/picpeak/commit/4309117f284d34fffc6aa480086a57811cd11a59))
-* **admin/events:** delete cascade orphaned photo folders because it read a non-existent column ([#608](https://github.com/filpgame/picpeak/issues/608)) ([f1cda42](https://github.com/filpgame/picpeak/commit/f1cda42253c4c4ca8344e1c98884c26b51413f3b))
-* **admin:** graceful logo-img fallback + show sidebar widgets during perm hydration ([#523](https://github.com/filpgame/picpeak/issues/523) follow-up 2) ([a1021e6](https://github.com/filpgame/picpeak/commit/a1021e6cf0fb1aea7888592f3352d189d6544417))
-* **api/v1/events:** also honour require_password + branding defaults ([#592](https://github.com/filpgame/picpeak/issues/592) follow-up) ([b0c314c](https://github.com/filpgame/picpeak/commit/b0c314c31ed2532486698e73fb65d8388539d846))
-* **api/v1/events:** honour global devtools-detection default on create ([#592](https://github.com/filpgame/picpeak/issues/592)) ([50ebc9b](https://github.com/filpgame/picpeak/commit/50ebc9b980d151afd2ed35639ad2a39bbe851b8e))
-* **backup-dashboard:** show last SUCCESSFUL backup + last attempt separately ([db2999e](https://github.com/filpgame/picpeak/commit/db2999e8f907e517d4ce634c0718053ec4099a35))
-* **backup-history:** show Total + Other so per-row sums match the count ([51fed26](https://github.com/filpgame/picpeak/commit/51fed2636c76feffd230d7a30f544defed75efd5))
-* **backup-ui:** respect general_date_format + general_time_format ([b96b65d](https://github.com/filpgame/picpeak/commit/b96b65dd0aa85ec40db19876ebff1735f113a4d5))
-* **backup:** include storage/business-docs/ in the in-app backup walker ([fe05ada](https://github.com/filpgame/picpeak/commit/fe05ada32396f86ce59586db282b3f0c3bdffd72))
-* **backup:** inline DB dump + fail-loud guard so "Run Backup Now" can't ship files-only ([33504ad](https://github.com/filpgame/picpeak/commit/33504ad357c3f72dbcf93e81b0d693e7498aa4be))
-* **backup:** inline DB dump + fail-loud guard so "Run Backup Now" can't ship files-only ([a3fd5a4](https://github.com/filpgame/picpeak/commit/a3fd5a4f7648c6e0051d8f950cbeaeab5e84bbac))
-* **bills:** localize the event_date on the invoice detail card ([a1a84cc](https://github.com/filpgame/picpeak/commit/a1a84cc7e68608ed80b55e6aec81ea2f9828cfab))
-* **branding:** accept SVG favicons ([3937556](https://github.com/filpgame/picpeak/commit/39375563f810fbd101845966bd8cb14a6c544839))
-* **branding:** allow larger square favicons ([a439c0a](https://github.com/filpgame/picpeak/commit/a439c0ab285363e6f4c528fb0c9747b1c21aa051))
-* **branding:** dark logo in the Branding live preview ([3ab14b0](https://github.com/filpgame/picpeak/commit/3ab14b0a669748780f2c2825ad9889468a69b238))
-* **branding:** dark-mode logo in the admin sidebar ([3015e35](https://github.com/filpgame/picpeak/commit/3015e35cd5d6ea7da2bb73b05675360a8505072e))
-* **branding:** point HTML favicon link at /favicon.ico (the real Safari fix) ([f83ad7d](https://github.com/filpgame/picpeak/commit/f83ad7d1cc80ece98e8771ba903d29cc01bf40f5))
-* **branding:** serve favicon via backend route so Safari picks it up ([9d29df4](https://github.com/filpgame/picpeak/commit/9d29df44609795c1aa93530761ebca35f97f5261))
-* **branding:** stream favicon bytes directly (Safari ignores the 302) ([beee4f1](https://github.com/filpgame/picpeak/commit/beee4f19061f5bbeb6f0e4e37fe41db474ba6760))
-* **branding:** SVG (and .ico) favicons now render ([c48392a](https://github.com/filpgame/picpeak/commit/c48392aa0e32582574fe538b6486f04756af8954))
-* **branding:** theme-aware logo across all login / auth entry pages ([1cc023d](https://github.com/filpgame/picpeak/commit/1cc023d591bf0bfaef89625e1c32facce005203e))
-* **branding:** theme-aware logo on customer-facing public pages ([53c8f27](https://github.com/filpgame/picpeak/commit/53c8f27a7692f231100250260b16670622d8ca56))
-* **branding:** use dark-mode logo on the admin login page ([811d779](https://github.com/filpgame/picpeak/commit/811d779142649c72525476cf825cc275386fcaec))
-* **business-profile:** align business-hours time columns ([5a83bf1](https://github.com/filpgame/picpeak/commit/5a83bf1d0e7160b1cd8d430990cc59dac9464adf))
-* **business-profile:** honor 24h time format in business-hours pickers ([9c9009f](https://github.com/filpgame/picpeak/commit/9c9009ff1bd0bef29887c51c7044ecc305d801d5))
-* **business-profile:** setting-aware custom time field for business hours ([06f225f](https://github.com/filpgame/picpeak/commit/06f225f44dbd9b4874718cfde0761c7a7dad4e3f))
-* **business-profile:** use the app-standard de-DE lang hint for 24h time ([29074ab](https://github.com/filpgame/picpeak/commit/29074ab8e1a95d0cd63fae1d1d949677c271137e))
-* **crm:** anchor imported invoice dates to issue_date, not import time ([70d07ea](https://github.com/filpgame/picpeak/commit/70d07ea1acd569e485b811d65f05326c60f99a04))
-* **crm:** commit LocalizedDateInput value live, not only on blur ([63ce5d8](https://github.com/filpgame/picpeak/commit/63ce5d81f8530472d86c48a29cd08fe6d447111c))
-* **crm:** country dropdown on customer onboarding, placed after State/region ([e9057c1](https://github.com/filpgame/picpeak/commit/e9057c1375516df2ef2f7ebcd446df888fde8166))
-* **crm:** country dropdown on customer profile billing address too ([4e3cc91](https://github.com/filpgame/picpeak/commit/4e3cc9183f96219f4d5c31da322c8378e756bce3))
-* **crm:** drop redundant 'Country (full name)' field ([62b6f16](https://github.com/filpgame/picpeak/commit/62b6f16dd232b5f793eadfdc8f82133883aeca2b))
-* **crm:** make 'Configure defaults in Settings' link navigate in-app ([b473027](https://github.com/filpgame/picpeak/commit/b47302795cd0795a6b48e81b58284b0bd727f12e))
-* **crm:** offer full ISO 3166-1 country list in pickers ([76e7a78](https://github.com/filpgame/picpeak/commit/76e7a78dda4a35f0773d53b29d36a6aa821f8527))
-* **crm:** recognise imported-invoice revenue on issue_date, not paid_at ([3d3bdea](https://github.com/filpgame/picpeak/commit/3d3bdea7f85a33c4c49732b417c3c754e3aa8c35))
-* **crm:** respect general_date_format on all admin date inputs ([aaff2e6](https://github.com/filpgame/picpeak/commit/aaff2e6809fd4356a086e7d9daca62b81e90d6dd))
-* **crm:** self-heal missing CRM email templates at boot + recover queue ([65508eb](https://github.com/filpgame/picpeak/commit/65508ebeeb1e9a9ba8c4e7ec5d5f12848670e50b))
-* **crm:** thread trx through sequence-claim sites to unblock SQLite ([e43be69](https://github.com/filpgame/picpeak/commit/e43be690f0d87ad1c2026c569ab12ad0dfad2659))
-* **csp:** external bootstrap script to survive strict reverse-proxy CSP ([#564](https://github.com/filpgame/picpeak/issues/564)) ([03c0c7b](https://github.com/filpgame/picpeak/commit/03c0c7b8c4ffe43c43ece3d1a06518de3f4b34ec))
-* **database-backup:** Postgres-safe insert destructure (runs the inline dump) ([4fce800](https://github.com/filpgame/picpeak/commit/4fce80016fbf982c2942bc305240d11a147b03ea))
-* **date-input:** render pg full-ISO dates in the configured format ([c0ced09](https://github.com/filpgame/picpeak/commit/c0ced0975296bf958a438baeca079523affd57ea))
-* **docker:** chown /backup mount to nodejs on container startup ([ffbd8d7](https://github.com/filpgame/picpeak/commit/ffbd8d7f8a73e026e5eb40e163c25182c945b0b5))
-* **downloads:** transliterate accented characters in filename via NFD instead of dropping them ([#607](https://github.com/filpgame/picpeak/issues/607)) ([3822d5c](https://github.com/filpgame/picpeak/commit/3822d5c4e041ea364d3c604ebb1de3db066dadab))
-* **email:** preserve dots + subaddresses across all normalization sites ([#574](https://github.com/filpgame/picpeak/issues/574)) ([45b0608](https://github.com/filpgame/picpeak/commit/45b0608f460c175b5feb235609c30fa9bfdebdf3))
-* **email:** recover stuck queue — reinit transporter on config save + manual flush ignores retry cap ([6c93af3](https://github.com/filpgame/picpeak/commit/6c93af3f98878bd1f9596807ab4489a6e211b516))
-* **email:** surface the real error on test/save/flush instead of generic toast ([0963848](https://github.com/filpgame/picpeak/commit/09638487d4cee99a1a81e04006bdf0a6dc868239))
-* **gallery:** preserve per-viewer is_liked across hard refresh ([#590](https://github.com/filpgame/picpeak/issues/590) follow-up) ([fdee355](https://github.com/filpgame/picpeak/commit/fdee355ef6891f01832b1004b0df85fa40436fea))
-* **gallery:** toggle (not add) the local liked set on click ([#590](https://github.com/filpgame/picpeak/issues/590)) ([c8c43b8](https://github.com/filpgame/picpeak/commit/c8c43b8aadbbc4254068b1262ff4537c2e86d5b9))
-* **i18n:** align quoteResponse.changeWithin DE placeholder with call site ([477abfc](https://github.com/filpgame/picpeak/commit/477abfcda584c92f65312698483527ad81a4fd40))
-* **i18n:** honor general_time_format across all time displays ([a5285b5](https://github.com/filpgame/picpeak/commit/a5285b541772e23b16471a9cfa852dcd38aeec1f))
-* **invoices:** anchor issue date + Skonto window to the actual send date ([552f634](https://github.com/filpgame/picpeak/commit/552f6343e30d9df1d24096686509628bd3026dd8))
-* **invoices:** auto-track due date from send date + payment term ([e69c9bc](https://github.com/filpgame/picpeak/commit/e69c9bcb3407e158e671466314a345dee784bc49))
-* **migrations:** defer cross-table FKs in 107_crm_consolidated ([40567f0](https://github.com/filpgame/picpeak/commit/40567f05bc4deefc2d63300c4289710cb565fc56))
-* **nginx:** defensive large_client_header_buffers bump ([#591](https://github.com/filpgame/picpeak/issues/591)) ([f0ac416](https://github.com/filpgame/picpeak/commit/f0ac41655876730c9502c3ebf7602b990a968a86))
-* **notifications:** restore /clear-all route the frontend already calls ([#597](https://github.com/filpgame/picpeak/issues/597)) ([02db2d0](https://github.com/filpgame/picpeak/commit/02db2d00748265a3843c9126b49928e411562ac3))
-* **pdf:** install fonts so SVG logo text rasterises correctly ([510ad38](https://github.com/filpgame/picpeak/commit/510ad387f4c6dae78c8a8696aa337dcc36c4bc6c))
-* **pdf:** version the logo rasterisation cache so the font fix takes effect ([7ddc91c](https://github.com/filpgame/picpeak/commit/7ddc91cacda45664799d1799f7b1217b2c98dbbf))
-* **quote-response:** compute minutes-remaining for the DE changeWithin string ([e28c106](https://github.com/filpgame/picpeak/commit/e28c106c1f4dd109b90755a59125cf6b40ee6bc8))
-* **restore-wizard:** surface failure status, stop showing "completed at 0%" ([81f8972](https://github.com/filpgame/picpeak/commit/81f8972b8ca93f01ca4a216d173bedf1bced97ca))
-* **restore-wizard:** warn on backups without a database dump ([282f9d8](https://github.com/filpgame/picpeak/commit/282f9d84291e548d0783918b5fd8f95a3b516a37))
-* **restore:** coerce pg bigint counts to Number before comparing (PR [#596](https://github.com/filpgame/picpeak/issues/596) round 2) ([a800d74](https://github.com/filpgame/picpeak/commit/a800d7457b5b714cac2d73d718c96a04613ef3a3))
-* **restore:** default restore_allow_force=true + auto-upgrade existing installs ([a57f8db](https://github.com/filpgame/picpeak/commit/a57f8db2d241f1c1b255a2469f7a10160101463d))
-* **restore:** discover backups from disk, not just the DB ([82f44a9](https://github.com/filpgame/picpeak/commit/82f44a91bb228964b17871711ff13df4bc6bbdd6))
-* **restore:** DROP/CREATE DATABASE needs explicit -d maintenance DB ([b9f3d91](https://github.com/filpgame/picpeak/commit/b9f3d9128ed12ac610f93eb75fd66a928cfa6ca3))
-* **restore:** evict active sessions before dropping target DB ([b49f042](https://github.com/filpgame/picpeak/commit/b49f042c046cc7a3bce715520de534470446d1f7))
-* **restore:** hoist preservedMeta above SQLite/PG split (PR [#596](https://github.com/filpgame/picpeak/issues/596) blocker) ([e375d84](https://github.com/filpgame/picpeak/commit/e375d84a818836cdbc1b3e83c8a6fd5ede14dae0))
-* **restore:** move operator-meta replay after post-restore verification (PR [#596](https://github.com/filpgame/picpeak/issues/596) round 3) ([ebdb382](https://github.com/filpgame/picpeak/commit/ebdb38277b93735701c15a35b05da17677ce34c6))
-* **restore:** preserve operator-meta settings across restore ([8c802ae](https://github.com/filpgame/picpeak/commit/8c802aee413595b6479da15737909319c9979b9c))
-* **restore:** re-init knex pool after DROP/CREATE DATABASE ([b6d0906](https://github.com/filpgame/picpeak/commit/b6d0906ad7b9be5389b88d8597ade1d149ca7f70))
-* **restore:** resolve 'local' source to backup_destination_path ([78b7e1a](https://github.com/filpgame/picpeak/commit/78b7e1a44f1a98da707a79e50bf847be70f20f93))
-* **restore:** resolve local source + always rollback on failure ([220a37c](https://github.com/filpgame/picpeak/commit/220a37c028e048cd64acbb9f6e3ea66661a3a62d))
-* **restore:** set was_successful=true on the completed update ([16dd001](https://github.com/filpgame/picpeak/commit/16dd001748cb18161e4270f2e9ae1a416007950f))
-* **safe-exec:** Node 22-compatible stdio + error-bridge for spawnTo/FromFile ([b46faf9](https://github.com/filpgame/picpeak/commit/b46faf94f5662e74da4bf72903fe540f39ab7344))
-* **security:** block script execution in served SVGs via CSP ([014895f](https://github.com/filpgame/picpeak/commit/014895ff20cd6f3b99197af3e33897966786416c))
-* **security:** re-apply SVG CSP on the direct favicon route (PR [#603](https://github.com/filpgame/picpeak/issues/603) blocker) ([1239e0b](https://github.com/filpgame/picpeak/commit/1239e0b10db8d8ec8a00ae377b9c206e0e3716b0))
-* **settings:** use CountrySelect for business-profile country (no more FL) ([7cb5d07](https://github.com/filpgame/picpeak/commit/7cb5d07761b149ac0f1e26bcad3bf191a7dc4e54))
-* **test-infra:** scope databaseBackup fs.unlink stub so it doesn't leak ([56f24d7](https://github.com/filpgame/picpeak/commit/56f24d799352c8988885450543d2e00ccbd340e8))
-* **test-infra:** unref sessionTimeout cleanup interval so workers exit gracefully ([93c3b8f](https://github.com/filpgame/picpeak/commit/93c3b8fcfabadcb7e5aa0858221d6845749145e8))
+* **archives:** stream-extract restore for &gt;2 GiB + preserve original_filename via manifest ([#640](https://github.com/the-luap/picpeak/issues/640)) ([e4e79a0](https://github.com/the-luap/picpeak/commit/e4e79a0b3a6d3ddbbc2f3cebdcadc89307147248))
+* **i18n:** wrap WhatsApp token show/hide aria-label through t() ([a8bb7b4](https://github.com/the-luap/picpeak/commit/a8bb7b439f6f57af9653ce283c951070bd52f3c2))
+* **settings:** hoist tab-visibility useEffect above isLoading early return ([49bfb45](https://github.com/the-luap/picpeak/commit/49bfb45332993b919ad4f949a0cd912a85888620))
 
-
-### Reverts
-
-* **docker:** drop /backup chown from wait-for-db.sh ([7d4ac60](https://github.com/filpgame/picpeak/commit/7d4ac60e2c0bca1279a505284be1099276d04d71))
-
-
-### Documentation
-
-* consolidate disaster-recovery into Backup & Restore guide ([a4b8401](https://github.com/filpgame/picpeak/commit/a4b840135253191a1f3b8ee87e8d3ac3e10424bf))
-* **contributing:** note rebuild-after-package.json gotcha for dev compose ([772a789](https://github.com/filpgame/picpeak/commit/772a7894078364ee91d028e247e5a3afec67f476))
-* **crm:** legal/financial disclaimers — examples only ([68f4f49](https://github.com/filpgame/picpeak/commit/68f4f49bf22d15400447b8befb93fbfd76a8d062))
-* **readme:** list CRM module under Beta Features with own-risk disclaimer ([5ca53a6](https://github.com/filpgame/picpeak/commit/5ca53a66e4eb9f0742dfbac904216bbff9480f3a))
-* **release:** establish stable-channel cadence + promotion process ([#565](https://github.com/filpgame/picpeak/issues/565)) ([74341ed](https://github.com/filpgame/picpeak/commit/74341ed6a79817d083b35c5e1ecddab6d308b2dc))
-
-## [4.3.1-beta.0](https://github.com/filpgame/picpeak/compare/v4.3.0-beta.0...v4.3.1-beta.0) (2026-06-03)
+## [3.65.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.65.0-beta.0...v3.65.1-beta.0) (2026-06-18)
 
 
 ### Bug Fixes
 
-* **fileWatcher:** limit concurrent photo processing to prevent OOM crashes ([70c01bd](https://github.com/filpgame/picpeak/commit/70c01bdbd9dd860079ed5dd9d5a449264a858523))
-* **fileWatcher:** limit concurrent processNewPhoto calls to 2 via p-limit ([8bd0b25](https://github.com/filpgame/picpeak/commit/8bd0b25acc70b945458688bc7afbc8610f5db036))
-* **fileWatcher:** make watcher concurrency env-configurable; fix env leak in tests ([5ce571a](https://github.com/filpgame/picpeak/commit/5ce571a80ebb7cc306a7f93d1ed6f3b0bf7edfd6))
-* **sharp:** cap libvips concurrency and cache at startup ([5524d1f](https://github.com/filpgame/picpeak/commit/5524d1fdee8a7183777c36ae89a171cd97ef2712))
+* **i18n:** sweep activity-type translations + Events / API Tokens / Webhooks settings tabs ([f17c654](https://github.com/the-luap/picpeak/commit/f17c654e146683683f347ae2cd46de9cf3e47989))
 
-
-### Documentation
-
-* add file watcher concurrency fix design spec ([79b3f5a](https://github.com/filpgame/picpeak/commit/79b3f5af0a614fd7149ffe485bbbefb8ae219502))
-* add file watcher concurrency implementation plan ([b67dd5e](https://github.com/filpgame/picpeak/commit/b67dd5e1819dc43875c2ff4f3627bc719788d882))
-
-## [4.3.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.2.0-beta.0...v4.3.0-beta.0) (2026-05-31)
+## [3.65.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.64.0-beta.0...v3.65.0-beta.0) (2026-06-18)
 
 
 ### Features
 
-* **i18n:** add admin.updates.card keys to all 7 locale files ([0d5a4b5](https://github.com/filpgame/picpeak/commit/0d5a4b520d9e4170555c6b69eb32e98e20232631))
-* **settings:** add UpdateCard component with 6 update states ([527e3ca](https://github.com/filpgame/picpeak/commit/527e3cad8d0bf2b4bfa4034b08117e845ab67c50))
-* **settings:** add UpdateCard to status tab, remove UpdateNotification banner ([5d40858](https://github.com/filpgame/picpeak/commit/5d408586bf3fcd7872b4f539d29f5e0ef5e7c4a3))
-* **settings:** add useUpdateCard hook with update state machine ([7da51e4](https://github.com/filpgame/picpeak/commit/7da51e4f39a4a1c700edcef090b3a76ac51066ea))
-* **settings:** auto-update card on status tab ([ac29102](https://github.com/filpgame/picpeak/commit/ac2910239a786f2447260104034af6185dbff0b7))
-* **system:** add GET /logs/download endpoint for combined and error logs ([8baa46c](https://github.com/filpgame/picpeak/commit/8baa46ced8c1e9ea3df6cbad8d68e1d90195827a))
-* **updates:** add POST /updates/apply endpoint to trigger server update ([cf14dfc](https://github.com/filpgame/picpeak/commit/cf14dfcd2ca9e8cf565ffb56159997cd98efb218))
+* **accounting:** consolidate VAT/financial config into Settings → Accounting ([dc7b87b](https://github.com/the-luap/picpeak/commit/dc7b87bb874e22ac6902fd2d48531ecdb6108c88))
+* **accounting:** explain dispositions inline, drop markup from pass-through ([9a023c0](https://github.com/the-luap/picpeak/commit/9a023c019750ebcd8d21e005aaf9a77a32cb34a3))
+* **accounting:** incoming-invoice workflow v2 + VAT/financial settings consolidation ([b527915](https://github.com/the-luap/picpeak/commit/b5279155ea4c545e13bab8bde46a39cfccf107fe))
+* **accounting:** invoices force-enable the Accounting master ([51837c3](https://github.com/the-luap/picpeak/commit/51837c3a88f711b164fafe2c7677e1a91c7542f9))
+* **accounting:** re-categorize incoming invoices, note field, pending re-bill pool ([36a8e42](https://github.com/the-luap/picpeak/commit/36a8e42f90f15a1ba96d9c4f004fa542d33e4937))
+* **accounting:** supplier-country tax default + configurable default output VAT code ([267b121](https://github.com/the-luap/picpeak/commit/267b121d66994bc57b10cd0694ab0e4320b163d9))
 
 
 ### Bug Fixes
 
-* **csp:** allow external analytics origin in CSP (script-src + connect-src) ([4903de9](https://github.com/filpgame/picpeak/commit/4903de9209bca3acda3ed1e3e8c02dc87d57cb77))
-* **csp:** allow external analytics origin in script-src and connect-src ([da5cc04](https://github.com/filpgame/picpeak/commit/da5cc049f4ad129d3760e91038ecb783f8b56827))
-* **settings:** address Copilot review issues on auto-update card ([ac6f67f](https://github.com/filpgame/picpeak/commit/ac6f67fd59926d1ce8f88ba026439bcc9aba4941))
-* **updates:** check filpgame/picpeak releases via GITHUB_RELEASES_REPO env var ([1a1915d](https://github.com/filpgame/picpeak/commit/1a1915d5371779d3f612806915548a2273d1cfa3))
-* **updates:** document sticky updateInProgress flag, add targetVersion fallback ([a6d270c](https://github.com/filpgame/picpeak/commit/a6d270c2e400089d31d70956ed4e3ff8dafb11da))
-* **updates:** replace remaining hardcoded the-luap/picpeak repo URLs ([a312f2f](https://github.com/filpgame/picpeak/commit/a312f2fb31e6aa948a81b90c0b5ac82c5d68bd3c))
+* **accounting:** address the-luap PR [#636](https://github.com/the-luap/picpeak/issues/636) review ([707c5d0](https://github.com/the-luap/picpeak/commit/707c5d027798bdafb9fe09d7efcbd9ea65330076))
+* **accounting:** tax-report storno totals + hours-line date on Postgres ([db9e41d](https://github.com/the-luap/picpeak/commit/db9e41d19846b31b29c5c1be2ee06a7958bb43b0))
+* **crm:** editor totals box computed VAT 100× too small ([e9b297c](https://github.com/the-luap/picpeak/commit/e9b297c162a19da31d53de377b90bfd5cda1b0a7))
+* **hours:** move logActivity out of the entry transactions (SQLite deadlock) ([348955b](https://github.com/the-luap/picpeak/commit/348955b261713fc9f0b48391a1d4117f6f8c873f))
 
-
-### Documentation
-
-* add auto-update card design spec ([b11b089](https://github.com/filpgame/picpeak/commit/b11b089c4ce6b8c33ed3d97a98ed889d9390aeb2))
-* add auto-update card implementation plan ([ec5e00a](https://github.com/filpgame/picpeak/commit/ec5e00a790b0e6ae883667e000f0f5b091b9e4f8))
-
-## [4.2.0-beta.0](https://github.com/filpgame/picpeak/compare/v4.1.2-beta.0...v4.2.0-beta.0) (2026-05-28)
+## [3.64.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.63.0-beta.0...v3.64.0-beta.0) (2026-06-18)
 
 
 ### Features
 
-* **encryption:** wire up resend-email modal and Docker env ([08fd721](https://github.com/filpgame/picpeak/commit/08fd721102d92bd9986585c40ace6910c5d7c270))
-* **encryption:** wire up resend-email modal and Docker env ([24c7c55](https://github.com/filpgame/picpeak/commit/24c7c5566fe7f7af0febf878bdf9a67deef4621d))
-* **lightbox:** multi-photo Web Share save-to-Photos on iOS ([#557](https://github.com/filpgame/picpeak/issues/557)) ([6a87e34](https://github.com/filpgame/picpeak/commit/6a87e3438dfa24043443b3e184621a3ac5ad6155))
+* **admin/exports:** inline preview modal with copy-to-clipboard ([#631](https://github.com/the-luap/picpeak/issues/631)) ([fc5c1ae](https://github.com/the-luap/picpeak/commit/fc5c1ae93f87678fcc16bc84a14a60a59b1a3c7b))
+* **admin/exports:** inline preview modal with copy-to-clipboard ([#631](https://github.com/the-luap/picpeak/issues/631)) ([27b5f7e](https://github.com/the-luap/picpeak/commit/27b5f7e4b68e43345cd99dd5cc77308dcd7ec98b))
 
-
-### Bug Fixes
-
-* **analytics:** Umami config check always falls back to env vars ([a6bc492](https://github.com/filpgame/picpeak/commit/a6bc4926f1345549f38c1250491ab2bf4ef0ecaa))
-* **api/v1:** accept color_theme + create feedback row on event create ([#550](https://github.com/filpgame/picpeak/issues/550)) ([3968710](https://github.com/filpgame/picpeak/commit/39687108110f00fbbf75ac441d93275758dab0cb))
-* **events:** preserve branding inheritance when saving events with null color_theme ([747ebb7](https://github.com/filpgame/picpeak/commit/747ebb7721946c31d8bcf6c4e0ac471dfbb55073))
-* **lightbox:** eliminate download lag on Android by skipping the blob round-trip ([6a89cba](https://github.com/filpgame/picpeak/commit/6a89cba610330b4f9d4ca5fafa274fd9a3b6cfbe))
-* **lightbox:** restrict Web Share save-to-Photos path to iOS ([#554](https://github.com/filpgame/picpeak/issues/554)) ([ec5d0f0](https://github.com/filpgame/picpeak/commit/ec5d0f00267ba4cb08c3820e92b63ec71fc5c905))
-
-## [4.1.2-beta.0](https://github.com/filpgame/picpeak/compare/v4.1.1-beta.0...v4.1.2-beta.0) (2026-05-27)
-
-
-### Bug Fixes
-
-* **email:** event emails always sent in English ignoring system language ([#5](https://github.com/filpgame/picpeak/issues/5)) ([b455135](https://github.com/filpgame/picpeak/commit/b455135283b3535e81c468b6fbfecfe53ce9ffbd))
-
-## [4.1.1-beta.0](https://github.com/filpgame/picpeak/compare/v4.1.0-beta.0...v4.1.1-beta.0) (2026-05-24)
-
-
-### Bug Fixes
-
-* **security:** password complexity setting never applied to gallery passwords ([a552526](https://github.com/filpgame/picpeak/commit/a55252657436f1109e54dceaa2342b861be5be5d))
-* **security:** password complexity setting never applied to gallery passwords ([630bdc3](https://github.com/filpgame/picpeak/commit/630bdc3c0b53b1a9fa7a15bae6828088b83363bc))
-
-## [4.1.0-beta.0](https://github.com/filpgame/picpeak/compare/v3.54.5-beta.0...v3.55.0-beta.0) (2026-05-22)
+## [3.63.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.62.0-beta.0...v3.63.0-beta.0) (2026-06-17)
 
 
 ### Features
 
-* add COOKIE_SECURE=auto for mixed HTTPS/HTTP deployments ([#298](https://github.com/filpgame/picpeak/issues/298)) ([b1dfbe4](https://github.com/filpgame/picpeak/commit/b1dfbe4c2fe271d8087974d02cf724f04058bdc9))
-* add COOKIE_SECURE=auto for mixed HTTPS/HTTP deployments ([#298](https://github.com/filpgame/picpeak/issues/298)) ([15a8ab4](https://github.com/filpgame/picpeak/commit/15a8ab41fd1c94e3397d300b161cd1fdd459ea05))
-* **api/v1:** accept category_id on POST /events/:id/photos ([2d5a2ad](https://github.com/filpgame/picpeak/commit/2d5a2ad78a5f6c101315214399a9c158ff0549da))
-* **api/v1:** accept category_id on POST /events/:id/photos ([6901e26](https://github.com/filpgame/picpeak/commit/6901e2661ed74e69f19c52ce046ee911b818d463))
-* **branding:** 8-token CI palette + force color mode + dark-mode consistency ([8050927](https://github.com/filpgame/picpeak/commit/80509276074b8125b6d676839afabb0b6f89206f))
-* **branding:** Customer dashboard header toggles in Branding page ([b252cb6](https://github.com/filpgame/picpeak/commit/b252cb67eb3645224a279fbbe9c14871438473f8))
-* **branding:** force color mode (dark or light) site-wide ([5a162fc](https://github.com/filpgame/picpeak/commit/5a162fc8bec47a49cb1bcaa92ff72e197e8d2e42))
-* **branding:** inline force color mode with auto-save + clearer palette help text ([67d7d8d](https://github.com/filpgame/picpeak/commit/67d7d8d3fa25ceab0eda02b291f2e220b222f84a))
-* **branding:** per-family generic fallback via meta.json ([dcff451](https://github.com/filpgame/picpeak/commit/dcff4515721482e06c2ef1c1eb34f9e12754c07c))
-* **branding:** preview each font in its own face in the picker dropdown ([b4f9b65](https://github.com/filpgame/picpeak/commit/b4f9b65f1df4c400f22b28f20e1304ec57279d33))
-* **branding:** self-hosted webfonts with filesystem scanner ([d04bf28](https://github.com/filpgame/picpeak/commit/d04bf288084144bf53ef0ba988fa32ed703d7351))
-* **branding:** self-hosted webfonts with filesystem scanner ([bac51fe](https://github.com/filpgame/picpeak/commit/bac51fe69a39f85381f445e8da6cd63cf5826fc4))
-* **branding:** toggle login-page logo frame + size ([75e41eb](https://github.com/filpgame/picpeak/commit/75e41eba036d07e6abaab301db42d16e77dd01be))
-* **clients:** scaffold top-level Clients section with sub-nav around Accounts ([9091ed4](https://github.com/filpgame/picpeak/commit/9091ed4012a85400f216ebfb40d5720c2c86a826))
-* **cms:** add external URL toggle for imprint and privacy pages ([b2c8161](https://github.com/filpgame/picpeak/commit/b2c8161a43c2d0b09d6783e791b3f26862254824))
-* **cms:** add per-page external URL override — backend ([66423bb](https://github.com/filpgame/picpeak/commit/66423bb65e83b6204509c9a98d783ba8255c3364))
-* **cms:** admin UI for external imprint/privacy URL ([a4e3d10](https://github.com/filpgame/picpeak/commit/a4e3d10fb0c97ea07c4b08d16c0947945d8a7576))
-* **cms:** redirect legal links to external URL when configured ([c5bba50](https://github.com/filpgame/picpeak/commit/c5bba505ac92b5257f6bb1c069b8bc23ea6a5a1b))
-* customer accounts ([#354](https://github.com/filpgame/picpeak/issues/354)) — recurring logins, profile, password reset, branded customer surface ([fe52953](https://github.com/filpgame/picpeak/commit/fe5295373b0bfeec1e81086206ffab7ce1b91094))
-* **customers:** "Manage galleries" dialog on customer detail page ([6d1af7a](https://github.com/filpgame/picpeak/commit/6d1af7a0113b6e3de44ab9bf2645591f4d6d68b4))
-* **customers:** "Manage galleries" dialog with immediate access revocation + section reorder + portal-flag revert ([9be9296](https://github.com/filpgame/picpeak/commit/9be9296eb58d7733d0b5f8ce6eb48e9832f65e7c))
-* **customers:** customer portal ([#354](https://github.com/filpgame/picpeak/issues/354)) on top of feature-flags reorg ([087ef45](https://github.com/filpgame/picpeak/commit/087ef45942a8a51d09af2cd8ec85aca330f6cf7f))
-* **customers:** email customer when admin adds new gallery access ([c02c947](https://github.com/filpgame/picpeak/commit/c02c947463011de80d9af3e947fc6d1caadc3313))
-* **customers:** replace-assignments endpoint for a single customer ([5377b88](https://github.com/filpgame/picpeak/commit/5377b88e0e0c27ecde18c2a366fb7d06f279f2ec))
-* customisable 404 + gallery-not-found pages via CMS ([#324](https://github.com/filpgame/picpeak/issues/324)) ([4f77905](https://github.com/filpgame/picpeak/commit/4f77905b87bea474b3d2496350996deaad041230))
-* **downloads:** preserve original camera filenames on download (opt-in) ([#493](https://github.com/filpgame/picpeak/issues/493)) ([826e43e](https://github.com/filpgame/picpeak/commit/826e43ebac940782be234630c50bbd54a3250f98))
-* **downloads:** preserve original camera filenames on download (opt-in) ([#493](https://github.com/filpgame/picpeak/issues/493)) ([7eeef2b](https://github.com/filpgame/picpeak/commit/7eeef2ba98a71a8b948cabf7f1c65eb3eb271d22))
-* **email-templates:** categorise + link to feature flags ([84c06af](https://github.com/filpgame/picpeak/commit/84c06affb73687529e35dbbac15801deb41dc4f2))
-* **email-templates:** categorise + sub-categorise + link to feature flags ([2cae3fe](https://github.com/filpgame/picpeak/commit/2cae3fe47deb667af5991ae1a90e3b5698693119))
-* **email-templates:** group Templates UI by category + Feature off chip ([5ec26fc](https://github.com/filpgame/picpeak/commit/5ec26fc9981028163cab122e229c83cdbbf35828))
-* **email-templates:** group Templates UI by category with core sub-sections ([53eecb6](https://github.com/filpgame/picpeak/commit/53eecb6f83ff75f1f3c75d68cee5e46d114ac8d1))
-* **email-templates:** seed missing locale translations + post-075 templates ([e3150e4](https://github.com/filpgame/picpeak/commit/e3150e42130cacf19dc7beadb8c86c76c0fff340))
-* **email-templates:** seed missing nl/pt/ru/fr translations ([358f7ee](https://github.com/filpgame/picpeak/commit/358f7ee99e2941ad179d5859178b35a80886542f))
-* **email:** expand email palette to 8 tokens + Sync from Branding button ([47b6b39](https://github.com/filpgame/picpeak/commit/47b6b39f3a942aee93b970031d95a952cb769d09))
-* **events:** add Photos column to admin events list ([#384](https://github.com/filpgame/picpeak/issues/384)) ([d561db8](https://github.com/filpgame/picpeak/commit/d561db802b04db8fbb38819a22e840532e775ef0))
-* **events:** add Photos column to admin events list ([#384](https://github.com/filpgame/picpeak/issues/384)) ([ffb4318](https://github.com/filpgame/picpeak/commit/ffb4318a1f667e273cd59805673b125d2f17699b))
-* **events:** bulk delete with password confirmation ([#384](https://github.com/filpgame/picpeak/issues/384)) ([647aea2](https://github.com/filpgame/picpeak/commit/647aea21ae42fe0d089bf45568702617a25b98e4))
-* **events:** bulk delete with password confirmation ([#384](https://github.com/filpgame/picpeak/issues/384)) ([48d538f](https://github.com/filpgame/picpeak/commit/48d538f94fd39d9b85ec57c57301a8490b7d4f6d))
-* **events:** default Guest Feedback ON via admin setting ([#520](https://github.com/filpgame/picpeak/issues/520)) ([3465b55](https://github.com/filpgame/picpeak/commit/3465b55abc98e52cf58ba46b811f4ec115d53012))
-* **events:** prefill admin email + admin picker on event creation ([3fe8e61](https://github.com/filpgame/picpeak/commit/3fe8e61bd1175e35dcb61604447e5d9c2e902ec5))
-* **events:** prefill admin email + admin picker on event creation ([ee56b67](https://github.com/filpgame/picpeak/commit/ee56b6762f5b2eb9ea42f4abe4dde4356e2e54e6))
-* **events:** Sync from Branding button in gallery theme customizer + clarified default inheritance ([bdbe7b8](https://github.com/filpgame/picpeak/commit/bdbe7b80a13b8b215ac544ba9105100e792eeda2))
-* **events:** tree view for external media folder picker ([cdd40ac](https://github.com/filpgame/picpeak/commit/cdd40acb4591d4eb8f80a79c69201556eab1bfd0))
-* **events:** tree view for external media folder picker ([f927b09](https://github.com/filpgame/picpeak/commit/f927b09c70f3b6a5c81c3726609a29680b96b6fc))
-* **footer:** hideable legal links + socials + promo banner ([#441](https://github.com/filpgame/picpeak/issues/441) + [#440](https://github.com/filpgame/picpeak/issues/440)) ([f3505c2](https://github.com/filpgame/picpeak/commit/f3505c2631cc5b4ae13a0f0d593a1ddd95fefdcb))
-* **footer:** hideable legal links + socials + promo banner ([#441](https://github.com/filpgame/picpeak/issues/441) + [#440](https://github.com/filpgame/picpeak/issues/440)) ([3a731e7](https://github.com/filpgame/picpeak/commit/3a731e7c95a75f6db42f903b1e6e560c3e024e6a))
-* **frontend:** dedupe /public/settings via shared usePublicSettings hook ([#325](https://github.com/filpgame/picpeak/issues/325)) ([3d4ae4d](https://github.com/filpgame/picpeak/commit/3d4ae4d7e9f9995d93563e8092e05215362afb3b))
-* **gallery:** decouple header style from layout, add banner option ([1f1a856](https://github.com/filpgame/picpeak/commit/1f1a856083b1966ed4b32a23a14442f1727cecef))
-* **gallery:** decouple header style from layout, add banner option ([24d7277](https://github.com/filpgame/picpeak/commit/24d727752c442263a6469e0aefa666454a4c652f))
-* **gallery:** decouple header style from layout, add banner option ([aff29c9](https://github.com/filpgame/picpeak/commit/aff29c91bbb250debe74e2a512047ee40e157a34))
-* **gallery:** icon-only menu, accent Download CTA ([#386](https://github.com/filpgame/picpeak/issues/386)) ([876b35b](https://github.com/filpgame/picpeak/commit/876b35b4a512f70cfc19561e35ce9d915a599547))
-* **gallery:** icon-only menu, accent Download CTA, logo aligned ([#386](https://github.com/filpgame/picpeak/issues/386)) ([de8ad5f](https://github.com/filpgame/picpeak/commit/de8ad5fdd5ce1b9552ca8ca6e405d15c7372a4c8))
-* **gallery:** revoke customer-minted JWTs when assignment is removed ([55a5846](https://github.com/filpgame/picpeak/commit/55a5846f6f802a1bc1910bb046325fe272a1b584))
-* guest selections with per-person identity ([#292](https://github.com/filpgame/picpeak/issues/292)) ([3856ba2](https://github.com/filpgame/picpeak/commit/3856ba25bbce971b07bba4dad19e7bdceca98cab))
-* guest selections with per-person identity ([#292](https://github.com/filpgame/picpeak/issues/292)) ([ad4e5a7](https://github.com/filpgame/picpeak/commit/ad4e5a7506bc9217d1223101da0bc112047532a8))
-* **i18n:** add Brazilian Portuguese (pt-BR) locale ([375f512](https://github.com/filpgame/picpeak/commit/375f51285b5db9c0dfcc04761d24927282e57796))
-* **i18n:** add Spanish (es) locale ([#510](https://github.com/filpgame/picpeak/issues/510)) ([061712e](https://github.com/filpgame/picpeak/commit/061712ebf143a58102334201c09a52e4c96880f0))
-* **i18n:** improve pt locale with pt-BR phrasings, remove duplicate pt-BR file ([f25559c](https://github.com/filpgame/picpeak/commit/f25559c0e76776f7cfe8d187e1fea05e751bbafe))
-* **install:** skip legacy chain when modern bootstrap fingerprint detected ([#530](https://github.com/filpgame/picpeak/issues/530)) ([8f0108c](https://github.com/filpgame/picpeak/commit/8f0108ce233f457d6a0f4f3dbc3e1b0a7217e74e))
-* **lightbox:** medium-resolution preview tier ([#492](https://github.com/filpgame/picpeak/issues/492)) ([3083c74](https://github.com/filpgame/picpeak/commit/3083c748b92fe7800044125524d053f5eeb28d4a))
-* **lightbox:** medium-resolution preview tier ([#492](https://github.com/filpgame/picpeak/issues/492)) ([61f1d13](https://github.com/filpgame/picpeak/commit/61f1d132104f485cfde9bd874e1c0ffdc042c4af))
-* **lightbox:** save photo to Photos app on mobile via Web Share ([#531](https://github.com/filpgame/picpeak/issues/531)) ([b2bbf7e](https://github.com/filpgame/picpeak/commit/b2bbf7efb5ded63e8c7438d5288d351cb9124ce8))
-* **lightbox:** surface original camera filenames ([#508](https://github.com/filpgame/picpeak/issues/508)) ([33de294](https://github.com/filpgame/picpeak/commit/33de294d570ced267d89223cb398ef8bdf99e91d))
-* **localization:** add French translations for fit options in thumbnails ([2c12885](https://github.com/filpgame/picpeak/commit/2c1288583fe787c1514c3cace0e2d92a212bb3a3))
-* **localization:** add i18next configuration and CLI commands for localization management ([74e87b9](https://github.com/filpgame/picpeak/commit/74e87b968b3152603dbfca72fae06372b7c7f519))
-* **localization:** add i18next extraction helper & refactor backup configuration component to tsx ([e7228b0](https://github.com/filpgame/picpeak/commit/e7228b07805a40aa67ccb7e3592848218eabbca2))
-* **localization:** add missing translations ([86ee6c8](https://github.com/filpgame/picpeak/commit/86ee6c80aa1f26b2ad47775337ebed301193e662))
-* **localization:** improve English translations for clarity and consistency ([46b99c6](https://github.com/filpgame/picpeak/commit/46b99c629215832e66d9215a210fd6eaf8c89fb4))
-* **localization:** update thumbnail settings and add fit options translations ([5fc427c](https://github.com/filpgame/picpeak/commit/5fc427c74b5cdda6ce1568006d9a94abdc692b3b))
-* native multi-arch Docker images (Apple Silicon, ARM64 Linux) ([df30618](https://github.com/filpgame/picpeak/commit/df3061893d154152b75b8ab0d07e0b1e0078431d))
-* native S3 storage backend ([#328](https://github.com/filpgame/picpeak/issues/328)) + presigned download follow-up ([1b717ce](https://github.com/filpgame/picpeak/commit/1b717ce5ededa343d2fbb7e1c3493b4434743565))
-* **og:** per-event opt-in to use hero photo as social-share preview ([#474](https://github.com/filpgame/picpeak/issues/474)) ([d856340](https://github.com/filpgame/picpeak/commit/d856340f0d230ad26539ba1088f739f03aaafc13))
-* **og:** per-event opt-in to use hero photo as social-share preview ([#474](https://github.com/filpgame/picpeak/issues/474)) ([0bc7e2a](https://github.com/filpgame/picpeak/commit/0bc7e2af171d1a4c6e91ba541d293b90c17c111b))
-* optional customer phone field gated by global toggle ([#322](https://github.com/filpgame/picpeak/issues/322)) ([be6cb28](https://github.com/filpgame/picpeak/commit/be6cb28c8097d2277c1af2a32cf8bc88ebbc7136))
-* outbound webhooks for event/photo lifecycle ([#327](https://github.com/filpgame/picpeak/issues/327)) ([c488f48](https://github.com/filpgame/picpeak/commit/c488f481caacf0d63dafc47f509e8de2708bc30f))
-* pre-zip download all and photo replacement by name ([#312](https://github.com/filpgame/picpeak/issues/312), [#313](https://github.com/filpgame/picpeak/issues/313)) ([d3f1206](https://github.com/filpgame/picpeak/commit/d3f12068164a6bfe6c4a3817ad2fc2e8ed7abf4f))
-* pre-zip download all and photo replacement by name ([#312](https://github.com/filpgame/picpeak/issues/312), [#313](https://github.com/filpgame/picpeak/issues/313)) ([e18afd3](https://github.com/filpgame/picpeak/commit/e18afd3e6b0b5a4cdb4873fb227d1b1d2bf35f21))
-* presigned download UI + S3 prefix walker auto-importer (follow-ups) ([446d80a](https://github.com/filpgame/picpeak/commit/446d80a4cc5eb0389994e29585b2a98dad373db2))
-* public v1 API + token management + OpenAPI docs ([#322](https://github.com/filpgame/picpeak/issues/322)) ([808b15b](https://github.com/filpgame/picpeak/commit/808b15bafbcdab6ea55aff7f0e507153f513a70a))
-* S3 storage + webhooks + settings dedupe + backup fixes ([06d54be](https://github.com/filpgame/picpeak/commit/06d54bec4d0afc4a1b9ba6f2449ed7d79f1d3e8f))
-* **settings:** Features tab + sidebar reorg with feature-flag gating ([c3798e1](https://github.com/filpgame/picpeak/commit/c3798e19c8f928eac0ca1d7694d1ecfd78a1e437))
-* **settings:** Features tab + sidebar reorg with feature-flag gating ([15e3336](https://github.com/filpgame/picpeak/commit/15e333681fe4ce94afa8e5b477b339b179d0195a))
-* sort photos by capture date with configurable default sort ([#283](https://github.com/filpgame/picpeak/issues/283)) ([8805fa5](https://github.com/filpgame/picpeak/commit/8805fa53e61c6b3672a8f6dad14d2fd17998a451))
-* sort photos by capture date with configurable default sort ([#283](https://github.com/filpgame/picpeak/issues/283)) ([633d4a0](https://github.com/filpgame/picpeak/commit/633d4a0f301e355ee9f057347f2f8dee8c5b4163))
-* support Apple Silicon natively via multi-arch images ([c282a72](https://github.com/filpgame/picpeak/commit/c282a72bd35db062cec25770a42cf9c803388e44))
-* **theme:** expand color settings to 8-token CI palette + alt button ([114aab5](https://github.com/filpgame/picpeak/commit/114aab57771a4bba03a9e5c616c75a37c9b25969))
-* **translations:** add French language support and improve localization handling ([a5db4bd](https://github.com/filpgame/picpeak/commit/a5db4bd46e6a5cc84c9563588f90d3461c277528))
-* **upload:** async photo processing — backend (PR-B part 1) ([851744c](https://github.com/filpgame/picpeak/commit/851744c3c4df7deba8d946b6592fdb5042c52a26))
-* **upload:** async photo processing — frontend (PR-B part 2) ([3b827b8](https://github.com/filpgame/picpeak/commit/3b827b80d51269e1a7b9c693396f3cb7a9a48ffc))
-* **upload:** async photo processing + fix(auth): /auth/session symmetry (loop fix) ([907bcf1](https://github.com/filpgame/picpeak/commit/907bcf1eb2d44ded149a1caf39ee1cfe63fec994))
-* **upload:** two-state UI + temp dir cleanup (PR-A of async processing) ([86dfcc4](https://github.com/filpgame/picpeak/commit/86dfcc4f116a394e7e092ab3e01f3f1d030bb367))
-* **webhooks:** enrich event.* payloads with customer contact + share_token ([#341](https://github.com/filpgame/picpeak/issues/341)) ([7ea4801](https://github.com/filpgame/picpeak/commit/7ea4801544fd5cd8bca1907a71b5c4e96ee77649))
-* **webhooks:** enrich event.* payloads with customer contact + share_token ([#341](https://github.com/filpgame/picpeak/issues/341)) ([1e69d5f](https://github.com/filpgame/picpeak/commit/1e69d5ff71ac2d1d133b0e40637b437d7cc8bc4f))
-* **whatsapp:** add WhatsApp frontend — service, settings tab, resend button, i18n ([76aeae6](https://github.com/filpgame/picpeak/commit/76aeae6be59074b761509bf5183703ae6f3df198))
-* **whatsapp:** WhatsApp Business API notification channel ([#1](https://github.com/filpgame/picpeak/issues/1)) ([5960af1](https://github.com/filpgame/picpeak/commit/5960af1675e9ef2a6cca7065fa5b57335507e515))
+* **events:** duplicate-gallery action ([#626](https://github.com/the-luap/picpeak/issues/626)) ([e985d25](https://github.com/the-luap/picpeak/commit/e985d25207671cbfefcdda9775a96eadf2fe0698))
 
 
 ### Bug Fixes
 
-* **activity-log:** smart feature_flags_updated rendering + 33 missing activity types ([4703fd5](https://github.com/filpgame/picpeak/commit/4703fd574f57bfab327ffefec5986bb08b240c95))
-* **activity-log:** smart feature_flags_updated rendering + 33 missing types ([fad2de5](https://github.com/filpgame/picpeak/commit/fad2de5abe1da07bbc7503a462efac8f686029c7))
-* address bugs and feature requests from discussion [#317](https://github.com/filpgame/picpeak/issues/317) ([6cfff6f](https://github.com/filpgame/picpeak/commit/6cfff6f6a6dbdc5bc1e9fe4fbce5795cdb1855c6))
-* admin photo feedback filters have no effect ([#293](https://github.com/filpgame/picpeak/issues/293)) ([9ed8a2b](https://github.com/filpgame/picpeak/commit/9ed8a2b1994d139efd100c8fb97e6368655e5530))
-* **admin-users:** normalise date fields to ISO across DB drivers ([#485](https://github.com/filpgame/picpeak/issues/485)) ([d300426](https://github.com/filpgame/picpeak/commit/d3004263905edeffe59065e201f203a6768b4384))
-* **admin-users:** normalise date fields to ISO across DB drivers ([#485](https://github.com/filpgame/picpeak/issues/485)) ([b6b58d0](https://github.com/filpgame/picpeak/commit/b6b58d0659fc8caee68a65e112780a1122d55907))
-* **admin:** tab underlines use accent (not accent-dark) for proper highlight color ([565ae45](https://github.com/filpgame/picpeak/commit/565ae45ca71e46166c8bbfc0eb0b6da92d74f120))
-* **admin:** test email always sends, regardless of update availability ([#418](https://github.com/filpgame/picpeak/issues/418)) ([9326a42](https://github.com/filpgame/picpeak/commit/9326a427b32458dfdaa01530bac66cda84ed7b72))
-* **admin:** test email always sends, regardless of update availability ([#418](https://github.com/filpgame/picpeak/issues/418)) ([c2b1854](https://github.com/filpgame/picpeak/commit/c2b1854df631354a977d737e8a00ddbc6fa8889f))
-* **api/v1:** scope category lookup to event_owned or global ([92bb9e1](https://github.com/filpgame/picpeak/commit/92bb9e1a12f77ce5e8c1286716198362b2bfdff2))
-* apply password change fix to regular modal + longer toast delay ([#263](https://github.com/filpgame/picpeak/issues/263)) ([c63bc47](https://github.com/filpgame/picpeak/commit/c63bc47089b4b32c570bdeeb1f82bf722569875f))
-* apply password change redirect fix to regular modal too ([#263](https://github.com/filpgame/picpeak/issues/263)) ([147dc28](https://github.com/filpgame/picpeak/commit/147dc28440ca69ed970677fa221dfac00c8e2560))
-* apply sort direction in gallery and respect show_feedback_to_guests ([#302](https://github.com/filpgame/picpeak/issues/302), [#303](https://github.com/filpgame/picpeak/issues/303)) ([3716ff5](https://github.com/filpgame/picpeak/commit/3716ff50854766bde588fbd6b9027f8647e59150))
-* apply sort direction in gallery view and respect show_feedback_to_guests ([#302](https://github.com/filpgame/picpeak/issues/302), [#303](https://github.com/filpgame/picpeak/issues/303)) ([dffe057](https://github.com/filpgame/picpeak/commit/dffe057772c922ab6a213e25f171157e0c2badf8))
-* **auth:** /auth/session must enforce session timeout symmetrically ([#350](https://github.com/filpgame/picpeak/issues/350) recurrence) ([c8e09c2](https://github.com/filpgame/picpeak/commit/c8e09c2a2a7d0920901560317eecd773b83251c0))
-* **auth:** /auth/session must enforce session timeout symmetrically ([#350](https://github.com/filpgame/picpeak/issues/350) recurrence) ([b106da1](https://github.com/filpgame/picpeak/commit/b106da1ededa27fc8727f2c0e74a9182e6e9c895))
-* **auth:** /auth/session must reject tokens that adminAuth/galleryAuth would reject ([f905f7e](https://github.com/filpgame/picpeak/commit/f905f7e7336c756e73a8c650c9239b171697164a))
-* **auth:** /auth/session must verify issuer claim like adminAuth ([#350](https://github.com/filpgame/picpeak/issues/350)) ([83dedbc](https://github.com/filpgame/picpeak/commit/83dedbcd45e34a924594dd83f6e3561f776576fb))
-* **auth:** default COOKIE_SECURE to 'auto' in production + first-install UX ([#427](https://github.com/filpgame/picpeak/issues/427)) ([e1c9382](https://github.com/filpgame/picpeak/commit/e1c93823c4a3095dd2afa618f393a061806f18a3))
-* **auth:** default COOKIE_SECURE to 'auto' in production + first-install UX ([#427](https://github.com/filpgame/picpeak/issues/427)) ([5c7de96](https://github.com/filpgame/picpeak/commit/5c7de96b7fda9ca037a01b93fabe69d1be224893))
-* **auth:** make /auth/session verify the issuer claim like adminAuth ([#350](https://github.com/filpgame/picpeak/issues/350)) ([88a6c6a](https://github.com/filpgame/picpeak/commit/88a6c6a7fba7e1419a021f4870518f0b76ac6494))
-* **auth:** restore COOKIE_SECURE='auto' default for production ([adfa29e](https://github.com/filpgame/picpeak/commit/adfa29e91eeea52aa672e38269c389a5178d9e5a))
-* **backup:** cron schedule mapping + manifest format detection + bigint coerce ([ab4095f](https://github.com/filpgame/picpeak/commit/ab4095f5928b1476009cddfd3444d6f5b58b034d))
-* **backup:** incremental backups against S3 + jsonb stats parsing ([e232f9f](https://github.com/filpgame/picpeak/commit/e232f9f2cf54aeba1e16d769397428206a0f1801))
-* **brand-title:** runtime substitution so GHCR-image users can override ([#521](https://github.com/filpgame/picpeak/issues/521) follow-up) ([efa6b4a](https://github.com/filpgame/picpeak/commit/efa6b4a2059f1da52ef435ec84bc548040dfa7e5))
-* **branding:** admin sidebar uses accent-dark, primary buttons follow CI token ([fc2bce3](https://github.com/filpgame/picpeak/commit/fc2bce3a01f02b2d131ca4ce1c8e81fc9dc62755))
-* **branding:** comprehensive sweep — replace remaining primary-* legacy colors with accent tokens ([578a174](https://github.com/filpgame/picpeak/commit/578a1745b8d010eeeb261d3452fd192b1ec7bcf8))
-* **branding:** selected-state accent colors, force-mode actually flips galleries, compact color picker layout ([5b410ed](https://github.com/filpgame/picpeak/commit/5b410ed9f87daad8e96345a86897f2a9e9419802))
-* **branding:** socials + promo round-trip from DB to form ([#460](https://github.com/filpgame/picpeak/issues/460)) ([bd2288e](https://github.com/filpgame/picpeak/commit/bd2288e6a01786cec0649b3326189e9737db359e))
-* **branding:** socials + promo round-trip from DB to form ([#460](https://github.com/filpgame/picpeak/issues/460)) ([ae64a6a](https://github.com/filpgame/picpeak/commit/ae64a6acbc119f78394e65cee7bf49910e1c7013))
-* **branding:** working tooltips, high-contrast selected states, gallery chrome follows accent ([b19bb0c](https://github.com/filpgame/picpeak/commit/b19bb0c6208744f329cb3e99f4e26a83f191710a))
-* **bug-batch-518:** lightbox comments toggle + further fixes ([633a2ae](https://github.com/filpgame/picpeak/commit/633a2ae72405ae1fc885cb710ed896476ffee467))
-* **categories:** strip diacritics from auto-generated slugs ([a747eb3](https://github.com/filpgame/picpeak/commit/a747eb351d1cf0ed269751cb685b504993d33dde))
-* **categories:** strip diacritics from auto-generated slugs ([848430e](https://github.com/filpgame/picpeak/commit/848430e72b39f61a78e3f967770abe6df9a730f2))
-* **ci:** pin TRIVY_PLATFORM per matrix arch (post-[#477](https://github.com/filpgame/picpeak/issues/477) follow-up) ([6750f5d](https://github.com/filpgame/picpeak/commit/6750f5d3b06f6312629e81c4c84100c572746b69))
-* **ci:** pin TRIVY_PLATFORM per matrix arch (post-[#477](https://github.com/filpgame/picpeak/issues/477) follow-up) ([c3256dc](https://github.com/filpgame/picpeak/commit/c3256dc6bf49a2352dfe38b804d757683bb3ac22))
-* **ci:** scan multi-arch images per-arch by digest, pin trivy-action ([#476](https://github.com/filpgame/picpeak/issues/476)) ([1144e9d](https://github.com/filpgame/picpeak/commit/1144e9d1625eb69d8e2a53b1a3aa1b515798fc80))
-* **ci:** scan multi-arch images per-arch by digest, pin trivy-action ([#476](https://github.com/filpgame/picpeak/issues/476)) ([caf0d61](https://github.com/filpgame/picpeak/commit/caf0d618572b7fca0b28776ee13dcce2e0da0b99))
-* **ci:** trivy-action tag is v0.36.0 (was 0.28.0 — does not exist) ([40e176c](https://github.com/filpgame/picpeak/commit/40e176cb46b2286d64a998937357b9e31cfaf04d))
-* **cms:** apply dark mode to CMS editor, public CMS, and admin modals ([d2a10f6](https://github.com/filpgame/picpeak/commit/d2a10f6523655488267d6f68835d7adb46dcf962))
-* **cms:** nl/pt/ru i18n + gate external_url in public response ([08d0462](https://github.com/filpgame/picpeak/commit/08d046276bf259e8511b01415141f51b8484f967))
-* **cms:** nl/pt/ru i18n + gate external_url in public response ([bce5c1f](https://github.com/filpgame/picpeak/commit/bce5c1f725043965c2499515f18e93e9578bd204))
-* **create-event:** branding-default theme survives eventTypes refetch ([d62c529](https://github.com/filpgame/picpeak/commit/d62c529b0278a9ac790b22f46f49004df71112ea))
-* **create-event:** branding-default theme survives eventTypes refetch ([#323](https://github.com/filpgame/picpeak/issues/323)-B) ([37d487d](https://github.com/filpgame/picpeak/commit/37d487db86fe9fc11facff6d2c0bb9a24e6f6277))
-* **create-event:** re-apply Branding theme on stale→fresh settings ([#323](https://github.com/filpgame/picpeak/issues/323)-B) ([401abf7](https://github.com/filpgame/picpeak/commit/401abf7a27cb73dd7fb8399f4c05644c95767093))
-* **customer-portal:** post-merge fixes for event save, theme fonts, and customer→gallery handoff ([9776d8a](https://github.com/filpgame/picpeak/commit/9776d8a6fcccb5e19e7c652b7e47557213d85731))
-* **customer-routes:** Cache-Control: no-store on customer endpoints ([#470](https://github.com/filpgame/picpeak/issues/470)) ([3122dd0](https://github.com/filpgame/picpeak/commit/3122dd08a8bc08deb937236aaa3f750119a979b9))
-* **customer:** customer sidebar active state matches admin pattern ([8d9d0be](https://github.com/filpgame/picpeak/commit/8d9d0bea836e80870c343220b1c253844ac01590))
-* **customer:** don't log customer out on transient session-refresh errors ([9e418c7](https://github.com/filpgame/picpeak/commit/9e418c759ce508adf6025e0740468d8229938ffe))
-* **customer:** preserve slug-scoped gallery tokens on auth provider mount ([7ac1d14](https://github.com/filpgame/picpeak/commit/7ac1d1473860796ea0925dd77454218f2b1f0020))
-* **customer:** unwrap /customer/* from RequireFeature gate ([da08a58](https://github.com/filpgame/picpeak/commit/da08a5828ab855365a2a2a6f4854b09eb409907a))
-* dedupe parallel admin 401 redirects to /admin/login ([038e84c](https://github.com/filpgame/picpeak/commit/038e84cae7f56a0a1af8c71b85881ca5d320c6e3))
-* discussion [#317](https://github.com/filpgame/picpeak/issues/317) issues and [#318](https://github.com/filpgame/picpeak/issues/318) archive crash ([2f2f405](https://github.com/filpgame/picpeak/commit/2f2f405d9bc2831b3bbe2ca7fbf726d61382dc38))
-* display welcome message in gallery and fix guest thumbnail URLs ([#306](https://github.com/filpgame/picpeak/issues/306), [#307](https://github.com/filpgame/picpeak/issues/307)) ([b05c36a](https://github.com/filpgame/picpeak/commit/b05c36ac810a557a2ac088ab7bec39bb76f9a2ae))
-* display welcome message in gallery and fix guest thumbnail URLs ([#306](https://github.com/filpgame/picpeak/issues/306), [#307](https://github.com/filpgame/picpeak/issues/307)) ([9323bef](https://github.com/filpgame/picpeak/commit/9323befdd99d64b85cca89af24ac1b7034d72eee))
-* **docker:** install system ffmpeg on Alpine, drop broken bundled binary ([3ab8a64](https://github.com/filpgame/picpeak/commit/3ab8a64a24f1600e674f77d39139e33857b4dfc8))
-* **docker:** install system ffmpeg on Alpine, drop broken bundled binary ([96818c7](https://github.com/filpgame/picpeak/commit/96818c7ae8de0d8fd478cd901ea25a3272eee85d))
-* **downloads:** apply original-filename toggle to individual downloads too ([#507](https://github.com/filpgame/picpeak/issues/507)) ([38343e6](https://github.com/filpgame/picpeak/commit/38343e62ded3d65efcea5c74b7c1e169807754d6))
-* **email-templates:** backfill subcategory + customer password reset translations ([2343a16](https://github.com/filpgame/picpeak/commit/2343a162df070cd5bd6abdc331bc5ca4aa283132))
-* **email:** parse JSON-encoded language setting before using as locale ([ebc7da2](https://github.com/filpgame/picpeak/commit/ebc7da21bea90ff84f5351bef4fd3c2605d3a68f))
-* **email:** parse JSON-encoded language setting before using as locale ([f12062f](https://github.com/filpgame/picpeak/commit/f12062f1e7be2974addbc50923f4427d3fba5a1c))
-* **email:** render conditionals, localise password placeholders, fix caller/template variable drift ([0767203](https://github.com/filpgame/picpeak/commit/07672038d4ac31fc601adfb2338104223856ba71))
-* **email:** render conditionals, localise password placeholders, fix caller/template variable drift ([e8052ad](https://github.com/filpgame/picpeak/commit/e8052adf1d2f1717652ac5d6b8cd8bcc01787189))
-* **event:** correct updating client access ([d00f6fa](https://github.com/filpgame/picpeak/commit/d00f6fa7de59bdbd30efe9ce824e795cf05616f4))
-* **event:** ensure client share token is generated only when necessary ([916580a](https://github.com/filpgame/picpeak/commit/916580adefd464417729e418aa1727b67566fea3))
-* events search/counters ([#346](https://github.com/filpgame/picpeak/issues/346)), lazy gallery skeleton ([#321](https://github.com/filpgame/picpeak/issues/321)), smooth lightbox swipe ([#348](https://github.com/filpgame/picpeak/issues/348)) ([6229b38](https://github.com/filpgame/picpeak/commit/6229b38bac90cc0c538a72688efae3be77a3bb08))
-* **events:** admin-set password on reset, full-URL gallery_link in all emails ([0d1f82d](https://github.com/filpgame/picpeak/commit/0d1f82d31a2f9e30bf193496ac203eaf8dfd856b))
-* **events:** admin-set password on reset, full-URL gallery_link in all emails ([ff50c74](https://github.com/filpgame/picpeak/commit/ff50c74e1912ccba60f7ccdbead92b76de91388b))
-* **events:** admins can clear expiration on edit even when 'Require expiration' is ON ([#426](https://github.com/filpgame/picpeak/issues/426)) ([3fd8af3](https://github.com/filpgame/picpeak/commit/3fd8af3d56b54f81cc20b75109cc212d23fc84c1))
-* **events:** admins can clear expiration on edit even when "Require expiration" is ON ([#426](https://github.com/filpgame/picpeak/issues/426)) ([e544561](https://github.com/filpgame/picpeak/commit/e54456135cc8605fad949a955261cecc3f986355))
-* **events:** clamp page state when totalPages drops below current page ([#442](https://github.com/filpgame/picpeak/issues/442)) ([b4e30a4](https://github.com/filpgame/picpeak/commit/b4e30a4293c77e6dc34e955741ee113b9d530718))
-* **events:** clamp page state when totalPages drops below current page ([#442](https://github.com/filpgame/picpeak/issues/442)) ([9c4a96f](https://github.com/filpgame/picpeak/commit/9c4a96fe977b7a0907f5dea99491385195b76184))
-* **events:** coerce expires_in_days to Number before addDays ([e5712d8](https://github.com/filpgame/picpeak/commit/e5712d8ffe2f0ed980e1df5e1263876af7202b76))
-* **events:** coerce expires_in_days to Number before addDays ([db29d0e](https://github.com/filpgame/picpeak/commit/db29d0e2788f63cc9eb0a43ec58313387acb0c0d))
-* **events:** CustomerAccountPicker hooks order crashed /admin/events/new ([2a7ae07](https://github.com/filpgame/picpeak/commit/2a7ae0702dfc56e69bf845ded19888c29519414a))
-* **events:** match scrollbar to theme in external folder tree picker ([bd42ee1](https://github.com/filpgame/picpeak/commit/bd42ee1ce03b8f6e7b011b53f2c71453be931cc6))
-* **events:** server-side search/pagination to remove first-100 cap ([#346](https://github.com/filpgame/picpeak/issues/346)) ([a5b20ca](https://github.com/filpgame/picpeak/commit/a5b20ca3fe77df665d4a9744413d7ee4054858f0))
-* **events:** show customer phone in event details view ([#331](https://github.com/filpgame/picpeak/issues/331)) ([4c73d22](https://github.com/filpgame/picpeak/commit/4c73d228ed98b8ec05bec2824aee7ce066a184e1))
-* **events:** stop mapping branding_logo_position onto hero_logo_position ([af2b062](https://github.com/filpgame/picpeak/commit/af2b0628cb4f79a147366665d35c098012071216))
-* **events:** stop mapping branding_logo_position onto hero_logo_position ([ef1c875](https://github.com/filpgame/picpeak/commit/ef1c875f6ec1e02657006cb09cd0b1d868ec2fc0))
-* **events:** strip customer_account_ids from update spread ([dde72a1](https://github.com/filpgame/picpeak/commit/dde72a1b1b3154e3effb9166291fdb8d59f16207))
-* **events:** TDZ ReferenceError on /admin/events from [#442](https://github.com/filpgame/picpeak/issues/442) fix ([#454](https://github.com/filpgame/picpeak/issues/454)) ([2f63188](https://github.com/filpgame/picpeak/commit/2f63188a345ce8e337723045a60b3a9306a9a840))
-* **events:** typed-DELETE confirmation for bulk delete ([#417](https://github.com/filpgame/picpeak/issues/417)) ([e165ee5](https://github.com/filpgame/picpeak/commit/e165ee5d9fa805c704a64f91c9514bf0ab75b5b8))
-* **events:** typed-DELETE confirmation for bulk delete ([#417](https://github.com/filpgame/picpeak/issues/417)) ([99e420b](https://github.com/filpgame/picpeak/commit/99e420b1b9783a1d6b4eb892c09d0af3340bf314))
-* **external-media:** pre-generate thumbnails so reference-mode galleries load fast ([#423](https://github.com/filpgame/picpeak/issues/423)) ([e2ffd9f](https://github.com/filpgame/picpeak/commit/e2ffd9f93d228f9e16408fe424c65b26db67ac8e))
-* **external-media:** pre-generate thumbnails so reference-mode galleries load fast ([#423](https://github.com/filpgame/picpeak/issues/423)) ([f3d0f16](https://github.com/filpgame/picpeak/commit/f3d0f161c9e554a5149e6b4eafdb0ac42bebf277))
-* **features-tab:** icon tiles + preview pills follow CI accent ([15d01f3](https://github.com/filpgame/picpeak/commit/15d01f375628d3c1ead05d48a09c6509c508a848))
-* **features:** customer-portal card uses 'Clients' to match sidebar wording ([441cc41](https://github.com/filpgame/picpeak/commit/441cc419377055a5872f71afb19036cc5c932b58))
-* **features:** customer-portal card uses 'Clients' to match sidebar wording ([dec2f5d](https://github.com/filpgame/picpeak/commit/dec2f5d3d2224b0d66f02bb9a562b4ddeaac77df))
-* **feedback:** three guest-mode bugs from [#538](https://github.com/filpgame/picpeak/issues/538) (filter, like state, count leak) ([c900be9](https://github.com/filpgame/picpeak/commit/c900be92dd490b21aabb10fd56b6fbc3da444ee0))
-* **feedback:** three guest-mode bugs reported in [#538](https://github.com/filpgame/picpeak/issues/538) ([5311588](https://github.com/filpgame/picpeak/commit/5311588baf3c6acfc971cb014a142d6b4b153aa1))
-* floor password_changed_at when comparing against JWT iat ([793e410](https://github.com/filpgame/picpeak/commit/793e410554b461522fbe24014dfd3baa915da2bb))
-* **fonts:** drop immutable Cache-Control to allow font replacement rollout ([5703fcb](https://github.com/filpgame/picpeak/commit/5703fcb80680155e3b637dd5fc15c430de963c40))
-* **gallery:** default controls to inline for every layout ([045e9ea](https://github.com/filpgame/picpeak/commit/045e9ea4861f33e3e82e31f978ac297c7f7824f6))
-* **gallery:** hide Like button when guest feedback is off ([#506](https://github.com/filpgame/picpeak/issues/506)) ([9d2db9a](https://github.com/filpgame/picpeak/commit/9d2db9a73b71967fe4658c53d29ef5984f20bc69))
-* **gallery:** lazy-render skeleton grid for fast loads ([#321](https://github.com/filpgame/picpeak/issues/321) follow-up) ([d9d8137](https://github.com/filpgame/picpeak/commit/d9d81372b80f7d44dca54b7993f52c36574048c9))
-* **gallery:** preserve sidebar controlsStyle on banner migration ([05dadff](https://github.com/filpgame/picpeak/commit/05dadff4934ad9b055de8875846c2a7175e16f86))
-* **gallery:** serve thumbnails / photos / hero via storage abstraction ([#432](https://github.com/filpgame/picpeak/issues/432)) ([d3007b0](https://github.com/filpgame/picpeak/commit/d3007b0dd29d37a46ce26e8b4eb15908e0f8e3d2))
-* **gallery:** serve thumbnails / photos / hero via storage abstraction ([#432](https://github.com/filpgame/picpeak/issues/432)) ([83d79f4](https://github.com/filpgame/picpeak/commit/83d79f4d39f2a68c8cb905cbd1b46d53bba80f49))
-* **gallery:** single-finger swipe nav in mobile lightbox ([#332](https://github.com/filpgame/picpeak/issues/332)) ([4c8eba0](https://github.com/filpgame/picpeak/commit/4c8eba0cb43635d92a53d90c58b19007136c1c12))
-* **gallery:** use ref for swipe-start to avoid stale-closure miss ([#332](https://github.com/filpgame/picpeak/issues/332)) ([fcddfe0](https://github.com/filpgame/picpeak/commit/fcddfe094b2a01963f7b420afa886e7d5dae4390))
-* **gallery:** WCAG-safe Download button text + extract HeaderDownloadButton ([#401](https://github.com/filpgame/picpeak/issues/401) follow-ups) ([04e928d](https://github.com/filpgame/picpeak/commit/04e928d7621743d9d99797f0996f8c7aa50e7b2d))
-* **gallery:** WCAG-safe Download button text + extract HeaderDownloadButton ([#401](https://github.com/filpgame/picpeak/issues/401) follow-ups) ([0c80abd](https://github.com/filpgame/picpeak/commit/0c80abd57b806b9df01429a093c30c12c80c0601))
-* guest feedback flow bugs in Masonry grid and PhotoLightbox ([#292](https://github.com/filpgame/picpeak/issues/292)) ([54badef](https://github.com/filpgame/picpeak/commit/54badefc51b834d55530722f87c81a6ade33e35b))
-* guest feedback flow bugs in Masonry grid and PhotoLightbox ([#292](https://github.com/filpgame/picpeak/issues/292)) ([77f07e9](https://github.com/filpgame/picpeak/commit/77f07e9329e47f6ac5040f2e85d2710ebbea3ced))
-* **header:** hide language name on mobile to free the title ([#523](https://github.com/filpgame/picpeak/issues/523)) ([4b4ecfd](https://github.com/filpgame/picpeak/commit/4b4ecfdf7143c8f353355ecd6d5ee14bbf50c9bb))
-* **i18n:** drive customer "Preferred language" select from SUPPORTED_LANGUAGES ([#510](https://github.com/filpgame/picpeak/issues/510)) ([51890e1](https://github.com/filpgame/picpeak/commit/51890e1aa5bacb5cfb5c9dc6e59770bd18406a66))
-* **i18n:** settings page resets UI language to server default ([482e91b](https://github.com/filpgame/picpeak/commit/482e91bbf8b8deee361ffc8b031094fb99cc569d))
-* **import:** capture photo dimensions in fileWatcher + s3AutoImporter ([#447](https://github.com/filpgame/picpeak/issues/447)) ([5b14854](https://github.com/filpgame/picpeak/commit/5b148542e6f2396ce47e3b6c301f186f9af9adec))
-* **import:** capture photo dimensions in fileWatcher + s3AutoImporter ([#447](https://github.com/filpgame/picpeak/issues/447)) ([936a277](https://github.com/filpgame/picpeak/commit/936a277eb8695a54e65eaaa5a75ce43cff54c5db))
-* **install:** defer events.hero_photo_id FK to break circular reference ([#484](https://github.com/filpgame/picpeak/issues/484)) ([62b3ed6](https://github.com/filpgame/picpeak/commit/62b3ed636414d358c0c73712b732207fc6fa1200))
-* **install:** defer events.hero_photo_id FK to break circular reference ([#484](https://github.com/filpgame/picpeak/issues/484)) ([87834a7](https://github.com/filpgame/picpeak/commit/87834a7fff57a53bb1060ad7061dd6d279922f42))
-* **install:** drop racy migration step + add missing frontend container ([#484](https://github.com/filpgame/picpeak/issues/484)) ([d4155c4](https://github.com/filpgame/picpeak/commit/d4155c46117eb1db6255ebac0ea47e6fc3e99801))
-* **install:** self-chowning entrypoint kills fresh-install restart loop ([#484](https://github.com/filpgame/picpeak/issues/484)) ([42c5cda](https://github.com/filpgame/picpeak/commit/42c5cda38c0deeb4e61554e9e4a913bd5cd0b980))
-* **install:** self-chowning entrypoint kills fresh-install restart loop ([#484](https://github.com/filpgame/picpeak/issues/484)) ([1505775](https://github.com/filpgame/picpeak/commit/15057756788eacc75dd9ff64541cac7418f368f2))
-* **install:** silence clean-install postgres log noise ([#484](https://github.com/filpgame/picpeak/issues/484)) ([99e60a2](https://github.com/filpgame/picpeak/commit/99e60a243321a06f659d811babbcda9ffef655c4))
-* **install:** silence clean-install postgres log noise ([#484](https://github.com/filpgame/picpeak/issues/484)) ([86b33d4](https://github.com/filpgame/picpeak/commit/86b33d4ddaf98e1f32473832b0f89565750174e5))
-* **install:** silence pg healthcheck noise + drop legacy workers container ([#484](https://github.com/filpgame/picpeak/issues/484)) ([d39406b](https://github.com/filpgame/picpeak/commit/d39406b2414cdfcae84e8175d90821dd3a5287bb))
-* **install:** silence pg healthcheck noise + drop legacy workers container ([#484](https://github.com/filpgame/picpeak/issues/484)) ([0b0b1bb](https://github.com/filpgame/picpeak/commit/0b0b1bb2d529dbaae8e49891d8d5e8019b971838))
-* **install:** skip legacy chain on recovery-state DBs + schema-drift CI ([#530](https://github.com/filpgame/picpeak/issues/530)) ([a0ebc97](https://github.com/filpgame/picpeak/commit/a0ebc97cdd871041ff3cfdcc7276c413ac89d24f))
-* **lightbox:** align swipe-neighbour height + stop black flash on commit ([#505](https://github.com/filpgame/picpeak/issues/505)) ([d2d5509](https://github.com/filpgame/picpeak/commit/d2d55098d6d899c74b3b32b46b8194d06e7cda7e))
-* **lightbox:** fill the heart icon when liked ([#538](https://github.com/filpgame/picpeak/issues/538) follow-up) ([3e39112](https://github.com/filpgame/picpeak/commit/3e39112a1276c194259d936dad813f3b0fc2dc3f))
-* **lightbox:** fill the heart icon when liked ([#538](https://github.com/filpgame/picpeak/issues/538) follow-up) ([600c29d](https://github.com/filpgame/picpeak/commit/600c29db8a75fa44e72da55bc5288908de614d9d))
-* **lightbox:** hide comments toggle when allow_comments=false ([#518](https://github.com/filpgame/picpeak/issues/518)) ([d44e1ad](https://github.com/filpgame/picpeak/commit/d44e1adba7a444b03511e9402cd39d25fe5acafe))
-* **lightbox:** mobile toolbar clipping + iOS safe-area + viewport-fit ([#336](https://github.com/filpgame/picpeak/issues/336)) ([42a7ae4](https://github.com/filpgame/picpeak/commit/42a7ae4be8fe7b12104ae036465c9c4117606378))
-* **lightbox:** pan zoomed image with single-finger touch on mobile ([#532](https://github.com/filpgame/picpeak/issues/532)) ([53139b8](https://github.com/filpgame/picpeak/commit/53139b8cb87e0669fe38089f38848a59ce3cbb28))
-* **lightbox:** smooth carousel swipe + drop instructional hint ([#348](https://github.com/filpgame/picpeak/issues/348)) ([743086d](https://github.com/filpgame/picpeak/commit/743086d3cb9100fb163bc9d04d968e5b611a1f99))
-* mobile lightbox + share previews + customer phone bug triage ([1e40677](https://github.com/filpgame/picpeak/commit/1e4067713ce9a808a7b49319bc262e5c9a6599c6))
-* **nginx:** honour outer X-Forwarded-Proto when behind a reverse proxy ([#547](https://github.com/filpgame/picpeak/issues/547)) ([b351d17](https://github.com/filpgame/picpeak/commit/b351d17ee99528dd4251e74dfc47cd1fe289d9c3))
-* **nginx:** honour outer X-Forwarded-Proto when behind a reverse proxy ([#547](https://github.com/filpgame/picpeak/issues/547)) ([5488de3](https://github.com/filpgame/picpeak/commit/5488de3383d33d8a037587dd9112d36ea035c465))
-* **nginx:** proxy /fonts requests to backend ([e6c03e4](https://github.com/filpgame/picpeak/commit/e6c03e4b6e4ee2ccc3e3cd8b7a54c18f9685c2ba))
-* **og:** brandable static title + wider crawler UA coverage ([#521](https://github.com/filpgame/picpeak/issues/521)) ([b960639](https://github.com/filpgame/picpeak/commit/b96063903513fcc4cbe0e72f59ccbc37d7b1c0ab))
-* prevent backend crash on archive when admin_email is null ([#318](https://github.com/filpgame/picpeak/issues/318)) ([e4b0f96](https://github.com/filpgame/picpeak/commit/e4b0f961b75952b6907cc2291fa256215c09c80c))
-* **promo-banner:** center by default + admin alignment selector ([#482](https://github.com/filpgame/picpeak/issues/482)) ([d1034ce](https://github.com/filpgame/picpeak/commit/d1034ce1c65c31b06005cfd0c047dba3251579ab))
-* **promo-banner:** center by default + admin alignment selector ([#482](https://github.com/filpgame/picpeak/issues/482)) ([a803491](https://github.com/filpgame/picpeak/commit/a803491cf477c0d62e23d6a019e0d252e2c537f8))
-* **public-site:** honor dark theme surface colors ([8b72721](https://github.com/filpgame/picpeak/commit/8b727218127db2a738ad5a4381358076c1575c8a))
-* recover three orphaned commits from [#527](https://github.com/filpgame/picpeak/issues/527) (BRAND_TITLE runtime, Web Share, pan zoom) ([9607b46](https://github.com/filpgame/picpeak/commit/9607b4666c0abf22e54b43be3e87e3243db2cdbc))
-* resolve JWT iat timing issue in password change ([#263](https://github.com/filpgame/picpeak/issues/263)) ([c031b1e](https://github.com/filpgame/picpeak/commit/c031b1e86333d90e8e0e0aa723572efa110f7fd1))
-* resolve password change redirect loop ([#263](https://github.com/filpgame/picpeak/issues/263)) and file watcher crash ([#269](https://github.com/filpgame/picpeak/issues/269)) ([b23c51b](https://github.com/filpgame/picpeak/commit/b23c51b386270dee4d911902b728dfacb1ff1bf9))
-* resolve password change redirect loop and file watcher crash ([835bdf5](https://github.com/filpgame/picpeak/commit/835bdf5abb40c7b143c5cdafb507c317a7c349bf)), closes [#269](https://github.com/filpgame/picpeak/issues/269)
-* revert /api prefix in adminPhotos.js to avoid double-prefix ([094276d](https://github.com/filpgame/picpeak/commit/094276d3cc7117eee30e4bcbce487e54f0eacb29))
-* revert /api prefix in adminPhotos.js to avoid double-prefix ([#307](https://github.com/filpgame/picpeak/issues/307)) ([ceb2a09](https://github.com/filpgame/picpeak/commit/ceb2a09f483b4754fda232c5c1f7acb8971aac10))
-* **scripts:** use filpgame fork, tag-based checkout, fix run_as_user ([a69aa12](https://github.com/filpgame/picpeak/commit/a69aa120cc1a752483f17c34de01e2cb9e9980cf))
-* **security:** patch 18 dependency CVEs (axios + transitives + nodemailer + i18next-http-backend) ([b7d6ca0](https://github.com/filpgame/picpeak/commit/b7d6ca0b65e652b50d957380f93ed16e151e94a8))
-* **security:** patch 18 dependency CVEs (axios + transitives) ([523f499](https://github.com/filpgame/picpeak/commit/523f49916bea44697d40f61e0b6e44b83decc4b9))
-* **security:** scan triage cleanup — drop dead deps, harden Docker/nginx/postMessage ([7abfeb9](https://github.com/filpgame/picpeak/commit/7abfeb91cc7bbb9b6853146dbfe16b8d9835bcb3))
-* **security:** scan triage cleanup — drop dead deps, harden Docker/nginx/postMessage ([6b6191a](https://github.com/filpgame/picpeak/commit/6b6191a4260650e21c45f6153cac1b142bf8483a))
-* **server:** drop missing requireCustomerPortal middleware import ([4fa7225](https://github.com/filpgame/picpeak/commit/4fa72257329942a6b598fa90c83c6bca7586fe33))
-* **server:** mount /api/admin/feature-flags route ([f048011](https://github.com/filpgame/picpeak/commit/f048011324bfa4cee8f89b0131b68dd520446ca2))
-* set JWT iat after password_changed_at to prevent token rejection ([#263](https://github.com/filpgame/picpeak/issues/263)) ([b1d1667](https://github.com/filpgame/picpeak/commit/b1d16670d56e19f7b35e7f2f12f3611fdb3fab58))
-* settings page resets UI language to server default ([165ebce](https://github.com/filpgame/picpeak/commit/165ebce8d1226cde22a36df28c0c45c2d79e2423))
-* **settings:** neutralize sidebar icons for a consistent palette ([2f00bbd](https://github.com/filpgame/picpeak/commit/2f00bbdd90ef38feca886e834e753d4c4b60c11d))
-* **settings:** readable contrast on accent-tinted icon tiles + pills ([bf7ef14](https://github.com/filpgame/picpeak/commit/bf7ef14626dc3a0e18f20813abe2a101d02c6d5b))
-* **share:** OG/Twitter-card metadata for gallery share URLs ([#333](https://github.com/filpgame/picpeak/issues/333)) ([5275621](https://github.com/filpgame/picpeak/commit/5275621fcd38f1ec09b54595163ecd5e63614b1a))
-* theme picker buttons no longer submit the parent form ([#326](https://github.com/filpgame/picpeak/issues/326)) ([2eead52](https://github.com/filpgame/picpeak/commit/2eead523193ccb7f23eb767097ad9698e8312833))
-* theme save without Live Preview, Branding default on new events, gallery loading flicker ([#323](https://github.com/filpgame/picpeak/issues/323), [#321](https://github.com/filpgame/picpeak/issues/321)) ([822be9a](https://github.com/filpgame/picpeak/commit/822be9a9b2716f1832a4cb6fccd53602e3cbab51))
-* theme-preset match loop ignores extra fields like logoUrl ([#323](https://github.com/filpgame/picpeak/issues/323)) ([b63a877](https://github.com/filpgame/picpeak/commit/b63a8774c4b44733b903736b2ca5a472a884055e))
-* **theme:** 'Same as body' heading font no longer inherits stale value ([35f5b86](https://github.com/filpgame/picpeak/commit/35f5b86d0f6a56627aac2abfe5228b5935709b08))
-* **theme:** centralise force-mode enforcement inside ThemeContext so every gallery flips ([21188f4](https://github.com/filpgame/picpeak/commit/21188f48d76dd29bc1251bcc6faf9d6d96c805b5))
-* **theme:** kill initial white frame + theme-aware skeleton tiles ([#358](https://github.com/filpgame/picpeak/issues/358) follow-up) ([f529c9e](https://github.com/filpgame/picpeak/commit/f529c9e3d72f0e3496951dfa5d160afda9a1ac51))
-* **theme:** kill initial white frame + theme-aware skeleton tiles ([#358](https://github.com/filpgame/picpeak/issues/358) follow-up) ([1a530ae](https://github.com/filpgame/picpeak/commit/1a530aeaa2d61b34d9721a555b71631c7101c58e))
-* **theme:** pre-React bootstrap to kill white-flash on dark galleries ([#358](https://github.com/filpgame/picpeak/issues/358)) ([07b41e6](https://github.com/filpgame/picpeak/commit/07b41e691d2e8a71f775c667d805a2f9adc10590))
-* **theme:** pre-React bootstrap to kill white-flash on dark galleries ([#358](https://github.com/filpgame/picpeak/issues/358)) ([f81a872](https://github.com/filpgame/picpeak/commit/f81a8728e67b313ac43f55c94fb635abf9beca05))
-* **upload:** restore configurable batch-size for reverse proxies ([#509](https://github.com/filpgame/picpeak/issues/509)) ([98f3c3d](https://github.com/filpgame/picpeak/commit/98f3c3df4184b6d59b6c6b8e5f11b12b362320af))
-* **upload:** wire drag-and-drop on admin + user upload zones ([#504](https://github.com/filpgame/picpeak/issues/504)) ([577c4bd](https://github.com/filpgame/picpeak/commit/577c4bdf29e107d11044a218ed5a6ba359e060c7))
-* **whatsapp:** use common.submitting key, use Input rightIcon for token visibility toggle ([5b79488](https://github.com/filpgame/picpeak/commit/5b79488f81aa8ed05aec929047b6f170551a7975))
-* wire admin photo feedback filters into grid query ([#293](https://github.com/filpgame/picpeak/issues/293)) ([d4b4dc6](https://github.com/filpgame/picpeak/commit/d4b4dc628f28a303ff1c80ba6d8e5e768217ba51))
+* **events:** publish-from-draft email carries the real password ([#627](https://github.com/the-luap/picpeak/issues/627)) ([83b568e](https://github.com/the-luap/picpeak/commit/83b568ee2ddc007b7d981fd4b46b69810f0165c3))
+* **gallery:** admin edits to welcome_message land for returning guests ([#625](https://github.com/the-luap/picpeak/issues/625)) ([ea6245c](https://github.com/the-luap/picpeak/commit/ea6245cfdea67bd4668e2100f295433a3d29f7f1))
+* **upload:** auto-throttle on low-memory hosts + correct documented RAM minimum ([#628](https://github.com/the-luap/picpeak/issues/628)) ([714a9f6](https://github.com/the-luap/picpeak/commit/714a9f6fb1f48ba1316cc240054d5128749581d8))
+
+## [3.62.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.61.0-beta.0...v3.62.0-beta.0) (2026-06-17)
 
 
-### Reverts
+### Features
 
-* **branding:** per-option font preview (defer to follow-up) ([f410207](https://github.com/filpgame/picpeak/commit/f410207b2d7ddf1c9525603c7dcbb7cdfee1729b))
-* **customer-portal:** make the global flag UI-only, drop the kill-switch middleware ([3f44193](https://github.com/filpgame/picpeak/commit/3f4419356a4f30509052a6d00b71485af2c17f85))
+* **accounting:** add a Banana "Income & Expense" (cash-book) export format ([445d6d7](https://github.com/the-luap/picpeak/commit/445d6d7b6d6b0692d5b7c0a3dd0ca8b71dfad6ef))
+* **accounting:** bill editor VAT dropdown + GET returns vat_code snapshot ([2479d87](https://github.com/the-luap/picpeak/commit/2479d87afc5b094a5323bca0b67e6404ce05a4e2))
+* **accounting:** clearer tax-export window + gate journal export on accounting flag ([3edd832](https://github.com/the-luap/picpeak/commit/3edd8321035c48d6b3e8b157d4b94075657fc7a0))
+* **accounting:** data-driven revenue-rate VAT map (multi-country) ([873be91](https://github.com/the-luap/picpeak/commit/873be910a5e88a6d942f116c2bcfecfef9161024))
+* **accounting:** move Chart of accounts into Settings → Accounting ([97795f6](https://github.com/the-luap/picpeak/commit/97795f6d1ed25d23396a76b63c225b110ddc315e))
+* **accounting:** move Treuhänder export onto the Tax page ([b1f73c1](https://github.com/the-luap/picpeak/commit/b1f73c1df9408ddae821760eb8ed57c726d2e056))
+* **accounting:** relocate VAT codes + rate maps into Settings → Accounting ([4ff5b84](https://github.com/the-luap/picpeak/commit/4ff5b84cb66e40be960c2be7a67334cf0cc98be2))
+* **accounting:** scope the tax-report export to income-only or cost-only ([9f3b286](https://github.com/the-luap/picpeak/commit/9f3b28684ff36b131420cd975df634a29d660323))
+* **accounting:** snapshot the chosen VAT code on quote/invoice create + storno ([5b52969](https://github.com/the-luap/picpeak/commit/5b52969e36a41bbc08a98e0bca1ce0e937d77f56))
+* **accounting:** snapshot vat_code on quotes/invoices + export prefers it (foundation) ([0a7dc1c](https://github.com/the-luap/picpeak/commit/0a7dc1cf5da17a5bef204f6680844c8ab2b44269))
+* **accounting:** tax report VAT-payable honours registration + reclaim ([d7107aa](https://github.com/the-luap/picpeak/commit/d7107aaf0adf5e03f08085c7691b6530b15ed702))
+* **accounting:** unify tax report into one signed, typed, sortable ledger ([fd1dd81](https://github.com/the-luap/picpeak/commit/fd1dd81e8dfc790d960a7e6d888beba895a23461))
+* **accounting:** VAT registration + reclaim-country settings in the Accounting tab ([4d87684](https://github.com/the-luap/picpeak/commit/4d876848823bce2c79e629308c92206c64d9893d))
+* **accounting:** VAT registration/reclaim settings + un-gated VAT-codes read ([fbbbb8a](https://github.com/the-luap/picpeak/commit/fbbbb8ab7335f07ecf48e217632c7011bd7c88cd))
+* **accounting:** VAT-code dropdown in the quote editor (+ reusable VatRateSelect) ([6e1924b](https://github.com/the-luap/picpeak/commit/6e1924bae8b50dbb8460e151c1d9a79553fddb19))
+* **branding:** force color mode = standard look; hide overridden theme controls ([4749e22](https://github.com/the-luap/picpeak/commit/4749e222dc41695a2494a3b740952745bb854d4e))
+
+
+### Bug Fixes
+
+* **accounting:** Banana export is now a tab-separated .txt (actually importable) ([a195067](https://github.com/the-luap/picpeak/commit/a19506749a449ec0a628da776af5a5bea8a2e46e))
+* **accounting:** Banana I&E export uses the 'Category' column (not 'ContraAccount') ([53a16f9](https://github.com/the-luap/picpeak/commit/53a16f9f6f9b11c224b3ff5f337f8a7fe4dbfc38))
+* **accounting:** emit ISO dates in exports (Postgres returns Date objects) ([0c0fb29](https://github.com/the-luap/picpeak/commit/0c0fb29770d7559b8b35a1b2a0aae1315485d875))
+* **accounting:** label the outgoing-invoice totals block in the tax summary ([f3e77e7](https://github.com/the-luap/picpeak/commit/f3e77e78079c6869a3a5de062a90f1a04fecde3c))
+* **accounting:** PR [#622](https://github.com/the-luap/picpeak/issues/622) blockers — CSV formula injection + IMAP double-ingest race ([cd6d578](https://github.com/the-luap/picpeak/commit/cd6d57839b4753b2848620c5960332cc945580ce))
+* **accounting:** PR [#622](https://github.com/the-luap/picpeak/issues/622) concerns — flag-cache, customer master gate, VAT-unconfigured, helpers, page cap ([a93b6dc](https://github.com/the-luap/picpeak/commit/a93b6dc232375e1362e091c8868a409b1335dcae))
+* **accounting:** tax report cost side queried a non-existent column ([ab65a47](https://github.com/the-luap/picpeak/commit/ab65a470a009d33558a7167dd2c3c649f785e686))
+* **accounting:** tidy the tax-export scope selector styling ([8deb7e0](https://github.com/the-luap/picpeak/commit/8deb7e0741a5bf559cb9f9b78350821dc84bdb53))
+* **accounting:** UTF-8 BOM on the ledger export so Banana reads it correctly ([74144da](https://github.com/the-luap/picpeak/commit/74144da45fc0a7a2c2e88d17a23b584ba77e9262))
+* **branding:** force lock = light/dark only; Branding stays the full preset, galleries hide color+mode ([a7c1913](https://github.com/the-luap/picpeak/commit/a7c19135bb9645a7f95d5fe76581098db305394f))
+* **branding:** when a force lock is active, collapse the theme customizer to just the Force control ([1ac653a](https://github.com/the-luap/picpeak/commit/1ac653ad1b9f47af8cb24cb53ffa60a1e95192fc))
+* **crm:** admin surfaces follow the admin light/dark toggle, not the gallery theme ([#620](https://github.com/the-luap/picpeak/issues/620)) ([d3266a0](https://github.com/the-luap/picpeak/commit/d3266a0d1c458e8ae9c57ccd2f650e699544d2d6))
+* **flags:** close CRM/accounting feature-gating gaps from the audit ([03fa3d8](https://github.com/the-luap/picpeak/commit/03fa3d82962d6d6f3cd9630e01258013d567865e))
+* **settings:** don't insert non-existent created_at into app_settings ([8621338](https://github.com/the-luap/picpeak/commit/8621338c489cbd5194da6ac22d1fe1bd9d730cb0))
 
 
 ### Documentation
 
-* add Buy Me a Coffee badge + Support section ([46bc894](https://github.com/filpgame/picpeak/commit/46bc894d917bd55dbd9bafaa64fd38db21488b81))
-* add WhatsApp Business API integration design spec ([23dc4ee](https://github.com/filpgame/picpeak/commit/23dc4ee4bcb5fde874f99665f46a61e1e25b6e21))
-* add WhatsApp integration implementation plan ([58e8202](https://github.com/filpgame/picpeak/commit/58e82023c5a21b7914720ddc2f9705f67be5493f))
-* clarify file system photo import requires existing event ([#269](https://github.com/filpgame/picpeak/issues/269)) ([5295516](https://github.com/filpgame/picpeak/commit/5295516b67a1d9f035564c5f9a724f25f8d21c78))
-* clarify file system photo import requires existing event ([#269](https://github.com/filpgame/picpeak/issues/269)) ([ee0baaf](https://github.com/filpgame/picpeak/commit/ee0baafc59f3588a26172aa8835c12dcaec35d10))
-* **contributing:** update branch reference from main to beta ([ed37caf](https://github.com/filpgame/picpeak/commit/ed37caf3d898d9b2db985e6c6ff203457fd4aa38))
-* **contributing:** update branch reference from main to beta ([c114749](https://github.com/filpgame/picpeak/commit/c1147499212ef64e9d8ded89c38d84ab0adc5346))
-* **fonts:** cache rollout, stale-list note, meta.json ([bd0e052](https://github.com/filpgame/picpeak/commit/bd0e052b1a1847718151a16117dacc6c42a2178e))
-* **localization:** enhance French language support and improve i18next configuration ([d1bc5e0](https://github.com/filpgame/picpeak/commit/d1bc5e030f55c15bf09f37b97f8e1608578a2395))
-* move documentation to docs.picpeak.app, drop in-repo copies ([02ed5d4](https://github.com/filpgame/picpeak/commit/02ed5d400736f966283a138dedde2455448067ff))
-* move documentation to docs.picpeak.app, drop in-repo copies ([0faf9b3](https://github.com/filpgame/picpeak/commit/0faf9b32816f5f94aa584d2336cdb1e0b7082239))
-* **readme:** add Contributors section with @Luca-Timo and @Rekoo-PS ([c60ab74](https://github.com/filpgame/picpeak/commit/c60ab74ae2daabc4b11fea1f1b2df728294b03c8))
-* **readme:** add Contributors section with @Luca-Timo and @Rekoo-PS ([dbe0a30](https://github.com/filpgame/picpeak/commit/dbe0a3055bd2c71981cb7d9cf43c2b22b9e3276c))
+* **readme:** add CRM + accounting to features, tax disclaimer, update contributor ([116743b](https://github.com/the-luap/picpeak/commit/116743ba438505a52b021f80f678c5a0094d20d4))
+
+## [3.61.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.6-beta.0...v3.61.0-beta.0) (2026-06-13)
+
+
+### Features
+
+* **projects:** Project Overview cockpit — link (multiple) quotes/contracts/hours into projects ([58f93ae](https://github.com/the-luap/picpeak/commit/58f93ae71350cc4a100f15a1a11f478750dace91))
+
+
+### Bug Fixes
+
+* **projects:** "one customer matches" rule for deal-lineage attach ([f74d8d4](https://github.com/the-luap/picpeak/commit/f74d8d4e8cd9fa040e067ffd751b183a9673161b))
+* **projects:** address review — cross-customer guards + email/queue hardening ([9d13880](https://github.com/the-luap/picpeak/commit/9d13880f2b177a1a090c4685798e199a1f47b5ec))
+* **projects:** enforce single-customer projects (guard event attach + re-label) ([4b1e85c](https://github.com/the-luap/picpeak/commit/4b1e85c8555b03cbed4abbd80e9cb45b831df6bf))
+
+## [3.60.6-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.5-beta.0...v3.60.6-beta.0) (2026-06-10)
+
+
+### Bug Fixes
+
+* **gallery:** guest upload honours general_max_files_per_upload + i18n placeholder interpolates ([#613](https://github.com/the-luap/picpeak/issues/613)) ([40a4aa2](https://github.com/the-luap/picpeak/commit/40a4aa2d85d93c9dc1faa69f0e6f8524ff917e29))
+* **gallery:** guest upload honours general_max_files_per_upload + i18n placeholder interpolates ([#613](https://github.com/the-luap/picpeak/issues/613)) ([69b5186](https://github.com/the-luap/picpeak/commit/69b5186582d56c42cec520abbe5454171f9f666b))
+
+## [3.60.5-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.4-beta.0...v3.60.5-beta.0) (2026-06-09)
+
+
+### Bug Fixes
+
+* **admin/events:** delete cascade orphaned photo folders because it read a non-existent column ([#608](https://github.com/the-luap/picpeak/issues/608)) ([284680e](https://github.com/the-luap/picpeak/commit/284680e0357db20177e45ab4ab01de0fbcac2a98))
+* **admin/events:** delete cascade orphaned photo folders because it read a non-existent column ([#608](https://github.com/the-luap/picpeak/issues/608)) ([457c956](https://github.com/the-luap/picpeak/commit/457c9563869156bc4773d873661a75d5115b25db))
+
+## [3.60.4-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.3-beta.0...v3.60.4-beta.0) (2026-06-08)
+
+
+### Bug Fixes
+
+* **admin:** graceful logo-img fallback + show sidebar widgets during perm hydration ([#523](https://github.com/the-luap/picpeak/issues/523) follow-up 2) ([f51b9cf](https://github.com/the-luap/picpeak/commit/f51b9cf8df2dfba07590b35cc63def689df98c4a))
+* **admin:** logo-img fallback + sidebar perm hydration + filename NFD transliteration ([#523](https://github.com/the-luap/picpeak/issues/523) follow-up 2, [#607](https://github.com/the-luap/picpeak/issues/607)) ([fcd3ca3](https://github.com/the-luap/picpeak/commit/fcd3ca36c659eafa47c036f622da8114433b1c74))
+* **downloads:** transliterate accented characters in filename via NFD instead of dropping them ([#607](https://github.com/the-luap/picpeak/issues/607)) ([620163f](https://github.com/the-luap/picpeak/commit/620163f2db77cda40b81edcac79a32cbb4fd278f))
+
+## [3.60.3-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.2-beta.0...v3.60.3-beta.0) (2026-06-04)
+
+
+### Bug Fixes
+
+* **security:** re-apply SVG CSP on the direct favicon route (PR [#603](https://github.com/the-luap/picpeak/issues/603) blocker) ([1214b6b](https://github.com/the-luap/picpeak/commit/1214b6b762ce6c763b9a28389c17905d8e47d87f))
+
+## [3.60.2-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.1-beta.0...v3.60.2-beta.0) (2026-06-04)
+
+
+### Bug Fixes
+
+* **admin-header:** skeleton brand block + move LanguageSelector into profile menu on &lt;sm ([#523](https://github.com/the-luap/picpeak/issues/523) follow-up) ([b48b5b0](https://github.com/the-luap/picpeak/commit/b48b5b0000fd95bc149335614eb062dd373fc50a))
+* **admin-header:** skeleton brand block + move LanguageSelector into profile menu on &lt;sm ([#523](https://github.com/the-luap/picpeak/issues/523) follow-up) ([fe10191](https://github.com/the-luap/picpeak/commit/fe10191b82546473f035435731bf6d6ecca2efd6))
+
+## [3.60.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.60.0-beta.0...v3.60.1-beta.0) (2026-06-02)
+
+
+### Bug Fixes
+
+* **notifications:** restore /clear-all route the frontend already calls ([#597](https://github.com/the-luap/picpeak/issues/597)) ([940fc60](https://github.com/the-luap/picpeak/commit/940fc607400afa528f7f464c1d41541f46a4070d))
+
+## [3.60.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.59.1-beta.0...v3.60.0-beta.0) (2026-06-02)
+
+
+### Features
+
+* **restore:** docker-logs visibility + ADMIN_CREDENTIALS.txt restore notice ([3322a1d](https://github.com/the-luap/picpeak/commit/3322a1d998bedf39274dbb473b44e7b1e7cbff51))
+
+
+### Bug Fixes
+
+* **backup-ui:** respect general_date_format + general_time_format ([09f6a1a](https://github.com/the-luap/picpeak/commit/09f6a1af6acfce5ef0da173fb3c17a16bb679047))
+* **restore:** coerce pg bigint counts to Number before comparing (PR [#596](https://github.com/the-luap/picpeak/issues/596) round 2) ([354fbed](https://github.com/the-luap/picpeak/commit/354fbed18220b47167b9bf6b11b3881fc120b7ae))
+* **restore:** hoist preservedMeta above SQLite/PG split (PR [#596](https://github.com/the-luap/picpeak/issues/596) blocker) ([a23fa3b](https://github.com/the-luap/picpeak/commit/a23fa3bb12cd05a922c0fb860ae97ffd3fe2baff))
+* **restore:** move operator-meta replay after post-restore verification (PR [#596](https://github.com/the-luap/picpeak/issues/596) round 3) ([20e3092](https://github.com/the-luap/picpeak/commit/20e3092c146dd9151b6e7a370f885154f0adeecc))
+* **restore:** set was_successful=true on the completed update ([7988c18](https://github.com/the-luap/picpeak/commit/7988c189723fa4639413b3a5339c148521c92c11))
+
+
+### Documentation
+
+* consolidate disaster-recovery into Backup & Restore guide ([43cb0ea](https://github.com/the-luap/picpeak/commit/43cb0ea4bfc4f241a55d2681f14c064df6b87920))
+
+## [3.59.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.59.0-beta.0...v3.59.1-beta.0) (2026-05-31)
+
+
+### Bug Fixes
+
+* **admin-header:** hide wordmark on &lt;sm when logo also shows ([#523](https://github.com/the-luap/picpeak/issues/523)) ([c246fd3](https://github.com/the-luap/picpeak/commit/c246fd3cc89962d626218029ab3da1346a726246))
+* **admin-header:** truncate long company names on narrow widths ([#523](https://github.com/the-luap/picpeak/issues/523) regression) ([e7cf834](https://github.com/the-luap/picpeak/commit/e7cf834325e8686613fbbee78d52213cb3ba98b1))
+* **api/v1/events:** also honour require_password + branding defaults ([#592](https://github.com/the-luap/picpeak/issues/592) follow-up) ([2d44b1a](https://github.com/the-luap/picpeak/commit/2d44b1ab2d251a4fc752cfeb645cb2126c0da3b7))
+* **api/v1/events:** honour global devtools-detection default on create ([#592](https://github.com/the-luap/picpeak/issues/592)) ([2304b25](https://github.com/the-luap/picpeak/commit/2304b2562465f8c86c82f2155fbdce264e68fdb3))
+* **bug-batch:** [#523](https://github.com/the-luap/picpeak/issues/523) [#564](https://github.com/the-luap/picpeak/issues/564) [#590](https://github.com/the-luap/picpeak/issues/590) [#591](https://github.com/the-luap/picpeak/issues/591) [#592](https://github.com/the-luap/picpeak/issues/592) ([c68a03c](https://github.com/the-luap/picpeak/commit/c68a03c20e70b8049ed851d41e20143813935a3a))
+* **csp:** external bootstrap script to survive strict reverse-proxy CSP ([#564](https://github.com/the-luap/picpeak/issues/564)) ([dcc629c](https://github.com/the-luap/picpeak/commit/dcc629cad23ce0ca89aabb6f8b1eacfde599774e))
+* **gallery:** preserve per-viewer is_liked across hard refresh ([#590](https://github.com/the-luap/picpeak/issues/590) follow-up) ([791e997](https://github.com/the-luap/picpeak/commit/791e9974eb4c81cc4b095f9b604eccd708fb3a66))
+* **gallery:** toggle (not add) the local liked set on click ([#590](https://github.com/the-luap/picpeak/issues/590)) ([d292b9f](https://github.com/the-luap/picpeak/commit/d292b9fa10bffe5d751629b900c606763fa8e73a))
+* **nginx:** defensive large_client_header_buffers bump ([#591](https://github.com/the-luap/picpeak/issues/591)) ([c83e883](https://github.com/the-luap/picpeak/commit/c83e88348fbd473fb1de041cebabd3ace65d4d98))
+
+## [3.59.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.58.0-beta.0...v3.59.0-beta.0) (2026-05-29)
+
+
+### Features
+
+* **admin/users:** reactivate + delete actions for deactivated admin users ([c4a9b36](https://github.com/the-luap/picpeak/commit/c4a9b3636fc7a9209ae724acb7c8cffe141d93ea))
+* **admin/users:** reactivate + delete actions for deactivated admin users ([dfcebcc](https://github.com/the-luap/picpeak/commit/dfcebccee98a551980ad2be78a8356fd39894f8a))
+
+## [3.58.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.57.2-beta.0...v3.58.0-beta.0) (2026-05-29)
+
+
+### Features
+
+* **i18n:** add Slovenian (sl) language support ([433af15](https://github.com/the-luap/picpeak/commit/433af1514687b5c103e72db800954f96fd42b9b8))
+
+## [3.57.2-beta.0](https://github.com/the-luap/picpeak/compare/v3.57.1-beta.0...v3.57.2-beta.0) (2026-05-29)
+
+
+### Documentation
+
+* list CRM under Beta Features + note dev-compose rebuild gotcha ([1ed4804](https://github.com/the-luap/picpeak/commit/1ed48046cbba1df3710cee197943521aedd1fe3d))
+
+## [3.57.1-beta.0](https://github.com/the-luap/picpeak/compare/v3.57.0-beta.0...v3.57.1-beta.0) (2026-05-29)
+
+
+### Bug Fixes
+
+* **email:** preserve dots + subaddresses across all normalization sites ([de9a924](https://github.com/the-luap/picpeak/commit/de9a924c77faebc2d0c1ff230a52d8da313259e8))
+
+## [3.57.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.56.0-beta.0...v3.57.0-beta.0) (2026-05-29)
+
+
+### Features
+
+* **admin:** clickable version links + update-available modal with changelog & upgrade command ([48cf112](https://github.com/the-luap/picpeak/commit/48cf1121e546e112cd37d94f7924a808c020dd8f))
+
+
+### Documentation
+
+* **release:** establish stable-channel cadence + promotion process ([e537923](https://github.com/the-luap/picpeak/commit/e537923857b4b6000d715bba23a78f8685b44ee6))
+
+## [3.56.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.55.0-beta.0...v3.56.0-beta.0) (2026-05-29)
+
+
+### Features
+
+* CRM module — quotes, contracts, invoices, hours, calendar, tax ([5f0fcc2](https://github.com/the-luap/picpeak/commit/5f0fcc225c29ce0f4410c5aba5ecd5a3a6d07259))
+
+
+### Bug Fixes
+
+* **crm:** thread trx through sequence-claim sites to unblock SQLite ([d1aecaa](https://github.com/the-luap/picpeak/commit/d1aecaa1804c0039744eb79a4032d1ed923e0b85))
+* **quote-response:** compute minutes-remaining for the DE changeWithin string ([5ce0b6e](https://github.com/the-luap/picpeak/commit/5ce0b6edc3fef41f2f22dd585a668f471ac47a2e))
+
+## [3.55.0-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.7-beta.0...v3.55.0-beta.0) (2026-05-27)
+
+
+### Features
+
+* **lightbox:** multi-photo Web Share save-to-Photos on iOS ([#557](https://github.com/the-luap/picpeak/issues/557)) ([d5823c7](https://github.com/the-luap/picpeak/commit/d5823c79d9a187461c0126adcff7f4374cd0e8aa))
+
+
+### Bug Fixes
+
+* **events:** preserve branding inheritance when saving events with null color_theme ([d5a37df](https://github.com/the-luap/picpeak/commit/d5a37df2c41425511dc8a1f974088bebb768f0d5))
+* **lightbox+events:** Android download lag, multi-photo Web Share re-land, theme branding inheritance ([e016f51](https://github.com/the-luap/picpeak/commit/e016f510b6cc57a9ed1b59e2ee24fedd5d7097c3))
+* **lightbox:** eliminate download lag on Android by skipping the blob round-trip ([0479521](https://github.com/the-luap/picpeak/commit/04795219a0b66fdd1ef73748d803adfdfc0d676f))
+
+## [3.54.7-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.6-beta.0...v3.54.7-beta.0) (2026-05-26)
+
+
+### Bug Fixes
+
+* **lightbox:** restrict Web Share save-to-Photos path to iOS ([#554](https://github.com/the-luap/picpeak/issues/554)) ([578397b](https://github.com/the-luap/picpeak/commit/578397bc6b27b56ccf3bf1f2f244e0e0053c493a))
+* **lightbox:** restrict Web Share save-to-Photos path to iOS ([#554](https://github.com/the-luap/picpeak/issues/554)) ([2a309c7](https://github.com/the-luap/picpeak/commit/2a309c75a74be3af3eb67758f8d65f801ef3019a))
+
+## [3.54.6-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.5-beta.0...v3.54.6-beta.0) (2026-05-25)
+
+
+### Bug Fixes
+
+* **api/v1:** accept color_theme + create feedback row on event create ([#550](https://github.com/the-luap/picpeak/issues/550)) ([7ef0e40](https://github.com/the-luap/picpeak/commit/7ef0e40e7cee2ab6eeea4fe75c558e930e31241d))
+* **api/v1:** accept color_theme + create feedback row on event create ([#550](https://github.com/the-luap/picpeak/issues/550)) ([1b521e7](https://github.com/the-luap/picpeak/commit/1b521e761c3e2cc6c885d03ef746aa7e77e6f067))
 
 ## [3.54.5-beta.0](https://github.com/the-luap/picpeak/compare/v3.54.4-beta.0...v3.54.5-beta.0) (2026-05-22)
 

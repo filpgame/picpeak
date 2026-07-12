@@ -154,6 +154,8 @@
     "collapse": "Einklappen",
     "expand": "Ausklappen",
     "submitting": "Wird übermittelt...",
+    "copy": "Kopieren",
+    "copied": "Kopiert!",
     "applying": "Wird angewendet...",
     "done": "Fertig",
     "retry": "Wiederholen",
@@ -171,6 +173,7 @@
     "saved": "",
     "deleted": "",
     "actions": "",
+    "copyFailed": "",
     "searching": "",
     "language": ""
   },
@@ -189,6 +192,18 @@
     "retryFailed": "Fehlgeschlagene erneut versuchen",
     "uploadComplete": "Upload abgeschlossen!",
     "someFilesFailed": "Einige Dateien konnten nicht hochgeladen werden",
+    "failures": {
+      "kindRejected": "Abgelehnt",
+      "kindTransfer": "Übertragung fehlgeschlagen",
+      "kindProcessing": "Verarbeitung fehlgeschlagen",
+      "transferReason": "Übertragung fehlgeschlagen",
+      "unknownReason": "Unbekannter Fehler",
+      "unknownFile": "Unbekannte Datei",
+      "toast_one": "",
+      "toast_other": "",
+      "title_one": "",
+      "title_other": ""
+    },
     "replaceByName": "Vorhandene Fotos mit gleichem Namen ersetzen",
     "uploadPhotos": "Fotos hochladen",
     "uploadMedia": "Fotos & Videos hochladen",
@@ -212,6 +227,93 @@
     "users": "Benutzer",
     "clients": "CRM",
     "betaTag": "Beta"
+  },
+  "workflows": {
+    "title": "Workflows",
+    "subtitle": "Visuelle Automatisierungen – Auslöser, Bedingungen, Freigaben und Aktionen.",
+    "new": "Neuer Workflow",
+    "empty": "Noch keine Workflows. Erstelle einen, um Rechnungsstellung und Buchungsschritte zu automatisieren.",
+    "builtin": "integriert",
+    "triggerLabel": "Auslöser",
+    "enabled": "Aktiv",
+    "disabled": "Inaktiv",
+    "confirmDelete": "Diesen Workflow löschen?",
+    "toggle": {
+      "confirmDisableBuiltin": "Das Deaktivieren dieses eingebauten Ablaufs stellt das vorherige Standardverhalten wieder her – die Automatisierung wird dadurch nicht abgeschaltet. Fortfahren?"
+    },
+    "test": {
+      "title": "Testlauf",
+      "hint": "Probelauf: durchläuft den ganzen Ablauf sofort (Wartezeiten übersprungen, Gates automatisch bestätigt), Nebeneffekte werden nur simuliert – keine echten E-Mails. Optional eine Entitäts-ID (z. B. eine Rechnung) angeben, damit Bedingungen sie lesen können.",
+      "entityId": "Entitäts-ID (optional, z. B. Rechnungs-ID)",
+      "run": "Probelauf starten",
+      "result": "Ergebnis",
+      "failed": "Testlauf fehlgeschlagen"
+    },
+    "toast": {
+      "createFailed": "Workflow konnte nicht erstellt werden",
+      "deleted": "Workflow gelöscht",
+      "deleteFailed": "Workflow konnte nicht gelöscht werden"
+    },
+    "approvals": {
+      "title": "Freigaben",
+      "subtitle": "Workflow-Durchläufe, die auf deine Bestätigung warten.",
+      "empty": "Aktuell wartet nichts auf dich.",
+      "confirm": "Bestätigen",
+      "deny": "Ablehnen",
+      "recorded": "Antwort gespeichert",
+      "defaultPrompt": "Ein Workflow benötigt deine Bestätigung.",
+      "pendingTitle": "Offene Freigaben",
+      "viewAll": "Alle Freigaben ansehen",
+      "openEntity": "{{type}} #{{id}} öffnen",
+      "acted": "Erledigt"
+    },
+    "editor": {
+      "namePlaceholder": "Workflow-Name",
+      "when": "Wenn",
+      "cleanUp": "Layout aufräumen",
+      "textView": "Text",
+      "canvasView": "Canvas",
+      "loadText": "In Editor laden",
+      "textLoaded": "Geladen – prüfen und speichern",
+      "textNeedsArrays": "Benötigt „nodes“- und „edges“-Arrays",
+      "textNeedsTrigger": "Benötigt genau einen Trigger-Knoten",
+      "textHint": "Der gesamte Ablauf als JSON – zum Teilen kopieren oder an ein LLM geben, oder einen Ablauf einfügen und in den Editor laden. Nach dem Import „Layout aufräumen“ klicken.",
+      "saved": "Workflow gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "badJson": "Konfiguration ist kein gültiges JSON",
+      "daysBefore": "Tage vor dem Anlass",
+      "templateGroup": "Vorlagengruppe für Erinnerungen",
+      "templateGroupHint": "Die genaue Vorlage wird je Anlasstyp innerhalb dieser Gruppe automatisch gewählt: «Gruppe»_«Anlasstyp», falls vorhanden, sonst «Gruppe»_default. Leer = event_reminder.",
+      "showAdvanced": "Erweitert (JSON)",
+      "hideAdvanced": "Erweitert ausblenden (JSON)",
+      "triggerHint": "Der Auslöser wird oben in der Leiste gesetzt (Wenn …).",
+      "actionLabel": "Aktion",
+      "recipient": "Empfänger",
+      "recipientCustomer": "Kunde (berücksichtigt Geschäftszeiten)",
+      "recipientAdmin": "Admin (sofort gesendet)",
+      "emailTemplate": "E-Mail-Vorlagenschlüssel",
+      "webhookTarget": "Webhook",
+      "webhookNone": "— Konfigurierten Webhook wählen —",
+      "webhookInactive": "(inaktiv)",
+      "webhookHint": "Wird über die Webhook-Pipeline zugestellt (Signatur, Wiederholungen, SSRF-Prüfungen). Endpunkte unter Einstellungen → Webhooks verwalten.",
+      "condition": "Bedingung",
+      "exprField": "Feld",
+      "exprOp": "Operator",
+      "exprValue": "Wert",
+      "conditionHint": "Führt bei „wahr“ zur „yes“-Kante, sonst zur „no“-Kante.",
+      "waitType": "Warten",
+      "waitUntil": "Bis zu einem Datum",
+      "waitDelay": "Feste Verzögerung",
+      "waitAnchor": "Warten bis",
+      "days": "Tage",
+      "hours": "Stunden",
+      "minutes": "Min",
+      "maxIterations": "Höchstens wiederholen (mal)",
+      "gatePrompt": "Frage an den Admin",
+      "gatePromptPh": "z. B. Keine Zahlung erhalten – Mahnung senden?",
+      "gateTimeout": "Automatisch ablaufen nach (Tagen, optional)",
+      "gateHint": "Sendet dem Admin einen Bestätigen/Ablehnen-Link; führt zur „confirm“- oder „deny“-Kante."
+    }
   },
   "eventTypes": {
     "title": "Veranstaltungsarten",
@@ -554,7 +656,15 @@
         "upload": {
           "name": "Backup hochladen",
           "description": "Eine Backup-Datei hochladen",
-          "comingSoon": "Upload-Funktion kommt bald"
+          "manifestComingSoon": "Manifest-Upload-Funktion kommt bald",
+          "picpeak": {
+            "name": ".picpeak-Backup",
+            "description": "Portables Voll-Backup — stellt alles wieder her (vollständige Überschreibung, Ihr aktuelles Konto bleibt erhalten)."
+          },
+          "manifest": {
+            "name": "Manifest + Dateien",
+            "description": "Ein Manifest und die zugehörigen Backup-Dateien hochladen (Legacy-Format)."
+          }
         },
         "configuration": {
           "s3": "S3-Konfiguration",
@@ -675,6 +785,26 @@
       "backupFailed": "Backup konnte nicht gestartet werden",
       "configUpdated": "Backup-Konfiguration aktualisiert",
       "configUpdateFailed": "Konfiguration konnte nicht aktualisiert werden"
+    },
+    "picpeak": {
+      "downloadFailed": "",
+      "title": "",
+      "intro": "",
+      "includePhotos": "",
+      "secretsWarning": "",
+      "download": "",
+      "restoreDone": "",
+      "restoreFailed": "",
+      "restoreTitle": "",
+      "restoreIntro": "",
+      "chooseFile": "",
+      "restoreSummary": "",
+      "externalMediaNote": "",
+      "externalMediaLink": "",
+      "reload": "",
+      "confirmTitle": "",
+      "confirmBody": "",
+      "confirmRestore": ""
     }
   },
   "archives": {
@@ -725,7 +855,14 @@
     "wrongPassword": "Falsches Passwort. Bitte überprüfen Sie Ihr Passwort und versuchen Sie es erneut.",
     "tooManyAttempts": "Zu viele fehlgeschlagene Anmeldeversuche. Bitte versuchen Sie es später erneut.",
     "pleaseEnterPassword": "Bitte geben Sie ein Passwort ein",
-    "passwordHint": "Das Passwort wurde vom Veranstalter bereitgestellt. Kontaktieren Sie ihn, wenn Sie es nicht haben."
+    "passwordHint": "Das Passwort wurde vom Veranstalter bereitgestellt. Kontaktieren Sie ihn, wenn Sie es nicht haben.",
+    "iab": {
+      "instagram": {
+        "title": "Diesen Link im Browser öffnen",
+        "ios": "Der eingebaute Browser von Instagram blockiert das Passwort-Login manchmal. Oben rechts auf das ⋯-Menü tippen und „Im externen Browser öffnen“ wählen (oder den Link kopieren und in Safari einfügen).",
+        "android": "Der eingebaute Browser von Instagram blockiert das Passwort-Login manchmal. Oben rechts auf das ⋮-Menü tippen und „Im externen Browser öffnen“ wählen (oder den Link kopieren und in Chrome einfügen)."
+      }
+    }
   },
   "gallery": {
     "expires": "Läuft ab",
@@ -845,9 +982,7 @@
   },
   "categories": {
     "title": "Fotokategorien",
-    "eventSpecificCategories": "Veranstaltungsspezifische Kategorien",
     "noEventSpecificCategories": "Keine veranstaltungsspezifischen Kategorien. Globale Kategorien sind standardmäßig verfügbar.",
-    "globalCategoriesAlwaysAvailable": "Globale Kategorien (immer verfügbar):",
     "deleteCategoryTitle": "Kategorie löschen",
     "categoryCreatedSuccess": "Kategorie erfolgreich erstellt",
     "categoryDeletedSuccess": "Kategorie erfolgreich gelöscht",
@@ -863,6 +998,15 @@
     "coverPhotoRemoved": "Titelbild entfernt",
     "failedToSetCoverPhoto": "Titelbild konnte nicht festgelegt werden",
     "categoryHeroHint": "Wenn kein Titelbild für eine Kategorie festgelegt ist, wird das Standard-Hero-Foto verwendet.",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "failedToReorder": "Kategorie-Reihenfolge konnte nicht aktualisiert werden",
+    "galleryOrder": "Galerie-Reihenfolge",
+    "resetToDefault": "Auf Standard zurücksetzen",
+    "orderReset": "Auf Standardreihenfolge zurückgesetzt",
+    "orderCustomisedHint": "Diese Galerie verwendet eine eigene Reihenfolge. Zurücksetzen, um der globalen Standardreihenfolge zu folgen (Einstellungen → Fotokategorien).",
+    "orderDefaultHint": "Mit den Pfeilen die Reihenfolge für diese Galerie festlegen. Andernfalls gilt die globale Standardreihenfolge (Einstellungen → Fotokategorien).",
+    "sharedBadge": "Geteilt",
     "downloadsEnabled": "Downloads für diese Kategorie aktiviert",
     "downloadsDisabled": "Downloads für diese Kategorie deaktiviert",
     "enableDownloadsTitle": "Klicken zum Aktivieren der Downloads für diese Kategorie",
@@ -934,13 +1078,30 @@
     "expires": "Läuft ab",
     "shareWithGuests": "Teilen Sie diesen Link mit Gästen. Sie benötigen das Passwort, um auf die Galerie zuzugreifen.",
     "shareWithGuestsPublic": "Teilen Sie diesen Link mit Gästen. Für diese Galerie ist kein Passwort erforderlich.",
+    "shortUrls": {
+      "title": "Gebrandete Kurz-URLs",
+      "description": "Erstelle einprägsame Links wie /s/sofia-abschluss, die zu dieser Galerie führen. Die Kurz-URL zeigt selbst die reiche Social-Vorschau — iMessage, Facebook, WhatsApp etc. sehen das Galerie-Foto + den Namen auch beim Einfügen des kurzen Links.",
+      "slugPlaceholder": "sofia-abschluss (optional)",
+      "slugHelp": "Leer lassen für automatische Generierung aus dem Galerienamen. Erlaubte Zeichen: Kleinbuchstaben, Ziffern, Bindestriche.",
+      "create": "Erstellen",
+      "created": "Kurz-URL erstellt",
+      "deleted": "Kurz-URL gelöscht",
+      "empty": "Noch keine Kurz-URLs. Erstelle oben eine, um diese Galerie mit einem einprägsamen Link zu teilen.",
+      "lastHit": "zuletzt {{when}}",
+      "createdAt": "erstellt {{when}}",
+      "useSuggested": "Stattdessen „{{suggested}}\" verwenden",
+      "confirmDelete": "Kurz-URL /s/{{slug}} löschen? Der Link funktioniert sofort nicht mehr.",
+      "errors": {
+        "slugTaken": "Diese Kurz-URL ist bereits vergeben — versuche stattdessen {{suggested}}.",
+        "invalidSlug": "Kurz-URLs müssen aus Kleinbuchstaben, Ziffern und Bindestrichen bestehen (1–64 Zeichen)."
+      },
+      "hits_one": "",
+      "hits_other": ""
+    },
     "resetGalleryPassword": "Galerie-Passwort zurücksetzen",
     "resendCreationEmail": "Erstellungs-E-Mail erneut senden",
     "creationEmailResent": "Die Erstellungs-E-Mail wurde zur Warteschlange hinzugefügt",
     "failedToResendEmail": "Fehler beim erneuten Senden der Erstellungs-E-Mail",
-    "resendWhatsApp": "WhatsApp erneut senden",
-    "whatsappResent": "WhatsApp-Nachricht gesendet",
-    "failedToResendWhatsApp": "WhatsApp erneut senden fehlgeschlagen",
     "photoStatistics": "Fotostatistiken",
     "managePhotos": "Fotos verwalten",
     "actions": "Aktionen",
@@ -1013,6 +1174,9 @@
     "protectionLevelMaximum": "Maximum - DevTools-Erkennung & Canvas-Rendering",
     "heroLogoSettings": "Hero-Logo-Einstellungen",
     "heroLogoVisible": "Logo im Hero-Bereich anzeigen",
+    "heroLogoInherit": "Branding-Standard verwenden",
+    "heroLogoShow": "Immer anzeigen",
+    "heroLogoHide": "Immer ausblenden",
     "heroLogoSize": "Logo-Größe",
     "heroLogoSizeSmall": "Klein",
     "heroLogoSizeMedium": "Mittel",
@@ -1066,10 +1230,13 @@
       "title": "Galerie veröffentlichen",
       "descriptionWithEmail": "Die Galerie \"{{eventName}}\" wird zugänglich gemacht und die Benachrichtigungs-E-Mail an {{customerEmail}} gesendet.",
       "descriptionNoEmail": "Die Galerie \"{{eventName}}\" wird zugänglich gemacht. Es ist keine Kunden-E-Mail hinterlegt – es wird keine Benachrichtigung gesendet.",
+      "justPublish": "Veröffentlichen",
       "passwordLabel": "Galerie-Passwort",
       "passwordPlaceholder": "Galerie-Passwort eingeben",
       "passwordHelp": "Gib das bei der Erstellung gesetzte Passwort erneut ein (oder wähle ein neues). Die E-Mail enthält genau diesen Text; das Backend hasht es erneut, sodass die Galerie-Anmeldung weiterhin funktioniert.",
-      "errorMinLength": "Das Passwort muss mindestens 6 Zeichen lang sein."
+      "errorMinLength": "Das Passwort muss mindestens 6 Zeichen lang sein.",
+      "descriptionAssignedAccount_one": "",
+      "descriptionAssignedAccount_other": ""
     },
     "duplicateEvent": "Galerie duplizieren",
     "duplicateDialog": {
@@ -1203,10 +1370,6 @@
       "help": "Beim Teilen der Galerie-URL auf WhatsApp, Facebook, Slack usw. wird das oben gewählte Heldenbild als Link-Vorschau angezeigt. Das Thumbnail wird von Link-Preview-Crawlern ohne Authentifizierung abgerufen — wer die URL teilt, macht damit faktisch dieses Bild öffentlich. Standardmäßig aus; wähle erst ein Heldenbild, das du bewusst öffentlich zeigen möchtest, bevor du diese Option aktivierst.",
       "heroRequired": "Wähle zuerst oben ein Heldenbild — diese Option verwendet es als WhatsApp- / Facebook- / Slack-Vorschaubild."
     },
-    "resendEmailPasswordLabel": "",
-    "resendEmailPasswordPlaceholder": "",
-    "resendEmailPasswordHint": "",
-    "sendEmail": "",
     "customerPicker": {
       "help": "",
       "label": "",
@@ -1340,13 +1503,14 @@
       "attemptWindowMinutesHelp": "Zeitraum, in dem fehlgeschlagene Anmeldeversuche gezählt werden",
       "lockoutDurationMinutes": "Sperrdauer (Minuten)",
       "lockoutDurationMinutesHelp": "Wie lange Galerie oder Konto nach zu vielen Fehlern gesperrt bleiben",
-      "enable2FA": "Zwei-Faktor-Authentifizierung für Admins aktivieren",
       "recaptchaSettings": "reCAPTCHA-Einstellungen",
       "enableRecaptcha": "reCAPTCHA für Anmeldeformulare aktivieren",
       "siteKey": "Site-Schlüssel",
       "secretKey": "Geheimer Schlüssel",
       "recaptchaHelp": "Holen Sie sich Ihre reCAPTCHA-Schlüssel von",
-      "saveSecuritySettings": "Sicherheitseinstellungen speichern"
+      "saveSecuritySettings": "Sicherheitseinstellungen speichern",
+      "twoFactorTitle": "Zwei-Faktor-Authentifizierung",
+      "twoFactorNote": "Die Zwei-Faktor-Authentifizierung wird jetzt pro Admin unter Einstellungen → Allgemein → Admin-Konto verwaltet. Jeder Admin aktiviert sie für seine eigene Anmeldung."
     },
     "events": {
       "title": "Veranstaltungserstellung",
@@ -1566,17 +1730,32 @@
     },
     "analytics": {
       "title": "Analyse",
-      "umamiIntegration": "Umami Analytics Integration",
-      "enableUmami": "Umami Analytics aktivieren",
+      "providerHeading": "Analytics-Anbieter",
+      "providerDescription": "Tracker für die öffentliche Galerie wählen oder eigenes Skript einfügen. Das Geräte-Diagramm im Admin-Dashboard wird nur bei Umami oder Rybbit angereichert — diese stellen eine Metrics-API bereit. Andere Anbieter (Plausible, Matomo, GA4, …) funktionieren über den Custom-Modus unten.",
+      "providerLabel": "Anbieter",
+      "provider": {
+        "none": "Keiner",
+        "umami": "Umami",
+        "rybbit": "Rybbit",
+        "custom": "Custom (eigenes Skript einfügen)"
+      },
+      "providerNoneInfo": "Kein externer Tracker eingebunden. Das Admin-Dashboard zeigt weiterhin Übersichtskarten + den Tagesverlauf aus PicPeaks eigenen access_logs; das Geräte-Diagramm verwendet eine grobe User-Agent-Heuristik.",
+      "rybbitUrl": "Rybbit-URL",
+      "rybbitUrlHelp": "URL Ihrer Rybbit-Instanz — `https://app.rybbit.io` für SaaS oder `https://rybbit.ihre-domain.de` für selbst gehostet.",
+      "rybbitWebsiteId": "Site-ID",
+      "rybbitWebsiteIdHelp": "Zu finden in Rybbit → Sites → Ihre Site → Tracking-Skript.",
+      "rybbitApiKey": "API-Schlüssel",
+      "rybbitApiKeyHelp": "Optional. Nur für das Geräte-Diagramm erforderlich. Erstellen in Rybbit → Account → Settings → API Keys. Beim Abruf maskiert als •••••••• gespeichert.",
+      "customHeadHtml": "Eigenes <head>-HTML",
+      "customHeadHtmlHelp": "Tracker-`<head>`-Snippet einfügen (Plausible, Matomo, Pirsch, GA4, GoatCounter, Fathom, Cloudflare Web Analytics, …). Beim Speichern bereinigt: nur `<script>`, `<noscript>`, `<link rel=\"preconnect|dns-prefetch\">` und `<meta>` bleiben erhalten; Event-Handler-Attribute werden entfernt. Das Geräte-Diagramm fällt in diesem Modus auf eine serverseitige User-Agent-Heuristik zurück — für tracker-seitige Zahlen Umami oder Rybbit wählen.",
+      "customCspWarning": "Hinweis zur Content-Security-Policy",
+      "customCspWarningText": "PicPeak setzt eine strikte CSP (`script-src 'self'`) ein. Wenn Ihr Tracker von einer anderen Domain lädt, müssen Sie diese Domain in Ihrer Reverse-Proxy- oder nginx-CSP-Konfiguration zulassen — sonst blockiert der Browser das Skript stillschweigend.",
       "umamiUrl": "Umami URL",
       "umamiUrlHelp": "Die URL Ihrer Umami-Instanz (z.B. https://analytics.ihredomain.de)",
       "websiteId": "Website-ID",
       "websiteIdHelp": "Ihre Umami Website-ID (im Umami-Dashboard zu finden)",
       "shareUrl": "Freigabe-URL (Optional)",
       "shareUrlHelp": "Öffentliche Freigabe-URL zum Einbetten des vollständigen Dashboards (in Umami erstellen)",
-      "umamiInfo": "Über Umami Analytics",
-      "umamiInfoText": "Umami ist eine datenschutzfreundliche, quelloffene Analyseplattform. Sie erfasst Seitenaufrufe, eindeutige Besucher und benutzerdefinierte Ereignisse ohne Cookies.",
-      "learnMore": "Mehr über Umami erfahren",
       "saveAnalyticsSettings": "Analyse-Einstellungen speichern",
       "backendAnalytics": "Backend-Analyse",
       "backendAnalyticsText": "Das System erfasst auch grundlegende serverseitige Analysen für Sicherheits- und Leistungsüberwachung.",
@@ -1586,7 +1765,9 @@
       "uniqueVisitors": "Eindeutige Besucher nach IP",
       "deviceTypes": "Gerätetypen aus User-Agents",
       "privacy": "Datenschutz",
-      "privacyText": "IP-Adressen werden aus Datenschutzgründen gehasht. Es werden keine persönlichen Daten gespeichert. Analysedaten werden 90 Tage aufbewahrt."
+      "privacyText": "IP-Adressen werden aus Datenschutzgründen gehasht. Es werden keine persönlichen Daten gespeichert. Analysedaten werden 90 Tage aufbewahrt.",
+      "umamiApiKey": "",
+      "umamiApiKeyHelp": ""
     },
     "groups": {
       "general": "Allgemein",
@@ -1684,28 +1865,6 @@
     "email": {
       "title": "E-Mail-Einstellungen"
     },
-    "messaging": {
-      "title": "Nachrichteneinstellungen",
-      "description": "WhatsApp Business API konfigurieren, um Kunden zu benachrichtigen.",
-      "enableWhatsApp": "WhatsApp-Benachrichtigungen aktivieren",
-      "enableDescription": "WhatsApp-Nachricht bei Galerie-Erstellung senden",
-      "phoneNumberId": "Phone Number ID",
-      "phoneNumberIdHelp": "Von Meta for Developers → WhatsApp → Getting Started",
-      "wabaId": "WhatsApp Business Account ID",
-      "wabaIdHelp": "In Meta Business Manager zu finden",
-      "accessToken": "Access Token",
-      "accessTokenHelp": "System-User-Token mit whatsapp_business_messaging",
-      "templateName": "Template-Name",
-      "templateNameHelp": "Exakter Name des genehmigten Templates",
-      "testButton": "Testen",
-      "testModalTitle": "Testnachricht senden",
-      "testPhoneLabel": "Telefonnummer (internationales Format)",
-      "testSendButton": "Senden",
-      "saved": "WhatsApp-Einstellungen gespeichert",
-      "saveFailed": "Einstellungen konnten nicht gespeichert werden",
-      "testSent": "Testnachricht gesendet!",
-      "testFailed": "Testnachricht fehlgeschlagen"
-    },
     "backup": {
       "title": "Backup"
     },
@@ -1730,7 +1889,8 @@
         "sales": "Vertrieb",
         "accounting": "Buchhaltung",
         "insights": "Auswertungen & Zugriff",
-        "clients": "CRM"
+        "clients": "CRM",
+        "automation": "Automatisierung"
       },
       "status": {
         "stable": "stabil",
@@ -1815,7 +1975,8 @@
         "description": "Persistente Kunden-Logins. Wiederkehrende Kunden sehen alle zugewiesenen Galerien an einem Ort — keine Passwörter pro Event. Kunden melden sich unter /customer/login an, verwaltet werden sie unter CRM → Konten."
       },
       "clients": {
-        "title": "CRM"
+        "title": "CRM",
+        "description": "Hauptschalter für den CRM-Bereich in der Seitenleiste. Aus blendet den Bereich und alle Unterfunktionen aus, unabhängig von deren individuellen Schaltern – beim erneuten Einschalten wird der vorherige Zustand wiederhergestellt."
       },
       "contracts": {
         "title": "Verträge",
@@ -1844,6 +2005,11 @@
       "slideshow": {
         "title": "Live-Diashow",
         "description": "Ein separater Vollbild-„Diashow“-Link pro Event für Beamer bei Live-Events – übernimmt neue Uploads automatisch, mit Voreinstellungen je Event-Typ und globalen Wasserzeichen-Vorgaben unter Einstellungen → Diashow."
+      },
+      "workflows": {
+        "title": "Workflows",
+        "description": "Visuelle Automatisierungen auf einer Canvas erstellen – Auslöser, Bedingungen, Verzweigungen, Schleifen und Freigabe-Gates für Admins. Deine Mahnstufen und Buchungsschritte werden zu bearbeitbaren Abläufen. Strikt optional.",
+        "sidebar": "Workflows"
       }
     },
     "customerSurface": {
@@ -1930,6 +2096,60 @@
       "testSend": "Test senden",
       "testSending": "Senden…",
       "testSentToast": "Testnachricht gesendet (ID: {{id}})."
+    },
+    "mfa": {
+      "title": "Zwei-Faktor-Authentifizierung",
+      "description": "Sichere deine Admin-Anmeldung mit einem zweiten Schritt über eine Authenticator-App (TOTP).",
+      "notEnrolled": "Die Zwei-Faktor-Authentifizierung ist für dein Konto nicht aktiviert.",
+      "setUp": "Einrichten",
+      "setupScanInstruction": "Scanne diesen QR-Code mit deiner Authenticator-App (z. B. Google Authenticator, 1Password, Authy).",
+      "manualEntry": "Oder gib diesen Schlüssel manuell ein:",
+      "qrAlt": "QR-Code zur Zwei-Faktor-Einrichtung",
+      "enterCodeLabel": "Gib den 6-stelligen Code aus deiner App ein",
+      "codePlaceholder": "123456",
+      "enable": "Aktivieren",
+      "enabledBadge": "Die Zwei-Faktor-Authentifizierung ist aktiviert.",
+      "recoveryCodesRemaining_other": "Noch {{count}} Wiederherstellungscodes übrig.",
+      "regenerate": "Wiederherstellungscodes neu erzeugen",
+      "regenerateHelp": "Gib einen aktuellen Authentifizierungscode ein, um neue Wiederherstellungscodes zu erzeugen. Deine alten Codes werden ungültig.",
+      "regenerateConfirm": "Neu erzeugen",
+      "disable": "Deaktivieren",
+      "disablePrompt": "Gib einen aktuellen Authentifizierungs- oder Wiederherstellungscode ein, um die Zwei-Faktor-Authentifizierung zu deaktivieren:",
+      "disableConfirmTitle": "Zwei-Faktor-Authentifizierung deaktivieren?",
+      "disableConfirmMessage": "Für dein Konto ist bei der Anmeldung dann kein zweiter Schritt mehr erforderlich. Du kannst sie jederzeit wieder aktivieren.",
+      "disableConfirmButton": "Deaktivieren",
+      "disabledToast": "Zwei-Faktor-Authentifizierung deaktiviert.",
+      "codeRequired": "Ein Code ist erforderlich.",
+      "recoveryCodesWarning": "Speichere diese Wiederherstellungscodes jetzt. Jeder kann einmal verwendet werden, falls du den Zugriff auf deine Authenticator-App verlierst. Sie werden nicht erneut angezeigt.",
+      "recoveryCodesAck": "Ich habe meine Wiederherstellungscodes an einem sicheren Ort gespeichert.",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "copyFailed": "Kopieren in die Zwischenablage fehlgeschlagen.",
+      "download": ".txt herunterladen",
+      "done": "Fertig",
+      "recoveryCodesRemaining_one": ""
+    },
+    "messaging": {
+      "title": "",
+      "saved": "",
+      "saveFailed": "",
+      "testSent": "",
+      "testFailed": "",
+      "description": "",
+      "enableWhatsApp": "",
+      "enableDescription": "",
+      "phoneNumberId": "",
+      "phoneNumberIdHelp": "",
+      "wabaId": "",
+      "wabaIdHelp": "",
+      "accessToken": "",
+      "accessTokenHelp": "",
+      "templateName": "",
+      "templateNameHelp": "",
+      "testButton": "",
+      "testModalTitle": "",
+      "testPhoneLabel": "",
+      "testSendButton": ""
     }
   },
   "branding": {
@@ -2252,25 +2472,25 @@
       "warning": "Warnung",
       "error": "Fehler"
     },
+    "whatsnew": {
+      "title": "Neu in {{version}}",
+      "viewAll": "Was ist neu",
+      "modalTitle": "Was ist neu",
+      "fullChangelog": "Vollständiges Änderungsprotokoll",
+      "gotIt": "Verstanden"
+    },
     "updates": {
+      "available": "Update verfügbar",
+      "newVersion": "Version {{version}} ist verfügbar",
+      "currentVersion": "Aktuell: {{version}}",
+      "newFeatures": "Neue Funktionen:",
+      "channel": "Kanal: {{channel}}",
+      "channelStable": "Stabil",
+      "channelBeta": "Beta",
       "beta": "BETA",
+      "viewReleaseNotes": "Versionshinweise anzeigen",
       "updateAvailableShort": "v{{version}} verfügbar",
-      "card": {
-        "title": "Anwendungsversion",
-        "upToDate": "Aktuell",
-        "updateTo": "Auf {{version}} aktualisieren",
-        "checkAgain": "Erneut prüfen",
-        "lastChecked": "Zuletzt geprüft: {{time}}",
-        "updating": "Wird aktualisiert…",
-        "updatingDesc": "Aktualisierung auf {{version}} — Abhängigkeiten werden installiert und das Frontend wird erstellt. Der Server wird automatisch neu gestartet.",
-        "restarting": "Wird neu gestartet…",
-        "restartingDesc": "Der Server wird neu gestartet — die Seite lädt automatisch neu, wenn er bereit ist.",
-        "complete": "Auf {{version}} aktualisiert — Seite wird neu geladen…",
-        "errorTitle": "Beim Update ist möglicherweise ein Problem aufgetreten, oder der Server benötigt länger als erwartet zum Neustart.",
-        "downloadCombinedLog": "combined.log herunterladen",
-        "downloadErrorLog": "error.log herunterladen",
-        "retry": "Erneut versuchen"
-      },
+      "updateNow": "Jetzt aktualisieren",
       "viewDetails": "",
       "copyFailed": "",
       "modalTitle": "",
@@ -2283,7 +2503,23 @@
       "noReleases": "",
       "viewOnGitHub": "",
       "noNotes": "",
-      "dismissUntilNext": ""
+      "dismissUntilNext": "",
+      "card": {
+        "title": "",
+        "updateTo": "",
+        "updating": "",
+        "restarting": "",
+        "retry": "",
+        "upToDate": "",
+        "updatingDesc": "",
+        "restartingDesc": "",
+        "complete": "",
+        "errorTitle": "",
+        "downloadCombinedLog": "",
+        "downloadErrorLog": "",
+        "lastChecked": "",
+        "checkAgain": ""
+      }
     },
     "notifications": "Benachrichtigungen",
     "markAllRead": "Alle als gelesen markieren",
@@ -2389,7 +2625,22 @@
       "visibleSuccess": "Fotos jetzt für Gäste sichtbar",
       "processingStatus": "Wird verarbeitet…",
       "processingFailed": "Fehlgeschlagen",
-      "retryQueued": "Wiederholung in Warteschlange"
+      "retryQueued": "Wiederholung in Warteschlange",
+      "viewMode": "Ansicht",
+      "gridView": "Rasteransicht",
+      "listView": "Listenansicht",
+      "columns": {
+        "photo": "Foto",
+        "category": "Kategorie",
+        "uploaded": "Hochgeladen",
+        "engagement": "Aktivität",
+        "feedback": "Feedback",
+        "size": "Größe",
+        "actions": "Aktionen",
+        "views": "Aufrufe",
+        "downloads": "Downloads",
+        "likes": "Likes"
+      }
     },
     "events": {
       "tabs": {
@@ -2563,7 +2814,8 @@
     },
     "viewReleaseNotes": "",
     "expandSidebar": "",
-    "collapseSidebar": ""
+    "collapseSidebar": "",
+    "viewOnGithub": ""
   },
   "acceptInvitation": {
     "title": "Einladung annehmen",
@@ -2851,6 +3103,24 @@
     "featureOffTooltip": "Die zugehörige Funktion ist derzeit deaktiviert. Du kannst die Vorlage trotzdem bearbeiten — sie wird verwendet, sobald die Funktion wieder aktiviert ist.",
     "subcategories": {
       "other": "Sonstige"
+    },
+    "customerMailbox": {
+      "title": "Kunden-Postfach (hello@)",
+      "subtitle": "Ein zweites Eingangspostfach für Kundenkommunikation. Die E-Mails erscheinen unter Nachrichten → Kunden; Anhänge werden nicht an die Buchhaltung weitergeleitet.",
+      "enabled": "Dieses Postfach jede Minute abrufen",
+      "outgoing": "Ausgang (SMTP)",
+      "outgoingHint": "Antworten aus diesem Postfach werden von hier gesendet. Leer lassen, um die globale Absenderadresse zu verwenden.",
+      "fromEmail": "Absenderadresse",
+      "smtpHost": "SMTP-Host",
+      "smtpUser": "SMTP-Benutzername",
+      "smtpPass": "SMTP-Passwort",
+      "smtpSsl": "SSL (465)",
+      "smtpStarttls": "STARTTLS (587)",
+      "save": "Kunden-Postfach speichern",
+      "savedToast": "Kunden-Postfach gespeichert.",
+      "requiredFields": "Host, Port und Benutzername sind erforderlich.",
+      "testOk": "Verbunden mit {{folder}} — {{messages}} Nachrichten, {{unseen}} ungelesen.",
+      "testFailed": "Verbindung fehlgeschlagen."
     }
   },
   "cms": {
@@ -2902,6 +3172,11 @@
     "title": "Systemwartung",
     "message": "Wir führen derzeit geplante Wartungsarbeiten durch, um unseren Service zu verbessern. Wir sind in Kürze wieder online.",
     "urgentMatters": "Bei dringenden Anliegen kontaktieren Sie bitte"
+  },
+  "migrationBanner": {
+    "title": "Die Image-Registry von PicPeak wurde verschoben",
+    "body": "Aktualisiere deine docker-compose.yml, um Images von {{newPath}} zu beziehen — der alte Pfad wird nicht mehr aktualisiert.",
+    "link": "Migrationshinweise ansehen"
   },
   "passwordChange": {
     "title": "Passwort ändern",
@@ -2992,6 +3267,12 @@
       "commentsDesc": "Textkommentare auf Fotos",
       "favorites": "Favoriten",
       "favoritesDesc": "Fotos als Favoriten markieren",
+      "perGuestLimits": "Limits pro Gast",
+      "perGuestLimitsDesc": "Begrenzen, wie viele Fotos jeder Gast favorisieren oder liken kann — praktisch für „Wählen Sie Ihre Top-N fürs Album“-Abläufe. 0 = unbegrenzt. Eine Senkung unter den aktuellen Stand eines Gasts lässt vorhandene Einträge bestehen; nur neue Hinzufügungen werden blockiert, bis er welche entfernt.",
+      "maxFavoritesPerGuest": "Max. Favoriten pro Gast",
+      "maxFavoritesPerGuestHint": "0 = unbegrenzt",
+      "maxLikesPerGuest": "Max. Likes pro Gast",
+      "maxLikesPerGuestHint": "0 = unbegrenzt",
       "identityMode": "Identitätsmodus",
       "identityModeSimple": "Einfaches Feedback",
       "identityModeSimpleDesc": "Anonym, gerätebasiert. Alle Besucher auf demselben Gerät teilen den Zustand.",
@@ -3066,6 +3347,14 @@
     "unlike": "Nicht mehr mögen",
     "like": "Gefällt mir",
     "favoriteError": "Favorit konnte nicht aktualisiert werden",
+    "limit": {
+      "favoriteTitle": "Favoritenlimit erreicht",
+      "favoriteBody": "Sie können in dieser Galerie bis zu {{limit}} Fotos favorisieren. Entfernen Sie einen, um einen neuen hinzuzufügen.",
+      "likeTitle": "Like-Limit erreicht",
+      "likeBody": "Sie können in dieser Galerie bis zu {{limit}} Fotos liken. Entfernen Sie einen, um einen neuen hinzuzufügen.",
+      "counter": "{{current}} von {{limit}} verwendet",
+      "ok": "Verstanden"
+    },
     "unfavorite": "Aus Favoriten entfernen",
     "favorite": "Zu Favoriten hinzufügen",
     "invalidEmail": "Ungültige E-Mail-Adresse",
@@ -3154,6 +3443,13 @@
       "cool": "Kühl",
       "vignette": "Vignette"
     },
+    "orderLabel": "Reihenfolge",
+    "order": {
+      "chronological": "Chronologisch",
+      "random": "Zufällig (mischen)"
+    },
+    "categoryLabel": "Nur Kategorie zeigen",
+    "categoryAll": "Alle Fotos",
     "watermarkToggle": "Logo-Wasserzeichen anzeigen",
     "watermarkDescription": "Blendet ein weißes, halbtransparentes Logo in einer Ecke ein (wie ein Senderlogo im TV).",
     "watermarkSourceLabel": "Logo",
@@ -3229,6 +3525,78 @@
     "regenerateToken": "Link neu generieren",
     "tokenRegenerated": "Kundenzugangs-Link neu generiert"
   },
+  "setup": {
+    "title": "Willkommen bei PicPeak",
+    "tokenStepSubtitle": "Geben Sie zunächst Ihren einmaligen Setup-Token ein",
+    "accountStepSubtitle": "Erstellen Sie nun Ihr Administrator-Konto",
+    "usageSubtitle": "Wie möchten Sie PicPeak nutzen?",
+    "usageAlwaysOn": "Galerien, Analysen und Benutzerverwaltung sind immer enthalten. Wählen Sie unten optionale Funktionen — Sie können dies jederzeit in den Einstellungen ändern.",
+    "usageDepsNote": "Rechnungen aktivieren automatisch den Buchhaltungsbereich.",
+    "usageSkip": "Nur mit Galerien fortfahren",
+    "finish": "Einrichtung abschließen",
+    "featuresSaveFailed": "Ihre Funktionsauswahl konnte nicht gespeichert werden — Sie können sie später unter Einstellungen → Funktionen festlegen.",
+    "restoreStepSubtitle": "Aus einem Backup wiederherstellen",
+    "restoreEntry": "Wechsel von einer anderen PicPeak-Instanz?",
+    "restoreEntryHint": "Stellen Sie stattdessen ein .picpeak-Backup wieder her, anstatt neu einzurichten.",
+    "restoreIntro": "Laden Sie ein .picpeak-Backup hoch, um eine andere Instanz auf diese zu klonen. Dies ersetzt alles außer dem gerade erstellten Konto.",
+    "config": {
+      "subtitle": "Richten Sie Ihre Funktionen ein",
+      "intro": "Einige Angaben zu den gewählten Funktionen. Was Sie überspringen, behält den Standard und kann später in den Einstellungen festgelegt werden.",
+      "invoicing": "Rechnungsdaten",
+      "invoicingDisclaimer": "Erscheint auf Ihren Rechnungen. Bank-/IBAN- und Mehrwertsteuerangaben liegen in Ihrer Verantwortung — prüfen Sie sie mit Ihrer Bank und Ihrem Treuhänder/Steuerberater.",
+      "companyName": "Firma / rechtlicher Name",
+      "addressLine1": "Strasse und Nummer",
+      "postalCode": "PLZ",
+      "city": "Ort",
+      "countryCode": "Ländercode (z. B. CH)",
+      "currency": "Währung (z. B. CHF)",
+      "vatId": "MwSt-Nummer (oder leer lassen)",
+      "taxId": "Steuernummer (oder MwSt-Nummer)",
+      "iban": "IBAN (für Rechnungszahlungen)",
+      "email": "E-Mail-Versand (SMTP)",
+      "emailHint": "Erforderlich, um Erinnerungen, Rechnungen und Benachrichtigungen zu senden.",
+      "smtpHost": "SMTP-Host",
+      "smtpPort": "Port",
+      "smtpUser": "Benutzername",
+      "smtpPass": "Passwort",
+      "fromEmail": "Absenderadresse",
+      "fromName": "Absendername",
+      "skip": "Vorerst überspringen",
+      "finish": "Einrichtung abschließen",
+      "saveFailed": "Einige Einstellungen konnten nicht gespeichert werden — Sie können sie in den Einstellungen abschließen."
+    },
+    "community": {
+      "subtitle": "Alles bereit",
+      "mission": "PicPeak gibt es, damit Fotografinnen und Fotografen ihre Galerien und Kundendaten selbst besitzen — auf dem eigenen Server, ohne monatliche SaaS-Gebühren. Danke, dass du es ausprobierst.",
+      "finish": "Fertig → Dashboard"
+    },
+    "stepOf": "Schritt {{current}} von {{total}}",
+    "continue": "Weiter",
+    "back": "Zurück",
+    "tokenLabel": "Setup-Token",
+    "tokenPlaceholder": "Einmaligen Setup-Token einfügen",
+    "tokenHint": "Wird beim ersten Start in den Server-Logs ausgegeben (auch in data/SETUP_TOKEN gespeichert).",
+    "tokenRequired": "Der Setup-Token ist erforderlich",
+    "tokenCommandLabel": "Token nicht gefunden? Führen Sie dies im Projektverzeichnis aus:",
+    "copyCommand": "Befehl kopieren",
+    "tokenRotatedLink": "Logs bereits rotiert? Zur Einrichtungsanleitung",
+    "invalidToken": "Dieser Setup-Token ist ungültig.",
+    "passwordRequirements": "Verwenden Sie mindestens 8 Zeichen mit einem Groß- und einem Kleinbuchstaben sowie einer Ziffer.",
+    "emailLabel": "E-Mail-Adresse",
+    "emailPlaceholder": "sie@beispiel.de",
+    "emailRequired": "E-Mail ist erforderlich",
+    "invalidEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+    "passwordLabel": "Passwort",
+    "passwordPlaceholder": "Wählen Sie ein sicheres Passwort",
+    "passwordRequired": "Passwort ist erforderlich",
+    "confirmLabel": "Passwort bestätigen",
+    "confirmPlaceholder": "Passwort erneut eingeben",
+    "passwordMismatch": "Die Passwörter stimmen nicht überein",
+    "submit": "Admin-Konto erstellen",
+    "success": "Admin-Konto erstellt. Willkommen!",
+    "genericError": "Einrichtung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "tooManyAttempts": "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es erneut."
+  },
   "adminLogin": {
     "title": "Admin-Anmeldung",
     "subtitle": "Melden Sie sich an, um Ihre Fotogalerien zu verwalten",
@@ -3250,7 +3618,25 @@
     "generalError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "needHelp": "Hilfe benötigt? Kontakt",
     "poweredBy": "Bereitgestellt von PicPeak",
-    "devModeHint": "Entwicklungsmodus: E-Mail: admin@example.com, Passwort: admin123"
+    "devModeHint": "Entwicklungsmodus: E-Mail: admin@example.com, Passwort: admin123",
+    "mfa": {
+      "title": "Zwei-Faktor-Authentifizierung",
+      "subtitle": "Gib den 6-stelligen Code aus deiner Authenticator-App ein.",
+      "recoverySubtitle": "Gib einen deiner Wiederherstellungscodes ein.",
+      "codeLabel": "Authentifizierungscode",
+      "codePlaceholder": "123456",
+      "recoveryCodeLabel": "Wiederherstellungscode",
+      "recoveryCodePlaceholder": "awzq-jca3-va",
+      "verify": "Bestätigen",
+      "back": "Zurück",
+      "useRecoveryCode": "Stattdessen Wiederherstellungscode verwenden",
+      "useAuthenticator": "Stattdessen Authenticator-App verwenden",
+      "codeRequired": "Gib deinen Authentifizierungscode ein",
+      "invalidCode": "Ungültiger Code. Bitte versuche es erneut.",
+      "sessionExpired": "Deine Bestätigungssitzung ist abgelaufen. Bitte melde dich erneut an.",
+      "locked": "Konto wegen zu vieler Versuche vorübergehend gesperrt. Versuche es später erneut.",
+      "lockedRetry": "Konto vorübergehend gesperrt. Versuche es in {{seconds}} Sekunden erneut."
+    }
   },
   "cssTemplates": {
     "title": "Benutzerdefinierte CSS-Vorlagen",
@@ -3651,7 +4037,7 @@
       "noEvents": "Noch keinem Event zugewiesen. Fügen Sie diesen Kunden über das Event-Formular hinzu.",
       "email": "E-Mail",
       "preferredLanguage": "Bevorzugte Sprache",
-      "preferredLanguageHint": "Steuert die Portal-Sprache sowie die Sprache von Angebots- und Rechnungs-PDFs. Neue Kunden erben standardmässig die Sprache aus dem Geschäftsprofil ({{lang}}); hier kann pro Kunde überschrieben werden.",
+      "preferredLanguageHint": "Steuert die Portal-Sprache, Angebots-/Rechnungs-PDFs sowie Rechnungs-E-Mails (Erinnerungen/Mahnungen). Neue Kunden erben standardmässig die Sprache aus dem Geschäftsprofil ({{lang}}); hier kann pro Kunde überschrieben werden.",
       "salutation": "Anrede",
       "firstName": "Vorname",
       "lastName": "Nachname",
@@ -4302,7 +4688,14 @@
       "ccPdfEmailPlaceholder": "name@example.com",
       "ccPdfPickFromAdmins": "Aus Admins auswählen:",
       "ccPdfCustom": "Eigene E-Mail-Adresse",
-      "internalNotes": "Interne Notizen (nicht auf der PDF)"
+      "internalNotes": "Interne Notizen (nicht auf der PDF)",
+      "eventType": "",
+      "eventTypeNone": "",
+      "eventTypeHint": "",
+      "bookingWorkflow": "",
+      "bookingWorkflowNone": "",
+      "bookingWorkflowDisabled": "",
+      "bookingWorkflowHint": ""
     },
     "responseWindowOpen": "Offen bis {{at}}",
     "section": {
@@ -4359,6 +4752,7 @@
       "total": "Summe",
       "subtotal": "Zwischensumme",
       "vat": "MwSt.",
+      "rounding": "Rundung",
       "position": "Pos.",
       "discount": "Rabatt %",
       "descriptionPlaceholder": "Beschreibung (mehrere Zeilen möglich)",
@@ -4381,6 +4775,7 @@
   "bills": {
     "status": {
       "scheduled": "Geplant",
+      "draft": "Entwurf",
       "pending_delivery": "Wartet auf Lieferung",
       "sent": "Gesendet",
       "paid": "Bezahlt",
@@ -4503,6 +4898,7 @@
       "notes": "Notizen",
       "methodPlaceholder": "Methode wählen…",
       "methods": {
+        "bankTransfer": "Überweisung",
         "card": "Karte",
         "cash": "Bar",
         "paypal": "PayPal",
@@ -4675,8 +5071,32 @@
     "crm_invoices_late_fee_minor": {
       "label": "Mahngebühr (Rappen / Cent)"
     },
+    "crm_invoices_late_fee_type": {
+      "label": "Art der Mahngebühr"
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": "Mahngebühr (% der Rechnung)"
+    },
+    "lateFeeType": {
+      "flat": "Fester Betrag (Rappen)",
+      "percent": "Prozentsatz der Rechnung"
+    },
+    "lateFeeAgb": {
+      "title": "Mahngebühren müssen in den AGB stehen",
+      "body": "Vertragliche Pflicht: Sätze wie „Es werden Mahnspesen erhoben“ reichen nicht aus. In den AGB muss die konkrete Gebühr klar beziffert sein (z.B. „CHF 20 ab der 2. Mahnung“). Mit dem Treuhänder prüfen."
+    },
+    "dunningMoved": {
+      "title": "Der Mahnrhythmus liegt jetzt in den Workflows",
+      "body": "Wann und wie oft Zahlungserinnerungen für überfällige Rechnungen verschickt werden, wird im Workflow „Rechnungsmahnung“ festgelegt. Die Mahngebühren unten gelten weiterhin.",
+      "link": "Workflows öffnen"
+    },
     "crm_invoices_late_fee_label": {
       "label": "Bezeichnung Mahngebühr"
+    },
+    "crm_invoices_vat_note_text": {
+      "label": "MwSt.- / Freitext-Hinweis auf Rechnungen",
+      "placeholder": "z. B. Gemäß § 6 Abs. 1 Z 27 UStG 1994 wird keine Umsatzsteuer berechnet (Kleinunternehmer).",
+      "help": "Wird direkt unter der MwSt.-Zeile auf jeder Rechnungs-PDF gedruckt. Leer lassen zum Ausblenden. Bitte den genauen Wortlaut mit deinem Steuerberater abstimmen."
     },
     "crm_invoices_skonto_percent_default": {
       "label": "Standard-Skonto %"
@@ -4744,6 +5164,11 @@
   },
   "reminderTemplates": {
     "title": "Erinnerungs-E-Mails vor dem Anlass",
+    "scheduleMoved": {
+      "title": "Der Versandzeitpunkt liegt jetzt in den Workflows",
+      "body": "Ob Erinnerungen vor dem Anlass verschickt werden und wie viele Tage vorher, wird im Workflow „Erinnerung vor dem Anlass“ festgelegt. Auf dieser Seite werden die E-Mail-Vorlagen bearbeitet; anlassspezifische Überschreibungen bleiben auf der jeweiligen Anlass-Detailseite.",
+      "link": "Workflows öffnen"
+    },
     "globalSection": "Globales Verhalten",
     "globalHelp": "Standardmässig aus — aktiviere, um Erinnerungen zu senden. Der unten gesetzte Offset ist der Standard; jeder Anlass kann ihn auf der Detailseite überschreiben.",
     "enableLabel": "Erinnerungs-E-Mails vor dem Anlass senden",
@@ -5017,6 +5442,90 @@
       }
     }
   },
+  "messages": {
+    "title": "Nachrichten",
+    "subtitle": "Gesendete, automatische und eingehende E-Mails — an einem Ort.",
+    "sync": "Abrufen",
+    "newMessage": "Neue Nachricht",
+    "searchPlaceholder": "In diesem Ordner suchen…",
+    "account": {
+      "all": "Alle E-Mails",
+      "customers": "Kunden",
+      "accounting": "Buchhaltung",
+      "automated": "Automatisch"
+    },
+    "folder": {
+      "inbox": "Posteingang",
+      "sent": "Gesendet",
+      "archived": "Archiviert",
+      "deleted": "Gelöscht"
+    },
+    "unified": "Konten übergreifend",
+    "systemGenerated": "Systemgeneriert",
+    "acrossAccounts": "Über alle Konten",
+    "selectPrompt": "Nachricht zum Lesen auswählen",
+    "noMessages": "Keine Nachrichten",
+    "noSearchResults": "Keine Treffer",
+    "noSubject": "(kein Betreff)",
+    "from": "von",
+    "to": "An",
+    "reply": "Antworten",
+    "replyAll": "Allen antworten",
+    "forward": "Weiterleiten",
+    "archive": "Archivieren",
+    "delete": "Löschen",
+    "deleteForever": "Endgültig löschen",
+    "restore": "Wiederherstellen",
+    "bookExpense": "Als Ausgabe buchen",
+    "rebill": "An Kunden weiterverrechnen",
+    "createQuote": "Angebot",
+    "createContract": "Vertrag",
+    "createGallery": "Galerie",
+    "createInvoice": "Rechnung",
+    "doc": {
+      "quote": "Angebot",
+      "contract": "Vertrag",
+      "invoice": "Rechnung",
+      "gallery": "Galerie"
+    },
+    "soon": "In einer späteren Phase verfügbar",
+    "viewDocument": "Dokument ansehen",
+    "openInAccounting": "Im Buchhaltungs-Posteingang öffnen",
+    "noInboundBody": "Für diese E-Mail wurde kein Nachrichtentext erfasst.",
+    "noBody": "Diese Nachricht wurde gesendet, bevor die Textspeicherung eingeführt wurde — keine Vorschau verfügbar.",
+    "loadError": "Diese Nachricht konnte nicht geladen werden.",
+    "attachments": "Anhang/Anhänge",
+    "notArchived": "noch nicht archiviert",
+    "sentAttachHint": "Gesendete Anhänge werden noch nicht archiviert — Phase 2.",
+    "document": "Dokument",
+    "previewUnavailable": "Vorschau nicht verfügbar",
+    "rasterNote": "Serverseitig gerenderte Vorschau — die Originaldatei erreicht den Browser nie.",
+    "close": "Schliessen",
+    "compose": "Nachricht verfassen",
+    "cancel": "Abbrechen",
+    "send": "Senden",
+    "subject": "Betreff",
+    "optional": "optional",
+    "bodyHint": "Bearbeite die Nachricht frei — füge vor dem Senden an beliebiger Stelle eine Notiz ein.",
+    "sendsFromHint": "Wird von deiner konfigurierten Absenderadresse gesendet.",
+    "sentToast": "Nachricht gesendet.",
+    "sendFailed": "Nachricht konnte nicht gesendet werden.",
+    "onWrote": "Am",
+    "customer": "Kunde",
+    "resolvingCustomer": "Absender wird einem Kunden zugeordnet…",
+    "noCustomerMatch": "Kein Kunde zu diesem Absender gefunden — oben suchen oder neuen Kunden anlegen.",
+    "createNewDoc": "Neues {{label}} erstellen",
+    "existingDocs": "Oder ein bestehendes referenzieren",
+    "noExistingDocs": "Für diesen Kunden gibt es noch keine Dokumente.",
+    "galleryCreateOnly": "Galerien sind event-basiert — dies öffnet den Event-Editor, wo du den Kunden zuweisen kannst.",
+    "syncDisabled": "Eingehende E-Mails sind deaktiviert — unter Einstellungen → Funktionen aktivieren.",
+    "syncUnconfigured": "Zuerst ein Postfach unter Einstellungen → E-Mail konfigurieren.",
+    "syncBusy": "Es läuft bereits eine Synchronisierung.",
+    "syncFailed": "Synchronisierung fehlgeschlagen.",
+    "actionFailed": "Aktion fehlgeschlagen.",
+    "syncOk_one": "",
+    "syncOk_other": ""
+  },
   "paymentCheck": {
     "missingToken": "",
     "alreadyUsed": "",
@@ -5101,7 +5610,9 @@
     "revenue": {
       "month": "",
       "quarter": "",
-      "year": ""
+      "yearCalendar": "",
+      "year": "",
+      "toggleHint": ""
     },
     "outstanding": "",
     "outstandingSub_one": "",

@@ -154,6 +154,8 @@
     "collapse": "Collapse",
     "expand": "Expand",
     "submitting": "Submitting...",
+    "copy": "Copy",
+    "copied": "Copied!",
     "applying": "Applying...",
     "done": "Done",
     "retry": "Retry",
@@ -171,6 +173,7 @@
     "saved": "Saved.",
     "deleted": "Deleted.",
     "actions": "Actions",
+    "copyFailed": "Could not copy to clipboard",
     "searching": "Searching…",
     "language": "Language"
   },
@@ -189,6 +192,18 @@
     "retryFailed": "Retry failed",
     "uploadComplete": "Upload complete!",
     "someFilesFailed": "Some files failed to upload",
+    "failures": {
+      "kindRejected": "Rejected",
+      "kindTransfer": "Transfer failed",
+      "kindProcessing": "Processing failed",
+      "transferReason": "Transfer failed",
+      "unknownReason": "Unknown error",
+      "unknownFile": "Unknown file",
+      "toast_one": "{{count}} file(s) could not be uploaded — see the list below.",
+      "toast_other": "{{count}} file(s) could not be uploaded — see the list below.",
+      "title_one": "{{count}} file(s) could not be uploaded",
+      "title_other": "{{count}} file(s) could not be uploaded"
+    },
     "replaceByName": "Replace existing photos with same name",
     "uploadPhotos": "Upload Photos",
     "uploadMedia": "Upload Photos & Videos",
@@ -212,6 +227,93 @@
     "users": "Users",
     "clients": "CRM",
     "betaTag": "Beta"
+  },
+  "workflows": {
+    "title": "Workflows",
+    "subtitle": "Visual automations — triggers, conditions, gates and actions.",
+    "new": "New workflow",
+    "empty": "No workflows yet. Create one to automate your invoicing and booking steps.",
+    "builtin": "built-in",
+    "triggerLabel": "Trigger",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "confirmDelete": "Delete this workflow?",
+    "toggle": {
+      "confirmDisableBuiltin": "Disabling this built-in reverts to the previous built-in behaviour — it does not turn the automation off. Continue?"
+    },
+    "test": {
+      "title": "Test run",
+      "hint": "Dry run: walks the whole flow now (waits skipped, gates auto-confirmed) with side effects mocked — no real emails. Optionally give an entity id (e.g. an invoice) so conditions can read it.",
+      "entityId": "Entity id (optional, e.g. invoice id)",
+      "run": "Run dry test",
+      "result": "Result",
+      "failed": "Test run failed"
+    },
+    "toast": {
+      "createFailed": "Could not create workflow",
+      "deleted": "Workflow deleted",
+      "deleteFailed": "Could not delete workflow"
+    },
+    "approvals": {
+      "title": "Approvals",
+      "subtitle": "Workflow runs waiting on your confirmation.",
+      "empty": "Nothing waiting for you right now.",
+      "confirm": "Confirm",
+      "deny": "Deny",
+      "recorded": "Response recorded",
+      "defaultPrompt": "A workflow needs your confirmation.",
+      "pendingTitle": "Pending approvals",
+      "viewAll": "View all approvals",
+      "openEntity": "Open {{type}} #{{id}}",
+      "acted": "Done"
+    },
+    "editor": {
+      "namePlaceholder": "Workflow name",
+      "when": "When",
+      "cleanUp": "Clean up layout",
+      "textView": "Text",
+      "canvasView": "Canvas",
+      "loadText": "Load into editor",
+      "textLoaded": "Loaded — review and Save",
+      "textNeedsArrays": "Needs \"nodes\" and \"edges\" arrays",
+      "textNeedsTrigger": "Needs exactly one trigger node",
+      "textHint": "The whole flow as JSON — copy it to share or hand to an LLM, or paste a flow and load it into the editor. Click “Clean up layout” after importing.",
+      "saved": "Workflow saved",
+      "saveFailed": "Could not save",
+      "badJson": "Config is not valid JSON",
+      "daysBefore": "days before event",
+      "templateGroup": "Reminder template group",
+      "templateGroupHint": "The exact template is auto-picked per event type within this group: «group»_«eventType» if you authored one, else «group»_default. Blank = event_reminder.",
+      "showAdvanced": "Advanced (JSON)",
+      "hideAdvanced": "Hide advanced (JSON)",
+      "triggerHint": "The trigger is set in the toolbar above (When …).",
+      "actionLabel": "Action",
+      "recipient": "Recipient",
+      "recipientCustomer": "Customer (respects business hours)",
+      "recipientAdmin": "Admin (sent immediately)",
+      "emailTemplate": "Email template key",
+      "webhookTarget": "Webhook",
+      "webhookNone": "— Select a configured webhook —",
+      "webhookInactive": "(inactive)",
+      "webhookHint": "Delivered via the webhook pipeline (signing, retries, SSRF checks). Manage endpoints in Settings → Webhooks.",
+      "condition": "Condition",
+      "exprField": "Field",
+      "exprOp": "Operator",
+      "exprValue": "Value",
+      "conditionHint": "Routes to the “yes” edge when true, “no” when false.",
+      "waitType": "Wait",
+      "waitUntil": "Until a date",
+      "waitDelay": "A fixed delay",
+      "waitAnchor": "Wait until",
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Min",
+      "maxIterations": "Repeat at most (times)",
+      "gatePrompt": "Question for the admin",
+      "gatePromptPh": "e.g. No payment received — send a reminder?",
+      "gateTimeout": "Auto-expire after (days, optional)",
+      "gateHint": "Emails the admin a confirm/deny link; routes to the “confirm” or “deny” edge."
+    }
   },
   "archives": {
     "title": "Archives",
@@ -261,7 +363,14 @@
     "wrongPassword": "Incorrect password. Please check your password and try again.",
     "tooManyAttempts": "Too many failed login attempts. Please try again later.",
     "pleaseEnterPassword": "Please enter a password",
-    "passwordHint": "The password was provided by the event organizer. Contact them if you don't have it."
+    "passwordHint": "The password was provided by the event organizer. Contact them if you don't have it.",
+    "iab": {
+      "instagram": {
+        "title": "Open this link in your browser",
+        "ios": "Instagram's built-in browser sometimes blocks the password login. Tap the ⋯ menu in the top right, then \"Open in external browser\" (or copy the link and paste into Safari).",
+        "android": "Instagram's built-in browser sometimes blocks the password login. Tap the ⋮ menu in the top right, then \"Open in external browser\" (or copy the link and paste into Chrome)."
+      }
+    }
   },
   "gallery": {
     "expires": "Expires",
@@ -382,9 +491,7 @@
   "categories": {
     "title": "Photo Categories",
     "addCategory": "Add Category",
-    "eventSpecificCategories": "Event-Specific Categories",
     "noEventSpecificCategories": "No event-specific categories. Global categories are available by default.",
-    "globalCategoriesAlwaysAvailable": "Global Categories (always available):",
     "deleteCategoryTitle": "Delete category",
     "categoryCreatedSuccess": "Category created successfully",
     "categoryDeletedSuccess": "Category deleted successfully",
@@ -399,6 +506,15 @@
     "coverPhotoRemoved": "Cover photo removed",
     "failedToSetCoverPhoto": "Failed to set cover photo",
     "categoryHeroHint": "If no cover photo is set for a category, the default hero photo will be used.",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "failedToReorder": "Failed to update category order",
+    "galleryOrder": "Gallery order",
+    "resetToDefault": "Reset to default",
+    "orderReset": "Reverted to the default order",
+    "orderCustomisedHint": "This gallery uses a custom order. Reset to follow the global default (Settings → Photo Categories).",
+    "orderDefaultHint": "Use the arrows to set the order for this gallery. Otherwise it follows the global default (Settings → Photo Categories).",
+    "sharedBadge": "Shared",
     "downloadsEnabled": "Downloads enabled for this category",
     "downloadsDisabled": "Downloads disabled for this category",
     "enableDownloadsTitle": "Click to enable downloads for this category",
@@ -468,13 +584,30 @@
     "expires": "Expires",
     "shareWithGuests": "Share this link with guests. They'll need the password to access the gallery.",
     "shareWithGuestsPublic": "Share this link with guests. No password is required for this gallery.",
+    "shortUrls": {
+      "title": "Branded short URLs",
+      "description": "Create memorable links like /s/sofia-graduation that resolve to this gallery. The short URL itself shows the rich social preview when shared — so iMessage, Facebook, WhatsApp etc. see the gallery photo + name even when pasting the short link.",
+      "slugPlaceholder": "sofia-graduation (optional)",
+      "slugHelp": "Leave empty to auto-generate from the gallery name. Allowed characters: lowercase letters, digits, hyphens.",
+      "create": "Create",
+      "created": "Short URL created",
+      "deleted": "Short URL deleted",
+      "empty": "No short URLs yet. Create one above to share this gallery with a memorable link.",
+      "lastHit": "last {{when}}",
+      "createdAt": "created {{when}}",
+      "useSuggested": "Use \"{{suggested}}\" instead",
+      "confirmDelete": "Delete short URL /s/{{slug}}? The link will stop working immediately.",
+      "errors": {
+        "slugTaken": "That short URL is already taken — try {{suggested}} instead.",
+        "invalidSlug": "Short URLs must be lowercase letters, digits, and hyphens (1–64 chars)."
+      },
+      "hits_one": "{{count}} hits",
+      "hits_other": "{{count}} hits"
+    },
     "resetGalleryPassword": "Reset Gallery Password",
     "resendCreationEmail": "Resend Creation Email",
     "creationEmailResent": "Creation email has been queued for sending",
     "failedToResendEmail": "Failed to resend creation email",
-    "resendWhatsApp": "Resend WhatsApp",
-    "whatsappResent": "WhatsApp message sent",
-    "failedToResendWhatsApp": "Failed to resend WhatsApp",
     "photoStatistics": "Photo Statistics",
     "totalPhotos": "Total Photos",
     "managePhotos": "Manage Photos",
@@ -547,6 +680,9 @@
     "protectionLevelMaximum": "Maximum - DevTools detection & canvas rendering",
     "heroLogoSettings": "Hero Logo Settings",
     "heroLogoVisible": "Display logo in hero section",
+    "heroLogoInherit": "Use branding default",
+    "heroLogoShow": "Always show",
+    "heroLogoHide": "Always hide",
     "heroLogoSize": "Logo Size",
     "heroLogoSizeSmall": "Small",
     "heroLogoSizeMedium": "Medium",
@@ -591,10 +727,13 @@
       "title": "Publish gallery",
       "descriptionWithEmail": "Publishing \"{{eventName}}\" makes the gallery accessible and sends the notification email to {{customerEmail}}.",
       "descriptionNoEmail": "Publishing \"{{eventName}}\" makes the gallery accessible. No customer email is set, so no notification will be sent.",
+      "justPublish": "Publish",
       "passwordLabel": "Gallery password",
       "passwordPlaceholder": "Enter the gallery password",
       "passwordHelp": "Re-type the password set at creation (or pick a new one). The email includes this exact text; the backend re-hashes it so the gallery login still works.",
-      "errorMinLength": "Password must be at least 6 characters long."
+      "errorMinLength": "Password must be at least 6 characters long.",
+      "descriptionAssignedAccount_one": "Publishing \"{{eventName}}\" makes the gallery accessible. The assigned customer account(s) will be notified by email (in their language) that it is available.",
+      "descriptionAssignedAccount_other": "Publishing \"{{eventName}}\" makes the gallery accessible. The assigned customer account(s) will be notified by email (in their language) that it is available."
     },
     "duplicateEvent": "Duplicate gallery",
     "duplicateDialog": {
@@ -739,10 +878,6 @@
       "help": "When this gallery URL is shared on WhatsApp, Facebook, Slack, etc., the link preview will show the hero photo above. The thumbnail is fetched unauthenticated by link-preview crawlers — anyone with the URL effectively makes this image public. Off by default; pick a hero you are comfortable surfacing publicly before enabling.",
       "heroRequired": "Pick a hero photo above first — this option uses it as the WhatsApp / Facebook / Slack preview image."
     },
-    "resendEmailPasswordLabel": "Gallery password (optional)",
-    "resendEmailPasswordPlaceholder": "Enter password to include in email",
-    "resendEmailPasswordHint": "If left blank, the email will say the password is not shown for security reasons.",
-    "sendEmail": "Send email",
     "customerPicker": {
       "help": "Customers added here can log in at /customer/login and view this gallery without entering the per-event password.",
       "label": "Customer accounts",
@@ -876,13 +1011,14 @@
       "attemptWindowMinutesHelp": "How long to look back when counting failed login attempts",
       "lockoutDurationMinutes": "Lockout Duration (minutes)",
       "lockoutDurationMinutesHelp": "How long the gallery or account stays locked after too many failures",
-      "enable2FA": "Enable two-factor authentication for admins",
       "recaptchaSettings": "reCAPTCHA Settings",
       "enableRecaptcha": "Enable reCAPTCHA for login forms",
       "siteKey": "Site Key",
       "secretKey": "Secret Key",
       "recaptchaHelp": "Get your reCAPTCHA keys from",
-      "saveSecuritySettings": "Save Security Settings"
+      "saveSecuritySettings": "Save Security Settings",
+      "twoFactorTitle": "Two-factor authentication",
+      "twoFactorNote": "Two-factor authentication is now managed per admin from Settings → General → Admin Account. Each admin enables it for their own login."
     },
     "categories": {
       "title": "Categories",
@@ -1102,17 +1238,32 @@
     },
     "analytics": {
       "title": "Analytics",
-      "umamiIntegration": "Umami Analytics Integration",
-      "enableUmami": "Enable Umami Analytics",
+      "providerHeading": "Analytics provider",
+      "providerDescription": "Pick which tracker to use for the public gallery, or paste your own script. The admin dashboard's device-breakdown chart only enriches when you pick Umami or Rybbit — those expose a metrics API. Other providers (Plausible, Matomo, GA4, …) work via the Custom mode below.",
+      "providerLabel": "Provider",
+      "provider": {
+        "none": "None",
+        "umami": "Umami",
+        "rybbit": "Rybbit",
+        "custom": "Custom (paste your own script)"
+      },
+      "providerNoneInfo": "No external tracker injected. The admin dashboard still shows summary cards + the daily chart from PicPeak's own access_logs; the device-breakdown chart uses a coarse user-agent heuristic.",
+      "rybbitUrl": "Rybbit URL",
+      "rybbitUrlHelp": "Your Rybbit instance URL — `https://app.rybbit.io` for the SaaS, or `https://rybbit.yourdomain.com` for self-hosted.",
+      "rybbitWebsiteId": "Site ID",
+      "rybbitWebsiteIdHelp": "Found in Rybbit → Sites → your site → Tracking script.",
+      "rybbitApiKey": "API key",
+      "rybbitApiKeyHelp": "Optional. Required only for the device-breakdown chart. Generate in Rybbit → Account → Settings → API Keys. Stored masked as •••••••• once saved.",
+      "customHeadHtml": "Custom <head> HTML",
+      "customHeadHtmlHelp": "Paste your tracker's `<head>` snippet (Plausible, Matomo, Pirsch, GA4, GoatCounter, Fathom, Cloudflare Web Analytics, …). Sanitised on save: only `<script>`, `<noscript>`, `<link rel=\"preconnect|dns-prefetch\">` and `<meta>` tags survive, and event-handler attributes are stripped. The admin dashboard's device-breakdown chart falls back to a server-side user-agent heuristic in this mode — pick Umami or Rybbit if you want the tracker-side numbers.",
+      "customCspWarning": "Content-Security-Policy reminder",
+      "customCspWarningText": "PicPeak ships with a strict CSP (`script-src 'self'`). If your tracker loads from another domain, add that domain to your reverse-proxy or nginx CSP config — otherwise the browser silently blocks the script.",
       "umamiUrl": "Umami URL",
       "umamiUrlHelp": "The URL of your Umami instance (e.g., https://analytics.yourdomain.com)",
       "websiteId": "Website ID",
       "websiteIdHelp": "Your Umami website ID (found in Umami dashboard)",
       "shareUrl": "Share URL (Optional)",
       "shareUrlHelp": "Public share URL for embedding the full dashboard (create in Umami)",
-      "umamiInfo": "About Umami Analytics",
-      "umamiInfoText": "Umami is a privacy-focused, open-source analytics platform. It tracks page views, unique visitors, and custom events without using cookies.",
-      "learnMore": "Learn more about Umami",
       "saveAnalyticsSettings": "Save Analytics Settings",
       "backendAnalytics": "Backend Analytics",
       "backendAnalyticsText": "The system also tracks basic analytics server-side for security and performance monitoring.",
@@ -1122,7 +1273,9 @@
       "uniqueVisitors": "Unique visitors by IP",
       "deviceTypes": "Device types from user agents",
       "privacy": "Privacy",
-      "privacyText": "IP addresses are hashed for privacy. No personal data is stored. Analytics data is retained for 90 days."
+      "privacyText": "IP addresses are hashed for privacy. No personal data is stored. Analytics data is retained for 90 days.",
+      "umamiApiKey": "API key",
+      "umamiApiKeyHelp": "Optional. Required only for the device-breakdown chart on the Analytics dashboard. Generate in Umami → Settings → Profile → API Keys. Stored masked as •••••••• once saved — leave the masked value to keep the existing key."
     },
     "groups": {
       "general": "General",
@@ -1220,28 +1373,6 @@
     "email": {
       "title": "Email Settings"
     },
-    "messaging": {
-      "title": "Message Settings",
-      "description": "Configure WhatsApp Business API to notify clients when their gallery is ready.",
-      "enableWhatsApp": "Enable WhatsApp notifications",
-      "enableDescription": "Send WhatsApp notification when a gallery is created or published",
-      "phoneNumberId": "Phone Number ID",
-      "phoneNumberIdHelp": "From Meta for Developers → WhatsApp → Getting Started",
-      "wabaId": "WhatsApp Business Account ID",
-      "wabaIdHelp": "Found in your Meta Business Manager",
-      "accessToken": "Access Token",
-      "accessTokenHelp": "System User token with whatsapp_business_messaging permission",
-      "templateName": "Template Name",
-      "templateNameHelp": "Exact name of the approved template in Meta Business Manager",
-      "testButton": "Test",
-      "testModalTitle": "Send test message",
-      "testPhoneLabel": "Phone number (international format)",
-      "testSendButton": "Send",
-      "saved": "WhatsApp settings saved",
-      "saveFailed": "Failed to save settings",
-      "testSent": "Test message sent!",
-      "testFailed": "Test message failed"
-    },
     "backup": {
       "title": "Backup"
     },
@@ -1266,7 +1397,8 @@
         "sales": "Sales",
         "accounting": "Accounting",
         "insights": "Insights & Access",
-        "clients": "CRM"
+        "clients": "CRM",
+        "automation": "Automation"
       },
       "status": {
         "stable": "stable",
@@ -1351,7 +1483,8 @@
         "description": "Persistent customer logins. Recurring clients see all their assigned galleries from one place — no per-event passwords. Customers log in at /customer/login and you manage them under CRM → Accounts."
       },
       "clients": {
-        "title": "CRM"
+        "title": "CRM",
+        "description": "Master switch for the CRM sidebar section. Off hides the section and every sub-feature below regardless of their individual toggles — re-enable to restore them to whatever you set last."
       },
       "contracts": {
         "title": "Contracts",
@@ -1380,6 +1513,11 @@
       "slideshow": {
         "title": "Live Slideshow",
         "description": "A separate fullscreen \"Diashow\" link per event for projectors at live events — auto-picks-up new uploads, with per-event-type presets and global watermark defaults under Settings → Slideshow."
+      },
+      "workflows": {
+        "title": "Workflows",
+        "description": "Build visual automations on a canvas — triggers, conditions, branches, loops and admin approval gates. Your reminder ladder and booking steps become editable flows. Strictly opt-in.",
+        "sidebar": "Workflows"
       }
     },
     "customerSurface": {
@@ -1466,6 +1604,60 @@
       "testSend": "Send test",
       "testSending": "Sending…",
       "testSentToast": "Test message sent (id: {{id}})."
+    },
+    "mfa": {
+      "title": "Two-factor authentication",
+      "description": "Add a second step to your admin sign-in using an authenticator app (TOTP).",
+      "notEnrolled": "Two-factor authentication is not enabled for your account.",
+      "setUp": "Set up",
+      "setupScanInstruction": "Scan this QR code with your authenticator app (e.g. Google Authenticator, 1Password, Authy).",
+      "manualEntry": "Or enter this secret manually:",
+      "qrAlt": "Two-factor setup QR code",
+      "enterCodeLabel": "Enter the 6-digit code from your app",
+      "codePlaceholder": "123456",
+      "enable": "Enable",
+      "enabledBadge": "Two-factor authentication is enabled.",
+      "recoveryCodesRemaining_other": "{{count}} recovery codes remaining.",
+      "regenerate": "Regenerate recovery codes",
+      "regenerateHelp": "Enter a current authentication code to generate a new set of recovery codes. Your old codes will stop working.",
+      "regenerateConfirm": "Regenerate",
+      "disable": "Disable",
+      "disablePrompt": "Enter a current authentication or recovery code to disable two-factor authentication:",
+      "disableConfirmTitle": "Disable two-factor authentication?",
+      "disableConfirmMessage": "Your account will no longer require a second step at sign-in. You can re-enable it at any time.",
+      "disableConfirmButton": "Disable",
+      "disabledToast": "Two-factor authentication disabled.",
+      "codeRequired": "A code is required.",
+      "recoveryCodesWarning": "Save these recovery codes now. Each can be used once if you lose access to your authenticator app. They will not be shown again.",
+      "recoveryCodesAck": "I have saved my recovery codes in a safe place.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Failed to copy to clipboard.",
+      "download": "Download .txt",
+      "done": "Done",
+      "recoveryCodesRemaining_one": "settings.mfa.recoveryCodesRemaining"
+    },
+    "messaging": {
+      "title": "Configurações de Mensagens",
+      "saved": "WhatsApp settings saved",
+      "saveFailed": "Failed to save settings",
+      "testSent": "Test message sent!",
+      "testFailed": "Test message failed",
+      "description": "Configure WhatsApp Business API to notify clients when their gallery is ready.",
+      "enableWhatsApp": "Ativar envio por WhatsApp",
+      "enableDescription": "Send WhatsApp notification when a gallery is created or published",
+      "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdHelp": "From Meta for Developers → WhatsApp → Getting Started",
+      "wabaId": "WhatsApp Business Account ID",
+      "wabaIdHelp": "Found in your Meta Business Manager",
+      "accessToken": "Access Token",
+      "accessTokenHelp": "System User token with whatsapp_business_messaging permission",
+      "templateName": "Nome do Template",
+      "templateNameHelp": "Exact name of the approved template in Meta Business Manager",
+      "testButton": "Testar",
+      "testModalTitle": "Enviar mensagem de teste",
+      "testPhoneLabel": "Número de telefone (formato internacional)",
+      "testSendButton": "Enviar"
     }
   },
   "analytics": {
@@ -1817,25 +2009,25 @@
       "error": "Error",
       "checking": "Checking..."
     },
+    "whatsnew": {
+      "title": "What's new in {{version}}",
+      "viewAll": "What's new",
+      "modalTitle": "What's new",
+      "fullChangelog": "Full changelog",
+      "gotIt": "Got it"
+    },
     "updates": {
+      "available": "Update Available",
+      "newVersion": "Version {{version}} is available",
+      "currentVersion": "Current: {{version}}",
+      "newFeatures": "New features include:",
+      "channel": "Channel: {{channel}}",
+      "channelStable": "Stable",
+      "channelBeta": "Beta",
       "beta": "BETA",
+      "viewReleaseNotes": "View Release Notes",
       "updateAvailableShort": "v{{version}} available",
-      "card": {
-        "title": "Application Version",
-        "upToDate": "Up to date",
-        "updateTo": "Update to {{version}}",
-        "checkAgain": "Check again",
-        "lastChecked": "Last checked: {{time}}",
-        "updating": "Updating…",
-        "updatingDesc": "Updating to {{version}} — installing dependencies and building frontend. The server will restart automatically.",
-        "restarting": "Restarting…",
-        "restartingDesc": "Server is restarting — page will reload automatically when ready.",
-        "complete": "Updated to {{version}} — reloading page…",
-        "errorTitle": "Update may have encountered an issue, or the server is taking longer than expected to restart.",
-        "downloadCombinedLog": "Download combined.log",
-        "downloadErrorLog": "Download error.log",
-        "retry": "Retry"
-      },
+      "updateNow": "Update Now",
       "viewDetails": "View release notes and upgrade instructions",
       "copyFailed": "Could not copy to clipboard",
       "modalTitle": "Update available",
@@ -1848,7 +2040,23 @@
       "noReleases": "No release notes available.",
       "viewOnGitHub": "View on GitHub",
       "noNotes": "No release notes provided.",
-      "dismissUntilNext": "Dismiss until next version"
+      "dismissUntilNext": "Dismiss until next version",
+      "card": {
+        "title": "admin.updates.card.title",
+        "updateTo": "admin.updates.card.updateTo",
+        "updating": "admin.updates.card.updating",
+        "restarting": "admin.updates.card.restarting",
+        "retry": "admin.updates.card.retry",
+        "upToDate": "admin.updates.card.upToDate",
+        "updatingDesc": "admin.updates.card.updatingDesc",
+        "restartingDesc": "admin.updates.card.restartingDesc",
+        "complete": "admin.updates.card.complete",
+        "errorTitle": "admin.updates.card.errorTitle",
+        "downloadCombinedLog": "admin.updates.card.downloadCombinedLog",
+        "downloadErrorLog": "admin.updates.card.downloadErrorLog",
+        "lastChecked": "admin.updates.card.lastChecked",
+        "checkAgain": "admin.updates.card.checkAgain"
+      }
     },
     "notifications": "Notifications",
     "markAllRead": "Mark all read",
@@ -1956,7 +2164,22 @@
       "visibleSuccess": "Photos now visible to guests",
       "processingStatus": "Processing…",
       "processingFailed": "Failed",
-      "retryQueued": "Retry queued"
+      "retryQueued": "Retry queued",
+      "viewMode": "View mode",
+      "gridView": "Grid view",
+      "listView": "List view",
+      "columns": {
+        "photo": "Photo",
+        "category": "Category",
+        "uploaded": "Uploaded",
+        "engagement": "Engagement",
+        "feedback": "Feedback",
+        "size": "Size",
+        "actions": "Actions",
+        "views": "Views",
+        "downloads": "Downloads",
+        "likes": "Likes"
+      }
     },
     "events": {
       "tabs": {
@@ -2130,7 +2353,8 @@
     },
     "viewReleaseNotes": "View release notes on GitHub",
     "expandSidebar": "Expand sidebar",
-    "collapseSidebar": "Collapse sidebar"
+    "collapseSidebar": "Collapse sidebar",
+    "viewOnGithub": "View PicPeak on GitHub"
   },
   "acceptInvitation": {
     "title": "Accept Invitation",
@@ -2401,6 +2625,24 @@
     "featureOffTooltip": "The feature this template belongs to is currently disabled. You can still edit the template — it will be used once the feature is re-enabled.",
     "subcategories": {
       "other": "Other"
+    },
+    "customerMailbox": {
+      "title": "Customer mailbox (hello@)",
+      "subtitle": "A second inbound mailbox for customer conversations. Its mail appears under Messages → Customers; attachments are not routed to Accounting.",
+      "enabled": "Poll this mailbox every minute",
+      "outgoing": "Outgoing (SMTP)",
+      "outgoingHint": "Replies from this mailbox send from here. Leave blank to fall back to the global outgoing address.",
+      "fromEmail": "From address",
+      "smtpHost": "SMTP Host",
+      "smtpUser": "SMTP Username",
+      "smtpPass": "SMTP Password",
+      "smtpSsl": "SSL (465)",
+      "smtpStarttls": "STARTTLS (587)",
+      "save": "Save Customer Mailbox",
+      "savedToast": "Customer mailbox saved.",
+      "requiredFields": "Host, port and username are required.",
+      "testOk": "Connected to {{folder}} — {{messages}} messages, {{unseen}} unread.",
+      "testFailed": "Connection failed."
     }
   },
   "cms": {
@@ -2775,7 +3017,15 @@
         "upload": {
           "name": "Upload Backup",
           "description": "Upload a backup file",
-          "comingSoon": "Upload functionality coming soon"
+          "manifestComingSoon": "Manifest Upload functionality coming soon",
+          "picpeak": {
+            "name": ".picpeak backup",
+            "description": "Portable full backup — restores everything (full override, keeps your current account)."
+          },
+          "manifest": {
+            "name": "Manifest + files",
+            "description": "Upload a manifest and its backup files (legacy format)."
+          }
         },
         "configuration": {
           "s3": "S3 Configuration",
@@ -2896,6 +3146,26 @@
       "backupFailed": "Failed to start backup",
       "configUpdated": "Backup configuration updated",
       "configUpdateFailed": "Failed to update configuration"
+    },
+    "picpeak": {
+      "downloadFailed": "Could not create the backup file.",
+      "title": "Portable backup (.picpeak)",
+      "intro": "Download a single self-contained file, then upload it on another instance to clone this one — all through the browser.",
+      "includePhotos": "Include original gallery photos (larger file)",
+      "secretsWarning": "This file contains secrets in plain text (email password, admin credentials, API keys). Store it securely and only transfer it over trusted channels.",
+      "download": "Download .picpeak",
+      "restoreDone": "Backup restored.",
+      "restoreFailed": "Restore failed.",
+      "restoreTitle": "Restore from a .picpeak",
+      "restoreIntro": "Upload a .picpeak taken from this or another instance. Same database engine only.",
+      "chooseFile": "Choose .picpeak file…",
+      "restoreSummary": "{{tables}} tables and {{files}} files restored.",
+      "externalMediaNote": "This backup references an external-media library. Make sure external-media routing is configured on this instance.",
+      "externalMediaLink": "Setup guide",
+      "reload": "Reload app",
+      "confirmTitle": "Restore will delete all current data",
+      "confirmBody": "This permanently replaces ALL data on this instance with the uploaded backup, except your current account. This cannot be undone.",
+      "confirmRestore": "Delete & restore"
     }
   },
   "cssTemplates": {
@@ -2923,6 +3193,11 @@
     "title": "System Maintenance",
     "message": "We're currently performing scheduled maintenance to improve our service. We'll be back online shortly.",
     "urgentMatters": "For urgent matters, please contact"
+  },
+  "migrationBanner": {
+    "title": "PicPeak's image registry has moved",
+    "body": "Update your docker-compose.yml to pull from {{newPath}} — the old path is no longer being updated.",
+    "link": "See migration notes"
   },
   "passwordChange": {
     "title": "Change Password",
@@ -3013,6 +3288,12 @@
       "commentsDesc": "Text comments on photos",
       "favorites": "Favorites",
       "favoritesDesc": "Mark photos as favorites",
+      "perGuestLimits": "Per-guest limits",
+      "perGuestLimitsDesc": "Cap how many photos each guest can favorite or like — useful for \"pick your top N for the album\" workflows. Leave at 0 for no limit. Lowering a cap below an existing guest's count keeps their existing rows; only new adds are blocked until they remove some.",
+      "maxFavoritesPerGuest": "Max favorites per guest",
+      "maxFavoritesPerGuestHint": "0 = unlimited",
+      "maxLikesPerGuest": "Max likes per guest",
+      "maxLikesPerGuestHint": "0 = unlimited",
       "identityMode": "Identity Mode",
       "identityModeSimple": "Simple feedback",
       "identityModeSimpleDesc": "Anonymous, device-based. All visitors on the same device share state.",
@@ -3089,6 +3370,14 @@
     "favoriteError": "Failed to update favorite",
     "unfavorite": "Remove from favorites",
     "favorite": "Add to favorites",
+    "limit": {
+      "favoriteTitle": "Favorite limit reached",
+      "favoriteBody": "You can favorite up to {{limit}} photos in this gallery. Remove one to add a new one.",
+      "likeTitle": "Like limit reached",
+      "likeBody": "You can like up to {{limit}} photos in this gallery. Remove one to add a new one.",
+      "counter": "{{current}} of {{limit}} used",
+      "ok": "Got it"
+    },
     "invalidEmail": "Invalid email address",
     "identityRequired": "Your Information Required",
     "identityReason": "Please provide your name and email to submit {{type}}.",
@@ -3125,6 +3414,78 @@
     "fourStarsPlus": "4+ Stars",
     "fiveStarsOnly": "5 Stars Only"
   },
+  "setup": {
+    "title": "Welcome to PicPeak",
+    "tokenStepSubtitle": "First, enter your one-time setup token",
+    "accountStepSubtitle": "Now create your administrator account",
+    "usageSubtitle": "How will you use PicPeak?",
+    "usageAlwaysOn": "Galleries, analytics and user management are always included. Pick any extras below — you can change these anytime in Settings.",
+    "usageDepsNote": "Invoices automatically enable the Accounting area.",
+    "usageSkip": "Continue with galleries only",
+    "finish": "Finish setup",
+    "featuresSaveFailed": "Could not save your feature choices — you can set them later in Settings → Features.",
+    "restoreStepSubtitle": "Restore from a backup",
+    "restoreEntry": "Migrating from another PicPeak?",
+    "restoreEntryHint": "Restore a .picpeak backup instead of setting up fresh.",
+    "restoreIntro": "Upload a .picpeak backup to clone another instance onto this one. This replaces everything except the account you just created.",
+    "config": {
+      "subtitle": "Set up your features",
+      "intro": "A few details for the features you picked. Anything you skip keeps its default and can be set later in Settings.",
+      "invoicing": "Invoicing details",
+      "invoicingDisclaimer": "Used on your invoices. Bank/IBAN and VAT details are your responsibility — verify them with your bank and Treuhänder/tax advisor.",
+      "companyName": "Company / legal name",
+      "addressLine1": "Street and number",
+      "postalCode": "Postal code",
+      "city": "City",
+      "countryCode": "Country code (e.g. CH)",
+      "currency": "Currency (e.g. CHF)",
+      "vatId": "VAT ID (or leave blank)",
+      "taxId": "Tax number (or VAT ID)",
+      "iban": "IBAN (for invoice payments)",
+      "email": "Email delivery (SMTP)",
+      "emailHint": "Required to send reminders, invoices and notifications.",
+      "smtpHost": "SMTP host",
+      "smtpPort": "Port",
+      "smtpUser": "Username",
+      "smtpPass": "Password",
+      "fromEmail": "From address",
+      "fromName": "From name",
+      "skip": "Skip for now",
+      "finish": "Finish setup",
+      "saveFailed": "Some settings could not be saved — you can finish them in Settings."
+    },
+    "community": {
+      "subtitle": "You're all set",
+      "mission": "PicPeak exists so photographers can own their galleries and client data — on their own server, without monthly SaaS fees. Thanks for giving it a try.",
+      "finish": "Finish → Dashboard"
+    },
+    "stepOf": "Step {{current}} of {{total}}",
+    "continue": "Continue",
+    "back": "Back",
+    "tokenLabel": "Setup token",
+    "tokenPlaceholder": "Paste the one-time setup token",
+    "tokenHint": "Printed to the server logs on first start (also saved to data/SETUP_TOKEN).",
+    "tokenRequired": "The setup token is required",
+    "tokenCommandLabel": "Can't find your token? Run this in the project directory:",
+    "copyCommand": "Copy command",
+    "tokenRotatedLink": "Logs already rotated away? Read the setup guide",
+    "invalidToken": "That setup token is not valid.",
+    "passwordRequirements": "Use at least 8 characters with an upper-case letter, a lower-case letter and a number.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "emailRequired": "Email is required",
+    "invalidEmail": "Please enter a valid email address",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Choose a strong password",
+    "passwordRequired": "Password is required",
+    "confirmLabel": "Confirm password",
+    "confirmPlaceholder": "Re-enter your password",
+    "passwordMismatch": "Passwords do not match",
+    "submit": "Create admin account",
+    "success": "Admin account created. Welcome!",
+    "genericError": "Setup failed. Please try again.",
+    "tooManyAttempts": "Too many attempts. Please wait a moment and try again."
+  },
   "adminLogin": {
     "title": "Admin Login",
     "subtitle": "Sign in to manage your photo galleries",
@@ -3146,7 +3507,25 @@
     "generalError": "An error occurred. Please try again.",
     "needHelp": "Need help? Contact",
     "poweredBy": "Powered by PicPeak",
-    "devModeHint": "Development Mode: Use email: admin@example.com, password: admin123"
+    "devModeHint": "Development Mode: Use email: admin@example.com, password: admin123",
+    "mfa": {
+      "title": "Two-factor authentication",
+      "subtitle": "Enter the 6-digit code from your authenticator app.",
+      "recoverySubtitle": "Enter one of your recovery codes.",
+      "codeLabel": "Authentication code",
+      "codePlaceholder": "123456",
+      "recoveryCodeLabel": "Recovery code",
+      "recoveryCodePlaceholder": "awzq-jca3-va",
+      "verify": "Verify",
+      "back": "Back",
+      "useRecoveryCode": "Use a recovery code instead",
+      "useAuthenticator": "Use your authenticator app instead",
+      "codeRequired": "Enter your authentication code",
+      "invalidCode": "Invalid code. Please try again.",
+      "sessionExpired": "Your verification session expired. Please sign in again.",
+      "locked": "Account temporarily locked due to too many attempts. Try again later.",
+      "lockedRetry": "Account temporarily locked. Try again in {{seconds}} seconds."
+    }
   },
   "slideshow": {
     "adminTitle": "Live Slideshow",
@@ -3178,6 +3557,13 @@
       "cool": "Cool",
       "vignette": "Vignette"
     },
+    "orderLabel": "Play order",
+    "order": {
+      "chronological": "Chronological",
+      "random": "Random (shuffle)"
+    },
+    "categoryLabel": "Show only category",
+    "categoryAll": "All photos",
     "watermarkToggle": "Show logo watermark",
     "watermarkDescription": "Overlay a white, semi-transparent logo in a corner (like a TV station ident).",
     "watermarkSourceLabel": "Logo",
@@ -3651,7 +4037,7 @@
       "noEvents": "Not assigned to any events yet. Add this customer to an event from the event form.",
       "email": "Email",
       "preferredLanguage": "Preferred language",
-      "preferredLanguageHint": "Drives portal UI and quote/invoice PDF locale. New customers default to the business-profile language ({{lang}}); override here per customer.",
+      "preferredLanguageHint": "Drives portal UI, quote/invoice PDFs, and billing emails (reminders/dunning). New customers default to the business-profile language ({{lang}}); override here per customer.",
       "salutation": "Salutation",
       "firstName": "First name",
       "lastName": "Last name",
@@ -4294,7 +4680,14 @@
       "ccPdfEmailPlaceholder": "name@example.com",
       "ccPdfPickFromAdmins": "Pick from admins:",
       "ccPdfCustom": "Custom email",
-      "internalNotes": "Internal notes (not on PDF)"
+      "internalNotes": "Internal notes (not on PDF)",
+      "eventType": "Event type",
+      "eventTypeNone": "— Use default —",
+      "eventTypeHint": "Used for the event created when this quote is accepted.",
+      "bookingWorkflow": "Booking workflow (on acceptance)",
+      "bookingWorkflowNone": "— None —",
+      "bookingWorkflowDisabled": "(disabled)",
+      "bookingWorkflowHint": "The flow that runs when the customer accepts. Leave as None to run no booking flow. The flow must be enabled to fire."
     },
     "responseWindowOpen": "Open until {{at}}",
     "section": {
@@ -4359,6 +4752,7 @@
       "total": "Total",
       "subtotal": "Subtotal",
       "vat": "VAT",
+      "rounding": "Rounding",
       "position": "Pos.",
       "discount": "Rabatt %",
       "descriptionPlaceholder": "Description (multi-line OK)",
@@ -4494,6 +4888,7 @@
       "notes": "Notes",
       "methodPlaceholder": "Select method…",
       "methods": {
+        "bankTransfer": "Bank transfer",
         "card": "Card",
         "cash": "Cash",
         "paypal": "PayPal",
@@ -4515,6 +4910,7 @@
     },
     "status": {
       "scheduled": "Scheduled",
+      "draft": "Draft",
       "pending_delivery": "Awaiting delivery",
       "sent": "Sent",
       "paid": "Paid",
@@ -4675,8 +5071,32 @@
     "crm_invoices_late_fee_minor": {
       "label": "Late fee (minor units / Rappen)"
     },
+    "crm_invoices_late_fee_type": {
+      "label": "Late fee type"
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": "Late fee (% of invoice)"
+    },
+    "lateFeeType": {
+      "flat": "Flat amount (Rappen)",
+      "percent": "Percentage of invoice"
+    },
+    "lateFeeAgb": {
+      "title": "Late fees must be itemised in your terms (AGB)",
+      "body": "A contractual duty: phrases like “late fees apply” aren't enough. Your terms must state the concrete fee (e.g. “CHF 20 from the 2nd reminder”). Verify with your Treuhänder."
+    },
+    "dunningMoved": {
+      "title": "Reminder schedule is now in Workflows",
+      "body": "When and how often overdue reminders go out is configured in the “Invoice dunning” workflow. The late-fee amounts below still apply.",
+      "link": "Open Workflows"
+    },
     "crm_invoices_late_fee_label": {
       "label": "Late fee label"
+    },
+    "crm_invoices_vat_note_text": {
+      "label": "VAT / free-text note on invoices",
+      "placeholder": "e.g. Gemäß § 6 Abs. 1 Z 27 UStG 1994 wird keine Umsatzsteuer berechnet (Kleinunternehmer).",
+      "help": "Printed directly under the MwSt. line on every invoice PDF. Leave empty to hide. Please confirm the exact wording with your tax advisor."
     },
     "crm_invoices_skonto_percent_default": {
       "label": "Skonto rate (default %)"
@@ -4744,6 +5164,11 @@
   },
   "reminderTemplates": {
     "title": "Pre-event reminder emails",
+    "scheduleMoved": {
+      "title": "The reminder schedule is now in Workflows",
+      "body": "Whether pre-event reminders are sent, and how many days before the event, is configured in the “Pre-event reminder” workflow. This page edits the email templates; per-event overrides stay on each event’s detail page.",
+      "link": "Open Workflows"
+    },
     "globalSection": "Global behaviour",
     "globalHelp": "Off by default — turn on to start sending pre-event reminders. The offset below is the default; each event can override on its detail page.",
     "enableLabel": "Send pre-event reminder emails",
@@ -5017,6 +5442,90 @@
       }
     }
   },
+  "messages": {
+    "title": "Messages",
+    "subtitle": "Sent, automated and incoming mail — one place.",
+    "sync": "Sync",
+    "newMessage": "New message",
+    "searchPlaceholder": "Search this folder…",
+    "account": {
+      "all": "All mail",
+      "customers": "Customers",
+      "accounting": "Accounting",
+      "automated": "Automated"
+    },
+    "folder": {
+      "inbox": "Inbox",
+      "sent": "Sent",
+      "archived": "Archived",
+      "deleted": "Deleted"
+    },
+    "unified": "Unified across accounts",
+    "systemGenerated": "System-generated",
+    "acrossAccounts": "Across all accounts",
+    "selectPrompt": "Select a message to read",
+    "noMessages": "No messages",
+    "noSearchResults": "No matches",
+    "noSubject": "(no subject)",
+    "from": "from",
+    "to": "To",
+    "reply": "Reply",
+    "replyAll": "Reply all",
+    "forward": "Forward",
+    "archive": "Archive",
+    "delete": "Delete",
+    "deleteForever": "Delete permanently",
+    "restore": "Restore",
+    "bookExpense": "Book as expense",
+    "rebill": "Re-bill to client",
+    "createQuote": "Quote",
+    "createContract": "Contract",
+    "createGallery": "Gallery",
+    "createInvoice": "Invoice",
+    "doc": {
+      "quote": "Quote",
+      "contract": "Contract",
+      "invoice": "Invoice",
+      "gallery": "Gallery"
+    },
+    "soon": "Available in a later phase",
+    "viewDocument": "View document",
+    "openInAccounting": "Open in Accounting inbox",
+    "noInboundBody": "No message body was captured for this email.",
+    "noBody": "This message was sent before body capture was added, so no preview is available.",
+    "loadError": "Could not load this message.",
+    "attachments": "attachment(s)",
+    "notArchived": "not archived yet",
+    "sentAttachHint": "Sent attachments are not archived yet — Phase 2.",
+    "document": "Document",
+    "previewUnavailable": "Preview unavailable",
+    "rasterNote": "Server-rendered preview — the raw file never reaches the browser.",
+    "close": "Close",
+    "compose": "Compose message",
+    "cancel": "Cancel",
+    "send": "Send",
+    "subject": "Subject",
+    "optional": "optional",
+    "bodyHint": "Edit the message freely — add a note anywhere before sending.",
+    "sendsFromHint": "Sends from your configured outgoing address.",
+    "sentToast": "Message sent.",
+    "sendFailed": "Failed to send message.",
+    "onWrote": "On",
+    "customer": "Customer",
+    "resolvingCustomer": "Matching the sender to a customer…",
+    "noCustomerMatch": "No customer matched this sender — search for one or create a new customer above.",
+    "createNewDoc": "Create new {{label}}",
+    "existingDocs": "Or reference an existing one",
+    "noExistingDocs": "No existing documents for this customer yet.",
+    "galleryCreateOnly": "Galleries are event-based — this opens the event editor, where you can assign the customer.",
+    "syncDisabled": "Incoming mail is off — enable it under Settings → Features.",
+    "syncUnconfigured": "Configure a mailbox under Settings → Email first.",
+    "syncBusy": "A sync is already running.",
+    "syncFailed": "Sync failed.",
+    "actionFailed": "Action failed.",
+    "syncOk_one": "Checked mailboxes — {{count}} new.",
+    "syncOk_other": "Checked mailboxes — {{count}} new."
+  },
   "paymentCheck": {
     "missingToken": "Missing token",
     "alreadyUsed": "This link has already been used (action: {{action}}). If you need to record another payment, open the invoice in admin.",
@@ -5101,7 +5610,9 @@
     "revenue": {
       "month": "Revenue · last 30 days",
       "quarter": "Revenue · last 90 days",
-      "year": "Revenue · last 365 days"
+      "yearCalendar": "Revenue · this year",
+      "year": "Revenue · last 365 days",
+      "toggleHint": "Tap to switch window"
     },
     "outstanding": "Outstanding payments",
     "outstandingSub_one": "{{count}} invoice(s) unpaid",

@@ -13,16 +13,17 @@ import {
   ShieldCheck,
   FolderTree,
 } from 'lucide-react';
-import { toast } from 'react-toastify';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { Button, Card, Loading } from '../../components/common';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../hooks';
 import { BackupDashboard } from '../../components/admin/BackupDashboard';
 import { BackupConfiguration } from '../../components/admin/BackupConfiguration';
 import { BackupHistory } from '../../components/admin/BackupHistory';
 import { RestoreWizard } from '../../components/admin/RestoreWizard';
+import { PicpeakExportCard } from '../../components/admin/PicpeakBackupCard';
 import { BackupIntegrityCard } from '../../components/admin/BackupIntegrityCard';
 import { BackupCoverageCard } from '../../components/admin/BackupCoverageCard';
 import { api } from '../../config/api';
@@ -31,7 +32,6 @@ type TabId = 'dashboard' | 'configuration' | 'history' | 'restore' | 'integrity'
 
 export const BackupManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
-  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { formatDateTime: fmtDateTime } = useLocalizedDate();
 
@@ -61,34 +61,24 @@ export const BackupManagement: React.FC = () => {
     },
   });
 
-  const manualBackupMutation = useMutation({
+  const manualBackupMutation = useMutationWithToast({
     mutationFn: async () => {
       const response = await api.post('/admin/backup/run');
       return response.data;
     },
-    onSuccess: () => {
-      toast.success(t('backup.messages.backupStarted'));
-      queryClient.invalidateQueries({ queryKey: ['backup-status'] });
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.error || t('backup.messages.backupFailed');
-      toast.error(message);
-    },
+    successMessage: t('backup.messages.backupStarted'),
+    errorMessage: t('backup.messages.backupFailed'),
+    invalidateKeys: [['backup-status']],
   });
 
-  const updateConfigMutation = useMutation({
+  const updateConfigMutation = useMutationWithToast({
     mutationFn: async (config: unknown) => {
       const response = await api.put('/admin/backup/config', config);
       return response.data;
     },
-    onSuccess: () => {
-      toast.success(t('backup.messages.configUpdated'));
-      queryClient.invalidateQueries({ queryKey: ['backup-config'] });
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.error || t('backup.messages.configUpdateFailed');
-      toast.error(message);
-    },
+    successMessage: t('backup.messages.configUpdated'),
+    errorMessage: t('backup.messages.configUpdateFailed'),
+    invalidateKeys: [['backup-config']],
   });
 
   if (statusLoading || configLoading) {
@@ -204,12 +194,15 @@ export const BackupManagement: React.FC = () => {
       {/* Tab Content */}
       <div className="mt-6">
         {activeTab === 'dashboard' && (
-          <BackupDashboard
-            status={backupStatus}
-            config={backupConfig}
-            onRunBackup={() => manualBackupMutation.mutate()}
-            isBackupRunning={backupStatus?.isRunning || manualBackupMutation.isPending}
-          />
+          <div className="space-y-6">
+            <BackupDashboard
+              status={backupStatus}
+              config={backupConfig}
+              onRunBackup={() => manualBackupMutation.mutate()}
+              isBackupRunning={backupStatus?.isRunning || manualBackupMutation.isPending}
+            />
+            <PicpeakExportCard />
+          </div>
         )}
 
         {activeTab === 'configuration' && (

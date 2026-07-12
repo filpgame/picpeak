@@ -20,6 +20,7 @@ import {
 import { Button, Card, Loading, Input, CountrySelect, TimeField } from '../../../components/common';
 import { toast } from 'react-toastify';
 import { currencyOptions, normalizeCurrency } from '../../../constants/currencies';
+import { useMutationWithToast } from '../../../hooks';
 
 // Full IANA timezone list for the picker. `Intl.supportedValuesOf` is ES2022
 // (all current browsers); fall back to a small CH/LI-relevant set on the rare
@@ -35,7 +36,6 @@ const IANA_TIMEZONES: string[] = (() => {
 
 export const SettingsBusinessProfilePage: React.FC = () => {
   const { t } = useTranslation();
-  const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ['business-profile'],
     queryFn: () => businessProfileService.get(),
@@ -44,7 +44,7 @@ export const SettingsBusinessProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   useEffect(() => { if (data?.profile) setProfile(data.profile); }, [data]);
 
-  const saveProfile = useMutation({
+  const saveProfile = useMutationWithToast({
     // vatLabel + defaultHourlyRateMinor now live on Settings → Accounting, and
     // vatRateDefault is retired (the rates are the Accounting VAT codes). Strip
     // them from this save so an open Business-profile page can't clobber an edit
@@ -55,11 +55,9 @@ export const SettingsBusinessProfilePage: React.FC = () => {
       void vatLabel; void defaultHourlyRateMinor; void vatRateDefault;
       return businessProfileService.update(rest);
     },
-    onSuccess: () => {
-      toast.success(t('businessProfile.savedToast', 'Business profile saved.'));
-      qc.invalidateQueries({ queryKey: ['business-profile'] });
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || 'Save failed'),
+    successMessage: t('businessProfile.savedToast', 'Business profile saved.'),
+    invalidateKeys: [['business-profile']],
+    errorMessage: 'Save failed',
   });
 
   if (isLoading || !profile) return <Loading />;
@@ -614,24 +612,20 @@ const BankAccountsSection: React.FC<BankAccountsSectionProps> = ({ accounts }) =
   };
   const closeForm = () => { setOpenForm(null); setDraft(EMPTY_DRAFT); };
 
-  const create = useMutation({
+  const create = useMutationWithToast({
     mutationFn: () => businessProfileService.createBankAccount(draft),
-    onSuccess: () => {
-      toast.success(t('businessProfile.bankCreatedToast', 'Bank account added.'));
-      qc.invalidateQueries({ queryKey: ['business-profile'] });
-      closeForm();
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || 'Failed'),
+    successMessage: t('businessProfile.bankCreatedToast', 'Bank account added.'),
+    invalidateKeys: [['business-profile']],
+    errorMessage: 'Failed',
+    onSuccess: () => closeForm(),
   });
 
-  const update = useMutation({
+  const update = useMutationWithToast({
     mutationFn: (id: number) => businessProfileService.updateBankAccount(id, draft),
-    onSuccess: () => {
-      toast.success(t('businessProfile.bankUpdatedToast', 'Bank account updated.'));
-      qc.invalidateQueries({ queryKey: ['business-profile'] });
-      closeForm();
-    },
-    onError: (err: any) => toast.error(err?.response?.data?.error || 'Failed'),
+    successMessage: t('businessProfile.bankUpdatedToast', 'Bank account updated.'),
+    invalidateKeys: [['business-profile']],
+    errorMessage: 'Failed',
+    onSuccess: () => closeForm(),
   });
 
   const setDefault = useMutation({

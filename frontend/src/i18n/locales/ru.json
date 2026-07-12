@@ -152,7 +152,10 @@
     "configureInSettings": "",
     "preview": "",
     "duplicate": "",
-    "show": ""
+    "show": "",
+    "copyFailed": "",
+    "copy": "",
+    "copied": ""
   },
   "upload": {
     "photoCategory": "Категория фото",
@@ -188,7 +191,23 @@
     "uploadingChunks_many": "{{count}} пакетов загружается",
     "uploadingChunks_one": "{{count}} пакет загружается",
     "uploadingChunks_other": "{{count}} пакета загружается",
-    "retryFailed": "Повторить неудавшиеся"
+    "retryFailed": "Повторить неудавшиеся",
+    "failures": {
+      "unknownFile": "",
+      "unknownReason": "",
+      "transferReason": "",
+      "toast_few": "",
+      "toast_many": "",
+      "toast_one": "",
+      "toast_other": "",
+      "title_few": "",
+      "title_many": "",
+      "title_one": "",
+      "title_other": "",
+      "kindRejected": "",
+      "kindTransfer": "",
+      "kindProcessing": ""
+    }
   },
   "navigation": {
     "dashboard": "Панель управления",
@@ -247,7 +266,14 @@
     "wrongPassword": "Неверный пароль. Проверьте пароль и попробуйте снова.",
     "tooManyAttempts": "Слишком много неудачных попыток входа. Попробуйте позже.",
     "pleaseEnterPassword": "Пожалуйста, введите пароль",
-    "passwordHint": "Пароль предоставлен организатором события. Свяжитесь с ним, если у вас его нет."
+    "passwordHint": "Пароль предоставлен организатором события. Свяжитесь с ним, если у вас его нет.",
+    "iab": {
+      "instagram": {
+        "title": "",
+        "ios": "",
+        "android": ""
+      }
+    }
   },
   "gallery": {
     "expires": "Истекает",
@@ -378,9 +404,7 @@
   "categories": {
     "title": "Категории фото",
     "addCategory": "Добавить категорию",
-    "eventSpecificCategories": "Категории конкретного события",
     "noEventSpecificCategories": "Нет категорий для этого события. По умолчанию доступны глобальные категории.",
-    "globalCategoriesAlwaysAvailable": "Глобальные категории (всегда доступны):",
     "deleteCategoryTitle": "Удалить категорию",
     "categoryCreatedSuccess": "Категория успешно создана",
     "categoryDeletedSuccess": "Категория успешно удалена",
@@ -399,7 +423,16 @@
     "downloadsDisabled": "",
     "failedToToggleDownloads": "",
     "enableDownloadsTitle": "",
-    "disableDownloadsTitle": ""
+    "disableDownloadsTitle": "",
+    "failedToReorder": "",
+    "orderReset": "",
+    "galleryOrder": "",
+    "resetToDefault": "",
+    "orderCustomisedHint": "",
+    "orderDefaultHint": "",
+    "moveUp": "",
+    "moveDown": "",
+    "sharedBadge": ""
   },
   "events": {
     "title": "События",
@@ -464,9 +497,6 @@
     "resendCreationEmail": "Отправить письмо о создании повторно",
     "creationEmailResent": "Письмо о создании поставлено в очередь отправки",
     "failedToResendEmail": "Не удалось повторно отправить письмо о создании",
-    "resendWhatsApp": "Повторно отправить WhatsApp",
-    "whatsappResent": "Сообщение WhatsApp отправлено",
-    "failedToResendWhatsApp": "Не удалось отправить WhatsApp",
     "photoStatistics": "Статистика фото",
     "totalPhotos": "Всего фото",
     "managePhotos": "Управление фото",
@@ -739,10 +769,6 @@
     },
     "createInvoice": "",
     "duplicateEvent": "",
-    "resendEmailPasswordLabel": "",
-    "resendEmailPasswordPlaceholder": "",
-    "resendEmailPasswordHint": "",
-    "sendEmail": "",
     "fullDay": "",
     "eventTimeStart": "",
     "eventTimeEnd": "",
@@ -753,7 +779,12 @@
       "descriptionNoEmail": "",
       "passwordLabel": "",
       "passwordPlaceholder": "",
-      "passwordHelp": ""
+      "passwordHelp": "",
+      "descriptionAssignedAccount_few": "",
+      "descriptionAssignedAccount_many": "",
+      "descriptionAssignedAccount_one": "",
+      "descriptionAssignedAccount_other": "",
+      "justPublish": ""
     },
     "customerPicker": {
       "help": "",
@@ -762,7 +793,32 @@
       "placeholder": "",
       "searching": "",
       "noResults": ""
-    }
+    },
+    "shortUrls": {
+      "created": "",
+      "errors": {
+        "slugTaken": "",
+        "invalidSlug": ""
+      },
+      "deleted": "",
+      "confirmDelete": "",
+      "title": "",
+      "description": "",
+      "slugPlaceholder": "",
+      "create": "",
+      "useSuggested": "",
+      "slugHelp": "",
+      "empty": "",
+      "hits_few": "",
+      "hits_many": "",
+      "hits_one": "",
+      "hits_other": "",
+      "lastHit": "",
+      "createdAt": ""
+    },
+    "heroLogoInherit": "",
+    "heroLogoShow": "",
+    "heroLogoHide": ""
   },
   "settings": {
     "title": "Системные настройки",
@@ -888,13 +944,14 @@
       "attemptWindowMinutesHelp": "Период для подсчёта неудачных попыток входа",
       "lockoutDurationMinutes": "Длительность блокировки (минут)",
       "lockoutDurationMinutesHelp": "Как долго галерея или аккаунт остаётся заблокированным после слишком многих неудач",
-      "enable2FA": "Включить двухфакторную аутентификацию для администраторов",
       "recaptchaSettings": "Настройки reCAPTCHA",
       "enableRecaptcha": "Включить reCAPTCHA для форм входа",
       "siteKey": "Ключ сайта",
       "secretKey": "Секретный ключ",
       "recaptchaHelp": "Получите ключи reCAPTCHA на",
-      "saveSecuritySettings": "Сохранить настройки безопасности"
+      "saveSecuritySettings": "Сохранить настройки безопасности",
+      "twoFactorTitle": "",
+      "twoFactorNote": ""
     },
     "categories": {
       "title": "Категории",
@@ -1068,17 +1125,12 @@
     },
     "analytics": {
       "title": "Аналитика",
-      "umamiIntegration": "Интеграция с Umami Analytics",
-      "enableUmami": "Включить Umami Analytics",
       "umamiUrl": "URL Umami",
       "umamiUrlHelp": "URL вашего экземпляра Umami (например, https://analytics.yourdomain.com)",
       "websiteId": "ID сайта",
       "websiteIdHelp": "Ваш ID сайта в Umami (находится в панели Umami)",
       "shareUrl": "URL для шаринга (необязательно)",
       "shareUrlHelp": "Публичный URL для встраивания полной панели (создаётся в Umami)",
-      "umamiInfo": "О Umami Analytics",
-      "umamiInfoText": "Umami — это аналитическая платформа с акцентом на приватность, работающая без куки.",
-      "learnMore": "Узнать больше о Umami",
       "saveAnalyticsSettings": "Сохранить настройки аналитики",
       "backendAnalytics": "Серверная аналитика",
       "backendAnalyticsText": "Система также отслеживает базовую аналитику на стороне сервера для мониторинга безопасности и производительности.",
@@ -1088,7 +1140,29 @@
       "uniqueVisitors": "Уникальные посетители по IP",
       "deviceTypes": "Типы устройств из user agent",
       "privacy": "Приватность",
-      "privacyText": "IP-адреса хешируются для конфиденциальности. Личные данные не хранятся. Данные аналитики хранятся 90 дней."
+      "privacyText": "IP-адреса хешируются для конфиденциальности. Личные данные не хранятся. Данные аналитики хранятся 90 дней.",
+      "providerHeading": "",
+      "providerDescription": "",
+      "providerLabel": "",
+      "provider": {
+        "none": "",
+        "umami": "",
+        "rybbit": "",
+        "custom": ""
+      },
+      "umamiApiKey": "",
+      "umamiApiKeyHelp": "",
+      "rybbitUrl": "",
+      "rybbitUrlHelp": "",
+      "rybbitWebsiteId": "",
+      "rybbitWebsiteIdHelp": "",
+      "rybbitApiKey": "",
+      "rybbitApiKeyHelp": "",
+      "customHeadHtml": "",
+      "customHeadHtmlHelp": "",
+      "customCspWarning": "",
+      "customCspWarningText": "",
+      "providerNoneInfo": ""
     },
     "thumbnails": {
       "title": "Миниатюры",
@@ -1276,7 +1350,8 @@
         "sales": "Продажи",
         "insights": "Аналитика и доступ",
         "clients": "Клиенты",
-        "accounting": ""
+        "accounting": "",
+        "automation": ""
       },
       "status": {
         "stable": "стабильно",
@@ -1328,7 +1403,8 @@
         "description": "Постоянные учётные записи клиентов. Постоянные клиенты видят все назначенные галереи в одном месте — без паролей для каждого события. Клиенты входят на /customer/login, а вы управляете ими в разделе Клиенты → Учётные записи."
       },
       "clients": {
-        "title": "Клиенты"
+        "title": "Клиенты",
+        "description": ""
       },
       "calendarBooking": {
         "title": "",
@@ -1387,6 +1463,11 @@
         "requiresAccounting": ""
       },
       "crmDevelopment": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "workflows": {
         "title": "",
         "description": "",
         "sidebar": ""
@@ -1482,6 +1563,40 @@
       "testHelp": "",
       "testSending": "",
       "testSend": ""
+    },
+    "mfa": {
+      "copyFailed": "",
+      "recoveryCodesWarning": "",
+      "copied": "",
+      "copy": "",
+      "download": "",
+      "recoveryCodesAck": "",
+      "done": "",
+      "disabledToast": "",
+      "disablePrompt": "",
+      "codeRequired": "",
+      "disableConfirmTitle": "",
+      "disableConfirmMessage": "",
+      "disableConfirmButton": "",
+      "title": "",
+      "description": "",
+      "enabledBadge": "",
+      "recoveryCodesRemaining_few": "",
+      "recoveryCodesRemaining_many": "",
+      "recoveryCodesRemaining_one": "",
+      "recoveryCodesRemaining_other": "",
+      "regenerateHelp": "",
+      "codePlaceholder": "",
+      "regenerateConfirm": "",
+      "regenerate": "",
+      "disable": "",
+      "setupScanInstruction": "",
+      "qrAlt": "",
+      "manualEntry": "",
+      "enterCodeLabel": "",
+      "enable": "",
+      "notEnrolled": "",
+      "setUp": ""
     }
   },
   "analytics": {
@@ -1864,7 +1979,16 @@
       "noReleases": "",
       "viewOnGitHub": "",
       "noNotes": "",
-      "dismissUntilNext": ""
+      "dismissUntilNext": "",
+      "channelBeta": "",
+      "channelStable": "",
+      "available": "",
+      "newVersion": "",
+      "currentVersion": "",
+      "channel": "",
+      "newFeatures": "",
+      "updateNow": "",
+      "viewReleaseNotes": ""
     },
     "notifications": "Уведомления",
     "markAllRead": "Отметить все как прочитанные",
@@ -1982,7 +2106,22 @@
       "visibleSuccess": "Фотографии теперь видны гостям",
       "processingStatus": "Обработка…",
       "processingFailed": "Ошибка",
-      "retryQueued": "Повтор в очереди"
+      "retryQueued": "Повтор в очереди",
+      "viewMode": "",
+      "gridView": "",
+      "listView": "",
+      "columns": {
+        "photo": "",
+        "category": "",
+        "uploaded": "",
+        "engagement": "",
+        "feedback": "",
+        "size": "",
+        "actions": "",
+        "views": "",
+        "downloads": "",
+        "likes": ""
+      }
     },
     "events": {
       "tabs": {
@@ -2166,7 +2305,15 @@
     },
     "viewReleaseNotes": "",
     "expandSidebar": "",
-    "collapseSidebar": ""
+    "collapseSidebar": "",
+    "whatsnew": {
+      "title": "",
+      "viewAll": "",
+      "modalTitle": "",
+      "fullChangelog": "",
+      "gotIt": ""
+    },
+    "viewOnGithub": ""
   },
   "acceptInvitation": {
     "title": "Принять приглашение",
@@ -2444,6 +2591,24 @@
       "roundTrip": "",
       "pollHint": "",
       "poll": "",
+      "save": ""
+    },
+    "customerMailbox": {
+      "requiredFields": "",
+      "savedToast": "",
+      "testOk": "",
+      "testFailed": "",
+      "title": "",
+      "subtitle": "",
+      "enabled": "",
+      "outgoing": "",
+      "outgoingHint": "",
+      "fromEmail": "",
+      "smtpHost": "",
+      "smtpSsl": "",
+      "smtpStarttls": "",
+      "smtpUser": "",
+      "smtpPass": "",
       "save": ""
     }
   },
@@ -2745,7 +2910,15 @@
         "upload": {
           "name": "Загрузить копию",
           "description": "Загрузить файл резервной копии",
-          "comingSoon": "Функция загрузки скоро появится"
+          "picpeak": {
+            "name": "",
+            "description": ""
+          },
+          "manifest": {
+            "name": "",
+            "description": ""
+          },
+          "manifestComingSoon": ""
         },
         "configuration": {
           "s3": "Конфигурация S3",
@@ -2942,6 +3115,26 @@
         "skippedByFlag": "",
         "missingOnDisk": ""
       }
+    },
+    "picpeak": {
+      "downloadFailed": "",
+      "title": "",
+      "intro": "",
+      "includePhotos": "",
+      "secretsWarning": "",
+      "download": "",
+      "restoreDone": "",
+      "restoreFailed": "",
+      "restoreTitle": "",
+      "restoreIntro": "",
+      "chooseFile": "",
+      "restoreSummary": "",
+      "externalMediaNote": "",
+      "externalMediaLink": "",
+      "reload": "",
+      "confirmTitle": "",
+      "confirmBody": "",
+      "confirmRestore": ""
     }
   },
   "cssTemplates": {
@@ -3074,7 +3267,13 @@
       "enableRateLimiting": "Включить ограничение частоты",
       "rateLimitingDesc": "Предотвращает спам, ограничивая частоту отзывов",
       "timeWindow": "Временное окно (минуты)",
-      "maxRequests": "Макс. запросов"
+      "maxRequests": "Макс. запросов",
+      "perGuestLimits": "",
+      "perGuestLimitsDesc": "",
+      "maxFavoritesPerGuest": "",
+      "maxFavoritesPerGuestHint": "",
+      "maxLikesPerGuest": "",
+      "maxLikesPerGuestHint": ""
     },
     "settingsUpdated": "Настройки отзывов обновлены",
     "settingsUpdateError": "Не удалось обновить настройки",
@@ -3161,7 +3360,15 @@
     "viewAllFeedback": "Просмотреть все отзывы и настройки",
     "exportShapeLabel": "",
     "exportShapeLong": "",
-    "exportShapePivot": ""
+    "exportShapePivot": "",
+    "limit": {
+      "favoriteTitle": "",
+      "likeTitle": "",
+      "favoriteBody": "",
+      "likeBody": "",
+      "counter": "",
+      "ok": ""
+    }
   },
   "filter": {
     "feedbackFilters": "Фильтры отзывов",
@@ -3202,7 +3409,25 @@
     "generalError": "Произошла ошибка. Попробуйте снова.",
     "needHelp": "Нужна помощь? Свяжитесь",
     "poweredBy": "Работает на PicPeak",
-    "devModeHint": "Режим разработки: используйте email: admin@example.com, пароль: admin123"
+    "devModeHint": "Режим разработки: используйте email: admin@example.com, пароль: admin123",
+    "mfa": {
+      "codeRequired": "",
+      "sessionExpired": "",
+      "lockedRetry": "",
+      "locked": "",
+      "invalidCode": "",
+      "title": "",
+      "recoverySubtitle": "",
+      "subtitle": "",
+      "recoveryCodeLabel": "",
+      "codeLabel": "",
+      "recoveryCodePlaceholder": "",
+      "codePlaceholder": "",
+      "verify": "",
+      "back": "",
+      "useAuthenticator": "",
+      "useRecoveryCode": ""
+    }
   },
   "clientAccess": {
     "title": "Доступ клиента",
@@ -4193,7 +4418,14 @@
       "white": "",
       "original": ""
     },
-    "watermarkSizeLabel": ""
+    "watermarkSizeLabel": "",
+    "orderLabel": "",
+    "order": {
+      "chronological": "",
+      "random": ""
+    },
+    "categoryLabel": "",
+    "categoryAll": ""
   },
   "systemHealth": {
     "retriedToast": "",
@@ -4236,7 +4468,8 @@
       "addFromPreset": "",
       "subtotal": "",
       "vat": "",
-      "shipping": ""
+      "shipping": "",
+      "rounding": ""
     },
     "customerPicker": {
       "search": ""
@@ -4464,7 +4697,8 @@
       "overdue": "",
       "cancelled": "",
       "pending_delivery": "",
-      "skipped": ""
+      "skipped": "",
+      "draft": ""
     },
     "title": "",
     "subtitle": "",
@@ -4591,7 +4825,8 @@
         "cash": "",
         "card": "",
         "paypal": "",
-        "twint": ""
+        "twint": "",
+        "bankTransfer": ""
       }
     },
     "recordPayment": ""
@@ -4667,7 +4902,14 @@
       "acceptedAt": "",
       "declinedAt": "",
       "declineReason": "",
-      "responseWindow": ""
+      "responseWindow": "",
+      "eventType": "",
+      "eventTypeNone": "",
+      "eventTypeHint": "",
+      "bookingWorkflow": "",
+      "bookingWorkflowNone": "",
+      "bookingWorkflowDisabled": "",
+      "bookingWorkflowHint": ""
     },
     "confirmConvert": "",
     "convertedToast": "",
@@ -4902,7 +5144,9 @@
     "revenue": {
       "month": "",
       "quarter": "",
-      "year": ""
+      "year": "",
+      "yearCalendar": "",
+      "toggleHint": ""
     },
     "outstanding": "",
     "outstandingSub_few": "",
@@ -5038,7 +5282,12 @@
     "subjectLabel": "",
     "subjectPlaceholder": "",
     "bodyLabel": "",
-    "variablesHint": ""
+    "variablesHint": "",
+    "scheduleMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    }
   },
   "crmSettings": {
     "savedToast": "",
@@ -5130,6 +5379,30 @@
     "crm_contracts_number_format": {
       "label": "",
       "help": ""
+    },
+    "crm_invoices_vat_note_text": {
+      "label": "",
+      "placeholder": "",
+      "help": ""
+    },
+    "dunningMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    },
+    "lateFeeAgb": {
+      "title": "",
+      "body": ""
+    },
+    "crm_invoices_late_fee_type": {
+      "label": ""
+    },
+    "lateFeeType": {
+      "flat": "",
+      "percent": ""
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": ""
     }
   },
   "hoursLogging": {
@@ -5222,6 +5495,256 @@
       "title": "",
       "body": "",
       "cardHint": ""
+    }
+  },
+  "setup": {
+    "tokenRequired": "",
+    "emailRequired": "",
+    "invalidEmail": "",
+    "passwordRequired": "",
+    "passwordRequirements": "",
+    "passwordMismatch": "",
+    "tooManyAttempts": "",
+    "invalidToken": "",
+    "success": "",
+    "genericError": "",
+    "featuresSaveFailed": "",
+    "title": "",
+    "tokenStepSubtitle": "",
+    "accountStepSubtitle": "",
+    "restoreStepSubtitle": "",
+    "config": {
+      "subtitle": "",
+      "saveFailed": "",
+      "intro": "",
+      "invoicing": "",
+      "invoicingDisclaimer": "",
+      "companyName": "",
+      "addressLine1": "",
+      "postalCode": "",
+      "city": "",
+      "countryCode": "",
+      "currency": "",
+      "vatId": "",
+      "taxId": "",
+      "iban": "",
+      "email": "",
+      "emailHint": "",
+      "smtpHost": "",
+      "smtpPort": "",
+      "smtpUser": "",
+      "smtpPass": "",
+      "fromEmail": "",
+      "fromName": "",
+      "skip": "",
+      "finish": ""
+    },
+    "community": {
+      "subtitle": "",
+      "mission": "",
+      "finish": ""
+    },
+    "usageSubtitle": "",
+    "stepOf": "",
+    "tokenLabel": "",
+    "tokenPlaceholder": "",
+    "tokenHint": "",
+    "tokenCommandLabel": "",
+    "copyCommand": "",
+    "tokenRotatedLink": "",
+    "continue": "",
+    "emailLabel": "",
+    "emailPlaceholder": "",
+    "passwordLabel": "",
+    "passwordPlaceholder": "",
+    "confirmLabel": "",
+    "confirmPlaceholder": "",
+    "submit": "",
+    "back": "",
+    "usageAlwaysOn": "",
+    "restoreEntry": "",
+    "restoreEntryHint": "",
+    "usageDepsNote": "",
+    "finish": "",
+    "usageSkip": "",
+    "restoreIntro": ""
+  },
+  "workflows": {
+    "approvals": {
+      "acted": "",
+      "pendingTitle": "",
+      "openEntity": "",
+      "confirm": "",
+      "deny": "",
+      "viewAll": "",
+      "title": "",
+      "recorded": "",
+      "defaultPrompt": "",
+      "subtitle": "",
+      "empty": ""
+    },
+    "toast": {
+      "createFailed": "",
+      "deleted": "",
+      "deleteFailed": ""
+    },
+    "test": {
+      "failed": "",
+      "title": "",
+      "hint": "",
+      "entityId": "",
+      "run": "",
+      "result": ""
+    },
+    "toggle": {
+      "confirmDisableBuiltin": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "new": "",
+    "empty": "",
+    "builtin": "",
+    "triggerLabel": "",
+    "enabled": "",
+    "disabled": "",
+    "confirmDelete": "",
+    "editor": {
+      "badJson": "",
+      "textNeedsArrays": "",
+      "textNeedsTrigger": "",
+      "textLoaded": "",
+      "saved": "",
+      "saveFailed": "",
+      "namePlaceholder": "",
+      "when": "",
+      "daysBefore": "",
+      "canvasView": "",
+      "textView": "",
+      "cleanUp": "",
+      "textHint": "",
+      "loadText": "",
+      "triggerHint": "",
+      "actionLabel": "",
+      "recipient": "",
+      "recipientCustomer": "",
+      "recipientAdmin": "",
+      "emailTemplate": "",
+      "templateGroup": "",
+      "templateGroupHint": "",
+      "webhookTarget": "",
+      "webhookNone": "",
+      "webhookInactive": "",
+      "webhookHint": "",
+      "condition": "",
+      "exprField": "",
+      "exprOp": "",
+      "exprValue": "",
+      "conditionHint": "",
+      "waitType": "",
+      "waitUntil": "",
+      "waitDelay": "",
+      "waitAnchor": "",
+      "days": "",
+      "hours": "",
+      "minutes": "",
+      "maxIterations": "",
+      "gatePrompt": "",
+      "gatePromptPh": "",
+      "gateTimeout": "",
+      "gateHint": "",
+      "hideAdvanced": "",
+      "showAdvanced": ""
+    }
+  },
+  "migrationBanner": {
+    "title": "",
+    "body": "",
+    "link": ""
+  },
+  "messages": {
+    "syncDisabled": "",
+    "syncUnconfigured": "",
+    "syncBusy": "",
+    "syncOk_few": "",
+    "syncOk_many": "",
+    "syncOk_one": "",
+    "syncOk_other": "",
+    "syncFailed": "",
+    "newMessage": "",
+    "actionFailed": "",
+    "account": {
+      "all": "",
+      "customers": "",
+      "accounting": "",
+      "automated": ""
+    },
+    "folder": {
+      "inbox": "",
+      "sent": "",
+      "archived": "",
+      "deleted": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "searchPlaceholder": "",
+    "sync": "",
+    "acrossAccounts": "",
+    "unified": "",
+    "systemGenerated": "",
+    "noSubject": "",
+    "noSearchResults": "",
+    "noMessages": "",
+    "selectPrompt": "",
+    "onWrote": "",
+    "reply": "",
+    "loadError": "",
+    "from": "",
+    "to": "",
+    "noBody": "",
+    "attachments": "",
+    "sentAttachHint": "",
+    "notArchived": "",
+    "noInboundBody": "",
+    "viewDocument": "",
+    "openInAccounting": "",
+    "soon": "",
+    "replyAll": "",
+    "forward": "",
+    "bookExpense": "",
+    "rebill": "",
+    "createQuote": "",
+    "createContract": "",
+    "createGallery": "",
+    "createInvoice": "",
+    "restore": "",
+    "archive": "",
+    "deleteForever": "",
+    "delete": "",
+    "document": "",
+    "close": "",
+    "previewUnavailable": "",
+    "rasterNote": "",
+    "sentToast": "",
+    "sendFailed": "",
+    "compose": "",
+    "optional": "",
+    "subject": "",
+    "bodyHint": "",
+    "sendsFromHint": "",
+    "cancel": "",
+    "send": "",
+    "customer": "",
+    "resolvingCustomer": "",
+    "noCustomerMatch": "",
+    "createNewDoc": "",
+    "existingDocs": "",
+    "noExistingDocs": "",
+    "galleryCreateOnly": "",
+    "doc": {
+      "quote": "",
+      "contract": "",
+      "invoice": "",
+      "gallery": ""
     }
   }
 }

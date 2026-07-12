@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { format as dateFnsFormat, formatDistanceToNow as dateFnsFormatDistanceToNow } from 'date-fns';
+import { format as dateFnsFormat, formatDistanceToNow as dateFnsFormatDistanceToNow, isValid } from 'date-fns';
 import { de, enUS, ptBR, fr } from 'date-fns/locale';
 import { usePublicSettings } from './usePublicSettings';
 
@@ -32,6 +32,11 @@ export const useLocalizedDate = () => {
   
   const format = (date: Date | string, formatStr?: string) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
+    // date-fns `format` throws RangeError on an Invalid Date, which crashes the
+    // whole page when a call site renders a transient/partial date (e.g. the
+    // event-date field mid-edit). Return '' instead so a bad value degrades to
+    // blank rather than tearing down the tree.
+    if (!isValid(dateObj)) return '';
     // Use admin-configured date format if available and no format string provided
     let dateFormat = formatStr;
     if (!dateFormat && settings?.general_date_format) {
@@ -50,6 +55,7 @@ export const useLocalizedDate = () => {
   
   const formatDistanceToNow = (date: Date | string, options?: { addSuffix?: boolean }) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (!isValid(dateObj)) return '';
     return dateFnsFormatDistanceToNow(dateObj, { ...options, locale: getLocale() });
   };
 

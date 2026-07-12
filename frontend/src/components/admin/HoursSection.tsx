@@ -24,6 +24,7 @@ import { parseLocaleDecimal, parseDuration } from '../../utils/parsers';
 import { customerAdminService } from '../../services/customerAdmin.service';
 import { businessProfileService } from '../../services/businessProfile.service';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
+import { useMutationWithToast } from '../../hooks';
 import { ProjectSelect } from './ProjectSelect';
 
 export interface HoursSectionProps {
@@ -151,16 +152,11 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
     },
   });
 
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutationWithToast({
     mutationFn: (entryId: number) => customerAdminService.deleteHourEntry(customerId, entryId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-customer-hour-entries', customerId] });
-      qc.invalidateQueries({ queryKey: ['admin-customer', customerId] });
-      toast.success(t('customers.hours.toast.deleted', 'Entry deleted'));
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.error || 'Failed to delete entry');
-    },
+    invalidateKeys: [['admin-customer-hour-entries', customerId], ['admin-customer', customerId]],
+    successMessage: t('customers.hours.toast.deleted', 'Entry deleted'),
+    errorMessage: 'Failed to delete entry',
   });
 
   const billMutation = useMutation({
@@ -448,12 +444,24 @@ export const HoursSection: React.FC<HoursSectionProps> = ({
                     </td>
                     <td className="py-1.5 pr-3">
                       {e.status === 'billed' ? (
-                        <span className="text-xs text-green-700 dark:text-green-300">
-                          {e.invoiceNumber
-                            ? t('customers.hours.status.billedOn',
-                              'Billed: {{number}}', { number: e.invoiceNumber })
-                            : t('customers.hours.status.billed', 'Billed')}
-                        </span>
+                        e.invoiceId ? (
+                          // Link straight to the invoice so a "Billed: R-…" entry
+                          // is one click from its (possibly draft) invoice.
+                          <Link
+                            to={`/admin/clients/bills/${e.invoiceId}`}
+                            className="text-xs text-green-700 dark:text-green-300 underline hover:no-underline"
+                          >
+                            {e.invoiceNumber
+                              ? t('customers.hours.status.billedOn', 'Billed: {{number}}', { number: e.invoiceNumber })
+                              : t('customers.hours.status.billed', 'Billed')}
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-green-700 dark:text-green-300">
+                            {e.invoiceNumber
+                              ? t('customers.hours.status.billedOn', 'Billed: {{number}}', { number: e.invoiceNumber })
+                              : t('customers.hours.status.billed', 'Billed')}
+                          </span>
+                        )
                       ) : (
                         <span className="text-xs text-amber-700 dark:text-amber-300">
                           {t('customers.hours.status.unbilled', 'Unbilled')}

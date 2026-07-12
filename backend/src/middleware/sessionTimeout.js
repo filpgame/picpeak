@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { db } = require('../database/db');
 const { getAdminTokenFromRequest } = require('../utils/tokenUtils');
+const logger = require('../utils/logger');
 
 // In-memory session tracking (in production, use Redis)
 const sessions = new Map();
@@ -69,7 +70,7 @@ async function getSessionTimeout() {
   } catch (error) {
     // Only log if it's not a connection error (to avoid spam)
     if (error.code !== 'ECONNRESET' && !error.message?.includes('Connection terminated')) {
-      console.error('Error getting session timeout:', error.message);
+      logger.error('Error getting session timeout:', error.message);
     }
   }
   
@@ -86,7 +87,7 @@ async function sessionTimeoutMiddleware(req, res, next) {
   
   try {
     // Verify token is valid
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     
     // Check if this is an admin token
     if (!decoded.id) {
@@ -127,7 +128,7 @@ async function sessionTimeoutMiddleware(req, res, next) {
     for (const [oldToken, _] of sessions.entries()) {
       if (oldToken !== token) {
         try {
-          const oldDecoded = jwt.verify(oldToken, process.env.JWT_SECRET);
+          const oldDecoded = jwt.verify(oldToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
           if (oldDecoded.id === userId) {
             sessions.delete(oldToken);
           }

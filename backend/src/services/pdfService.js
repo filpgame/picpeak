@@ -243,25 +243,48 @@ function formatCurrencyLabel(currency) {
 
 function formatDate(value, dateFormat) {
   if (!value) return '';
-  const d = (value instanceof Date) ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) return '';
+  let yyyy, mm, dd;
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return '';
+    yyyy = value.getFullYear();
+    mm = value.getMonth() + 1;
+    dd = value.getDate();
+  } else {
+    const s = String(value);
+    // Bare ISO date (YYYY-MM-DD) — parse in local time so the rendered
+    // day matches what the caller typed, instead of the previous day
+    // caused by JS parsing it as UTC midnight and then being read back
+    // via local-time getters west of UTC.
+    const bare = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (bare) {
+      yyyy = Number(bare[1]);
+      mm = Number(bare[2]);
+      dd = Number(bare[3]);
+    } else {
+      const d = new Date(s);
+      if (Number.isNaN(d.getTime())) return '';
+      yyyy = d.getFullYear();
+      mm = d.getMonth() + 1;
+      dd = d.getDate();
+    }
+  }
   // Respect the `general_date_format` app setting (read once in the
   // service layer and passed through ctx.dateFormat). We build the
   // string by hand instead of going through Intl.DateTimeFormat so
   // a chosen "DD.MM.YYYY" actually renders with dots even when the
   // customer's preferred_language maps to a locale that prints
   // slashes (en-GB → 02/12/2025).
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = String(d.getFullYear());
+  const ddStr = String(dd).padStart(2, '0');
+  const mmStr = String(mm).padStart(2, '0');
+  const yyyyStr = String(yyyy);
   const format = (dateFormat && dateFormat.format) || 'DD.MM.YYYY';
   switch (format) {
-  case 'MM/DD/YYYY': return `${mm}/${dd}/${yyyy}`;
-  case 'DD/MM/YYYY': return `${dd}/${mm}/${yyyy}`;
-  case 'YYYY-MM-DD': return `${yyyy}-${mm}-${dd}`;
+  case 'MM/DD/YYYY': return `${mmStr}/${ddStr}/${yyyyStr}`;
+  case 'DD/MM/YYYY': return `${ddStr}/${mmStr}/${yyyyStr}`;
+  case 'YYYY-MM-DD': return `${yyyyStr}-${mmStr}-${ddStr}`;
   case 'DD.MM.YYYY':
   default:
-    return `${dd}.${mm}.${yyyy}`;
+    return `${ddStr}.${mmStr}.${yyyyStr}`;
   }
 }
 
@@ -851,6 +874,18 @@ function drawTotals(doc, ctx, x, y, width) {
   doc.text(formatMinor(totals.vatAmountMinor, currency, intlLocale), valueX, y, { width: valueCol, align: 'right' });
   y = doc.y + 4;
 
+  // Free-text VAT / legal note (#794) — printed directly under the MwSt. line
+  // (Benedikt's requested spot). The admin sets the exact wording in
+  // Settings → CRM → Invoices (e.g. the Austrian Kleinunternehmer statement).
+  // Optional; wraps across the totals column. Font size is restored to the row
+  // scale so the Mahngebühr / Rundung / grand-total rows below are unaffected.
+  if (ctx.vatNote) {
+    doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).fontSize(8).fillColor('#555');
+    doc.text(ctx.vatNote, labelX, y, { width: right - labelX });
+    doc.fillColor('#000').fontSize(10);
+    y = doc.y + 4;
+  }
+
   // Mahngebühr row — only rendered when a late fee has been added
   // (second reminder onwards). Sits between VAT and the grand-total
   // divider so the customer sees a clear "VAT + late fee → Total"
@@ -859,6 +894,18 @@ function drawTotals(doc, ctx, x, y, width) {
   if (lateFeeMinor > 0) {
     doc.font(doc._fonts ? doc._fonts.bold : FONT_BOLD).text(t(locale, 'totals_late_fee'), labelX, y, { width: labelCol });
     doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).text(formatMinor(lateFeeMinor, currency, intlLocale), valueX, y, { width: valueCol, align: 'right' });
+    y = doc.y + 4;
+  }
+
+  // Rundung — sub-cent reconciliation row (crm_invoice_round_total). Only
+  // rendered when the stored (clean) net differs from the sum of the
+  // visible line totals; bridges "Betrag Netto" (= Σ lines, foots with
+  // the items) down/up to the clean Gesamtbetrag below. Zero ⇒ omitted,
+  // so unrounded documents are byte-identical to before.
+  const roundingMinor = Number(totals.roundingAdjustmentMinor || 0);
+  if (roundingMinor !== 0) {
+    doc.font(doc._fonts ? doc._fonts.bold : FONT_BOLD).text(t(locale, 'totals_rounding'), labelX, y, { width: labelCol });
+    doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).text(formatMinor(roundingMinor, currency, intlLocale), valueX, y, { width: valueCol, align: 'right' });
     y = doc.y + 4;
   }
   y += 6;
@@ -916,7 +963,14 @@ function drawPaymentBlock(doc, ctx, x, y, width) {
   const showSkontoHere = isQuote
     ? (issuer?.quoteShowSkonto !== false)
     : reminderLevel === 0;
-  const showIbanHere    = !isQuote;
+  // Invoices show the IBAN block in the right column EXCEPT when a
+  // Swiss QR-bill slip is appended: that slip already prints the
+  // account/IBAN ("Konto / Zahlbar an") in human-readable form, so
+  // repeating "Der Betrag ist auf die folgende Bankverbindung zu
+  // überweisen: …" under the totals is pure duplication. The EPC QR
+  // path keeps the block — its QR lives on a trailing page, so having
+  // the bank details on the invoice page itself still helps.
+  const showIbanHere    = !isQuote && ctx.qrFormat !== 'swiss';
 
   // If the quote has nothing to print in either column, bail out
   // early — don't render a bare "Payment conditions:" header with
@@ -1477,6 +1531,10 @@ function renderDocument(type, context) {
         // family — Storni share the invoice renderer surface, only
         // the cosmetic + accounting-sign branches differ.
         const isStorno = type === 'invoice' && ctx.doc.kind === 'storno';
+        // Mahnung (reminder letter) reuses the invoice surface: same line items +
+        // a Mahngebühr row + the new grand total, but a "Mahnung" title and NO
+        // QR (the QR would encode the original amount, not the new total).
+        const isMahnung = type === 'invoice' && ctx.doc.kind === 'mahnung';
 
         // ---- document number (above) + date (below), both right-aligned
         // The number sits directly under the sender address block so the
@@ -1516,7 +1574,9 @@ function renderDocument(type, context) {
           ? t(ctx.locale, 'quote_title')
           : isStorno
             ? t(ctx.locale, 'storno_title')
-            : t(ctx.locale, 'invoice_title');
+            : isMahnung
+              ? t(ctx.locale, 'mahnung_title')
+              : t(ctx.locale, 'invoice_title');
         y = drawTitle(doc, title, leftX, y + 2);
 
         // Mandatory Storno reference line — "Bezug: Storno zu Rechnung
@@ -1604,29 +1664,25 @@ function renderDocument(type, context) {
         doc.y = y;
         doc.x = leftX;
 
-        // Force the items table to auto-paginate BEFORE it can collide
-        // with the totals + payment block at the page bottom. We
-        // compute the same anchor as below, then temporarily inflate
-        // the page's bottom margin so swissqrbill's Table sees a
-        // shorter usable area and breaks to a new page when items
-        // would otherwise spill into the totals zone. The header row
-        // is already marked `header: true` so it auto-repeats on the
-        // continuation page.
-        const _origBottomMargin = doc.page.margins.bottom;
-        const _itemsBottomReserve = PAGE.marginBottom
-        + 30                                  // FOOTER_RESERVE
-        + (ctx.paymentTerm ? 80 : 50)         // PAYMENT_BLOCK_HEIGHT
-        + 12                                  // gap between totals + payment
-        + 90                                  // TOTALS_BLOCK_HEIGHT
-        + 20;                                 // small breathing room
-        doc.page.margins.bottom = _itemsBottomReserve;
-        try {
-          drawLineItems(doc, ctx);
-        } finally {
-        // Restore even if drawLineItems threw — keeps subsequent
-        // pages on the document's normal margin geometry.
-          doc.page.margins.bottom = _origBottomMargin;
-        }
+        // Let the items table paginate with the document's NORMAL
+        // margins so each page fills to the bottom. The header row is
+        // marked `header: true` so it auto-repeats on every
+        // continuation page. Totals/payment placement is handled below:
+        // they're pinned to a fixed anchor near the page bottom, and if
+        // the last item row spilled past that anchor we advance to a
+        // fresh page before drawing them (see the desiredTotalsY check).
+        //
+        // We deliberately do NOT inflate the bottom margin here to
+        // "reserve" the totals zone on every page. That older approach
+        // shortened the usable area on EVERY page (not just the last),
+        // so a long invoice broke far too early — only a handful of
+        // line items rendered on page 1 with a large blank gap beneath.
+        // Worse, the inflated margin was set on the page active when the
+        // table started but restored on whichever page the table ended,
+        // leaving page 1 permanently short: the page-number stamp later
+        // landed below that page's phantom bottom margin and spawned a
+        // stray blank trailing page (which then desynced "Seite X von Y").
+        drawLineItems(doc, ctx);
         // y after the table — used only to detect whether the items
         // overflowed past the totals anchor below. We don't use it as
         // the totals position directly because the totals block is
@@ -1649,7 +1705,16 @@ function renderDocument(type, context) {
         //                          VAT + middle divider + Total)
         const FOOTER_RESERVE = 30;
         const PAYMENT_BLOCK_HEIGHT = ctx.paymentTerm ? 80 : 50;
-        const TOTALS_BLOCK_HEIGHT  = 90;
+        let TOTALS_BLOCK_HEIGHT  = 90;
+        // A free-text VAT note (#794) adds a wrapped row under the MwSt. line —
+        // grow the reserved totals height by its measured height so a long note
+        // can't push the grand total / payment block into the footer.
+        if (ctx.vatNote) {
+          doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).fontSize(8);
+          const noteWidth = PAGE.contentWidth - ((PAGE.contentWidth - 20) / 2 + 20);
+          TOTALS_BLOCK_HEIGHT += doc.heightOfString(ctx.vatNote, { width: noteWidth }) + 4;
+          doc.fontSize(10);
+        }
         const desiredPaymentY = PAGE.height - PAGE.marginBottom - FOOTER_RESERVE - PAYMENT_BLOCK_HEIGHT;
         const desiredTotalsY  = desiredPaymentY - 12 - TOTALS_BLOCK_HEIGHT;
 
@@ -1700,7 +1765,7 @@ function renderDocument(type, context) {
         // Both append a fresh page; 'none' is a no-op.
         // Suppressed on Stornorechnungen — negative-amount QR codes
         // aren't a defined construct in either spec.
-        if (type === 'invoice' && !isStorno) {
+        if (type === 'invoice' && !isStorno && !isMahnung) {
           if (ctx.qrFormat === 'swiss') {
             appendSwissQrBill(doc, ctx);
           } else if (ctx.qrFormat === 'epc') {
@@ -1725,14 +1790,23 @@ function renderDocument(type, context) {
           // grey line in the bottom corner) is negligible.
           for (let i = 0; i < total; i++) {
             doc.switchToPage(range.start + i);
+            // Drop this page's bottom margin to 0 so writing the label INTO the
+            // margin band (below the content area the line-item table fills) can't
+            // trigger PDFKit's auto-page-break. Previously the label sat at
+            // marginBottom-12 — INSIDE the content area — so on a full multi-page
+            // invoice the table's last row overlapped the "Seite X von Y" stamp
+            // (#794). The page is already fully laid out (buffered), so zeroing the
+            // margin here is safe.
+            doc.page.margins.bottom = 0;
             doc.font(doc._fonts ? doc._fonts.body : FONT_BODY).fontSize(8).fillColor('#888');
             const label = t(ctx.locale, 'page_of', {
               current: i + 1,
               total,
             });
-            // Bottom-right corner, just above the bottom margin so
-            // it doesn't trigger PDFKit's auto-paging.
-            const labelY = doc.page.height - PAGE.marginBottom - 12;
+            // Bottom-right corner, INSIDE the bottom margin (below the content
+            // edge the table fills), so a full continuation page's last row can't
+            // overlap it.
+            const labelY = doc.page.height - PAGE.marginBottom + 8;
             const labelW = 120;
             const labelX = doc.page.width - PAGE.marginRight - labelW;
             doc.text(label, labelX, labelY, {
@@ -1772,6 +1846,8 @@ function normaliseContext(type, ctx) {
     totals: ctx.totals || {},
     doc: ctx.doc || {},
     qrFormat: ctx.qrFormat || 'none',
+    // Free-text VAT/legal note printed under the MwSt. line on invoices (#794).
+    vatNote: (typeof ctx.vatNote === 'string' && ctx.vatNote.trim()) ? ctx.vatNote.trim() : null,
     // Date-format config from the `general_date_format` app setting.
     // Shape: `{ format: 'DD.MM.YYYY' | 'DD/MM/YYYY' | 'MM/DD/YYYY' |
     // 'YYYY-MM-DD', locale?: string }`. The service layer hydrates

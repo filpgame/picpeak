@@ -30,6 +30,34 @@
 
 const { db } = require('../database/db');
 const { AppError } = require('./errors');
+const { getAppSetting } = require('./appSettings');
+
+/**
+ * Render a document-number format template.
+ * Tokens: {YEAR}, {MONTH}, {SEQ:04d} (zero-padded), {SEQ}.
+ */
+function formatNumberInTemplate(format, year, seq) {
+  return format
+    .replace(/\{YEAR\}/g, String(year))
+    .replace(/\{MONTH\}/g, String(new Date().getMonth() + 1).padStart(2, '0'))
+    .replace(/\{SEQ:(\d+)d\}/g, (_, pad) => String(seq).padStart(parseInt(pad, 10), '0'))
+    .replace(/\{SEQ\}/g, String(seq));
+}
+
+/**
+ * Claim + format the next document number for `kind` in the current
+ * year, using the admin-configurable format stored under `settingKey`.
+ *
+ * Reads the setting through `trx` when present — getAppSetting on the
+ * global db inside an open transaction deadlocks the single-connection
+ * SQLite pool.
+ */
+async function nextDocumentNumber(kind, settingKey, defaultFormat, trx) {
+  const format = (await getAppSetting(settingKey, null, trx || db)) || defaultFormat;
+  const year = new Date().getFullYear();
+  const seq = await claimNextSequence(kind, year, trx);
+  return formatNumberInTemplate(format, year, seq);
+}
 
 /**
  * Claim the next sequence value for (kind, year). Returns the new
@@ -90,4 +118,4 @@ async function claimNextSequence(kind, year, trx) {
   return await db.transaction(async (innerTrx) => exec(innerTrx));
 }
 
-module.exports = { claimNextSequence };
+module.exports = { claimNextSequence, formatNumberInTemplate, nextDocumentNumber };

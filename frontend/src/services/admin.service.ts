@@ -327,6 +327,34 @@ export interface AnalyticsData {
     mobile: number;
     tablet: number;
   };
+  // Period totals computed via dedicated COUNT queries on the backend
+  // (#661 Bug A). Postgres returns these as strings, so callers should
+  // coerce via Number() before display. Optional on the type because
+  // older backends (pre-#661) didn't always emit it.
+  totals?: {
+    views: number | string;
+    downloads: number | string;
+    uniqueVisitors: number | string;
+  };
+  // Source of the device breakdown — `umami` when API-key auth succeeded,
+  // `access_logs` for the local user-agent heuristic fallback (#661 Bug C).
+  devicesSource?: 'umami' | 'access_logs';
+}
+
+export interface WhatsNewVersion {
+  version: string;
+  name: string;
+  htmlUrl: string;
+  publishedAt: string;
+  bullets: string[];
+}
+
+export interface WhatsNewResponse {
+  enabled: boolean;
+  hasNews: boolean;
+  fromVersion?: string;
+  toVersion?: string;
+  versions?: WhatsNewVersion[];
 }
 
 export const adminService = {
@@ -356,6 +384,16 @@ export const adminService = {
   async getSystemHealth(): Promise<SystemHealth> {
     const response = await api.get<SystemHealth>('/admin/dashboard/health');
     return response.data;
+  },
+
+  // After-update "What's New" highlights (per-instance acknowledgement).
+  async getWhatsNew(): Promise<WhatsNewResponse> {
+    const response = await api.get<WhatsNewResponse>('/admin/system/updates/whatsnew');
+    return response.data;
+  },
+
+  async markWhatsNewSeen(): Promise<void> {
+    await api.post('/admin/system/updates/whatsnew/seen');
   },
 
   // Backup-integrity verifier (read-only diagnostic). `scope` filters

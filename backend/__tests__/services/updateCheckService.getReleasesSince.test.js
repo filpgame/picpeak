@@ -27,7 +27,7 @@ function release(tag, body = '', publishedAt = '2026-01-01T00:00:00Z') {
     name: tag,
     body,
     published_at: publishedAt,
-    html_url: `https://github.com/the-luap/picpeak/releases/tag/${tag}`,
+    html_url: `https://github.com/PicPeak/picpeak/releases/tag/${tag}`,
   };
 }
 
@@ -58,7 +58,7 @@ describe('updateCheckService.getReleasesSince', () => {
       tag: 'v3.55.0',
       name: 'v3.55.0',
       body: 'stable notes 3.55.0',
-      htmlUrl: 'https://github.com/the-luap/picpeak/releases/tag/v3.55.0',
+      htmlUrl: 'https://github.com/PicPeak/picpeak/releases/tag/v3.55.0',
     });
   });
 

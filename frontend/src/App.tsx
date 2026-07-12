@@ -42,10 +42,14 @@ import { HoursLoggingPage } from './pages/admin/clients/HoursLoggingPage';
 // (carved into its own chunk in vite.config.ts) doesn't ship with the
 // main app. Only pages that visit /admin/clients/calendar fetch it.
 const CalendarPage = lazy(() => import('./pages/admin/clients/CalendarPage').then((m) => ({ default: m.CalendarPage })));
+const MessagesPage = lazy(() => import('./pages/admin/messages/MessagesPage').then((m) => ({ default: m.MessagesPage })));
 import { QuoteResponsePage } from './pages/public/QuoteResponsePage';
 import { ContractResponsePage } from './pages/public/ContractResponsePage';
 import { ProjectsListPage } from './pages/admin/projects/ProjectsListPage';
 import { ProjectCockpitPage } from './pages/admin/projects/ProjectCockpitPage';
+import { WorkflowsListPage } from './pages/admin/workflows/WorkflowsListPage';
+import { WorkflowApprovalsPage } from './pages/admin/workflows/WorkflowApprovalsPage';
+import { WorkflowEditorPage } from './pages/admin/workflows/WorkflowEditorPage';
 import { ContractsListPage } from './pages/admin/contracts/ContractsListPage';
 import { ContractEditorPage } from './pages/admin/contracts/ContractEditorPage';
 import { ContractDetailPage } from './pages/admin/contracts/ContractDetailPage';
@@ -76,6 +80,8 @@ import { MaintenanceWrapper } from './components/MaintenanceWrapper';
 import { GlobalThemeProvider } from './components/GlobalThemeProvider';
 import { ConfirmDialogProvider } from './components/common';
 import { usePublicSettings } from './hooks/usePublicSettings';
+import { SetupPage } from './pages/SetupPage';
+import { AdminAuthProvider } from './contexts';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -87,8 +93,13 @@ const queryClient = new QueryClient({
   },
 });
 
-// Bootstraps Umami analytics from /public/settings. Lives inside QueryClientProvider
-// so it shares the public-settings cache with every other consumer of usePublicSettings.
+// Bootstraps the analytics tracker from /public/settings. Lives inside
+// QueryClientProvider so it shares the public-settings cache with every
+// other consumer of usePublicSettings. Dispatches based on the
+// `analytics_tracker_provider` switch (#663 Phase 1) — Umami / Rybbit /
+// Custom / None. Back-compat: when the provider field is missing or unset,
+// falls through to the legacy `umami_enabled`-based behaviour so installs
+// that haven't picked yet keep working.
 function AnalyticsBootstrap() {
   const { data: settings, isError } = usePublicSettings();
 
@@ -97,21 +108,49 @@ function AnalyticsBootstrap() {
 
     const envUmamiUrl = import.meta.env.VITE_UMAMI_URL;
     const envUmamiWebsiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID;
+    const provider = settings?.analytics_tracker_provider;
 
-    if (settings?.umami_enabled && settings.umami_url && settings.umami_website_id) {
+    if (provider === 'rybbit' && settings?.rybbit_url && settings.rybbit_website_id) {
       analyticsService.initialize({
-        websiteId: settings.umami_website_id,
-        hostUrl: settings.umami_url,
+        provider: 'rybbit',
+        hostUrl: settings.rybbit_url,
+        websiteId: settings.rybbit_website_id,
         autoTrack: true,
         doNotTrack: true,
       });
       return;
     }
 
+    if (provider === 'custom') {
+      analyticsService.initialize({
+        provider: 'custom',
+        customHeadHtml: settings?.analytics_custom_head_html || '',
+      });
+      return;
+    }
+
+    // Umami: explicit provider OR legacy umami_enabled path.
+    if (
+      (provider === 'umami' || settings?.umami_enabled)
+      && settings?.umami_url && settings?.umami_website_id
+    ) {
+      analyticsService.initialize({
+        provider: 'umami',
+        hostUrl: settings.umami_url,
+        websiteId: settings.umami_website_id,
+        autoTrack: true,
+        doNotTrack: true,
+      });
+      return;
+    }
+
+    // Env-var fallback (legacy deploys). Only when no DB config and
+    // analytics aren't disabled at the public-site level.
     if (envUmamiUrl && envUmamiWebsiteId && (isError || settings?.enable_analytics !== false)) {
       analyticsService.initialize({
-        websiteId: envUmamiWebsiteId,
+        provider: 'umami',
         hostUrl: envUmamiUrl,
+        websiteId: envUmamiWebsiteId,
         autoTrack: true,
         doNotTrack: true,
       });
@@ -178,6 +217,13 @@ function App() {
                     </GalleryAuthProvider>
                   } />
 
+                  {/* First-run setup — public, self-closes once an admin exists */}
+                  <Route path="/setup" element={
+                    <AdminAuthProvider>
+                      <SetupPage />
+                    </AdminAuthProvider>
+                  } />
+
                   {/* Admin routes - wrap with AdminAuthProvider */}
                   <Route path="/admin" element={<AdminAuthWrapper />}>
                     <Route path="login" element={<AdminLoginPage />} />
@@ -195,6 +241,13 @@ function App() {
                       </Route>
                       <Route element={<RequireFeature flag="userManagement" />}>
                         <Route path="users" element={<UserManagementPage />} />
+                      </Route>
+                      <Route element={<RequireFeature flag="messaging" />}>
+                        <Route path="messages" element={
+                          <Suspense fallback={<Loading />}>
+                            <MessagesPage />
+                          </Suspense>
+                        } />
                       </Route>
                       {/* Clients section (#354 follow-up). Parent route
                           gated by the top-level `clients` flag — when off
@@ -313,6 +366,14 @@ function App() {
                           don't 404. */}
                       <Route path="customers"     element={<Navigate to="/admin/clients/accounts" replace />} />
                       <Route path="customers/:id" element={<RedirectCustomerDetail />} />
+
+                      {/* Workflows (automation engine) — top-level area gated
+                          by the `workflows` flag. */}
+                      <Route element={<RequireFeature flag="workflows" />}>
+                        <Route path="workflows" element={<WorkflowsListPage />} />
+                        <Route path="workflows/approvals" element={<WorkflowApprovalsPage />} />
+                        <Route path="workflows/:id" element={<WorkflowEditorPage />} />
+                      </Route>
 
                       <Route path="settings" element={<SettingsPage />} />
                       <Route path="system-health" element={<SystemHealthPage />} />

@@ -726,9 +726,12 @@ async function sendTemplateEmail(to, templateKey, variables) {
       throw new Error('Email configuration not found');
     }
 
-    // Determine recipient language (pass eventId if available in variables)
-    const language = await getRecipientLanguage(to, variables.eventId || null);
-    
+    // Determine recipient language. An explicit `__language` in the email data
+    // wins (CRM/billing emails set it to the customer/invoice language so a
+    // gallery event's language can't override a dunning notice — see #760);
+    // otherwise fall back to the event-first recipient resolution.
+    const language = variables.__language || await getRecipientLanguage(to, variables.eventId || null);
+
     // Process template with variables
     const { subject, htmlBody, textBody } = await processTemplate(template, variables, language);
 
@@ -773,6 +776,62 @@ async function sendTemplateEmail(to, templateKey, variables) {
 }
 
 /**
+ * Send a fully-composed email (subject + HTML the admin already edited in the
+ * Messages composer) WITHOUT a template. Used for replies + human-sent document
+ * messages. Uses the configured SMTP identity + from address. Returns
+ * { messageId, html } so the caller can persist rendered_html for the record.
+ */
+async function sendRawEmail({ to, cc, subject, html, text, attachments, accountKey } = {}) {
+  let tx = null;
+  let fromEmail = null;
+  let fromName = null;
+
+  // Prefer a per-account outgoing identity (e.g. hello@) when the mail account
+  // has its own SMTP config, so customer replies send from that address instead
+  // of the global no-reply@. Falls back to the global SMTP transport.
+  if (accountKey) {
+    const acct = await db('mail_accounts').where({ account_key: accountKey }).first();
+    if (acct && acct.smtp_host && (acct.smtp_user || acct.from_email)) {
+      const nodemailer = require('nodemailer');
+      tx = nodemailer.createTransport({
+        host: acct.smtp_host,
+        port: parseInt(acct.smtp_port, 10) || 587,
+        secure: acct.smtp_secure === true || acct.smtp_secure === 1,
+        auth: acct.smtp_user && acct.smtp_pass ? { user: acct.smtp_user, pass: acct.smtp_pass } : undefined,
+        tls: { rejectUnauthorized: true },
+      });
+      fromEmail = acct.from_email || acct.smtp_user;
+      fromName = acct.from_name || '';
+    }
+  }
+  if (!tx) {
+    tx = await initializeTransporter();
+    if (!tx) throw new Error('Email service not configured');
+    const config = await db('email_configs').first();
+    if (!config || !config.from_email) throw new Error('Email service not configured');
+    fromEmail = config.from_email;
+    fromName = config.from_name;
+  }
+
+  const ccList = Array.isArray(cc) ? cc.filter(Boolean) : (cc ? [cc] : undefined);
+  const atts = Array.isArray(attachments)
+    ? attachments.filter((a) => a && (a.contentPath || a.path || a.content))
+      .map((a) => ({ filename: a.filename, path: a.contentPath || a.path, content: a.content, contentType: a.contentType }))
+    : undefined;
+  const info = await tx.sendMail({
+    from: `${fromName || 'picpeak'} <${fromEmail}>`,
+    to,
+    cc: ccList,
+    subject,
+    html,
+    text: text || htmlToText(html),
+    attachments: atts,
+  });
+  logger.info(`Manual email sent: ${info.messageId}`);
+  return { messageId: info.messageId, html };
+}
+
+/**
  * Render a queued email's HTML WITHOUT sending it. Used by the Project
  * Overview cockpit to preview emails that predate the rendered_html column
  * (so nothing was stored at send time). The result is rendered from the
@@ -783,7 +842,7 @@ async function sendTemplateEmail(to, templateKey, variables) {
 async function renderQueuedEmail(templateKey, variables = {}, to = '') {
   const template = await db('email_templates').where('template_key', templateKey).first();
   if (!template) return null;
-  const language = await getRecipientLanguage(to, variables.eventId || null);
+  const language = variables.__language || await getRecipientLanguage(to, variables.eventId || null);
   const { subject, htmlBody } = await processTemplate(template, variables, language);
   return { subject, html: htmlBody };
 }
@@ -860,10 +919,19 @@ async function processEmailQueue({ ignoreSchedule = false, limit = 10, onlyId = 
 
     for (const email of pendingEmails) {
       try {
-        const emailData = typeof email.email_data === 'string' 
+        const emailData = typeof email.email_data === 'string'
           ? JSON.parse(email.email_data || '{}')
           : email.email_data || {};
-        
+
+        // Language is resolved from emailData.eventId (event.language is the top
+        // priority). queueEmail injects it, but direct email_queue inserts (e.g.
+        // the gallery-publish notification) only set the event_id COLUMN — so
+        // backfill from the authoritative column so every send path resolves the
+        // recipient language from the event consistently.
+        if (emailData.eventId == null && email.event_id != null) {
+          emailData.eventId = email.event_id;
+        }
+
         const sendResult = await sendTemplateEmail(
           email.recipient_email,
           email.email_type,
@@ -1096,6 +1164,7 @@ module.exports = {
   initializeTransporter,
   startEmailQueueProcessor,
   sendTemplateEmail,
+  sendRawEmail,
   renderQueuedEmail,
   processEmailQueue,
   queueEmail,

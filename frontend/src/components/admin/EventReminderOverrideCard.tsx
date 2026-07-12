@@ -25,11 +25,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
 import { Bell, BellOff, Save } from 'lucide-react';
 import { Button, Card, Input } from '../common';
 import { api } from '../../config/api';
+import { useMutationWithToast } from '../../hooks';
 
 export interface EventReminderOverrideCardProps {
   eventId: number;
@@ -48,7 +47,6 @@ export const EventReminderOverrideCard: React.FC<EventReminderOverrideCardProps>
   eventId, initial, onSaved,
 }) => {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
 
   const [disabled, setDisabled] = useState<boolean>(!!initial.event_reminder_disabled);
   const [offsetDays, setOffsetDays] = useState<string>(
@@ -64,7 +62,7 @@ export const EventReminderOverrideCard: React.FC<EventReminderOverrideCardProps>
     setBodyOverride(initial.event_reminder_body_override || '');
   }, [initial.event_reminder_disabled, initial.event_reminder_offset_days, initial.event_reminder_body_override]);
 
-  const save = useMutation({
+  const save = useMutationWithToast({
     mutationFn: async () => {
       const payload: Record<string, unknown> = {
         event_reminder_disabled: disabled,
@@ -83,18 +81,17 @@ export const EventReminderOverrideCard: React.FC<EventReminderOverrideCardProps>
       payload.event_reminder_body_override = bodyOverride.trim() === '' ? null : bodyOverride;
       await api.put(`/admin/events/${eventId}`, payload);
     },
+    successMessage: t('eventReminderOverride.saved', 'Reminder override saved.'),
+    invalidateKeys: [['admin-event', eventId], ['adminEvent', eventId]],
     onSuccess: () => {
-      toast.success(t('eventReminderOverride.saved', 'Reminder override saved.'));
-      queryClient.invalidateQueries({ queryKey: ['admin-event', eventId] });
-      queryClient.invalidateQueries({ queryKey: ['adminEvent', eventId] });
       onSaved?.();
     },
-    onError: (err: unknown) => {
+    errorMessage: (err: unknown) => {
       const e = err as { message?: string; response?: { data?: { error?: string } } };
-      toast.error(
+      return (
         e?.response?.data?.error
         || e?.message
-        || t('eventReminderOverride.saveError', 'Could not save reminder override.'),
+        || t('eventReminderOverride.saveError', 'Could not save reminder override.')
       );
     },
   });

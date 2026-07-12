@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, RefreshCw, RotateCw, Send, X, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { Button, Card, Loading } from '../../components/common';
 import { api } from '../../config/api';
+import { useModal, useMutationWithToast } from '../../hooks';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
 const WEBHOOK_EVENT_TYPES = [
@@ -64,12 +64,11 @@ function statusBadge(status: string) {
 export const WebhookDeliveriesPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const webhookId = parseInt(id || '', 10);
-  const queryClient = useQueryClient();
   const { formatDateTime: fmtDateTime } = useLocalizedDate();
 
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [openDeliveryId, setOpenDeliveryId] = useState<number | null>(null);
-  const [showTestDialog, setShowTestDialog] = useState(false);
+  const testDialog = useModal();
   const [testEventType, setTestEventType] = useState<string>('event.published');
 
   const { data: webhook, isLoading: loadingWebhook } = useQuery({
@@ -108,24 +107,22 @@ export const WebhookDeliveriesPage: React.FC = () => {
     enabled: Number.isFinite(webhookId) && openDeliveryId !== null,
   });
 
-  const replayMutation = useMutation({
+  const replayMutation = useMutationWithToast({
     mutationFn: async (deliveryId: number) =>
       api.post(`/admin/webhooks/${webhookId}/deliveries/${deliveryId}/replay`),
-    onSuccess: () => {
-      toast.success('Replay enqueued');
-      queryClient.invalidateQueries({ queryKey: ['admin-webhook-deliveries', webhookId] });
-    },
-    onError: () => toast.error('Failed to replay'),
+    invalidateKeys: [['admin-webhook-deliveries', webhookId]],
+    successMessage: 'Replay enqueued',
+    errorMessage: () => 'Failed to replay',
   });
 
-  const testMutation = useMutation({
+  const testMutation = useMutationWithToast({
     mutationFn: async () => api.post(`/admin/webhooks/${webhookId}/test`, { event_type: testEventType }),
+    invalidateKeys: [['admin-webhook-deliveries', webhookId]],
+    successMessage: 'Test event enqueued',
+    errorMessage: 'Failed to send test',
     onSuccess: () => {
-      toast.success('Test event enqueued');
-      setShowTestDialog(false);
-      queryClient.invalidateQueries({ queryKey: ['admin-webhook-deliveries', webhookId] });
+      testDialog.close();
     },
-    onError: (err: any) => toast.error(err?.response?.data?.error || 'Failed to send test'),
   });
 
   if (loadingWebhook) {
@@ -174,7 +171,7 @@ export const WebhookDeliveriesPage: React.FC = () => {
             variant="outline"
             size="sm"
             leftIcon={<Send className="w-4 h-4" />}
-            onClick={() => setShowTestDialog(true)}
+            onClick={() => testDialog.open()}
           >
             Send test event
           </Button>
@@ -338,8 +335,8 @@ export const WebhookDeliveriesPage: React.FC = () => {
       )}
 
       {/* Test event dialog */}
-      {showTestDialog && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40" onClick={() => setShowTestDialog(false)}>
+      {testDialog.isOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40" onClick={() => testDialog.close()}>
           <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Send test event</h2>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
@@ -354,7 +351,7 @@ export const WebhookDeliveriesPage: React.FC = () => {
               {WEBHOOK_EVENT_TYPES.map((e) => <option key={e} value={e}>{e}</option>)}
             </select>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setShowTestDialog(false)}>Cancel</Button>
+              <Button variant="ghost" onClick={() => testDialog.close()}>Cancel</Button>
               <Button variant="primary" isLoading={testMutation.isPending} onClick={() => testMutation.mutate()}>
                 Send
               </Button>

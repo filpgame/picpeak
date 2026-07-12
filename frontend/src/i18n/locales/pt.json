@@ -172,7 +172,10 @@
     "deleted": "",
     "actions": "",
     "searching": "",
-    "language": ""
+    "language": "",
+    "copyFailed": "",
+    "copy": "",
+    "copied": ""
   },
   "upload": {
     "photoCategory": "Categoria da Foto",
@@ -205,7 +208,21 @@
     "uploadingChunks_other": "{{count}} fragmentos a enviar",
     "replacedFiles_many": "{{count}} fotos substituídas",
     "processingFailed_many": "{{count}} fotos falharam ao processar",
-    "uploadingChunks_many": "{{count}} fragmentos a enviar"
+    "uploadingChunks_many": "{{count}} fragmentos a enviar",
+    "failures": {
+      "unknownFile": "",
+      "unknownReason": "",
+      "transferReason": "",
+      "toast_many": "",
+      "toast_one": "",
+      "toast_other": "",
+      "title_many": "",
+      "title_one": "",
+      "title_other": "",
+      "kindRejected": "",
+      "kindTransfer": "",
+      "kindProcessing": ""
+    }
   },
   "navigation": {
     "dashboard": "Painel",
@@ -264,7 +281,14 @@
     "wrongPassword": "Senha incorreta. Verifique e tente novamente.",
     "tooManyAttempts": "Muitas tentativas falhas. Tente novamente mais tarde.",
     "pleaseEnterPassword": "Por favor, digite uma senha",
-    "passwordHint": "A senha foi fornecida pelo organizador do evento. Entre em contato se não a tiver."
+    "passwordHint": "A senha foi fornecida pelo organizador do evento. Entre em contato se não a tiver.",
+    "iab": {
+      "instagram": {
+        "title": "",
+        "ios": "",
+        "android": ""
+      }
+    }
   },
   "gallery": {
     "expires": "Expira",
@@ -390,9 +414,7 @@
   "categories": {
     "title": "Categorias de Fotos",
     "addCategory": "Adicionar Categoria",
-    "eventSpecificCategories": "Categorias Específicas do Evento",
     "noEventSpecificCategories": "Sem categorias específicas. As categorias globais estão disponíveis por padrão.",
-    "globalCategoriesAlwaysAvailable": "Categorias Globais (sempre disponíveis):",
     "deleteCategoryTitle": "Excluir categoria",
     "categoryCreatedSuccess": "Categoria criada com sucesso",
     "categoryDeletedSuccess": "Categoria excluída com sucesso",
@@ -411,7 +433,16 @@
     "downloadsDisabled": "Downloads desabilitados para esta categoria",
     "enableDownloadsTitle": "Clique para habilitar downloads desta categoria",
     "disableDownloadsTitle": "Clique para desabilitar downloads desta categoria",
-    "failedToToggleDownloads": "Falha ao atualizar a permissão de download"
+    "failedToToggleDownloads": "Falha ao atualizar a permissão de download",
+    "failedToReorder": "",
+    "orderReset": "",
+    "galleryOrder": "",
+    "resetToDefault": "",
+    "orderCustomisedHint": "",
+    "orderDefaultHint": "",
+    "moveUp": "",
+    "moveDown": "",
+    "sharedBadge": ""
   },
   "events": {
     "title": "Eventos",
@@ -480,9 +511,6 @@
     "resendCreationEmail": "Reenviar E-mail de Criação",
     "creationEmailResent": "O e-mail de criação foi enfileirado para envio",
     "failedToResendEmail": "Falha ao reenviar e-mail de criação",
-    "resendWhatsApp": "Reenviar WhatsApp",
-    "whatsappResent": "Mensagem WhatsApp enviada",
-    "failedToResendWhatsApp": "Falha ao reenviar WhatsApp",
     "photoStatistics": "Estatísticas de Fotos",
     "totalPhotos": "Total de Fotos",
     "managePhotos": "Gerenciar Fotos",
@@ -602,7 +630,11 @@
       "passwordLabel": "Senha da galeria",
       "passwordPlaceholder": "Digite a senha da galeria",
       "passwordHelp": "Digite novamente a senha definida na criação (ou escolha uma nova). O e-mail inclui este texto exato; o backend gera novo hash para que o login da galeria continue funcionando.",
-      "errorMinLength": "A senha deve ter pelo menos 6 caracteres."
+      "errorMinLength": "A senha deve ter pelo menos 6 caracteres.",
+      "descriptionAssignedAccount_many": "",
+      "descriptionAssignedAccount_one": "",
+      "descriptionAssignedAccount_other": "",
+      "justPublish": ""
     },
     "duplicateEvent": "Duplicar galeria",
     "duplicateDialog": {
@@ -752,10 +784,6 @@
       "help": "Quando o URL desta galeria é compartilhado no WhatsApp, Facebook, Slack etc., a pré-visualização do link mostrará a foto principal acima. A miniatura é obtida sem autenticação pelos rastreadores de pré-visualização — quem compartilha o URL torna esta imagem efetivamente pública. Desativado por padrão; escolha uma foto principal que você esteja confortável em expor publicamente antes de ativar.",
       "heroRequired": "Escolha primeiro uma foto principal acima — esta opção a usa como imagem de pré-visualização no WhatsApp / Facebook / Slack."
     },
-    "resendEmailPasswordLabel": "Senha atual da galeria (opcional)",
-    "resendEmailPasswordPlaceholder": "Digite a senha atual da galeria para incluir no e-mail",
-    "resendEmailPasswordHint": "Informe a senha que os convidados usam para acessar a galeria. Esse campo não altera a senha — apenas a inclui no e-mail. Se deixado em branco, o e-mail informará que a senha não é exibida por motivos de segurança.",
-    "sendEmail": "Enviar e-mail",
     "bulkArchiveSuccess_many": "{{count}} eventos arquivados com sucesso",
     "daysLeft_many": "({{count}} dias restantes)",
     "eventsSelected_many": "{{count}} eventos selecionados",
@@ -766,7 +794,31 @@
       "placeholder": "",
       "searching": "",
       "noResults": ""
-    }
+    },
+    "shortUrls": {
+      "created": "",
+      "errors": {
+        "slugTaken": "",
+        "invalidSlug": ""
+      },
+      "deleted": "",
+      "confirmDelete": "",
+      "title": "",
+      "description": "",
+      "slugPlaceholder": "",
+      "create": "",
+      "useSuggested": "",
+      "slugHelp": "",
+      "empty": "",
+      "hits_many": "",
+      "hits_one": "",
+      "hits_other": "",
+      "lastHit": "",
+      "createdAt": ""
+    },
+    "heroLogoInherit": "",
+    "heroLogoShow": "",
+    "heroLogoHide": ""
   },
   "settings": {
     "title": "Configurações do Sistema",
@@ -892,13 +944,14 @@
       "attemptWindowMinutesHelp": "Tempo para contabilizar falhas de login",
       "lockoutDurationMinutes": "Duração do Bloqueio (minutos)",
       "lockoutDurationMinutesHelp": "Tempo que a conta permanece bloqueada após falhas",
-      "enable2FA": "Ativar autenticação de dois fatores para admins",
       "recaptchaSettings": "Configurações de reCAPTCHA",
       "enableRecaptcha": "Ativar reCAPTCHA nos formulários de login",
       "siteKey": "Chave do Site",
       "secretKey": "Chave Secreta",
       "recaptchaHelp": "Obtenha suas chaves em",
-      "saveSecuritySettings": "Salvar Configurações de Segurança"
+      "saveSecuritySettings": "Salvar Configurações de Segurança",
+      "twoFactorTitle": "",
+      "twoFactorNote": ""
     },
     "categories": {
       "title": "Categorias",
@@ -1119,17 +1172,12 @@
     },
     "analytics": {
       "title": "Análise",
-      "umamiIntegration": "Integração com Umami Analytics",
-      "enableUmami": "Ativar Umami Analytics",
       "umamiUrl": "URL do Umami",
       "umamiUrlHelp": "A URL da sua instância Umami (ex: https://analytics.seudominio.com)",
       "websiteId": "ID do Website",
       "websiteIdHelp": "O ID do site no painel do Umami",
       "shareUrl": "URL de Compartilhamento (Opcional)",
       "shareUrlHelp": "URL pública para incorporar o painel completo",
-      "umamiInfo": "Sobre o Umami Analytics",
-      "umamiInfoText": "Umami é uma plataforma de análise focada em privacidade e código aberto.",
-      "learnMore": "Saiba mais sobre o Umami",
       "saveAnalyticsSettings": "Salvar Configurações de Análise",
       "backendAnalytics": "Análise de Backend",
       "backendAnalyticsText": "O sistema rastreia métricas básicas no servidor para segurança e performance.",
@@ -1139,7 +1187,29 @@
       "uniqueVisitors": "Visitantes únicos por IP",
       "deviceTypes": "Tipos de dispositivos",
       "privacy": "Privacidade",
-      "privacyText": "Endereços IP são anonimizados. Dados são retidos por 90 dias."
+      "privacyText": "Endereços IP são anonimizados. Dados são retidos por 90 dias.",
+      "providerHeading": "",
+      "providerDescription": "",
+      "providerLabel": "",
+      "provider": {
+        "none": "",
+        "umami": "",
+        "rybbit": "",
+        "custom": ""
+      },
+      "umamiApiKey": "",
+      "umamiApiKeyHelp": "",
+      "rybbitUrl": "",
+      "rybbitUrlHelp": "",
+      "rybbitWebsiteId": "",
+      "rybbitWebsiteIdHelp": "",
+      "rybbitApiKey": "",
+      "rybbitApiKeyHelp": "",
+      "customHeadHtml": "",
+      "customHeadHtmlHelp": "",
+      "customCspWarning": "",
+      "customCspWarningText": "",
+      "providerNoneInfo": ""
     },
     "groups": {
       "general": "Geral",
@@ -1284,7 +1354,8 @@
         "sales": "Vendas",
         "accounting": "Contabilidade",
         "insights": "Análises & Acesso",
-        "clients": "Clientes"
+        "clients": "Clientes",
+        "automation": ""
       },
       "status": {
         "stable": "estável",
@@ -1369,7 +1440,8 @@
         "description": "Logins persistentes para clientes. Clientes recorrentes veem todas as galerias atribuídas em um só lugar — sem senhas por evento. Os clientes entram em /customer/login e você os gerencia em Clientes → Contas."
       },
       "clients": {
-        "title": "Clientes"
+        "title": "Clientes",
+        "description": ""
       },
       "contracts": {
         "title": "Contratos",
@@ -1398,6 +1470,11 @@
       "slideshow": {
         "title": "Apresentação ao vivo",
         "description": "Um link de \"Diashow\" em tela cheia separado por evento para projetores em eventos ao vivo — capta automaticamente novos envios, com predefinições por tipo de evento e padrões globais de marca d'água em Configurações → Apresentação."
+      },
+      "workflows": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
       }
     },
     "customerSurface": {
@@ -1484,6 +1561,39 @@
       "testSend": "Enviar teste",
       "testSending": "Enviando…",
       "testSentToast": "Mensagem de teste enviada (id: {{id}})."
+    },
+    "mfa": {
+      "copyFailed": "",
+      "recoveryCodesWarning": "",
+      "copied": "",
+      "copy": "",
+      "download": "",
+      "recoveryCodesAck": "",
+      "done": "",
+      "disabledToast": "",
+      "disablePrompt": "",
+      "codeRequired": "",
+      "disableConfirmTitle": "",
+      "disableConfirmMessage": "",
+      "disableConfirmButton": "",
+      "title": "",
+      "description": "",
+      "enabledBadge": "",
+      "recoveryCodesRemaining_many": "",
+      "recoveryCodesRemaining_one": "",
+      "recoveryCodesRemaining_other": "",
+      "regenerateHelp": "",
+      "codePlaceholder": "",
+      "regenerateConfirm": "",
+      "regenerate": "",
+      "disable": "",
+      "setupScanInstruction": "",
+      "qrAlt": "",
+      "manualEntry": "",
+      "enterCodeLabel": "",
+      "enable": "",
+      "notEnrolled": "",
+      "setUp": ""
     }
   },
   "analytics": {
@@ -1866,7 +1976,16 @@
       "noReleases": "",
       "viewOnGitHub": "",
       "noNotes": "",
-      "dismissUntilNext": ""
+      "dismissUntilNext": "",
+      "channelBeta": "",
+      "channelStable": "",
+      "available": "",
+      "newVersion": "",
+      "currentVersion": "",
+      "channel": "",
+      "newFeatures": "",
+      "updateNow": "",
+      "viewReleaseNotes": ""
     },
     "notifications": "Notificações",
     "markAllRead": "Marcar tudo como lido",
@@ -1979,7 +2098,22 @@
       "visibleSuccess": "Fotos agora visíveis aos visitantes",
       "processingStatus": "A processar…",
       "processingFailed": "Falhado",
-      "retryQueued": "Nova tentativa em fila"
+      "retryQueued": "Nova tentativa em fila",
+      "viewMode": "",
+      "gridView": "",
+      "listView": "",
+      "columns": {
+        "photo": "",
+        "category": "",
+        "uploaded": "",
+        "engagement": "",
+        "feedback": "",
+        "size": "",
+        "actions": "",
+        "views": "",
+        "downloads": "",
+        "likes": ""
+      }
     },
     "events": {
       "tabs": {
@@ -2158,7 +2292,15 @@
     "viewAllExpiringEvents_many": "Ver todos os {{count}} eventos a expirar",
     "viewReleaseNotes": "",
     "expandSidebar": "",
-    "collapseSidebar": ""
+    "collapseSidebar": "",
+    "whatsnew": {
+      "title": "",
+      "viewAll": "",
+      "modalTitle": "",
+      "fullChangelog": "",
+      "gotIt": ""
+    },
+    "viewOnGithub": ""
   },
   "acceptInvitation": {
     "title": "Aceitar Convite",
@@ -2433,6 +2575,24 @@
     "featureOffTooltip": "O recurso ao qual este modelo pertence está atualmente desativado. Você ainda pode editar o modelo — ele será usado assim que o recurso for reativado.",
     "subcategories": {
       "other": "Outros"
+    },
+    "customerMailbox": {
+      "requiredFields": "",
+      "savedToast": "",
+      "testOk": "",
+      "testFailed": "",
+      "title": "",
+      "subtitle": "",
+      "enabled": "",
+      "outgoing": "",
+      "outgoingHint": "",
+      "fromEmail": "",
+      "smtpHost": "",
+      "smtpSsl": "",
+      "smtpStarttls": "",
+      "smtpUser": "",
+      "smtpPass": "",
+      "save": ""
     }
   },
   "cms": {
@@ -2808,7 +2968,15 @@
         "upload": {
           "name": "Enviar Backup",
           "description": "Fazer upload de um arquivo de backup",
-          "comingSoon": "Funcionalidade de upload disponível em breve"
+          "picpeak": {
+            "name": "",
+            "description": ""
+          },
+          "manifest": {
+            "name": "",
+            "description": ""
+          },
+          "manifestComingSoon": ""
         },
         "configuration": {
           "s3": "Configuração S3",
@@ -2929,6 +3097,26 @@
       "backupFailed": "Falha ao iniciar backup",
       "configUpdated": "Configuração de backup atualizada",
       "configUpdateFailed": "Falha ao atualizar configuração"
+    },
+    "picpeak": {
+      "downloadFailed": "",
+      "title": "",
+      "intro": "",
+      "includePhotos": "",
+      "secretsWarning": "",
+      "download": "",
+      "restoreDone": "",
+      "restoreFailed": "",
+      "restoreTitle": "",
+      "restoreIntro": "",
+      "chooseFile": "",
+      "restoreSummary": "",
+      "externalMediaNote": "",
+      "externalMediaLink": "",
+      "reload": "",
+      "confirmTitle": "",
+      "confirmBody": "",
+      "confirmRestore": ""
     }
   },
   "cssTemplates": {
@@ -3061,7 +3249,13 @@
       "enableRateLimiting": "Ativar limitação de taxa",
       "rateLimitingDesc": "Previne spam limitando a frequência de feedback",
       "timeWindow": "Janela de tempo (minutos)",
-      "maxRequests": "Pedidos máx."
+      "maxRequests": "Pedidos máx.",
+      "perGuestLimits": "",
+      "perGuestLimitsDesc": "",
+      "maxFavoritesPerGuest": "",
+      "maxFavoritesPerGuestHint": "",
+      "maxLikesPerGuest": "",
+      "maxLikesPerGuestHint": ""
     },
     "settingsUpdated": "Definições de feedback atualizadas",
     "settingsUpdateError": "Falha ao atualizar definições",
@@ -3143,7 +3337,15 @@
     "pendingModeration_many": "{{count}} pendentes",
     "rateStar_many": "Avaliar {{count}} estrelas",
     "ratingsCount_many": "{{count}} avaliações",
-    "showAll_many": "Mostrar todos os {{count}} comentários pendentes"
+    "showAll_many": "Mostrar todos os {{count}} comentários pendentes",
+    "limit": {
+      "favoriteTitle": "",
+      "likeTitle": "",
+      "favoriteBody": "",
+      "likeBody": "",
+      "counter": "",
+      "ok": ""
+    }
   },
   "filter": {
     "feedbackFilters": "Filtros de Feedback",
@@ -3184,7 +3386,25 @@
     "generalError": "Ocorreu um erro. Tente novamente.",
     "needHelp": "Precisa de ajuda? Contate",
     "poweredBy": "Distribuído por PicPeak",
-    "devModeHint": "Modo Desenvolvimento: E-mail: admin@exemplo.com, Senha: admin123"
+    "devModeHint": "Modo Desenvolvimento: E-mail: admin@exemplo.com, Senha: admin123",
+    "mfa": {
+      "codeRequired": "",
+      "sessionExpired": "",
+      "lockedRetry": "",
+      "locked": "",
+      "invalidCode": "",
+      "title": "",
+      "recoverySubtitle": "",
+      "subtitle": "",
+      "recoveryCodeLabel": "",
+      "codeLabel": "",
+      "recoveryCodePlaceholder": "",
+      "codePlaceholder": "",
+      "verify": "",
+      "back": "",
+      "useAuthenticator": "",
+      "useRecoveryCode": ""
+    }
   },
   "slideshow": {
     "adminTitle": "Apresentação ao vivo",
@@ -3264,7 +3484,14 @@
     "waiting": "Aguardando fotos…",
     "ended": "Apresentação encerrada.",
     "notFound": "Este link da apresentação não está ativo.",
-    "startFailed": "Não foi possível iniciar a apresentação. Tente novamente."
+    "startFailed": "Não foi possível iniciar a apresentação. Tente novamente.",
+    "orderLabel": "",
+    "order": {
+      "chronological": "",
+      "random": ""
+    },
+    "categoryLabel": "",
+    "categoryAll": ""
   },
   "clientAccess": {
     "title": "Acesso do Cliente",
@@ -4344,7 +4571,14 @@
       "ccPdfEmailPlaceholder": "nome@exemplo.com",
       "ccPdfPickFromAdmins": "Escolher entre admins:",
       "ccPdfCustom": "E-mail personalizado",
-      "internalNotes": "Notas internas (não no PDF)"
+      "internalNotes": "Notas internas (não no PDF)",
+      "eventType": "",
+      "eventTypeNone": "",
+      "eventTypeHint": "",
+      "bookingWorkflow": "",
+      "bookingWorkflowNone": "",
+      "bookingWorkflowDisabled": "",
+      "bookingWorkflowHint": ""
     },
     "responseWindowOpen": "Aberto até {{at}}",
     "section": {
@@ -4424,7 +4658,8 @@
       "detailsFilled": "Detalhes",
       "detailsPlaceholder": "Notas opcionais — letras miúdas, inclusões do pacote, condições…",
       "autoTotaledHint": "Total calculado automaticamente a partir dos subitens abaixo",
-      "autoTotaledNote": "= soma dos subitens"
+      "autoTotaledNote": "= soma dos subitens",
+      "rounding": ""
     },
     "customerPicker": {
       "search": ""
@@ -4549,7 +4784,8 @@
         "card": "Cartão",
         "cash": "Dinheiro",
         "paypal": "PayPal",
-        "twint": "TWINT"
+        "twint": "TWINT",
+        "bankTransfer": ""
       },
       "withSkonto": "Pago com Skonto ({{percent}}% de desconto)"
     },
@@ -4572,7 +4808,8 @@
       "paid": "Paga",
       "overdue": "Vencida",
       "cancelled": "Cancelada",
-      "skipped": "Ignorada (mês vazio)"
+      "skipped": "Ignorada (mês vazio)",
+      "draft": ""
     }
   },
   "businessProfile": {
@@ -4764,6 +5001,30 @@
     "crm_contracts_number_format": {
       "label": "Formato do número do contrato",
       "help": "Tokens suportados: {YEAR}, {MONTH}, {SEQ:04d}. Exemplo: LBM-C-{YEAR}-{SEQ:04d} → LBM-C-2026-0001."
+    },
+    "crm_invoices_vat_note_text": {
+      "label": "",
+      "placeholder": "",
+      "help": ""
+    },
+    "dunningMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    },
+    "lateFeeAgb": {
+      "title": "",
+      "body": ""
+    },
+    "crm_invoices_late_fee_type": {
+      "label": ""
+    },
+    "lateFeeType": {
+      "flat": "",
+      "percent": ""
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": ""
     }
   },
   "quoteResponse": {
@@ -4816,7 +5077,12 @@
     "noTranslation": "Ainda sem tradução",
     "saveTemplate": "Salvar modelo",
     "saved": "Modelo salvo.",
-    "saveError": "Não foi possível salvar o modelo."
+    "saveError": "Não foi possível salvar o modelo.",
+    "scheduleMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    }
   },
   "eventReminderOverride": {
     "title": "Lembrete pré-evento",
@@ -5155,7 +5421,9 @@
     "revenue": {
       "month": "",
       "quarter": "",
-      "year": ""
+      "year": "",
+      "yearCalendar": "",
+      "toggleHint": ""
     },
     "outstanding": "",
     "outstandingSub_many": "",
@@ -5167,6 +5435,255 @@
     "viewAll": "",
     "invoices": {
       "title": ""
+    }
+  },
+  "setup": {
+    "tokenRequired": "",
+    "emailRequired": "",
+    "invalidEmail": "",
+    "passwordRequired": "",
+    "passwordRequirements": "",
+    "passwordMismatch": "",
+    "tooManyAttempts": "",
+    "invalidToken": "",
+    "success": "",
+    "genericError": "",
+    "featuresSaveFailed": "",
+    "title": "",
+    "tokenStepSubtitle": "",
+    "accountStepSubtitle": "",
+    "restoreStepSubtitle": "",
+    "config": {
+      "subtitle": "",
+      "saveFailed": "",
+      "intro": "",
+      "invoicing": "",
+      "invoicingDisclaimer": "",
+      "companyName": "",
+      "addressLine1": "",
+      "postalCode": "",
+      "city": "",
+      "countryCode": "",
+      "currency": "",
+      "vatId": "",
+      "taxId": "",
+      "iban": "",
+      "email": "",
+      "emailHint": "",
+      "smtpHost": "",
+      "smtpPort": "",
+      "smtpUser": "",
+      "smtpPass": "",
+      "fromEmail": "",
+      "fromName": "",
+      "skip": "",
+      "finish": ""
+    },
+    "community": {
+      "subtitle": "",
+      "mission": "",
+      "finish": ""
+    },
+    "usageSubtitle": "",
+    "stepOf": "",
+    "tokenLabel": "",
+    "tokenPlaceholder": "",
+    "tokenHint": "",
+    "tokenCommandLabel": "",
+    "copyCommand": "",
+    "tokenRotatedLink": "",
+    "continue": "",
+    "emailLabel": "",
+    "emailPlaceholder": "",
+    "passwordLabel": "",
+    "passwordPlaceholder": "",
+    "confirmLabel": "",
+    "confirmPlaceholder": "",
+    "submit": "",
+    "back": "",
+    "usageAlwaysOn": "",
+    "restoreEntry": "",
+    "restoreEntryHint": "",
+    "usageDepsNote": "",
+    "finish": "",
+    "usageSkip": "",
+    "restoreIntro": ""
+  },
+  "workflows": {
+    "approvals": {
+      "acted": "",
+      "pendingTitle": "",
+      "openEntity": "",
+      "confirm": "",
+      "deny": "",
+      "viewAll": "",
+      "title": "",
+      "recorded": "",
+      "defaultPrompt": "",
+      "subtitle": "",
+      "empty": ""
+    },
+    "toast": {
+      "createFailed": "",
+      "deleted": "",
+      "deleteFailed": ""
+    },
+    "test": {
+      "failed": "",
+      "title": "",
+      "hint": "",
+      "entityId": "",
+      "run": "",
+      "result": ""
+    },
+    "toggle": {
+      "confirmDisableBuiltin": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "new": "",
+    "empty": "",
+    "builtin": "",
+    "triggerLabel": "",
+    "enabled": "",
+    "disabled": "",
+    "confirmDelete": "",
+    "editor": {
+      "badJson": "",
+      "textNeedsArrays": "",
+      "textNeedsTrigger": "",
+      "textLoaded": "",
+      "saved": "",
+      "saveFailed": "",
+      "namePlaceholder": "",
+      "when": "",
+      "daysBefore": "",
+      "canvasView": "",
+      "textView": "",
+      "cleanUp": "",
+      "textHint": "",
+      "loadText": "",
+      "triggerHint": "",
+      "actionLabel": "",
+      "recipient": "",
+      "recipientCustomer": "",
+      "recipientAdmin": "",
+      "emailTemplate": "",
+      "templateGroup": "",
+      "templateGroupHint": "",
+      "webhookTarget": "",
+      "webhookNone": "",
+      "webhookInactive": "",
+      "webhookHint": "",
+      "condition": "",
+      "exprField": "",
+      "exprOp": "",
+      "exprValue": "",
+      "conditionHint": "",
+      "waitType": "",
+      "waitUntil": "",
+      "waitDelay": "",
+      "waitAnchor": "",
+      "days": "",
+      "hours": "",
+      "minutes": "",
+      "maxIterations": "",
+      "gatePrompt": "",
+      "gatePromptPh": "",
+      "gateTimeout": "",
+      "gateHint": "",
+      "hideAdvanced": "",
+      "showAdvanced": ""
+    }
+  },
+  "migrationBanner": {
+    "title": "",
+    "body": "",
+    "link": ""
+  },
+  "messages": {
+    "syncDisabled": "",
+    "syncUnconfigured": "",
+    "syncBusy": "",
+    "syncOk_many": "",
+    "syncOk_one": "",
+    "syncOk_other": "",
+    "syncFailed": "",
+    "newMessage": "",
+    "actionFailed": "",
+    "account": {
+      "all": "",
+      "customers": "",
+      "accounting": "",
+      "automated": ""
+    },
+    "folder": {
+      "inbox": "",
+      "sent": "",
+      "archived": "",
+      "deleted": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "searchPlaceholder": "",
+    "sync": "",
+    "acrossAccounts": "",
+    "unified": "",
+    "systemGenerated": "",
+    "noSubject": "",
+    "noSearchResults": "",
+    "noMessages": "",
+    "selectPrompt": "",
+    "onWrote": "",
+    "reply": "",
+    "loadError": "",
+    "from": "",
+    "to": "",
+    "noBody": "",
+    "attachments": "",
+    "sentAttachHint": "",
+    "notArchived": "",
+    "noInboundBody": "",
+    "viewDocument": "",
+    "openInAccounting": "",
+    "soon": "",
+    "replyAll": "",
+    "forward": "",
+    "bookExpense": "",
+    "rebill": "",
+    "createQuote": "",
+    "createContract": "",
+    "createGallery": "",
+    "createInvoice": "",
+    "restore": "",
+    "archive": "",
+    "deleteForever": "",
+    "delete": "",
+    "document": "",
+    "close": "",
+    "previewUnavailable": "",
+    "rasterNote": "",
+    "sentToast": "",
+    "sendFailed": "",
+    "compose": "",
+    "optional": "",
+    "subject": "",
+    "bodyHint": "",
+    "sendsFromHint": "",
+    "cancel": "",
+    "send": "",
+    "customer": "",
+    "resolvingCustomer": "",
+    "noCustomerMatch": "",
+    "createNewDoc": "",
+    "existingDocs": "",
+    "noExistingDocs": "",
+    "galleryCreateOnly": "",
+    "doc": {
+      "quote": "",
+      "contract": "",
+      "invoice": "",
+      "gallery": ""
     }
   }
 }

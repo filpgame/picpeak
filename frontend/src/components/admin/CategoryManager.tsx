@@ -1,65 +1,80 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Plus, Edit2, Trash2, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { categoriesService, type PhotoCategory } from '../../services/categories.service';
 import { Button } from '../common';
+import { useMutationWithToast, useModal } from '../../hooks';
 
 export const CategoryManager: React.FC = () => {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const [isAdding, setIsAdding] = useState(false);
+  const addingModal = useModal();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingName, setEditingName] = useState('');
 
-  // Fetch global categories
+  // Fetch global categories (ordered by the global default display_order)
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['global-categories'],
     queryFn: categoriesService.getGlobalCategories,
   });
 
+  // Local copy so the up/down reorder buttons feel instant; resynced when the
+  // query data changes.
+  const [ordered, setOrdered] = useState<PhotoCategory[]>(categories);
+  useEffect(() => {
+    setOrdered(categories);
+  }, [categories]);
+
+  // Set the GLOBAL default order (#782). Applies to every gallery that hasn't
+  // set its own per-event override.
+  const reorderMutation = useMutationWithToast({
+    mutationFn: (orderedIds: number[]) => categoriesService.reorderGlobalCategories(orderedIds),
+    invalidateKeys: [['global-categories']],
+    errorMessage: t('categories.failedToReorder', 'Failed to update category order'),
+  });
+
+  const handleMove = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= ordered.length) return;
+    const next = [...ordered];
+    [next[index], next[target]] = [next[target], next[index]];
+    setOrdered(next); // optimistic
+    reorderMutation.mutate(next.map((c) => c.id));
+  };
+
   // Create category mutation
-  const createMutation = useMutation({
-    mutationFn: (name: string) => 
+  const createMutation = useMutationWithToast({
+    mutationFn: (name: string) =>
       categoriesService.createCategory({ name, is_global: true }),
+    invalidateKeys: [['global-categories']],
+    successMessage: t('categories.categoryCreatedSuccess'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['global-categories'] });
-      toast.success(t('categories.categoryCreatedSuccess'));
       setNewCategoryName('');
-      setIsAdding(false);
+      addingModal.close();
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error || t('categories.failedToCreateCategory'));
-    },
+    errorMessage: t('categories.failedToCreateCategory'),
   });
 
   // Update category mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) => 
+  const updateMutation = useMutationWithToast({
+    mutationFn: ({ id, name }: { id: number; name: string }) =>
       categoriesService.updateCategory(id, name),
+    invalidateKeys: [['global-categories']],
+    successMessage: t('toast.categoryUpdated'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['global-categories'] });
-      toast.success(t('toast.categoryUpdated'));
       setEditingId(null);
       setEditingName('');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error || t('toast.saveError'));
-    },
+    errorMessage: t('toast.saveError'),
   });
 
   // Delete category mutation
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutationWithToast({
     mutationFn: categoriesService.deleteCategory,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['global-categories'] });
-      toast.success(t('categories.categoryDeletedSuccess'));
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error || t('categories.failedToDeleteCategory'));
-    },
+    invalidateKeys: [['global-categories']],
+    successMessage: t('categories.categoryDeletedSuccess'),
+    errorMessage: t('categories.failedToDeleteCategory'),
   });
 
   const handleCreate = () => {
@@ -102,11 +117,11 @@ export const CategoryManager: React.FC = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('categories.title')}</h3>
-        {!isAdding && (
+        {!addingModal.isOpen && (
           <Button
             variant="primary"
             size="sm"
-            onClick={() => setIsAdding(true)}
+            onClick={addingModal.open}
             leftIcon={<Plus className="w-4 h-4" />}
           >
             {t('categories.addCategory')}
@@ -115,7 +130,7 @@ export const CategoryManager: React.FC = () => {
       </div>
 
       {/* Add new category form */}
-      {isAdding && (
+      {addingModal.isOpen && (
         <div className="flex gap-2 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
           <input
             type="text"
@@ -142,7 +157,7 @@ export const CategoryManager: React.FC = () => {
             variant="secondary"
             size="sm"
             onClick={() => {
-              setIsAdding(false);
+              addingModal.close();
               setNewCategoryName('');
             }}
           >
@@ -153,12 +168,12 @@ export const CategoryManager: React.FC = () => {
 
       {/* Categories list */}
       <div className="space-y-2">
-        {categories.length === 0 ? (
+        {ordered.length === 0 ? (
           <p className="text-neutral-500 dark:text-neutral-400 text-center py-8">
             {t('categories.noCategoriesYet')}
           </p>
         ) : (
-          categories.map((category) => (
+          ordered.map((category, index) => (
             <div
               key={category.id}
               className="flex items-center justify-between p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 transition-colors"
@@ -198,9 +213,33 @@ export const CategoryManager: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <div>
-                    <p className="font-medium text-neutral-900 dark:text-neutral-100">{category.name}</p>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">/{category.slug}</p>
+                  <div className="flex items-center gap-2 min-w-0">
+                    {/* Global default order (#782). The gallery uses this order
+                        unless a specific event overrides it. */}
+                    <div className="flex flex-col -space-y-1">
+                      <button
+                        onClick={() => handleMove(index, -1)}
+                        disabled={index === 0 || reorderMutation.isPending}
+                        className="p-0.5 text-neutral-400 dark:text-neutral-500 hover:text-accent-dark disabled:opacity-30 disabled:hover:text-neutral-400 transition-colors"
+                        title={t('categories.moveUp', 'Move up')}
+                        aria-label={t('categories.moveUp', 'Move up')}
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleMove(index, 1)}
+                        disabled={index === ordered.length - 1 || reorderMutation.isPending}
+                        className="p-0.5 text-neutral-400 dark:text-neutral-500 hover:text-accent-dark disabled:opacity-30 disabled:hover:text-neutral-400 transition-colors"
+                        title={t('categories.moveDown', 'Move down')}
+                        aria-label={t('categories.moveDown', 'Move down')}
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-neutral-900 dark:text-neutral-100 truncate">{category.name}</p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 truncate">/{category.slug}</p>
+                    </div>
                   </div>
                   <div className="flex gap-1">
                     <button

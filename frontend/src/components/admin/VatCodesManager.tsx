@@ -8,14 +8,14 @@
  * keys, and the two never overwrite each other.
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 import { X, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Button, Card, CardContent, Input, Loading } from '../common';
 import {
   ledgerService, type LedgerAccount, type VatCode, type VatDirection, type LedgerSettings,
 } from '../../services/ledger.service';
+import { useMutationWithToast } from '../../hooks';
 
 const labelCls = 'block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1';
 const selectCls = 'w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm';
@@ -39,13 +39,14 @@ const VatModal: React.FC<{ vat?: VatCode; accounts: LedgerAccount[]; onClose: ()
   const [rate, setRate] = useState<string>(vat ? String(vat.rate) : '8.1');
   const [direction, setDirection] = useState<VatDirection>(vat?.direction ?? 'input');
   const [accountId, setAccountId] = useState<number | ''>(vat?.account_id ?? '');
-  const save = useMutation({
+  const save = useMutationWithToast({
     mutationFn: () => {
       const payload = { code, name, rate: Number(rate) || 0, direction, accountId: accountId === '' ? null : Number(accountId) };
       return isEdit ? ledgerService.updateVatCode(vat!.id, payload) : ledgerService.createVatCode(payload);
     },
-    onSuccess: () => { toast.success(t('common.saved', 'Saved.')); onDone(); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: t('common.saved', 'Saved.'),
+    onSuccess: () => onDone(),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
   });
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4">
@@ -122,19 +123,21 @@ export const VatCodesManager: React.FC = () => {
 
   const refetch = () => { qc.invalidateQueries({ queryKey: ['ledger-vat-codes'] }); qc.invalidateQueries({ queryKey: ['ledger-mappings'] }); };
 
-  const delVat = useMutation({
+  const delVat = useMutationWithToast({
     mutationFn: (id: number) => ledgerService.deleteVatCode(id),
-    onSuccess: () => { toast.success(t('common.deleted', 'Deleted.')); refetch(); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: t('common.deleted', 'Deleted.'),
+    onSuccess: () => refetch(),
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
   });
   // PARTIAL save — only the two map keys, never the account keys.
-  const saveMaps = useMutation({
+  const saveMaps = useMutationWithToast({
     mutationFn: () => ledgerService.updateSettings({
       ledger_vat_map: maps.ledger_vat_map || {},
       ledger_output_vat_map: maps.ledger_output_vat_map || {},
     }),
-    onSuccess: () => { toast.success(t('ledger.settingsSaved', 'Mappings saved.')); qc.invalidateQueries({ queryKey: ['ledger-mappings'] }); },
-    onError: (e: any) => toast.error(e?.response?.data?.error || e.message || 'Failed'),
+    successMessage: t('ledger.settingsSaved', 'Mappings saved.'),
+    invalidateKeys: [['ledger-mappings']],
+    errorMessage: (e: any) => e?.response?.data?.error || e.message || 'Failed',
   });
 
   const setVatMap = (tt: string, code: string) => setMaps((s) => ({ ...s, ledger_vat_map: { ...(s.ledger_vat_map || {}), [tt]: code } }));

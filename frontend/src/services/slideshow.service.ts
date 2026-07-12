@@ -18,6 +18,9 @@ export const SLIDESHOW_WATERMARK_STYLES: SlideshowWatermarkStyle[] = ['white', '
 // (admin Settings → Slideshow); 'on'/'off' = explicit override.
 export type SlideshowWatermarkMode = 'inherit' | 'on' | 'off';
 export const SLIDESHOW_WATERMARK_MODES: SlideshowWatermarkMode[] = ['inherit', 'on', 'off'];
+// Play order (#202): 'chronological' = upload order; 'random' = client shuffle.
+export type SlideshowOrder = 'chronological' | 'random';
+export const SLIDESHOW_ORDERS: SlideshowOrder[] = ['chronological', 'random'];
 
 export const SLIDESHOW_TRANSITIONS: SlideshowTransition[] = ['crossfade', 'cut', 'slide', 'kenburns', 'dipwhite', 'dipblack'];
 export const SLIDESHOW_COLORFILTERS: SlideshowColorFilter[] = ['none', 'bw', 'sepia', 'warm', 'cool', 'vignette'];
@@ -37,6 +40,9 @@ export interface SlideshowStyle {
   transition_ms: number;
   watermark: SlideshowWatermarkMode;
   colorfilter: SlideshowColorFilter;
+  // Play order + optional category filter (#202). category_id null = all photos.
+  order: SlideshowOrder;
+  category_id: number | null;
 }
 
 export const DEFAULT_SLIDESHOW_STYLE: SlideshowStyle = {
@@ -45,6 +51,8 @@ export const DEFAULT_SLIDESHOW_STYLE: SlideshowStyle = {
   transition_ms: 800,
   watermark: 'inherit',
   colorfilter: 'none',
+  order: 'chronological',
+  category_id: null,
 };
 
 // Global slideshow defaults (admin Settings → Slideshow). The single source of
@@ -81,6 +89,10 @@ export interface SlideshowSettings {
   transition: SlideshowTransition;
   transition_ms: number;
   colorfilter: SlideshowColorFilter;
+  // Play order the kiosk applies (#202): 'random' shuffles client-side so
+  // live-appended uploads keep working. The category filter is enforced
+  // server-side, so it isn't echoed here.
+  order: SlideshowOrder;
   fit: SlideshowFit;
   watermark: SlideshowWatermark | null;
 }

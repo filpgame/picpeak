@@ -199,9 +199,9 @@ async function deliverOne(row) {
       last_error: errorMsg,
       latency_ms: latency,
       attempt_count: newAttempt,
-      next_retry_at: new Date(Date.now() + backoff),
+      next_retry_at: new Date(Date.now() + backoff).toISOString(),
     });
-  await db('webhooks').where({ id: webhook.id }).update({ last_failure_at: new Date() });
+  await db('webhooks').where({ id: webhook.id }).update({ last_failure_at: new Date().toISOString() });
 }
 
 async function markFailedFinal(row, reason) {

@@ -22,6 +22,8 @@ const { sanitizeCss } = require('../utils/cssSanitizer');
 const { upsertAppSetting } = require('../utils/appSettings');
 const { clearShareLinkSettingsCache } = require('../services/shareLinkService');
 const { resetSecurityConfigCache } = require('../utils/authSecurity');
+const { errorResponse } = require('../utils/routeHelpers');
+const logger = require('../utils/logger');
 const router = express.Router();
 const { clearMaxFilesPerUploadCache, MAX_ALLOWED_FILES_PER_UPLOAD } = require('../services/uploadSettings');
 const watermarkService = require('../services/watermarkService');
@@ -145,11 +147,20 @@ router.get('/', adminAuth, requirePermission('settings.view'), async (req, res) 
     if (settingsObject.security_recaptcha_secret_key) {
       settingsObject.security_recaptcha_secret_key = '••••••••';
     }
+    // Umami v2 API key (#661 Bug C) — read-write secret that authenticates
+    // outbound calls to the operator's Umami instance for the device
+    // breakdown. Masked on GET, same pattern as the recaptcha secret.
+    if (settingsObject.analytics_umami_api_key) {
+      settingsObject.analytics_umami_api_key = '••••••••';
+    }
+    // Rybbit API key (#663 Phase 1) — same pattern.
+    if (settingsObject.analytics_rybbit_api_key) {
+      settingsObject.analytics_rybbit_api_key = '••••••••';
+    }
 
     res.json(settingsObject);
   } catch (error) {
-    console.error('Settings fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch settings' });
+    errorResponse(res, error, 500, 'Failed to fetch settings');
   }
 });
 
@@ -190,8 +201,7 @@ router.get('/customer-surface', adminAuth, requirePermission('settings.view'), a
 
     res.json(settings);
   } catch (error) {
-    console.error('Customer surface settings fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch customer surface settings' });
+    errorResponse(res, error, 500, 'Failed to fetch customer surface settings');
   }
 });
 
@@ -221,8 +231,7 @@ router.put('/customer-surface', adminAuth, requirePermission('settings.edit'), a
 
     res.json({ message: 'Customer surface settings updated', updated: updates.map((u) => u.setting_key) });
   } catch (error) {
-    console.error('Customer surface settings save error:', error);
-    res.status(500).json({ error: 'Failed to save customer surface settings' });
+    errorResponse(res, error, 500, 'Failed to save customer surface settings');
   }
 });
 
@@ -285,8 +294,7 @@ router.put('/accounting', adminAuth, requirePermission('settings.edit'), async (
     }
     res.json({ message: 'Accounting settings updated', updated: updates.map((u) => u.setting_key) });
   } catch (error) {
-    console.error('Accounting settings save error:', error);
-    res.status(500).json({ error: 'Failed to save accounting settings' });
+    errorResponse(res, error, 500, 'Failed to save accounting settings');
   }
 });
 
@@ -350,8 +358,7 @@ router.put('/slideshow', adminAuth, requirePermission('settings.edit'), async (r
     require('../utils/slideshowGlobals').invalidateSlideshowGlobals();
     res.json({ message: 'Slideshow settings updated', updated: updates.map((u) => u.setting_key) });
   } catch (error) {
-    console.error('Slideshow settings save error:', error);
-    res.status(500).json({ error: 'Failed to save slideshow settings' });
+    errorResponse(res, error, 500, 'Failed to save slideshow settings');
   }
 });
 
@@ -390,11 +397,20 @@ router.get('/:type', adminAuth, requirePermission('settings.view'), async (req, 
     if (settingsObject.security_recaptcha_secret_key) {
       settingsObject.security_recaptcha_secret_key = '••••••••';
     }
+    // Umami v2 API key (#661 Bug C) — read-write secret that authenticates
+    // outbound calls to the operator's Umami instance for the device
+    // breakdown. Masked on GET, same pattern as the recaptcha secret.
+    if (settingsObject.analytics_umami_api_key) {
+      settingsObject.analytics_umami_api_key = '••••••••';
+    }
+    // Rybbit API key (#663 Phase 1) — same pattern.
+    if (settingsObject.analytics_rybbit_api_key) {
+      settingsObject.analytics_rybbit_api_key = '••••••••';
+    }
 
     res.json(settingsObject);
   } catch (error) {
-    console.error('Settings fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch settings' });
+    errorResponse(res, error, 500, 'Failed to fetch settings');
   }
 });
 
@@ -414,8 +430,7 @@ router.get('/password/complexity', adminAuth, requirePermission('settings.view')
       config
     });
   } catch (error) {
-    console.error('Password complexity settings fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch password complexity settings' });
+    errorResponse(res, error, 500, 'Failed to fetch password complexity settings');
   }
 });
 
@@ -557,9 +572,9 @@ router.put('/branding', adminAuth, requirePermission('settings.edit'), async (re
           const faviconPath = path.join(getStoragePath(), relativePath);
           try {
             await fs.unlink(faviconPath);
-            console.log('Deleted favicon file:', faviconPath);
+            logger.info('Deleted favicon file:', faviconPath);
           } catch (err) {
-            console.error('Error deleting favicon file:', err);
+            logger.error('Error deleting favicon file:', err);
           }
         }
       }
@@ -588,9 +603,9 @@ router.put('/branding', adminAuth, requirePermission('settings.edit'), async (re
           const logoPath = path.join(getStoragePath(), relativePath);
           try {
             await fs.unlink(logoPath);
-            console.log('Deleted logo file:', logoPath);
+            logger.info('Deleted logo file:', logoPath);
           } catch (err) {
-            console.error('Error deleting logo file:', err);
+            logger.error('Error deleting logo file:', err);
           }
         }
       }
@@ -636,20 +651,20 @@ router.put('/branding', adminAuth, requirePermission('settings.edit'), async (re
 
       if (currentSettings && currentSettings.enabled) {
         // Start background regeneration of all watermarks
-        console.log('Watermark settings changed, starting background regeneration');
+        logger.info('Watermark settings changed, starting background regeneration');
         watermarkGeneratorService.regenerateAll()
           .then(result => {
-            console.log(`Watermark regeneration completed: ${result.success}/${result.total} successful`);
+            logger.info(`Watermark regeneration completed: ${result.success}/${result.total} successful`);
           })
           .catch(err => {
-            console.error('Watermark regeneration failed:', err);
+            logger.error('Watermark regeneration failed:', err);
           });
         watermarkRegenerationStarted = true;
       } else {
         // Watermarking was disabled, clear all pre-generated watermarks
-        console.log('Watermarking disabled, clearing pre-generated watermarks');
+        logger.info('Watermarking disabled, clearing pre-generated watermarks');
         watermarkGeneratorService.clearAllWatermarks()
-          .catch(err => console.error('Failed to clear watermarks:', err));
+          .catch(err => logger.error('Failed to clear watermarks:', err));
       }
     }
 
@@ -658,8 +673,7 @@ router.put('/branding', adminAuth, requirePermission('settings.edit'), async (re
       watermarkRegenerationStarted
     });
   } catch (error) {
-    console.error('Branding update error:', error);
-    res.status(500).json({ error: 'Failed to update branding settings' });
+    errorResponse(res, error, 500, 'Failed to update branding settings');
   }
 });
 
@@ -691,7 +705,7 @@ router.post('/logo', adminAuth, requirePermission('settings.edit'), upload.singl
         }
         await fs.unlink(oldPath);
       } catch (error) {
-        console.error('Failed to delete old logo:', error);
+        logger.error('Failed to delete old logo:', error);
       }
     }
 
@@ -731,8 +745,7 @@ router.post('/logo', adminAuth, requirePermission('settings.edit'), upload.singl
       logoUrl: publicPath
     });
   } catch (error) {
-    console.error('Logo upload error:', error);
-    res.status(500).json({ error: 'Failed to upload logo' });
+    errorResponse(res, error, 500, 'Failed to upload logo');
   }
 });
 
@@ -752,7 +765,7 @@ router.delete('/logo', adminAuth, requirePermission('settings.edit'), async (req
         if (p.startsWith('"')) p = JSON.parse(p);
         await fs.unlink(p);
       } catch (error) {
-        console.error('Failed to delete logo file:', error);
+        logger.error('Failed to delete logo file:', error);
       }
     }
     await db('app_settings')
@@ -761,8 +774,7 @@ router.delete('/logo', adminAuth, requirePermission('settings.edit'), async (req
 
     res.json({ message: 'Logo removed' });
   } catch (error) {
-    console.error('Logo delete error:', error);
-    res.status(500).json({ error: 'Failed to remove logo' });
+    errorResponse(res, error, 500, 'Failed to remove logo');
   }
 });
 
@@ -792,7 +804,7 @@ router.post('/branding/watermark-logo', adminAuth, requirePermission('settings.e
         try {
           await fs.unlink(oldPath);
         } catch (error) {
-          console.error('Failed to delete old watermark logo:', error);
+          logger.error('Failed to delete old watermark logo:', error);
         }
       }
     }
@@ -834,13 +846,13 @@ router.post('/branding/watermark-logo', adminAuth, requirePermission('settings.e
     let watermarkRegenerationStarted = false;
 
     if (currentSettings && currentSettings.enabled) {
-      console.log('Watermark logo changed, starting background regeneration');
+      logger.info('Watermark logo changed, starting background regeneration');
       watermarkGeneratorService.regenerateAll()
         .then(result => {
-          console.log(`Watermark regeneration completed: ${result.success}/${result.total} successful`);
+          logger.info(`Watermark regeneration completed: ${result.success}/${result.total} successful`);
         })
         .catch(err => {
-          console.error('Watermark regeneration failed:', err);
+          logger.error('Watermark regeneration failed:', err);
         });
       watermarkRegenerationStarted = true;
     }
@@ -851,8 +863,7 @@ router.post('/branding/watermark-logo', adminAuth, requirePermission('settings.e
       watermarkRegenerationStarted
     });
   } catch (error) {
-    console.error('Watermark logo upload error:', error);
-    res.status(500).json({ error: 'Failed to upload watermark logo' });
+    errorResponse(res, error, 500, 'Failed to upload watermark logo');
   }
 });
 
@@ -888,8 +899,7 @@ router.put('/theme', adminAuth, requirePermission('settings.edit'), async (req, 
 
     res.json({ message: 'Theme settings updated successfully' });
   } catch (error) {
-    console.error('Theme update error:', error);
-    res.status(500).json({ error: 'Failed to update theme settings' });
+    errorResponse(res, error, 500, 'Failed to update theme settings');
   }
 });
 
@@ -985,7 +995,7 @@ router.put('/general', adminAuth, requirePermission('settings.edit'), async (req
         require('../services/downloadFilenameService').clearCache();
         require('../services/downloadZipService').invalidateAll();
       } catch (e) {
-        console.warn('Failed to invalidate download caches after filename setting change:', e.message);
+        logger.warn('Failed to invalidate download caches after filename setting change:', e.message);
       }
     }
 
@@ -1000,8 +1010,7 @@ router.put('/general', adminAuth, requirePermission('settings.edit'), async (req
 
     res.json({ message: 'General settings updated successfully' });
   } catch (error) {
-    console.error('General settings update error:', error);
-    res.status(500).json({ error: 'Failed to update general settings' });
+    errorResponse(res, error, 500, 'Failed to update general settings');
   }
 });
 
@@ -1039,8 +1048,7 @@ router.put('/security', adminAuth, requirePermission('settings.edit'), async (re
 
     res.json({ message: 'Security settings updated successfully' });
   } catch (error) {
-    console.error('Security settings update error:', error);
-    res.status(500).json({ error: 'Failed to update security settings' });
+    errorResponse(res, error, 500, 'Failed to update security settings');
   }
 });
 
@@ -1048,6 +1056,25 @@ router.put('/security', adminAuth, requirePermission('settings.edit'), async (re
 router.put('/analytics', adminAuth, requirePermission('settings.edit'), async (req, res) => {
   try {
     const settings = req.body;
+
+    // Validate the provider switch (#663 Phase 1). Reject unknown values
+    // so the dashboard route's factory doesn't have to defensively guard.
+    if (Object.prototype.hasOwnProperty.call(settings, 'analytics_tracker_provider')) {
+      const valid = ['none', 'umami', 'rybbit', 'custom'];
+      if (!valid.includes(settings.analytics_tracker_provider)) {
+        return res.status(400).json({
+          error: `analytics_tracker_provider must be one of: ${valid.join(', ')}`,
+        });
+      }
+    }
+
+    // Sanitise the custom-mode HTML snippet on save (#663 Phase 1). Stored
+    // pre-sanitised so the publicSettings endpoint surfaces it as-is on
+    // every gallery request — never re-running sanitize-html on the hot path.
+    if (Object.prototype.hasOwnProperty.call(settings, 'analytics_custom_head_html')) {
+      const { sanitizeTrackerSnippet } = require('../services/trackers/customScriptSanitiser');
+      settings.analytics_custom_head_html = sanitizeTrackerSnippet(settings.analytics_custom_head_html);
+    }
 
     // Update or insert each setting
     for (const [key, value] of Object.entries(settings)) {
@@ -1076,8 +1103,7 @@ router.put('/analytics', adminAuth, requirePermission('settings.edit'), async (r
 
     res.json({ message: 'Analytics settings updated successfully' });
   } catch (error) {
-    console.error('Analytics settings update error:', error);
-    res.status(500).json({ error: 'Failed to update analytics settings' });
+    errorResponse(res, error, 500, 'Failed to update analytics settings');
   }
 });
 
@@ -1140,8 +1166,7 @@ router.put('/seo', adminAuth, requirePermission('settings.edit'), async (req, re
 
     res.json({ message: 'SEO settings updated successfully' });
   } catch (error) {
-    console.error('SEO settings update error:', error);
-    res.status(500).json({ error: 'Failed to update SEO settings' });
+    errorResponse(res, error, 500, 'Failed to update SEO settings');
   }
 });
 
@@ -1177,7 +1202,7 @@ router.get('/storage/info', adminAuth, requirePermission('settings.view'), async
           const stats = await fs.stat(fullArchivePath);
           archiveStorage += stats.size;
         } catch (error) {
-          console.error('Archive file not found:', archive.archive_path, error.message);
+          logger.error('Archive file not found:', archive.archive_path, error.message);
         }
       }
     }
@@ -1195,7 +1220,7 @@ router.get('/storage/info', adminAuth, requirePermission('settings.view'), async
       rawDiskFree = Number(diskStats.bsize) * Number(diskStats.bfree);
       rawDiskAvailable = Number(diskStats.bsize) * Number(diskStats.bavail);
     } catch (diskError) {
-      console.error('Disk stats error:', diskError.message);
+      logger.error('Disk stats error:', diskError.message);
     }
 
     const clampDiskValue = (value) => {
@@ -1294,7 +1319,7 @@ router.get('/storage/info', adminAuth, requirePermission('settings.view'), async
         }
       });
     } catch (error) {
-      console.error('Storage settings read error:', error.message);
+      logger.error('Storage settings read error:', error.message);
     }
 
     const capacityOverrideEnv = parseEnvOverride('STORAGE_CAPACITY_OVERRIDE_BYTES', 'STORAGE_CAPACITY_OVERRIDE_GB');
@@ -1368,8 +1393,7 @@ router.get('/storage/info', adminAuth, requirePermission('settings.view'), async
       disk_override_source: overrideSource
     });
   } catch (error) {
-    console.error('Storage info error:', error);
-    res.status(500).json({ error: 'Failed to fetch storage information' });
+    errorResponse(res, error, 500, 'Failed to fetch storage information');
   }
 });
 
@@ -1406,8 +1430,7 @@ router.post('/favicon', adminAuth, requirePermission('settings.edit'), faviconUp
 
     res.json({ faviconUrl });
   } catch (error) {
-    console.error('Error uploading favicon:', error);
-    res.status(500).json({ error: 'Failed to upload favicon' });
+    errorResponse(res, error, 500, 'Failed to upload favicon');
   }
 });
 
@@ -1470,8 +1493,7 @@ router.put('/security/rate-limit', adminAuth, requirePermission('settings.edit')
 
     res.json({ message: 'Rate limit settings updated successfully' });
   } catch (error) {
-    console.error('Rate limit settings update error:', error);
-    res.status(500).json({ error: 'Failed to update rate limit settings' });
+    errorResponse(res, error, 500, 'Failed to update rate limit settings');
   }
 });
 
@@ -1491,8 +1513,7 @@ router.get('/public-site/default', adminAuth, requirePermission('settings.view')
       }
     });
   } catch (error) {
-    console.error('Failed to load public site defaults:', error);
-    res.status(500).json({ error: 'Failed to load defaults' });
+    errorResponse(res, error, 500, 'Failed to load defaults');
   }
 });
 
@@ -1545,8 +1566,7 @@ router.post('/public-site/reset', adminAuth, requirePermission('settings.edit'),
       branding: defaults.branding
     });
   } catch (error) {
-    console.error('Failed to reset public site template:', error);
-    res.status(500).json({ error: 'Failed to reset template' });
+    errorResponse(res, error, 500, 'Failed to reset template');
   }
 });
 

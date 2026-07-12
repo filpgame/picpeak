@@ -64,6 +64,9 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   whatsapp: false,
   // Live Slideshow ("Diashow") — opt-in; gates all slideshow admin UI.
   slideshow: false,
+  // Workflow / automation engine — opt-in; gates the Workflows admin area
+  // and the engine runtime (triggers/actions/gates).
+  workflows: false,
 };
 
 export const FEATURE_FLAGS_QUERY_KEY = ['feature-flags'] as const;
