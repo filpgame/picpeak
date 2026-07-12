@@ -2,7 +2,7 @@ name: Release Please (Beta)
 
 on:
   push:
-    branches: [beta]
+    branches: [main]
 
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config-beta.json
           manifest-file: .release-please-manifest-beta.json
-          target-branch: beta
+          target-branch: main
 
       # Auto-approve + enable auto-merge on the open release PR so betas publish
       # with no manual clicks. Approval uses GITHUB_TOKEN (github-actions[bot]) —

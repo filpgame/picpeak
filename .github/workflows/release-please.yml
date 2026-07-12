@@ -2,7 +2,7 @@ name: Release Please
 
 on:
   push:
-    branches: [stable]
+    branches: [main]
 
 permissions:
   contents: write
@@ -25,7 +25,7 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          target-branch: stable
+          target-branch: main
 
       # Auto-approve + auto-merge the open stable release PR. See the beta
       # workflow for the full rationale. Skipped on the release-cutting run and
@@ -43,7 +43,7 @@ jobs:
             echo "RELEASE_PLEASE_TOKEN not set — skipping auto-merge (manual review still required)."
             exit 0
           fi
-          pr=$(gh pr list --head release-please--branches--stable --state open --json number --jq '.[0].number // empty')
+          pr=$(gh pr list --head release-please--branches--main --state open --json number --jq '.[0].number // empty')
           if [ -n "$pr" ]; then
             # Approve as github-actions[bot] (GITHUB_TOKEN, ≠ the PAT author) so it
             # is a valid review; enable auto-merge as the PAT so the merge commit is
