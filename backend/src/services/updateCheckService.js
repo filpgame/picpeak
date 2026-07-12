@@ -95,7 +95,7 @@ function compareVersions(a, b) {
 async function fetchAvailableVersions() {
   try {
     // Use GitHub Releases API (public, no auth required)
-const response = await axios.get(
+    const response = await axios.get(
       `https://api.github.com/repos/${RELEASES_REPO}/releases`,
       {
         headers: {

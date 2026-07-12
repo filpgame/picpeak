@@ -816,7 +816,7 @@ async function sendRawEmail({ to, cc, subject, html, text, attachments, accountK
   const ccList = Array.isArray(cc) ? cc.filter(Boolean) : (cc ? [cc] : undefined);
   const atts = Array.isArray(attachments)
     ? attachments.filter((a) => a && (a.contentPath || a.path || a.content))
-        .map((a) => ({ filename: a.filename, path: a.contentPath || a.path, content: a.content, contentType: a.contentType }))
+      .map((a) => ({ filename: a.filename, path: a.contentPath || a.path, content: a.content, contentType: a.contentType }))
     : undefined;
   const info = await tx.sendMail({
     from: `${fromName || 'picpeak'} <${fromEmail}>`,

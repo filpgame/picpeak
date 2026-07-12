@@ -152,7 +152,10 @@
     "configureInSettings": "",
     "preview": "",
     "duplicate": "",
-    "show": ""
+    "show": "",
+    "copyFailed": "",
+    "copy": "",
+    "copied": ""
   },
   "upload": {
     "photoCategory": "Fotocategorie",
@@ -182,7 +185,19 @@
     "transferring": "Overdragen",
     "uploadingChunks_one": "{{count}} deel wordt geüpload",
     "uploadingChunks_other": "{{count}} delen worden geüpload",
-    "retryFailed": "Mislukte opnieuw proberen"
+    "retryFailed": "Mislukte opnieuw proberen",
+    "failures": {
+      "unknownFile": "",
+      "unknownReason": "",
+      "transferReason": "",
+      "toast_one": "",
+      "toast_other": "",
+      "title_one": "",
+      "title_other": "",
+      "kindRejected": "",
+      "kindTransfer": "",
+      "kindProcessing": ""
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -241,7 +256,14 @@
     "wrongPassword": "Onjuist wachtwoord. Controleer uw wachtwoord en probeer het opnieuw.",
     "tooManyAttempts": "Te veel mislukte inlogpogingen. Probeer het later opnieuw.",
     "pleaseEnterPassword": "Voer een wachtwoord in",
-    "passwordHint": "Het wachtwoord is verstrekt door de organisator van het evenement. Neem contact op als u het niet heeft."
+    "passwordHint": "Het wachtwoord is verstrekt door de organisator van het evenement. Neem contact op als u het niet heeft.",
+    "iab": {
+      "instagram": {
+        "title": "",
+        "ios": "",
+        "android": ""
+      }
+    }
   },
   "gallery": {
     "expires": "Verloopt",
@@ -362,9 +384,7 @@
   "categories": {
     "title": "Fotocategorieen",
     "addCategory": "Categorie toevoegen",
-    "eventSpecificCategories": "Evenement-specifieke categorieen",
     "noEventSpecificCategories": "Geen evenement-specifieke categorieen. Globale categorieen zijn standaard beschikbaar.",
-    "globalCategoriesAlwaysAvailable": "Globale categorieen (altijd beschikbaar):",
     "deleteCategoryTitle": "Categorie verwijderen",
     "categoryCreatedSuccess": "Categorie succesvol aangemaakt",
     "categoryDeletedSuccess": "Categorie succesvol verwijderd",
@@ -383,7 +403,16 @@
     "downloadsDisabled": "",
     "failedToToggleDownloads": "",
     "enableDownloadsTitle": "",
-    "disableDownloadsTitle": ""
+    "disableDownloadsTitle": "",
+    "failedToReorder": "",
+    "orderReset": "",
+    "galleryOrder": "",
+    "resetToDefault": "",
+    "orderCustomisedHint": "",
+    "orderDefaultHint": "",
+    "moveUp": "",
+    "moveDown": "",
+    "sharedBadge": ""
   },
   "events": {
     "title": "Evenementen",
@@ -448,9 +477,6 @@
     "resendCreationEmail": "Aanmaakmail opnieuw verzenden",
     "creationEmailResent": "Aanmaakmail is in de wachtrij geplaatst",
     "failedToResendEmail": "Kan aanmaakmail niet opnieuw verzenden",
-    "resendWhatsApp": "WhatsApp opnieuw sturen",
-    "whatsappResent": "WhatsApp-bericht verzonden",
-    "failedToResendWhatsApp": "WhatsApp opnieuw sturen mislukt",
     "photoStatistics": "Fotostatistieken",
     "totalPhotos": "Totaal foto's",
     "managePhotos": "Foto's beheren",
@@ -707,10 +733,6 @@
     },
     "createInvoice": "",
     "duplicateEvent": "",
-    "resendEmailPasswordLabel": "",
-    "resendEmailPasswordPlaceholder": "",
-    "resendEmailPasswordHint": "",
-    "sendEmail": "",
     "fullDay": "",
     "eventTimeStart": "",
     "eventTimeEnd": "",
@@ -721,7 +743,10 @@
       "descriptionNoEmail": "",
       "passwordLabel": "",
       "passwordPlaceholder": "",
-      "passwordHelp": ""
+      "passwordHelp": "",
+      "descriptionAssignedAccount_one": "",
+      "descriptionAssignedAccount_other": "",
+      "justPublish": ""
     },
     "customerPicker": {
       "help": "",
@@ -730,7 +755,30 @@
       "placeholder": "",
       "searching": "",
       "noResults": ""
-    }
+    },
+    "shortUrls": {
+      "created": "",
+      "errors": {
+        "slugTaken": "",
+        "invalidSlug": ""
+      },
+      "deleted": "",
+      "confirmDelete": "",
+      "title": "",
+      "description": "",
+      "slugPlaceholder": "",
+      "create": "",
+      "useSuggested": "",
+      "slugHelp": "",
+      "empty": "",
+      "hits_one": "",
+      "hits_other": "",
+      "lastHit": "",
+      "createdAt": ""
+    },
+    "heroLogoInherit": "",
+    "heroLogoShow": "",
+    "heroLogoHide": ""
   },
   "settings": {
     "title": "Systeeminstellingen",
@@ -856,13 +904,14 @@
       "attemptWindowMinutesHelp": "Hoe ver terug wordt gekeken bij het tellen van mislukte inlogpogingen",
       "lockoutDurationMinutes": "Vergrendelingsduur (minuten)",
       "lockoutDurationMinutesHelp": "Hoe lang de galerij of het account vergrendeld blijft na te veel mislukte pogingen",
-      "enable2FA": "Tweefactorauthenticatie inschakelen voor beheerders",
       "recaptchaSettings": "reCAPTCHA-instellingen",
       "enableRecaptcha": "reCAPTCHA inschakelen voor inlogformulieren",
       "siteKey": "Sitesleutel",
       "secretKey": "Geheime sleutel",
       "recaptchaHelp": "Haal uw reCAPTCHA-sleutels op bij",
-      "saveSecuritySettings": "Beveiligingsinstellingen opslaan"
+      "saveSecuritySettings": "Beveiligingsinstellingen opslaan",
+      "twoFactorTitle": "",
+      "twoFactorNote": ""
     },
     "categories": {
       "title": "Categorieen",
@@ -1082,17 +1131,12 @@
     },
     "analytics": {
       "title": "Statistieken",
-      "umamiIntegration": "Umami Analytics-integratie",
-      "enableUmami": "Umami Analytics inschakelen",
       "umamiUrl": "Umami-URL",
       "umamiUrlHelp": "De URL van uw Umami-instantie (bijv. https://analytics.uwdomein.nl)",
       "websiteId": "Website-ID",
       "websiteIdHelp": "Uw Umami website-ID (te vinden in het Umami-dashboard)",
       "shareUrl": "Deel-URL (optioneel)",
       "shareUrlHelp": "Openbare deel-URL voor het insluiten van het volledige dashboard (aanmaken in Umami)",
-      "umamiInfo": "Over Umami Analytics",
-      "umamiInfoText": "Umami is een privacygericht, open-source analyticsplatform. Het houdt paginaweergaven, unieke bezoekers en aangepaste gebeurtenissen bij zonder cookies te gebruiken.",
-      "learnMore": "Meer informatie over Umami",
       "saveAnalyticsSettings": "Statistiekinstellingen opslaan",
       "backendAnalytics": "Backend-statistieken",
       "backendAnalyticsText": "Het systeem houdt ook basisstatistieken bij op de server voor beveiligings- en prestatiemonitoring.",
@@ -1102,7 +1146,29 @@
       "uniqueVisitors": "Unieke bezoekers op basis van IP",
       "deviceTypes": "Apparaattypen op basis van user agents",
       "privacy": "Privacy",
-      "privacyText": "IP-adressen worden gehasht voor privacy. Er worden geen persoonsgegevens opgeslagen. Statistiekgegevens worden 90 dagen bewaard."
+      "privacyText": "IP-adressen worden gehasht voor privacy. Er worden geen persoonsgegevens opgeslagen. Statistiekgegevens worden 90 dagen bewaard.",
+      "providerHeading": "",
+      "providerDescription": "",
+      "providerLabel": "",
+      "provider": {
+        "none": "",
+        "umami": "",
+        "rybbit": "",
+        "custom": ""
+      },
+      "umamiApiKey": "",
+      "umamiApiKeyHelp": "",
+      "rybbitUrl": "",
+      "rybbitUrlHelp": "",
+      "rybbitWebsiteId": "",
+      "rybbitWebsiteIdHelp": "",
+      "rybbitApiKey": "",
+      "rybbitApiKeyHelp": "",
+      "customHeadHtml": "",
+      "customHeadHtmlHelp": "",
+      "customCspWarning": "",
+      "customCspWarningText": "",
+      "providerNoneInfo": ""
     },
     "groups": {
       "general": "Algemeen",
@@ -1240,7 +1306,8 @@
         "sales": "Verkoop",
         "insights": "Inzichten & Toegang",
         "clients": "Klanten",
-        "accounting": ""
+        "accounting": "",
+        "automation": ""
       },
       "status": {
         "stable": "stabiel",
@@ -1292,7 +1359,8 @@
         "description": "Permanente klantlogins. Terugkerende klanten zien al hun toegewezen galerijen op één plek — geen wachtwoorden per evenement. Klanten loggen in op /customer/login en je beheert ze onder Klanten → Accounts."
       },
       "clients": {
-        "title": "Klanten"
+        "title": "Klanten",
+        "description": ""
       },
       "calendarBooking": {
         "title": "",
@@ -1351,6 +1419,11 @@
         "requiresAccounting": ""
       },
       "crmDevelopment": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "workflows": {
         "title": "",
         "description": "",
         "sidebar": ""
@@ -1446,6 +1519,38 @@
       "testHelp": "",
       "testSending": "",
       "testSend": ""
+    },
+    "mfa": {
+      "copyFailed": "",
+      "recoveryCodesWarning": "",
+      "copied": "",
+      "copy": "",
+      "download": "",
+      "recoveryCodesAck": "",
+      "done": "",
+      "disabledToast": "",
+      "disablePrompt": "",
+      "codeRequired": "",
+      "disableConfirmTitle": "",
+      "disableConfirmMessage": "",
+      "disableConfirmButton": "",
+      "title": "",
+      "description": "",
+      "enabledBadge": "",
+      "recoveryCodesRemaining_one": "",
+      "recoveryCodesRemaining_other": "",
+      "regenerateHelp": "",
+      "codePlaceholder": "",
+      "regenerateConfirm": "",
+      "regenerate": "",
+      "disable": "",
+      "setupScanInstruction": "",
+      "qrAlt": "",
+      "manualEntry": "",
+      "enterCodeLabel": "",
+      "enable": "",
+      "notEnrolled": "",
+      "setUp": ""
     }
   },
   "analytics": {
@@ -1828,7 +1933,16 @@
       "noReleases": "",
       "viewOnGitHub": "",
       "noNotes": "",
-      "dismissUntilNext": ""
+      "dismissUntilNext": "",
+      "channelBeta": "",
+      "channelStable": "",
+      "available": "",
+      "newVersion": "",
+      "currentVersion": "",
+      "channel": "",
+      "newFeatures": "",
+      "updateNow": "",
+      "viewReleaseNotes": ""
     },
     "notifications": "Meldingen",
     "markAllRead": "Alles als gelezen markeren",
@@ -1936,7 +2050,22 @@
       "visibleSuccess": "Foto's nu zichtbaar voor gasten",
       "processingStatus": "Verwerken…",
       "processingFailed": "Mislukt",
-      "retryQueued": "Nieuwe poging in wachtrij"
+      "retryQueued": "Nieuwe poging in wachtrij",
+      "viewMode": "",
+      "gridView": "",
+      "listView": "",
+      "columns": {
+        "photo": "",
+        "category": "",
+        "uploaded": "",
+        "engagement": "",
+        "feedback": "",
+        "size": "",
+        "actions": "",
+        "views": "",
+        "downloads": "",
+        "likes": ""
+      }
     },
     "events": {
       "tabs": {
@@ -2110,7 +2239,15 @@
     },
     "viewReleaseNotes": "",
     "expandSidebar": "",
-    "collapseSidebar": ""
+    "collapseSidebar": "",
+    "whatsnew": {
+      "title": "",
+      "viewAll": "",
+      "modalTitle": "",
+      "fullChangelog": "",
+      "gotIt": ""
+    },
+    "viewOnGithub": ""
   },
   "acceptInvitation": {
     "title": "Uitnodiging accepteren",
@@ -2380,6 +2517,24 @@
       "roundTrip": "",
       "pollHint": "",
       "poll": "",
+      "save": ""
+    },
+    "customerMailbox": {
+      "requiredFields": "",
+      "savedToast": "",
+      "testOk": "",
+      "testFailed": "",
+      "title": "",
+      "subtitle": "",
+      "enabled": "",
+      "outgoing": "",
+      "outgoingHint": "",
+      "fromEmail": "",
+      "smtpHost": "",
+      "smtpSsl": "",
+      "smtpStarttls": "",
+      "smtpUser": "",
+      "smtpPass": "",
       "save": ""
     }
   },
@@ -2679,7 +2834,15 @@
         "upload": {
           "name": "Back-up uploaden",
           "description": "Een back-upbestand uploaden",
-          "comingSoon": "Uploadfunctionaliteit binnenkort beschikbaar"
+          "picpeak": {
+            "name": "",
+            "description": ""
+          },
+          "manifest": {
+            "name": "",
+            "description": ""
+          },
+          "manifestComingSoon": ""
         },
         "configuration": {
           "s3": "S3-configuratie",
@@ -2876,6 +3039,26 @@
         "skippedByFlag": "",
         "missingOnDisk": ""
       }
+    },
+    "picpeak": {
+      "downloadFailed": "",
+      "title": "",
+      "intro": "",
+      "includePhotos": "",
+      "secretsWarning": "",
+      "download": "",
+      "restoreDone": "",
+      "restoreFailed": "",
+      "restoreTitle": "",
+      "restoreIntro": "",
+      "chooseFile": "",
+      "restoreSummary": "",
+      "externalMediaNote": "",
+      "externalMediaLink": "",
+      "reload": "",
+      "confirmTitle": "",
+      "confirmBody": "",
+      "confirmRestore": ""
     }
   },
   "cssTemplates": {
@@ -3008,7 +3191,13 @@
       "enableRateLimiting": "Snelheidsbeperking inschakelen",
       "rateLimitingDesc": "Voorkom spam door de feedbackfrequentie te beperken",
       "timeWindow": "Tijdvenster (minuten)",
-      "maxRequests": "Max. verzoeken"
+      "maxRequests": "Max. verzoeken",
+      "perGuestLimits": "",
+      "perGuestLimitsDesc": "",
+      "maxFavoritesPerGuest": "",
+      "maxFavoritesPerGuestHint": "",
+      "maxLikesPerGuest": "",
+      "maxLikesPerGuestHint": ""
     },
     "settingsUpdated": "Feedbackinstellingen bijgewerkt",
     "settingsUpdateError": "Bijwerken instellingen mislukt",
@@ -3085,7 +3274,15 @@
     "viewAllFeedback": "Alle feedback en instellingen bekijken",
     "exportShapeLabel": "",
     "exportShapeLong": "",
-    "exportShapePivot": ""
+    "exportShapePivot": "",
+    "limit": {
+      "favoriteTitle": "",
+      "likeTitle": "",
+      "favoriteBody": "",
+      "likeBody": "",
+      "counter": "",
+      "ok": ""
+    }
   },
   "filter": {
     "feedbackFilters": "Feedbackfilters",
@@ -3146,7 +3343,25 @@
     "generalError": "Er is een fout opgetreden. Probeer het opnieuw.",
     "needHelp": "Hulp nodig? Neem contact op met",
     "poweredBy": "Powered by PicPeak",
-    "devModeHint": "Ontwikkelmodus: Gebruik e-mail: admin@example.com, wachtwoord: admin123"
+    "devModeHint": "Ontwikkelmodus: Gebruik e-mail: admin@example.com, wachtwoord: admin123",
+    "mfa": {
+      "codeRequired": "",
+      "sessionExpired": "",
+      "lockedRetry": "",
+      "locked": "",
+      "invalidCode": "",
+      "title": "",
+      "recoverySubtitle": "",
+      "subtitle": "",
+      "recoveryCodeLabel": "",
+      "codeLabel": "",
+      "recoveryCodePlaceholder": "",
+      "codePlaceholder": "",
+      "verify": "",
+      "back": "",
+      "useAuthenticator": "",
+      "useRecoveryCode": ""
+    }
   },
   "clientAccess": {
     "title": "Klanttoegang",
@@ -4097,7 +4312,14 @@
       "white": "",
       "original": ""
     },
-    "watermarkSizeLabel": ""
+    "watermarkSizeLabel": "",
+    "orderLabel": "",
+    "order": {
+      "chronological": "",
+      "random": ""
+    },
+    "categoryLabel": "",
+    "categoryAll": ""
   },
   "systemHealth": {
     "retriedToast": "",
@@ -4140,7 +4362,8 @@
       "addFromPreset": "",
       "subtotal": "",
       "vat": "",
-      "shipping": ""
+      "shipping": "",
+      "rounding": ""
     },
     "customerPicker": {
       "search": ""
@@ -4366,7 +4589,8 @@
       "overdue": "",
       "cancelled": "",
       "pending_delivery": "",
-      "skipped": ""
+      "skipped": "",
+      "draft": ""
     },
     "title": "",
     "subtitle": "",
@@ -4493,7 +4717,8 @@
         "cash": "",
         "card": "",
         "paypal": "",
-        "twint": ""
+        "twint": "",
+        "bankTransfer": ""
       }
     },
     "recordPayment": ""
@@ -4567,7 +4792,14 @@
       "acceptedAt": "",
       "declinedAt": "",
       "declineReason": "",
-      "responseWindow": ""
+      "responseWindow": "",
+      "eventType": "",
+      "eventTypeNone": "",
+      "eventTypeHint": "",
+      "bookingWorkflow": "",
+      "bookingWorkflowNone": "",
+      "bookingWorkflowDisabled": "",
+      "bookingWorkflowHint": ""
     },
     "confirmConvert": "",
     "convertedToast": "",
@@ -4796,7 +5028,9 @@
     "revenue": {
       "month": "",
       "quarter": "",
-      "year": ""
+      "year": "",
+      "yearCalendar": "",
+      "toggleHint": ""
     },
     "outstanding": "",
     "outstandingSub_one": "",
@@ -4930,7 +5164,12 @@
     "subjectLabel": "",
     "subjectPlaceholder": "",
     "bodyLabel": "",
-    "variablesHint": ""
+    "variablesHint": "",
+    "scheduleMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    }
   },
   "crmSettings": {
     "savedToast": "",
@@ -5022,6 +5261,30 @@
     "crm_contracts_number_format": {
       "label": "",
       "help": ""
+    },
+    "crm_invoices_vat_note_text": {
+      "label": "",
+      "placeholder": "",
+      "help": ""
+    },
+    "dunningMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    },
+    "lateFeeAgb": {
+      "title": "",
+      "body": ""
+    },
+    "crm_invoices_late_fee_type": {
+      "label": ""
+    },
+    "lateFeeType": {
+      "flat": "",
+      "percent": ""
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": ""
     }
   },
   "hoursLogging": {
@@ -5112,6 +5375,254 @@
       "title": "",
       "body": "",
       "cardHint": ""
+    }
+  },
+  "setup": {
+    "tokenRequired": "",
+    "emailRequired": "",
+    "invalidEmail": "",
+    "passwordRequired": "",
+    "passwordRequirements": "",
+    "passwordMismatch": "",
+    "tooManyAttempts": "",
+    "invalidToken": "",
+    "success": "",
+    "genericError": "",
+    "featuresSaveFailed": "",
+    "title": "",
+    "tokenStepSubtitle": "",
+    "accountStepSubtitle": "",
+    "restoreStepSubtitle": "",
+    "config": {
+      "subtitle": "",
+      "saveFailed": "",
+      "intro": "",
+      "invoicing": "",
+      "invoicingDisclaimer": "",
+      "companyName": "",
+      "addressLine1": "",
+      "postalCode": "",
+      "city": "",
+      "countryCode": "",
+      "currency": "",
+      "vatId": "",
+      "taxId": "",
+      "iban": "",
+      "email": "",
+      "emailHint": "",
+      "smtpHost": "",
+      "smtpPort": "",
+      "smtpUser": "",
+      "smtpPass": "",
+      "fromEmail": "",
+      "fromName": "",
+      "skip": "",
+      "finish": ""
+    },
+    "community": {
+      "subtitle": "",
+      "mission": "",
+      "finish": ""
+    },
+    "usageSubtitle": "",
+    "stepOf": "",
+    "tokenLabel": "",
+    "tokenPlaceholder": "",
+    "tokenHint": "",
+    "tokenCommandLabel": "",
+    "copyCommand": "",
+    "tokenRotatedLink": "",
+    "continue": "",
+    "emailLabel": "",
+    "emailPlaceholder": "",
+    "passwordLabel": "",
+    "passwordPlaceholder": "",
+    "confirmLabel": "",
+    "confirmPlaceholder": "",
+    "submit": "",
+    "back": "",
+    "usageAlwaysOn": "",
+    "restoreEntry": "",
+    "restoreEntryHint": "",
+    "usageDepsNote": "",
+    "finish": "",
+    "usageSkip": "",
+    "restoreIntro": ""
+  },
+  "workflows": {
+    "approvals": {
+      "acted": "",
+      "pendingTitle": "",
+      "openEntity": "",
+      "confirm": "",
+      "deny": "",
+      "viewAll": "",
+      "title": "",
+      "recorded": "",
+      "defaultPrompt": "",
+      "subtitle": "",
+      "empty": ""
+    },
+    "toast": {
+      "createFailed": "",
+      "deleted": "",
+      "deleteFailed": ""
+    },
+    "test": {
+      "failed": "",
+      "title": "",
+      "hint": "",
+      "entityId": "",
+      "run": "",
+      "result": ""
+    },
+    "toggle": {
+      "confirmDisableBuiltin": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "new": "",
+    "empty": "",
+    "builtin": "",
+    "triggerLabel": "",
+    "enabled": "",
+    "disabled": "",
+    "confirmDelete": "",
+    "editor": {
+      "badJson": "",
+      "textNeedsArrays": "",
+      "textNeedsTrigger": "",
+      "textLoaded": "",
+      "saved": "",
+      "saveFailed": "",
+      "namePlaceholder": "",
+      "when": "",
+      "daysBefore": "",
+      "canvasView": "",
+      "textView": "",
+      "cleanUp": "",
+      "textHint": "",
+      "loadText": "",
+      "triggerHint": "",
+      "actionLabel": "",
+      "recipient": "",
+      "recipientCustomer": "",
+      "recipientAdmin": "",
+      "emailTemplate": "",
+      "templateGroup": "",
+      "templateGroupHint": "",
+      "webhookTarget": "",
+      "webhookNone": "",
+      "webhookInactive": "",
+      "webhookHint": "",
+      "condition": "",
+      "exprField": "",
+      "exprOp": "",
+      "exprValue": "",
+      "conditionHint": "",
+      "waitType": "",
+      "waitUntil": "",
+      "waitDelay": "",
+      "waitAnchor": "",
+      "days": "",
+      "hours": "",
+      "minutes": "",
+      "maxIterations": "",
+      "gatePrompt": "",
+      "gatePromptPh": "",
+      "gateTimeout": "",
+      "gateHint": "",
+      "hideAdvanced": "",
+      "showAdvanced": ""
+    }
+  },
+  "migrationBanner": {
+    "title": "",
+    "body": "",
+    "link": ""
+  },
+  "messages": {
+    "syncDisabled": "",
+    "syncUnconfigured": "",
+    "syncBusy": "",
+    "syncOk_one": "",
+    "syncOk_other": "",
+    "syncFailed": "",
+    "newMessage": "",
+    "actionFailed": "",
+    "account": {
+      "all": "",
+      "customers": "",
+      "accounting": "",
+      "automated": ""
+    },
+    "folder": {
+      "inbox": "",
+      "sent": "",
+      "archived": "",
+      "deleted": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "searchPlaceholder": "",
+    "sync": "",
+    "acrossAccounts": "",
+    "unified": "",
+    "systemGenerated": "",
+    "noSubject": "",
+    "noSearchResults": "",
+    "noMessages": "",
+    "selectPrompt": "",
+    "onWrote": "",
+    "reply": "",
+    "loadError": "",
+    "from": "",
+    "to": "",
+    "noBody": "",
+    "attachments": "",
+    "sentAttachHint": "",
+    "notArchived": "",
+    "noInboundBody": "",
+    "viewDocument": "",
+    "openInAccounting": "",
+    "soon": "",
+    "replyAll": "",
+    "forward": "",
+    "bookExpense": "",
+    "rebill": "",
+    "createQuote": "",
+    "createContract": "",
+    "createGallery": "",
+    "createInvoice": "",
+    "restore": "",
+    "archive": "",
+    "deleteForever": "",
+    "delete": "",
+    "document": "",
+    "close": "",
+    "previewUnavailable": "",
+    "rasterNote": "",
+    "sentToast": "",
+    "sendFailed": "",
+    "compose": "",
+    "optional": "",
+    "subject": "",
+    "bodyHint": "",
+    "sendsFromHint": "",
+    "cancel": "",
+    "send": "",
+    "customer": "",
+    "resolvingCustomer": "",
+    "noCustomerMatch": "",
+    "createNewDoc": "",
+    "existingDocs": "",
+    "noExistingDocs": "",
+    "galleryCreateOnly": "",
+    "doc": {
+      "quote": "",
+      "contract": "",
+      "invoice": "",
+      "gallery": ""
     }
   }
 }

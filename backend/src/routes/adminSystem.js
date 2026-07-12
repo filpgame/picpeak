@@ -268,7 +268,7 @@ router.get('/updates/instructions', adminAuth, requirePermission('settings.view'
       targetVersion: updateInfo.latest.forChannel,
       channel: updateInfo.channel,
       environment: env,
-instructions,
+      instructions,
       releaseNotesUrl: `https://github.com/${RELEASES_REPO}/releases/tag/v${updateInfo.latest.forChannel}`
     });
   } catch (error) {
