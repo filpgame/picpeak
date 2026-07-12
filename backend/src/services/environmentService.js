@@ -154,7 +154,7 @@ function generateUpdateInstructions(env, targetVersion) {
       {
         description: 'Download release archive',
         command: `# Download v${targetVersion} from GitHub Releases`,
-        note: `https://github.com/the-luap/picpeak/releases/tag/v${targetVersion}`
+        note: `https://github.com/${process.env.GITHUB_RELEASES_REPO || 'filpgame/picpeak'}/releases/tag/v${targetVersion}`
       },
       {
         description: 'Backup current installation',

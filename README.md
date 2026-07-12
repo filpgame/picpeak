@@ -1,5 +1,13 @@
 # 📸 PicPeak - Open Source Photo Sharing for Events
 
+> [!IMPORTANT]
+> **PicPeak has moved to its own GitHub organization.**
+>
+> - **Docker images** are now published at `ghcr.io/picpeak/picpeak/{backend,frontend}`. The old path (`ghcr.io/the-luap/picpeak/...`) is no longer served — update your `docker-compose.yml`.
+> - **Branches**: active development is now on `main` (was `beta`); the curated stable channel is now `stable` (was `main`). Existing PRs and clones auto-redirect via GitHub.
+>
+> See **[`docs/migration-to-org.md`](docs/migration-to-org.md)** for the one-line `docker-compose.yml` edit and full details.
+
 <div align="center">
   <img src="docs/picpeak-logo.png" alt="PicPeak Logo" width="300" />
   
@@ -49,6 +57,7 @@ Unlike expensive SaaS solutions, PicPeak gives you:
 - 🔐 **Password Protection** - Secure client galleries
 - 📧 **Automated Emails** - Creation confirmations and expiration warnings
 - 📊 **Analytics Dashboard** - Track views, downloads, and engagement
+- 📽️ **Live Slideshow** - A separate fullscreen "Diashow" link per event for projectors at live events — auto-picks-up new uploads while it runs, with transitions, a logo watermark, and image-fit/colour options ([guide](docs/live-slideshow.md))
 - 🎨 **Custom Themes** - Match your brand perfectly
 - 🌐 **Public Landing Page** - Publish a curated marketing page when guests visit your root URL
 
@@ -68,26 +77,47 @@ Unlike expensive SaaS solutions, PicPeak gives you:
 - 🛡️ **Security First** - JWT auth, rate limiting, CORS protection
 - 📈 **Scalable** - From small studios to large agencies
 
+### For Studios — CRM & Accounting (Beta · off by default)
+- 📝 **Quotes → Contracts → Invoices** - One deal lineage; cancel-and-reissue (Storno) keeps issued invoices immutable
+- ⏱️ **Hours Logging & Calendar** - Per-customer time tracking; admin calendar of events, logged hours, and pending quotes/contracts
+- 🧾 **Inbound Supplier Invoices & Expenses** - Capture received invoices (upload/camera, rasterised server-side), categorise, and re-bill costs to clients
+- 📊 **Tax Report & Accountant Export** - Period-scoped income/cost report with VAT breakdown; PDF/CSV plus a Treuhänder/Banana (Swiss/LI) journal export, scopable to income-only or cost-only
+- 🌍 **VAT & Multi-currency** - Single VAT-code registry snapshotted onto each document; data-driven per-country rates
+- ⚠️ **Verify locally** - Feature-flagged off by default. Seeded contracts, QR/IBAN and tax defaults are **examples only** — review your own legal **and tax** regulations first (see disclaimers below)
+
 ## 🚀 Quick Start
 
 Get PicPeak running in under 5 minutes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/the-luap/picpeak.git
+git clone https://github.com/PicPeak/picpeak.git
 cd picpeak
 
-# Copy environment template
+# Copy the environment template — the defaults work out of the box.
+# Machine secrets (JWT, DB, Redis) are auto-generated on first run, and the
+# admin account is created in the browser (see below). Edit .env only to
+# customise (domain, SMTP, storage paths, …) — nothing is required.
 cp .env.example .env
-
-# Edit configuration (required: JWT_SECRET)
-nano .env
 
 # Start with Docker Compose
 docker compose up -d
 
 # Access at http://localhost:3000
 ```
+
+### First run — create your admin account
+
+On first start with no `ADMIN_PASSWORD` set, PicPeak has **no admin account yet** and greets you with an in-browser setup screen — no credentials in `.env`:
+
+1. Open **http://localhost:3000/admin** — you'll be redirected to `/setup`.
+2. Grab the **one-time setup token** from the backend logs (it's also saved to `data/SETUP_TOKEN`):
+   ```bash
+   docker compose logs backend | grep -i "setup token"
+   ```
+3. Paste the token, set your admin **email + password**, and you're in. The token is single-use, and the setup screen closes permanently once an admin exists.
+
+> Prefer the old behaviour? Set `ADMIN_PASSWORD` in `.env` and PicPeak auto-creates the admin on first boot instead (credentials written to `data/ADMIN_CREDENTIALS.txt`).
 
 Note on Docker file permissions
 - The backend container starts as root, chowns bind-mounted host directories (`./storage`, `./data`, `./logs`) to UID 1001 (`nodejs`), then drops privileges via `su-exec` before running the app. No host-side setup needed for fresh installs.
@@ -97,7 +127,7 @@ Note on Docker file permissions
 
 ## 🔄 Release Channels
 
-PicPeak offers two release channels for different needs:
+PicPeak offers two release channels for different needs. Stable promotions are cut from a known-good beta point every 4–6 weeks — see [RELEASING.md](RELEASING.md) for the maintainer's promotion criteria and cadence policy.
 
 ### Stable Channel (Recommended)
 - Production-ready releases
@@ -146,7 +176,8 @@ Full documentation lives at **[docs.picpeak.app](https://docs.picpeak.app)** —
 - 🚀 [**Deployment**](https://docs.picpeak.app/deployment) - Docker, environment variables, reverse proxy, SSL
 - ⚙️ [**Admin Settings**](https://docs.picpeak.app/guides/admin-settings) - Every tab in the Settings panel
 - 🎯 [**Creating Events**](https://docs.picpeak.app/guides/creating-events) - Full event field reference
-- 💾 [**Backup & Restore**](https://docs.picpeak.app/guides/backup-restore) - Local, S3, rsync destinations
+- 📽️ [**Live Slideshow**](https://docs.picpeak.app/features/live-slideshow) - Fullscreen projector view that auto-updates during live events
+- 💾 [**Backup & Restore**](https://docs.picpeak.app/guides/backup-restore) - Backup configuration, restore wizard, full disaster recovery
 - 🔌 [**API Reference**](https://docs.picpeak.app/api) - REST endpoints, OpenAPI spec, webhooks
 - 🪝 [**Webhooks**](https://docs.picpeak.app/features/webhooks) - Event payloads, signing, filters, templates
 
@@ -177,6 +208,7 @@ Perfect for:
 - 📸 **Portrait Studios** - Client galleries with download limits
 - 🏢 **Corporate Events** - Internal photo sharing with branding
 - 🎓 **School Photography** - Secure parent access with expiration
+- 📽️ **Live Events** - Put a [Live Slideshow](docs/live-slideshow.md) on the venue projector that updates as you shoot
 
 ## 🏗️ Tech Stack
 
@@ -291,7 +323,12 @@ For local development with a receiver on the same machine or docker network, set
 
 ### Minimum Requirements
 - **CPU**: 2 CPU cores
-- **RAM**: 2GB minimum
+- **RAM**: **4 GB minimum** for a normal photo-upload workload — sharp/libvips
+  decodes the full uncompressed frame before resize, and the default two
+  worker loops at sharp-concurrency 2 can push peak RSS past 1.5 GB on a
+  batch of 20-MP+ photos. On a 2 GB VPS that's enough to OOM-kill the
+  backend mid-batch (surfaces as 503s on thumbnails — see [Low-memory
+  hosts](#low-memory-hosts) below for the recipe to run on 2 GB).
 - **Storage**: 20GB minimum (plus photo storage needs)
 - **OS**: Linux (Ubuntu 20.04+), macOS, or Windows with WSL2
 - **Node.js**: v18.0.0 or higher
@@ -300,6 +337,26 @@ For local development with a receiver on the same machine or docker network, set
 ### Docker Requirements (Recommended)
 - **Docker**: v20.10.0+
 - **Docker Compose**: v2.0.0+
+
+### Low-memory hosts
+
+Running on 2 GB RAM (e.g. an entry-level VPS) is workable but requires
+tuning the upload-processor concurrency down. The backend auto-detects
+total RAM at startup via `os.totalmem()` — on a host that reports < 3 GB,
+it defaults `UPLOAD_PROCESSOR_CONCURRENCY` to **1** instead of 2 and logs
+a one-shot warning. You can pin the value explicitly in `.env`:
+
+```env
+# Single worker loop — slower batch processing, lower peak RSS
+UPLOAD_PROCESSOR_CONCURRENCY=1
+```
+
+The trade-off is throughput: a single worker processes one photo at a
+time, so a 100-photo batch takes ~2× as long but won't OOM. **Health-check
+note**: if the backend dies under memory pressure, the gallery serves
+`503 Service Unavailable` on thumbnails until Docker's
+`restart: unless-stopped` brings the container back. Persistent 503s
+during/after an upload batch on a low-memory host are almost always this.
 
 ### Video Support Requirements
 When enabling video uploads, consider these additional resources:
@@ -334,17 +391,23 @@ See our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## 📊 Comparison with Alternatives
 
-| Feature | PicPeak | PicDrop | Scrapbook.de |
-|---------|---------|---------|--------------|
-| Self-Hosted | ✅ | ❌ | ❌ |
-| Custom Branding | ✅ Full | Limited | Limited |
-| Monthly Cost | $0 | $29-199 | €19-99 |
-| Storage Limit | Unlimited* | 50-500GB | 100-1000GB |
-| Client Uploads | ✅ | ✅ | ✅ |
-| API Access | ✅ | Paid | ❌ |
-| Open Source | ✅ | ❌ | ❌ |
+| Feature | PicPeak | PicDrop | Scrapbook.de | Pixieset |
+|---------|---------|---------|--------------|----------|
+| Self-Hosted | ✅ | ❌ | ❌ | ❌ |
+| Custom Branding | ✅ Full | Limited | Limited | ✅ (paid) |
+| Monthly Cost | $0* | $29-199 | €19-99 | ~$60 |
+| Storage Limit | Unlimited** | 50-500GB | 100-1000GB | 3GB–Unlimited*** |
+| Client Uploads | ✅ | ✅ | ✅ | Limited |
+| API Access | ✅ | Paid | ❌ | ❌ |
+| Open Source | ✅ | ❌ | ❌ | ❌ |
+| Customer Accounts | ✅ | ❌ | ❌ | ✅ |
+| Quotes / Contracts / Invoices | 🧪 Beta | ❌ | ❌ | ✅ |
+| Incoming Invoices & Accounting | 🧪 Beta | ❌ | ❌ | ❌ |
 
-*Limited only by your server storage
+*You still bring your own server (own hardware or a VPS) and, if you want one, a domain.
+**Limited only by your server storage.
+***Pixieset's "unlimited" is photos only; video is capped by plan (roughly 0–10 h depending on tier).
+🧪 Beta = built but feature-flagged off by default (see [Beta Features](#-beta-features-use-at-your-own-risk)).
 
 ## 🛡️ Security
 
@@ -356,7 +419,7 @@ PicPeak takes security seriously:
 - 📝 Activity logging
 - 🔒 Secure file access
 
-Found a security issue? Please open a [security issue](https://github.com/the-luap/picpeak/issues/new?labels=security) on GitHub
+Found a security issue? Please open a [security issue](https://github.com/PicPeak/picpeak/issues/new?labels=security) on GitHub
 
 ## 📸 Screenshots
 
@@ -401,6 +464,7 @@ These features are currently in beta testing and may have limited functionality 
 
 | Feature | Description | Status |
 |---------|-------------|--------|
+| **CRM & Accounting Module** | Quotes, contracts, invoices (+ Storno), hours logging, calendar, and tax report — plus inbound supplier-invoice capture, internal expenses, and a Treuhänder/Banana (Swiss/LI) accountant-journal export. Feature-flagged off by default. Seeded contract blocks, payment terms, IBAN / QR-bill and tax defaults are **examples only** and need legal / financial / **tax** review before customer-facing use. See [docs.picpeak.app/features/crm](https://docs.picpeak.app/features/crm). | 🧪 Beta |
 | **Simple Deployment Script** | One-click deployment script for quick server setup with automated configuration and dependency installation | 🧪 Beta |
 
 ### 📋 Future Enhancements
@@ -439,7 +503,8 @@ PicPeak is inspired by the best features of commercial platforms while remaining
 
 A huge thank you to the people whose code, reports, and feedback have shaped PicPeak:
 
-- [**@Luca-Timo**](https://github.com/Luca-Timo) — native Apple Silicon multi-arch images, external-URL toggle for legal CMS pages, the lazy-loaded folder tree picker, the admin-email picker on event creation, the data-driven self-hosted webfont system, the gallery header/banner decoupling, and several typed-API refactors. Consistently raises the bar with thoughtful PRs.
+- [**@the-luap**](https://github.com/the-luap) — creator and lead maintainer. Started the project and built PicPeak's foundation and the entire gallery experience (events, galleries, uploads, sharing, download protection, templates), plus backup & restore, analytics, system health, branding/theming, and WhatsApp notifications — and the architecture every later feature builds on.
+- [**@Luca-Timo**](https://github.com/Luca-Timo) — native Apple Silicon multi-arch images, external-URL toggle for legal CMS pages, the lazy-loaded folder tree picker, the admin-email picker on event creation, the data-driven self-hosted webfont system, the gallery header/banner decoupling, several typed-API refactors, and the CRM + accounting suite (quotes/contracts/invoices, hours logging, calendar, tax report, inbound supplier-invoice capture, expenses, and the Treuhänder/Banana export). Consistently raises the bar with thoughtful PRs.
 - [**@Rekoo-PS**](https://github.com/Rekoo-PS) — sharp-eyed bug reporter and product feedback. Filed the issues that drove the login-loop fix, the gallery-loading skeleton work, the redirection cleanup, the mobile-lightbox overhaul, the admin-events search-counter fix, the photo-count column, and the bulk-delete workflow. Also a [BuyMeACoffee](https://buymeacoffee.com/theluap) supporter — the kind of feedback loop that keeps the project useful for real deployments.
 
 If you've contributed and aren't listed here, please open a PR — this list is meant to grow.
@@ -453,6 +518,34 @@ This project was generated with the assistance of AI technology, but has been:
 - 🧪 **Production-tested** in real-world scenarios
 
 We believe in transparent development practices and the responsible use of AI as a tool to accelerate development while maintaining high standards of quality and security.
+
+## ⚠️ CRM & Accounting disclaimers — examples only, verify locally
+
+The CRM & accounting modules (contracts, invoices, QR-bills, the tax
+report and the accountant exports) ship seeded content and computed
+figures that are intended as a **starting point only**:
+
+- **Contract blocks** (image rights, NDA, model release, cancellation,
+  jurisdiction, …) are written by the maintainer, **not by a lawyer**.
+  Every operator must have their lawyer review and adapt them before
+  sending any contract to a customer.
+- **QR-bills and SEPA EPC payloads** are rendered from the data you
+  typed. Picpeak is open source — please scan a test invoice with your
+  bank's app to check the QR actually works. We are not responsible for
+  any mistakes that come from sending an invoice with bad data on it.
+- **Tax, VAT & accounting figures** (the tax report, VAT-payable, the
+  per-rate breakdown, the Treuhänder / Banana export, etc.) are computed
+  from the data you enter and the defaults you configure. They are
+  **guidance only and jurisdiction-specific** — tax rules, VAT rates,
+  deduction schemes (e.g. the Liechtenstein 20 % Gewinnungskosten flat
+  rate) and filing duties differ by country and change over time. **Every
+  operator must check their own tax / VAT regulations and verify the
+  numbers with their accountant / Treuhänder / tax authority before
+  relying on any figure or export.** Picpeak makes no warranty that the
+  output is correct for your jurisdiction or situation.
+
+Read [`docs/crm-disclaimers.md`](docs/crm-disclaimers.md) before
+enabling the Contracts, Invoices or Accounting features.
 
 ## 📄 License
 
@@ -472,7 +565,7 @@ PicPeak is released under the [MIT License](LICENSE). Use it freely for personal
   <br>
   <a href="https://www.picpeak.app">Homepage</a> •
   <a href="https://demo.picpeak.app">Live Demo</a> •
-  <a href="https://github.com/the-luap/picpeak">GitHub</a> •
+  <a href="https://github.com/PicPeak/picpeak">GitHub</a> •
   <a href="https://docs.picpeak.app">Documentation</a> •
-  <a href="https://github.com/the-luap/picpeak/issues">Support</a>
+  <a href="https://github.com/PicPeak/picpeak/issues">Support</a>
 </p>

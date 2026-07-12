@@ -81,7 +81,7 @@ export const AuthenticatedVideo: React.FC<AuthenticatedVideoProps> = ({
           setVideoSrc(primaryUrl);
           setError(false);
         }
-      } catch (err) {
+      } catch (_err) {
         if (fallbackSrc && fallbackSrc !== src) {
           try {
             const fallbackUrl = await fetchWithAuth(fallbackSrc);

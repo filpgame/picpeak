@@ -36,8 +36,8 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
   src,
   fallbackSrc,
   alt,
-  useWatermark = false,
-  isGallery = false,
+  useWatermark: _useWatermark = false,
+  isGallery: _isGallery = false,
   protectFromDownload,
   slug,
   photoId,
@@ -137,18 +137,26 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
         throw new Error('No URL provided');
       }
 
-      // Build full URL for the image
+      // Build full URL for the image. Only relative paths are app-owned;
+      // an absolute URL is passed through untouched.
+      const isRelative = rawUrl.startsWith('/');
       const fullImageUrl = rawUrl.startsWith('/admin')
         ? buildResourceUrl(`/api${rawUrl}`)
-        : rawUrl.startsWith('/')
+        : isRelative
           ? buildResourceUrl(rawUrl)
           : rawUrl;
 
       const headers: Record<string, string> = {};
-      const slugForRequest = resolveSlug(rawUrl);
-      const token = getGalleryToken(slugForRequest);
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
+      // Attach the gallery bearer token ONLY to relative (same-app) image
+      // paths. Never send it to an absolute/external URL — that would leak
+      // gallery credentials cross-origin. AuthenticatedImage does not
+      // support external URLs by design.
+      if (isRelative) {
+        const slugForRequest = resolveSlug(rawUrl);
+        const token = getGalleryToken(slugForRequest);
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
       }
 
       const response = await fetch(fullImageUrl, {
@@ -173,7 +181,7 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
           setImageSrc(primaryUrl);
           setError(false);
         }
-      } catch (err) {
+      } catch (_err) {
         setIsLoading(false);
         if (fallbackSrc && fallbackSrc !== src) {
           try {
@@ -183,7 +191,7 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
               setError(false);
             }
             return;
-          } catch (fallbackError) {
+          } catch (_fallbackError) {
             // Swallow and mark error below
           }
         }

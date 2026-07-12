@@ -68,11 +68,11 @@ export const useImageProtection = (options: UseImageProtectionOptions) => {
         if (data[0] !== 255 || data[1] !== 255 || data[2] !== 255) {
           reportViolation('print_screen_detected');
         }
-      } catch (e) {
+      } catch (_e) {
         // Canvas data access blocked - possible screenshot attempt
         reportViolation('canvas_access_blocked');
       }
-    } catch (error) {
+    } catch (_error) {
       // Silently handle detection errors
     }
   }, [options.detectPrintScreen, options.protectionLevel, reportViolation]);

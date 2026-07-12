@@ -1,5 +1,5 @@
 import { api } from '../config/api';
-import type { LoginResponse, GalleryAuthResponse, AdminUser } from '../types';
+import type { LoginResponse, AdminLoginResponse, GalleryAuthResponse, AdminUser } from '../types';
 import { normalizeRequirePassword } from '../utils/accessControl';
 
 const normalizeGalleryResponse = (response: GalleryAuthResponse): GalleryAuthResponse => ({
@@ -14,9 +14,10 @@ const normalizeGalleryResponse = (response: GalleryAuthResponse): GalleryAuthRes
 
 export const authService = {
   // Admin authentication
-  async adminLogin(credentials: { email: string; password: string; recaptchaToken?: string | null }): Promise<LoginResponse> {
-    // Backend expects 'username' field, but we accept email
-    const response = await api.post<LoginResponse>('/auth/admin/login', {
+  async adminLogin(credentials: { email: string; password: string; recaptchaToken?: string | null }): Promise<AdminLoginResponse> {
+    // Backend expects 'username' field, but we accept email.
+    // Returns either { user } (session set) or an MFA challenge { mfaRequired, mfaToken }.
+    const response = await api.post<AdminLoginResponse>('/auth/admin/login', {
       username: credentials.email,
       password: credentials.password,
       recaptchaToken: credentials.recaptchaToken
@@ -24,10 +25,18 @@ export const authService = {
     return response.data;
   },
 
+  // Second step of the two-step admin login. `code` accepts a 6-digit TOTP
+  // or a recovery code (e.g. "awzq-jca3-va"). On success the session cookie
+  // is set server-side and the user object is returned.
+  async adminLoginMfa(payload: { mfaToken: string; code: string }): Promise<LoginResponse> {
+    const response = await api.post<LoginResponse>('/auth/admin/login/mfa', payload);
+    return response.data;
+  },
+
   async adminLogout() {
     try {
       await api.post('/auth/logout');
-    } catch (err) {
+    } catch (_err) {
       // Ignore logout errors; fallback to redirect
     } finally {
       window.location.href = '/admin/login';
@@ -64,7 +73,7 @@ export const authService = {
   async galleryLogout(slug?: string | null) {
     try {
       await api.post('/auth/gallery/logout', { slug });
-    } catch (err) {
+    } catch (_err) {
       // Ignore; cookie will naturally expire if removal fails
     }
   },

@@ -67,7 +67,7 @@ export function typescriptPlugin (
       }
 
       // Override module resolution to look in memfs
-      host.resolveModuleNameLiterals = (moduleLiterals, containingFile, redirectedReference, options, containingSourceFile, reusedNames) => {
+      host.resolveModuleNameLiterals = (moduleLiterals, containingFile, redirectedReference, options, _containingSourceFile, _reusedNames) => {
         return moduleLiterals.map(moduleLiteral => {
           const moduleName = moduleLiteral.text
           // Simple resolution for test: resolve relative paths against the containing file's directory

@@ -34,7 +34,7 @@ exports.up = async function(knex) {
   // Helpful index for queries
   try {
     if (knex.client.config.client === 'pg') {
-      await knex.raw("CREATE INDEX IF NOT EXISTS photos_event_source_idx ON photos (event_id, source_origin)");
+      await knex.raw('CREATE INDEX IF NOT EXISTS photos_event_source_idx ON photos (event_id, source_origin)');
     } else {
       await knex.schema.alterTable('photos', (table) => {
         table.index(['event_id', 'source_origin'], 'photos_event_source_idx');

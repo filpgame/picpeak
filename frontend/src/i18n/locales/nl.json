@@ -71,7 +71,23 @@
     "confirmCancelInvitation": {
       "title": "Uitnodiging annuleren",
       "message": "Weet u zeker dat u de uitnodiging voor {{email}} wilt annuleren?"
-    }
+    },
+    "userActivated": "",
+    "activateUserError": "",
+    "userDeleted": "",
+    "deleteUserError": "",
+    "activateUser": "",
+    "deleteUser": "",
+    "confirmActivate": {
+      "title": "",
+      "message": ""
+    },
+    "confirmDelete": {
+      "title": "",
+      "message": ""
+    },
+    "activate": "",
+    "delete": ""
   },
   "common": {
     "loading": "Laden...",
@@ -115,8 +131,6 @@
     "collapse": "Inklappen",
     "expand": "Uitklappen",
     "submitting": "Bezig met verzenden…",
-    "copy": "Kopiëren",
-    "copied": "Gekopieerd!",
     "applying": "Toepassen…",
     "done": "Klaar",
     "retry": "Opnieuw proberen",
@@ -124,7 +138,24 @@
     "saveChanges": "Wijzigingen opslaan",
     "resetChanges": "Wijzigingen ongedaan maken",
     "dismiss": "Sluiten",
-    "discard": "Verwerpen"
+    "discard": "Verwerpen",
+    "confirm": "",
+    "menu": "",
+    "selectCountry": "",
+    "saved": "",
+    "saving": "",
+    "deleted": "",
+    "actions": "",
+    "showAll": "",
+    "searching": "",
+    "language": "",
+    "configureInSettings": "",
+    "preview": "",
+    "duplicate": "",
+    "show": "",
+    "copyFailed": "",
+    "copy": "",
+    "copied": ""
   },
   "upload": {
     "photoCategory": "Fotocategorie",
@@ -154,21 +185,28 @@
     "transferring": "Overdragen",
     "uploadingChunks_one": "{{count}} deel wordt geüpload",
     "uploadingChunks_other": "{{count}} delen worden geüpload",
-    "retryFailed": "Mislukte opnieuw proberen"
+    "retryFailed": "Mislukte opnieuw proberen",
+    "failures": {
+      "unknownFile": "",
+      "unknownReason": "",
+      "transferReason": "",
+      "toast_one": "",
+      "toast_other": "",
+      "title_one": "",
+      "title_other": "",
+      "kindRejected": "",
+      "kindTransfer": "",
+      "kindProcessing": ""
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",
     "events": "Evenementen",
     "settings": "Instellingen",
     "archives": "Archieven",
-    "emailSettings": "E-mailinstellingen",
-    "branding": "Huisstijl",
-    "eventTypes": "Evenementtypes",
-    "backup": "Back-up en herstel",
-    "cmsPages": "CMS-pagina's",
     "users": "Gebruikers",
-    "calendar": "Agenda",
-    "clients": "Klanten"
+    "clients": "Klanten",
+    "betaTag": ""
   },
   "archives": {
     "title": "Archieven",
@@ -218,7 +256,14 @@
     "wrongPassword": "Onjuist wachtwoord. Controleer uw wachtwoord en probeer het opnieuw.",
     "tooManyAttempts": "Te veel mislukte inlogpogingen. Probeer het later opnieuw.",
     "pleaseEnterPassword": "Voer een wachtwoord in",
-    "passwordHint": "Het wachtwoord is verstrekt door de organisator van het evenement. Neem contact op als u het niet heeft."
+    "passwordHint": "Het wachtwoord is verstrekt door de organisator van het evenement. Neem contact op als u het niet heeft.",
+    "iab": {
+      "instagram": {
+        "title": "",
+        "ios": "",
+        "android": ""
+      }
+    }
   },
   "gallery": {
     "expires": "Verloopt",
@@ -339,9 +384,7 @@
   "categories": {
     "title": "Fotocategorieen",
     "addCategory": "Categorie toevoegen",
-    "eventSpecificCategories": "Evenement-specifieke categorieen",
     "noEventSpecificCategories": "Geen evenement-specifieke categorieen. Globale categorieen zijn standaard beschikbaar.",
-    "globalCategoriesAlwaysAvailable": "Globale categorieen (altijd beschikbaar):",
     "deleteCategoryTitle": "Categorie verwijderen",
     "categoryCreatedSuccess": "Categorie succesvol aangemaakt",
     "categoryDeletedSuccess": "Categorie succesvol verwijderd",
@@ -355,7 +398,21 @@
     "coverPhotoSet": "Omslagfoto succesvol ingesteld",
     "coverPhotoRemoved": "Omslagfoto verwijderd",
     "failedToSetCoverPhoto": "Kan omslagfoto niet instellen",
-    "categoryHeroHint": "Als er geen omslagfoto is ingesteld voor een categorie, wordt de standaard hero-foto gebruikt."
+    "categoryHeroHint": "Als er geen omslagfoto is ingesteld voor een categorie, wordt de standaard hero-foto gebruikt.",
+    "downloadsEnabled": "",
+    "downloadsDisabled": "",
+    "failedToToggleDownloads": "",
+    "enableDownloadsTitle": "",
+    "disableDownloadsTitle": "",
+    "failedToReorder": "",
+    "orderReset": "",
+    "galleryOrder": "",
+    "resetToDefault": "",
+    "orderCustomisedHint": "",
+    "orderDefaultHint": "",
+    "moveUp": "",
+    "moveDown": "",
+    "sharedBadge": ""
   },
   "events": {
     "title": "Evenementen",
@@ -420,9 +477,6 @@
     "resendCreationEmail": "Aanmaakmail opnieuw verzenden",
     "creationEmailResent": "Aanmaakmail is in de wachtrij geplaatst",
     "failedToResendEmail": "Kan aanmaakmail niet opnieuw verzenden",
-    "resendWhatsApp": "WhatsApp opnieuw sturen",
-    "whatsappResent": "WhatsApp-bericht verzonden",
-    "failedToResendWhatsApp": "WhatsApp opnieuw sturen mislukt",
     "photoStatistics": "Fotostatistieken",
     "totalPhotos": "Totaal foto's",
     "managePhotos": "Foto's beheren",
@@ -462,7 +516,9 @@
       "toastError": "Wachtwoord opnieuw instellen mislukt",
       "toastCopied": "Wachtwoord gekopieerd naar klembord",
       "errorMinLength": "Wachtwoord moet minimaal 6 tekens bevatten",
-      "errorMismatch": "Wachtwoorden komen niet overeen"
+      "errorMismatch": "Wachtwoorden komen niet overeen",
+      "hide": "",
+      "show": ""
     },
     "themeAndStyle": "Thema & Stijl",
     "galleryExpiration": "Galerij vervaldatum",
@@ -532,7 +588,6 @@
     "expired": "Verlopen",
     "draft": "Concept",
     "publishAndNotify": "Publiceren & klant informeren",
-    "publishConfirm": "Hiermee wordt de galerij toegankelijk en wordt de notificatie-e-mail naar de klant verzonden. Doorgaan?",
     "publishSuccess": "Galerij gepubliceerd en klant geïnformeerd!",
     "draftBanner": "Deze galerij staat in conceptmodus. Upload je foto's en publiceer wanneer je klaar bent.",
     "subtitle": "Beheer uw fotogalerijen en evenementen",
@@ -652,13 +707,78 @@
       "mode_custom": "Aangepast voor dit evenement",
       "mode_off": "Uit (verbergen voor dit evenement)",
       "placeholder": "Markdown-inhoud (bijv. **Aanbieding:** [boek je volgende sessie](https://example.com))",
-      "preview": "Voorbeeld"
+      "preview": "Voorbeeld",
+      "mode_managed": "",
+      "mode_reference": ""
     },
     "ogShare": {
       "title": "Hero-foto gebruiken als social-share-voorbeeld",
       "help": "Wanneer deze galerij-URL wordt gedeeld op WhatsApp, Facebook, Slack enz., toont de link-preview de bovenstaande hero-foto. De thumbnail wordt niet-geauthenticeerd opgehaald door link-preview-crawlers — wie de URL deelt maakt deze afbeelding daarmee in feite openbaar. Standaard uit; kies eerst een hero die je bewust openbaar wilt tonen voordat je dit inschakelt.",
       "heroRequired": "Kies eerst hierboven een hero-foto — deze optie gebruikt die als WhatsApp- / Facebook- / Slack-voorbeeldafbeelding."
-    }
+    },
+    "duplicateDialog": {
+      "successToast": "",
+      "errorNameRequired": "",
+      "title": "",
+      "description": "",
+      "eventNameLabel": "",
+      "eventNamePlaceholder": "",
+      "eventDateLabel": "",
+      "eventDateHelp": "",
+      "customerNameLabel": "",
+      "customerNamePlaceholder": "",
+      "customerEmailLabel": "",
+      "customerEmailPlaceholder": "",
+      "confirm": ""
+    },
+    "createInvoice": "",
+    "duplicateEvent": "",
+    "fullDay": "",
+    "eventTimeStart": "",
+    "eventTimeEnd": "",
+    "publishDialog": {
+      "errorMinLength": "",
+      "title": "",
+      "descriptionWithEmail": "",
+      "descriptionNoEmail": "",
+      "passwordLabel": "",
+      "passwordPlaceholder": "",
+      "passwordHelp": "",
+      "descriptionAssignedAccount_one": "",
+      "descriptionAssignedAccount_other": "",
+      "justPublish": ""
+    },
+    "customerPicker": {
+      "help": "",
+      "label": "",
+      "removeAria": "",
+      "placeholder": "",
+      "searching": "",
+      "noResults": ""
+    },
+    "shortUrls": {
+      "created": "",
+      "errors": {
+        "slugTaken": "",
+        "invalidSlug": ""
+      },
+      "deleted": "",
+      "confirmDelete": "",
+      "title": "",
+      "description": "",
+      "slugPlaceholder": "",
+      "create": "",
+      "useSuggested": "",
+      "slugHelp": "",
+      "empty": "",
+      "hits_one": "",
+      "hits_other": "",
+      "lastHit": "",
+      "createdAt": ""
+    },
+    "heroLogoInherit": "",
+    "heroLogoShow": "",
+    "heroLogoHide": ""
   },
   "settings": {
     "title": "Systeeminstellingen",
@@ -697,7 +817,15 @@
       "accountEmailRequired": "E-mailadres is verplicht",
       "accountEmailInvalid": "Voer een geldig e-mailadres in",
       "accountSaveButton": "Accountgegevens opslaan",
-      "accountSaveSuccess": "Accountgegevens bijgewerkt"
+      "accountSaveSuccess": "Accountgegevens bijgewerkt",
+      "maxUploadBatchSize": "",
+      "maxUploadBatchSizeHelp": "",
+      "useOriginalFilenames": "",
+      "useOriginalFilenamesHelp": "",
+      "timeFormat": "",
+      "timeFormat24h": "",
+      "timeFormat12h": "",
+      "timeFormatHelp": ""
     },
     "publicSite": {
       "badge": "Openbare landingspagina",
@@ -776,13 +904,14 @@
       "attemptWindowMinutesHelp": "Hoe ver terug wordt gekeken bij het tellen van mislukte inlogpogingen",
       "lockoutDurationMinutes": "Vergrendelingsduur (minuten)",
       "lockoutDurationMinutesHelp": "Hoe lang de galerij of het account vergrendeld blijft na te veel mislukte pogingen",
-      "enable2FA": "Tweefactorauthenticatie inschakelen voor beheerders",
       "recaptchaSettings": "reCAPTCHA-instellingen",
       "enableRecaptcha": "reCAPTCHA inschakelen voor inlogformulieren",
       "siteKey": "Sitesleutel",
       "secretKey": "Geheime sleutel",
       "recaptchaHelp": "Haal uw reCAPTCHA-sleutels op bij",
-      "saveSecuritySettings": "Beveiligingsinstellingen opslaan"
+      "saveSecuritySettings": "Beveiligingsinstellingen opslaan",
+      "twoFactorTitle": "",
+      "twoFactorNote": ""
     },
     "categories": {
       "title": "Categorieen",
@@ -873,7 +1002,9 @@
       "showGalleryFilterBar": "Filterbalk in galerijen tonen",
       "showGalleryFilterBarHelp": "Toont de zoek-op-bestandsnaam en sorteerbediening boven rasterindelingsgalerijen. Uitschakelen voor een cleaner lay-out.",
       "enablePhoneField": "Telefoonnummerveld inschakelen",
-      "enablePhoneFieldHelp": "Voegt een optioneel telefoonnumerinvoerveld toe aan het evenementformulier. Handig voor automatisering zoals WhatsApp-levering via n8n. Altijd optioneel, ook als ingeschakeld."
+      "enablePhoneFieldHelp": "Voegt een optioneel telefoonnumerinvoerveld toe aan het evenementformulier. Handig voor automatisering zoals WhatsApp-levering via n8n. Altijd optioneel, ook als ingeschakeld.",
+      "defaultFeedbackEnabled": "",
+      "defaultFeedbackEnabledHelp": ""
     },
     "imageSecurity": {
       "title": "Afbeeldingsbeveiliging",
@@ -961,7 +1092,14 @@
       "fit_fill": "Vullen (uitrekken)",
       "fit_inside": "Binnenkant (verkleinen om te passen)",
       "fit_outside": "Buitenkant (vergroten om te bedekken)",
-      "fitRecommendation": "Aanbeveling: gebruik \"Inside\" voor masonry/mosaic/justified-lay-outs (behoudt beeldverhouding); \"Cover\" voor uniforme 1:1-tegels."
+      "fitRecommendation": "Aanbeveling: gebruik \"Inside\" voor masonry/mosaic/justified-lay-outs (behoudt beeldverhouding); \"Cover\" voor uniforme 1:1-tegels.",
+      "previewsRegenerateStarted": "",
+      "previewsRegenerateError": "",
+      "lightboxTitle": "",
+      "lightboxHelp": "",
+      "lightboxToggle": "",
+      "lightboxToggleHelp": "",
+      "regeneratePreviewsButton": ""
     },
     "seo": {
       "title": "SEO & Robots",
@@ -993,17 +1131,12 @@
     },
     "analytics": {
       "title": "Statistieken",
-      "umamiIntegration": "Umami Analytics-integratie",
-      "enableUmami": "Umami Analytics inschakelen",
       "umamiUrl": "Umami-URL",
       "umamiUrlHelp": "De URL van uw Umami-instantie (bijv. https://analytics.uwdomein.nl)",
       "websiteId": "Website-ID",
       "websiteIdHelp": "Uw Umami website-ID (te vinden in het Umami-dashboard)",
       "shareUrl": "Deel-URL (optioneel)",
       "shareUrlHelp": "Openbare deel-URL voor het insluiten van het volledige dashboard (aanmaken in Umami)",
-      "umamiInfo": "Over Umami Analytics",
-      "umamiInfoText": "Umami is een privacygericht, open-source analyticsplatform. Het houdt paginaweergaven, unieke bezoekers en aangepaste gebeurtenissen bij zonder cookies te gebruiken.",
-      "learnMore": "Meer informatie over Umami",
       "saveAnalyticsSettings": "Statistiekinstellingen opslaan",
       "backendAnalytics": "Backend-statistieken",
       "backendAnalyticsText": "Het systeem houdt ook basisstatistieken bij op de server voor beveiligings- en prestatiemonitoring.",
@@ -1013,16 +1146,38 @@
       "uniqueVisitors": "Unieke bezoekers op basis van IP",
       "deviceTypes": "Apparaattypen op basis van user agents",
       "privacy": "Privacy",
-      "privacyText": "IP-adressen worden gehasht voor privacy. Er worden geen persoonsgegevens opgeslagen. Statistiekgegevens worden 90 dagen bewaard."
+      "privacyText": "IP-adressen worden gehasht voor privacy. Er worden geen persoonsgegevens opgeslagen. Statistiekgegevens worden 90 dagen bewaard.",
+      "providerHeading": "",
+      "providerDescription": "",
+      "providerLabel": "",
+      "provider": {
+        "none": "",
+        "umami": "",
+        "rybbit": "",
+        "custom": ""
+      },
+      "umamiApiKey": "",
+      "umamiApiKeyHelp": "",
+      "rybbitUrl": "",
+      "rybbitUrlHelp": "",
+      "rybbitWebsiteId": "",
+      "rybbitWebsiteIdHelp": "",
+      "rybbitApiKey": "",
+      "rybbitApiKeyHelp": "",
+      "customHeadHtml": "",
+      "customHeadHtmlHelp": "",
+      "customCspWarning": "",
+      "customCspWarningText": "",
+      "providerNoneInfo": ""
     },
     "groups": {
       "general": "Algemeen",
-      "display": "Weergave",
       "privacySecurity": "Privacy & Beveiliging",
       "integrations": "Integraties",
       "system": "Systeem",
       "appearance": "Inhoud & Weergave",
-      "communication": "Communicatie"
+      "communication": "Communicatie",
+      "crm": ""
     },
     "apiTokens": {
       "title": "API-tokens",
@@ -1046,7 +1201,8 @@
       "statusActive": "Actief",
       "confirmRevoke": "Dit token intrekken? Deze actie kan niet ongedaan worden gemaakt.",
       "revoke": "Intrekken",
-      "empty": "Nog geen tokens. Genereer er een hierboven om te beginnen."
+      "empty": "Nog geen tokens. Genereer er een hierboven om te beginnen.",
+      "preview": ""
     },
     "webhooks": {
       "title": "Webhooks",
@@ -1060,7 +1216,38 @@
       "template": "Sjabloon (optioneel)",
       "create": "Webhook aanmaken",
       "existing": "Bestaande webhooks",
-      "empty": "Nog geen webhooks. Maak er een aan hierboven om evenementmeldingen te ontvangen."
+      "empty": "Nog geen webhooks. Maak er een aan hierboven om evenementmeldingen te ontvangen.",
+      "filterError": "",
+      "createError": "",
+      "updateError": "",
+      "deletedToast": "",
+      "deleteError": "",
+      "copied": "",
+      "copyFailed": "",
+      "copyButton": "",
+      "dismiss": "",
+      "namePlaceholder": "",
+      "urlPlaceholder": "",
+      "hideAdvanced": "",
+      "showAdvanced": "",
+      "filterHelp": "",
+      "templatePlaceholder": "",
+      "templateHelp": "",
+      "colName": "",
+      "colUrl": "",
+      "colEvents": "",
+      "colLastDelivery": "",
+      "colStatus": "",
+      "colActions": "",
+      "eventsSubscribed_one": "",
+      "eventsSubscribed_other": "",
+      "toggleToDisable": "",
+      "toggleToEnable": "",
+      "statusActive": "",
+      "statusDisabled": "",
+      "deliveriesLink": "",
+      "confirmDelete": "",
+      "delete": ""
     },
     "sectionLabel": "Instellingensectie",
     "navAriaLabel": "Instellingennavigatie",
@@ -1118,8 +1305,9 @@
         "scheduling": "Planning",
         "sales": "Verkoop",
         "insights": "Inzichten & Toegang",
-        "customers": "Klanten",
-        "clients": "Klanten"
+        "clients": "Klanten",
+        "accounting": "",
+        "automation": ""
       },
       "status": {
         "stable": "stabiel",
@@ -1172,7 +1360,73 @@
       },
       "clients": {
         "title": "Klanten",
-        "description": "Hoofdschakelaar voor het Klanten-onderdeel in de zijbalk. Uitgeschakeld verbergt het onderdeel en alle subfuncties ongeacht hun individuele schakelaars — opnieuw inschakelen herstelt de vorige status."
+        "description": ""
+      },
+      "calendarBooking": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "slideshow": {
+        "title": "",
+        "description": ""
+      },
+      "incomingMail": {
+        "title": "",
+        "description": ""
+      },
+      "whatsapp": {
+        "title": "",
+        "description": ""
+      },
+      "contracts": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "hoursLogging": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "projects": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "accounting": {
+        "title": "",
+        "description": "",
+        "sidebar": "",
+        "requiredByBills": ""
+      },
+      "taxReport": {
+        "title": "",
+        "description": "",
+        "sidebar": "",
+        "requiresAccounting": ""
+      },
+      "incomingInvoices": {
+        "title": "",
+        "description": "",
+        "sidebar": "",
+        "requiresAccounting": ""
+      },
+      "expenses": {
+        "title": "",
+        "description": "",
+        "sidebar": "",
+        "requiresAccounting": ""
+      },
+      "crmDevelopment": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "workflows": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
       }
     },
     "customerSurface": {
@@ -1185,6 +1439,118 @@
       "save": "Wijzigingen opslaan",
       "saved": "Branding van klantdashboard opgeslagen",
       "error": "Instellingen konden niet worden opgeslagen"
+    },
+    "slideshow": {
+      "title": "",
+      "subtitle": ""
+    },
+    "businessProfile": {
+      "title": ""
+    },
+    "crm": {
+      "title": ""
+    },
+    "contracts": {
+      "title": ""
+    },
+    "reminderTemplates": {
+      "title": ""
+    },
+    "accounting": {
+      "title": "",
+      "savedToast": "",
+      "subtitle": "",
+      "kmRate": "",
+      "kmRateHint": "",
+      "perDiemRate": "",
+      "perDiemRateHint": "",
+      "profileFields": {
+        "hourlyRate": "",
+        "hourlyRatePlaceholder": "",
+        "hourlyRateHint": "",
+        "vatLabel": "",
+        "vatLabelHint": ""
+      },
+      "requireProof": "",
+      "disclaimer": "",
+      "vat": {
+        "title": "",
+        "registered": "",
+        "registeredHint": "",
+        "reclaimCountries": "",
+        "reclaimCountriesHint": "",
+        "defaultOutputCode": "",
+        "defaultOutputCodeNone": "",
+        "defaultOutputCodeHint": ""
+      }
+    },
+    "whatsapp": {
+      "title": "",
+      "savedToast": "",
+      "testSentToast": "",
+      "subtitle": "",
+      "phoneNumberId": "",
+      "phoneNumberIdHint": "",
+      "wabaId": "",
+      "wabaIdHint": "",
+      "accessToken": "",
+      "accessTokenPlaceholder": "",
+      "accessTokenHint": "",
+      "templateName": "",
+      "templateNameHint": "",
+      "templateLanguage": "",
+      "templateLanguagePlaceholder": "",
+      "templateLanguageHint": "",
+      "templateParams": "",
+      "templateParamsHint": "",
+      "params": {
+        "customer_name": "",
+        "event_name": "",
+        "gallery_link": "",
+        "password_line": "",
+        "expiry_date": ""
+      },
+      "paramMoveUp": "",
+      "paramMoveDown": "",
+      "templateParamsEmpty": "",
+      "templateParamsPreview": "",
+      "enabled": "",
+      "testHeading": "",
+      "testHelp": "",
+      "testSending": "",
+      "testSend": ""
+    },
+    "mfa": {
+      "copyFailed": "",
+      "recoveryCodesWarning": "",
+      "copied": "",
+      "copy": "",
+      "download": "",
+      "recoveryCodesAck": "",
+      "done": "",
+      "disabledToast": "",
+      "disablePrompt": "",
+      "codeRequired": "",
+      "disableConfirmTitle": "",
+      "disableConfirmMessage": "",
+      "disableConfirmButton": "",
+      "title": "",
+      "description": "",
+      "enabledBadge": "",
+      "recoveryCodesRemaining_one": "",
+      "recoveryCodesRemaining_other": "",
+      "regenerateHelp": "",
+      "codePlaceholder": "",
+      "regenerateConfirm": "",
+      "regenerate": "",
+      "disable": "",
+      "setupScanInstruction": "",
+      "qrAlt": "",
+      "manualEntry": "",
+      "enterCodeLabel": "",
+      "enable": "",
+      "notEnrolled": "",
+      "setUp": ""
     }
   },
   "analytics": {
@@ -1375,6 +1741,11 @@
     "saveTheme": "Thema opslaan",
     "previewLayout": "Lay-outvoorbeeld",
     "livePreview": "Live voorbeeld",
+    "pdfTypography": "PDF-typografie",
+    "pdfTypographyHelp": "Wordt gebruikt voor briefhoofden van facturen en offertes. Kies een van de meegeleverde lettertypen, of laat de standaardinstelling staan om Helvetica te gebruiken.",
+    "pdfFontFamily": "Bodylettertype",
+    "pdfFontFamilyDefault": "Helvetica gebruiken (standaard)",
+    "pdfFontFamilyMissing": "ontbreekt",
     "heroPlaceholderText": "De hero-foto van uw evenement verschijnt hier",
     "whiteLabel": "White Label",
     "hidePoweredBy": "\"Powered by PicPeak\"-vermelding verbergen",
@@ -1389,6 +1760,7 @@
     "logoMaxHeight": "Maximale hoogte (pixels)",
     "logoMaxHeightHelp": "Stel een aangepaste maximale hoogte in voor het logo (20-200 pixels)",
     "logoPosition": "Logopositie in header",
+    "positionSidepanelHelp": "Het logo verschijnt in de admin-zijbalk in plaats van in de header. Wanneer de zijbalk is ingeklapt, wordt het favicon getoond.",
     "logoDisplayMode": "Weergavemodus",
     "logoOnly": "Alleen logo",
     "textOnly": "Alleen bedrijfsnaam",
@@ -1492,8 +1864,26 @@
       "alignment": "Uitlijning",
       "alignLeft": "Links",
       "alignCenter": "Gecentreerd (standaard — komt overeen met footer)",
-      "alignRight": "Rechts"
-    }
+      "alignRight": "Rechts",
+      "title": "",
+      "help": "",
+      "position": "",
+      "aboveFooter": "",
+      "belowFooter": "",
+      "content": "",
+      "placeholder": "",
+      "markdownHelp": "",
+      "preview": ""
+    },
+    "socialMedia": {
+      "title": "",
+      "help": "",
+      "whatsappHelp": ""
+    },
+    "logoDark": "",
+    "logoDarkHelp": "",
+    "forcedModeBrandingHint": "",
+    "forcedModeGalleryNote": ""
   },
   "admin": {
     "title": "Beheerpaneel",
@@ -1513,27 +1903,46 @@
       "error": "Fout"
     },
     "updates": {
-      "available": "Update beschikbaar",
-      "newVersion": "Versie {{version}} is beschikbaar",
-      "currentVersion": "Huidig: {{version}}",
-      "channel": "Kanaal: {{channel}}",
-      "channelStable": "Stabiel",
-      "channelBeta": "Beta",
       "beta": "BETA",
-      "viewReleaseNotes": "Release-opmerkingen bekijken",
       "updateAvailableShort": "v{{version}} beschikbaar",
-      "upToDate": "U bent up-to-date",
-      "updateNow": "Nu bijwerken",
-      "updateDialog": {
-        "title": "PicPeak bijwerken",
-        "detectedEnv": "Gedetecteerde omgeving",
-        "beforeUpdating": "Voor het bijwerken:",
-        "updateCommands": "Updateopdrachten:",
-        "afterUpdating": "Na het bijwerken:",
-        "copyAllCommands": "Alle opdrachten kopieren",
-        "completeChecklist": "Voltooi de checklist voor het bijwerken",
-        "error": "Kan update-instructies niet laden"
-      }
+      "card": {
+        "title": "Versie van de applicatie",
+        "upToDate": "Up-to-date",
+        "updateTo": "Bijwerken naar {{version}}",
+        "checkAgain": "Opnieuw controleren",
+        "lastChecked": "Laatst gecontroleerd: {{time}}",
+        "updating": "Bijwerken…",
+        "updatingDesc": "Bijwerken naar {{version}} — afhankelijkheden installeren en frontend bouwen. De server zal automatisch opnieuw starten.",
+        "restarting": "Herstarten…",
+        "restartingDesc": "De server herstart — de pagina wordt automatisch herladen zodra deze gereed is.",
+        "complete": "Bijgewerkt naar {{version}} — pagina herladen…",
+        "errorTitle": "De update is mogelijk mislukt, of de server heeft meer tijd nodig dan verwacht om te herstarten.",
+        "downloadCombinedLog": "Download combined.log",
+        "downloadErrorLog": "Download error.log",
+        "retry": "Opnieuw proberen"
+      },
+      "viewDetails": "",
+      "copyFailed": "",
+      "modalTitle": "",
+      "modalSubtitle": "",
+      "howToUpgrade": "",
+      "detectedEnv": "",
+      "copyCommand": "",
+      "releaseNotes": "",
+      "changelogError": "",
+      "noReleases": "",
+      "viewOnGitHub": "",
+      "noNotes": "",
+      "dismissUntilNext": "",
+      "channelBeta": "",
+      "channelStable": "",
+      "available": "",
+      "newVersion": "",
+      "currentVersion": "",
+      "channel": "",
+      "newFeatures": "",
+      "updateNow": "",
+      "viewReleaseNotes": ""
     },
     "notifications": "Meldingen",
     "markAllRead": "Alles als gelezen markeren",
@@ -1605,13 +2014,14 @@
       "eventPublished": "Evenement gepubliceerd: {{eventName}}",
       "eventLogoUploaded": "Evenementlogo geüpload voor {{eventName}}",
       "eventLogoRemoved": "Evenementlogo verwijderd voor {{eventName}}",
-      "bulkDeleteCompleted": "Massa-verwijdering voltooid: {{count}} evenementen verwijderd",
       "photoReplaced": "Foto vervangen in {{eventName}}",
       "photoUploaded": "Foto geüpload naar {{eventName}}",
       "categoryHeroUpdated": "Categorie hero-foto bijgewerkt",
       "publicSiteResetToDefault": "Publieke site teruggezet naar standaard",
       "cmsPageLogoUploaded": "CMS-pagina-logo geüpload: {{slug}}",
-      "adminPasswordResetByAdmin": "Beheerderswachtwoord door andere beheerder gereset: {{username}}"
+      "adminPasswordResetByAdmin": "Beheerderswachtwoord door andere beheerder gereset: {{username}}",
+      "bulkDeleteCompleted_one": "",
+      "bulkDeleteCompleted_other": ""
     },
     "notificationToasts": {
       "markedAllRead": "Alle meldingen als gelezen gemarkeerd",
@@ -1640,7 +2050,22 @@
       "visibleSuccess": "Foto's nu zichtbaar voor gasten",
       "processingStatus": "Verwerken…",
       "processingFailed": "Mislukt",
-      "retryQueued": "Nieuwe poging in wachtrij"
+      "retryQueued": "Nieuwe poging in wachtrij",
+      "viewMode": "",
+      "gridView": "",
+      "listView": "",
+      "columns": {
+        "photo": "",
+        "category": "",
+        "uploaded": "",
+        "engagement": "",
+        "feedback": "",
+        "size": "",
+        "actions": "",
+        "views": "",
+        "downloads": "",
+        "likes": ""
+      }
     },
     "events": {
       "tabs": {
@@ -1769,7 +2194,6 @@
       "unknown": "Onbekende activiteit",
       "feature_enabled": "{{label}} ingeschakeld",
       "feature_disabled": "{{label}} uitgeschakeld",
-      "feature_flags_summary": "{{count}} functies bijgewerkt: {{summary}}",
       "feature_flags_noop": "Functie-schakelaars bekeken (geen wijzigingen)",
       "customer_login": "Klant ingelogd: {{email}}",
       "customer_invitation_created": "Klantuitnodiging verzonden naar {{email}}",
@@ -1808,8 +2232,22 @@
       "photo_uploaded": "Foto geüpload naar {{eventName}}",
       "category_hero_updated": "Categorie hero-foto bijgewerkt",
       "public_site_reset_to_default": "Publieke site teruggezet naar standaard",
-      "cms_page_logo_uploaded": "CMS-pagina-logo geüpload: {{slug}}"
-    }
+      "cms_page_logo_uploaded": "CMS-pagina-logo geüpload: {{slug}}",
+      "feature_flags_summary_one": "",
+      "feature_flags_summary_other": "",
+      "feature_flags_updated": ""
+    },
+    "viewReleaseNotes": "",
+    "expandSidebar": "",
+    "collapseSidebar": "",
+    "whatsnew": {
+      "title": "",
+      "viewAll": "",
+      "modalTitle": "",
+      "fullChangelog": "",
+      "gotIt": ""
+    },
+    "viewOnGithub": ""
   },
   "acceptInvitation": {
     "title": "Uitnodiging accepteren",
@@ -1889,7 +2327,6 @@
     "passwordsDoNotMatch": "Wachtwoorden komen niet overeen",
     "expirationRange": "Vervaltijd moet tussen 1 en 365 dagen zijn",
     "required": "Dit veld is verplicht",
-    "expirationRequired": "Vervaldatum is verplicht.",
     "eventDateRequired": "Evenementdatum is verplicht",
     "passwordTooSimple": "Wachtwoord mag niet alleen uit cijfers bestaan. Gebruik een datumformaat zoals \"04.07.2025\""
   },
@@ -1997,20 +2434,108 @@
     "buttonTextColor": "Knoptekst",
     "buttonTextColorHelp": "Tekstkleur op gevulde knoppen. Moet goed contrasteren met de primaire kleur. Doorgaans wit.",
     "categories": {
-      "core": "Kern",
-      "customers": "Klanten",
-      "calendar": "Agenda",
-      "quotes": "Offertes",
-      "billing": "Facturatie"
+      "core": "Kern"
     },
     "featureOff": "Functie uit",
     "featureOffTooltip": "De functie waar deze sjabloon bij hoort, is momenteel uitgeschakeld. U kunt de sjabloon nog steeds bewerken — deze wordt gebruikt zodra de functie weer is ingeschakeld.",
     "subcategories": {
-      "gallery": "Galerijen",
-      "admin": "Adminaccounts",
-      "backup": "Back-up & herstel",
-      "system": "Systeemupdates",
       "other": "Overige"
+    },
+    "flushQueue": {
+      "empty": "",
+      "success": "",
+      "title": "",
+      "help": "",
+      "button": ""
+    },
+    "sentEmails": {
+      "tab": "",
+      "title": "",
+      "subtitle": "",
+      "searchPlaceholder": "",
+      "from": "",
+      "to": "",
+      "status": {
+        "pending": "",
+        "sent": "",
+        "failed": ""
+      },
+      "empty": "",
+      "col": {
+        "recipient": "",
+        "type": "",
+        "status": "",
+        "created": "",
+        "sent": "",
+        "event": ""
+      },
+      "retries_one": "",
+      "retries_other": "",
+      "pagination_one": "",
+      "pagination_other": ""
+    },
+    "received": {
+      "tab": "",
+      "empty": "",
+      "from": "",
+      "subject": "",
+      "received": "",
+      "status": "",
+      "inbox": ""
+    },
+    "incoming": {
+      "requiredFields": "",
+      "savedToast": "",
+      "testOk": "",
+      "testFailed": "",
+      "roundTripOk": "",
+      "roundTripFailed": "",
+      "pollDisabled": "",
+      "pollUnconfigured": "",
+      "pollBusy": "",
+      "pollOk_one": "",
+      "pollOk_other": "",
+      "pollFailed": "",
+      "foldersDetected_one": "",
+      "foldersDetected_other": "",
+      "noFolders": "",
+      "detectFailed": "",
+      "title": "",
+      "subtitle": "",
+      "host": "",
+      "port": "",
+      "security": "",
+      "ssl": "",
+      "plain": "",
+      "user": "",
+      "pass": "",
+      "folder": "",
+      "detectFolders": "",
+      "folderHint": "",
+      "test": "",
+      "roundTripHint": "",
+      "roundTrip": "",
+      "pollHint": "",
+      "poll": "",
+      "save": ""
+    },
+    "customerMailbox": {
+      "requiredFields": "",
+      "savedToast": "",
+      "testOk": "",
+      "testFailed": "",
+      "title": "",
+      "subtitle": "",
+      "enabled": "",
+      "outgoing": "",
+      "outgoingHint": "",
+      "fromEmail": "",
+      "smtpHost": "",
+      "smtpSsl": "",
+      "smtpStarttls": "",
+      "smtpUser": "",
+      "smtpPass": "",
+      "save": ""
     }
   },
   "cms": {
@@ -2040,7 +2565,9 @@
     "noLogo": "geen overschrijving",
     "replaceLogo": "Logo vervangen",
     "uploadLogo": "Logo uploaden",
-    "clearLogo": "Sitestandaard gebruiken"
+    "clearLogo": "Sitestandaard gebruiken",
+    "showInFooter": "",
+    "showInFooterHelp": ""
   },
   "eventTypes": {
     "title": "Evenementtypes",
@@ -2097,7 +2624,9 @@
       "dashboard": "Dashboard",
       "configuration": "Configuratie",
       "history": "Back-upgeschiedenis",
-      "restore": "Herstellen"
+      "restore": "Herstellen",
+      "integrity": "",
+      "coverage": ""
     },
     "status": {
       "inProgress": "Back-up wordt uitgevoerd...",
@@ -2163,6 +2692,15 @@
         "excellent": "Uitstekend",
         "good": "Goed",
         "critical": "Kritiek"
+      },
+      "lastSuccessful": "",
+      "lastAttempt": "",
+      "zombieRuns_one": "",
+      "zombieRuns_other": "",
+      "status": {
+        "completed": "",
+        "failed": "",
+        "running": ""
       }
     },
     "configuration": {
@@ -2264,7 +2802,9 @@
         "completed": "Voltooid",
         "contentBackedUp": "Geback-upte inhoud",
         "errorDetails": "Foutdetails",
-        "manifest": "Manifest"
+        "manifest": "Manifest",
+        "totalFiles": "",
+        "otherFiles": ""
       },
       "pagination": {
         "showing": "{{from}}-{{to}} van {{total}} back-ups weergegeven",
@@ -2294,7 +2834,15 @@
         "upload": {
           "name": "Back-up uploaden",
           "description": "Een back-upbestand uploaden",
-          "comingSoon": "Uploadfunctionaliteit binnenkort beschikbaar"
+          "picpeak": {
+            "name": "",
+            "description": ""
+          },
+          "manifest": {
+            "name": "",
+            "description": ""
+          },
+          "manifestComingSoon": ""
         },
         "configuration": {
           "s3": "S3-configuratie",
@@ -2311,7 +2859,15 @@
         "encrypted": "Versleutelde back-up",
         "encryptedMessage": "U moet het versleutelingswachtwoord opgeven om deze back-up te herstellen.",
         "enterPassphrase": "Voer versleutelingswachtwoord in",
-        "at": "om"
+        "at": "om",
+        "filesOnlyHint": "",
+        "filesOnlyBadge": "",
+        "corruptHint": "",
+        "corruptBadge": "",
+        "filesOnlyWarning": {
+          "title": "",
+          "message": ""
+        }
       },
       "restoreTypes": {
         "full": {
@@ -2384,8 +2940,14 @@
         "restoreLogs": "Hersteltlogs",
         "success": {
           "title": "Herstel succesvol voltooid",
-          "message": "Uw gegevens zijn hersteld. Controleer of alles correct werkt."
-        }
+          "message": "Uw gegevens zijn hersteld. Controleer of alles correct werkt.",
+          "verifyIntegrity": ""
+        },
+        "failedSubtitle": "",
+        "idle": "",
+        "errorTitle": "",
+        "errorUnknown": "",
+        "rolledBack": ""
       },
       "actions": {
         "back": "Terug",
@@ -2401,6 +2963,102 @@
       "backupFailed": "Kan back-up niet starten",
       "configUpdated": "Back-upconfiguratie bijgewerkt",
       "configUpdateFailed": "Kan configuratie niet bijwerken"
+    },
+    "integrity": {
+      "title": "",
+      "description": "",
+      "running": "",
+      "runNow": "",
+      "error": "",
+      "summary": {
+        "total": "",
+        "verifiedOk": "",
+        "existsButNoHash": "",
+        "existsButNoHashHint": "",
+        "missingFiles": "",
+        "hashMismatches": ""
+      },
+      "scannedAt": "",
+      "missing": {
+        "heading": "",
+        "caption": ""
+      },
+      "hashMismatches": {
+        "heading": "",
+        "caption": ""
+      },
+      "emptyState": "",
+      "results": {
+        "table": "",
+        "rowId": "",
+        "column": "",
+        "detail": ""
+      }
+    },
+    "coverage": {
+      "generatedAt": "",
+      "title": "",
+      "description": "",
+      "refresh": "",
+      "error": "",
+      "fallbackInUse": "",
+      "database": {
+        "title": "",
+        "mode": "",
+        "modeInline": "",
+        "modeScheduled": "",
+        "lastDump": "",
+        "lastDumpSize": "",
+        "noDump": "",
+        "staleLabel": "",
+        "stale": ""
+      },
+      "summary": {
+        "title": "",
+        "willScan": "",
+        "skippedByToggle": "",
+        "skippedByFlag": "",
+        "missingOnDisk": "",
+        "drift": ""
+      },
+      "paths": {
+        "heading": "",
+        "path": "",
+        "coverage": "",
+        "featureFlag": "",
+        "description": ""
+      },
+      "drift": {
+        "none": "",
+        "heading": "",
+        "caption": ""
+      },
+      "coverage": {
+        "willScan": "",
+        "skippedByToggle": "",
+        "skippedByFlag": "",
+        "missingOnDisk": ""
+      }
+    },
+    "picpeak": {
+      "downloadFailed": "",
+      "title": "",
+      "intro": "",
+      "includePhotos": "",
+      "secretsWarning": "",
+      "download": "",
+      "restoreDone": "",
+      "restoreFailed": "",
+      "restoreTitle": "",
+      "restoreIntro": "",
+      "chooseFile": "",
+      "restoreSummary": "",
+      "externalMediaNote": "",
+      "externalMediaLink": "",
+      "reload": "",
+      "confirmTitle": "",
+      "confirmBody": "",
+      "confirmRestore": ""
     }
   },
   "cssTemplates": {
@@ -2533,7 +3191,13 @@
       "enableRateLimiting": "Snelheidsbeperking inschakelen",
       "rateLimitingDesc": "Voorkom spam door de feedbackfrequentie te beperken",
       "timeWindow": "Tijdvenster (minuten)",
-      "maxRequests": "Max. verzoeken"
+      "maxRequests": "Max. verzoeken",
+      "perGuestLimits": "",
+      "perGuestLimitsDesc": "",
+      "maxFavoritesPerGuest": "",
+      "maxFavoritesPerGuestHint": "",
+      "maxLikesPerGuest": "",
+      "maxLikesPerGuestHint": ""
     },
     "settingsUpdated": "Feedbackinstellingen bijgewerkt",
     "settingsUpdateError": "Bijwerken instellingen mislukt",
@@ -2607,7 +3271,18 @@
     "onPhoto": "Op foto",
     "showAll_one": "Alle {{count}} openstaande opmerking tonen",
     "showAll_other": "Alle {{count}} openstaande opmerkingen tonen",
-    "viewAllFeedback": "Alle feedback en instellingen bekijken"
+    "viewAllFeedback": "Alle feedback en instellingen bekijken",
+    "exportShapeLabel": "",
+    "exportShapeLong": "",
+    "exportShapePivot": "",
+    "limit": {
+      "favoriteTitle": "",
+      "likeTitle": "",
+      "favoriteBody": "",
+      "likeBody": "",
+      "counter": "",
+      "ok": ""
+    }
   },
   "filter": {
     "feedbackFilters": "Feedbackfilters",
@@ -2634,7 +3309,18 @@
     "exportFiltered": "Gefilterde foto's exporteren",
     "hint": "Selecteer foto's of pas filters toe om te exporteren",
     "exportSelected_one": "{{count}} geselecteerde exporteren",
-    "exportSelected_other": "{{count}} geselecteerde exporteren"
+    "exportSelected_other": "{{count}} geselecteerde exporteren",
+    "preview": {
+      "copied": "",
+      "copyFailed": "",
+      "titleCsv": "",
+      "titleTxt": "",
+      "helpCsv": "",
+      "helpTxt": "",
+      "download": "",
+      "copiedShort": "",
+      "copyButton": ""
+    }
   },
   "adminLogin": {
     "title": "Beheerder login",
@@ -2657,7 +3343,25 @@
     "generalError": "Er is een fout opgetreden. Probeer het opnieuw.",
     "needHelp": "Hulp nodig? Neem contact op met",
     "poweredBy": "Powered by PicPeak",
-    "devModeHint": "Ontwikkelmodus: Gebruik e-mail: admin@example.com, wachtwoord: admin123"
+    "devModeHint": "Ontwikkelmodus: Gebruik e-mail: admin@example.com, wachtwoord: admin123",
+    "mfa": {
+      "codeRequired": "",
+      "sessionExpired": "",
+      "lockedRetry": "",
+      "locked": "",
+      "invalidCode": "",
+      "title": "",
+      "recoverySubtitle": "",
+      "subtitle": "",
+      "recoveryCodeLabel": "",
+      "codeLabel": "",
+      "recoveryCodePlaceholder": "",
+      "codePlaceholder": "",
+      "verify": "",
+      "back": "",
+      "useAuthenticator": "",
+      "useRecoveryCode": ""
+    }
   },
   "clientAccess": {
     "title": "Klanttoegang",
@@ -2724,7 +3428,6 @@
       "networkError": "Kan de server niet bereiken. Probeer het opnieuw.",
       "generalError": "Inloggen mislukt. Probeer het opnieuw.",
       "acceptedToast": "Account gereed — log nu in.",
-      "adminHint": "Op zoek naar het beheerderspaneel? Ga naar /admin/login.",
       "emailPlaceholder": "jij@voorbeeld.com",
       "passwordPlaceholder": "Je wachtwoord",
       "needHelp": "Hulp nodig?",
@@ -2735,7 +3438,6 @@
       "invalidToken": "Deze uitnodigingslink is ongeldig of verlopen. Vraag je fotograaf om een nieuwe uitnodiging.",
       "emailWillBe": "Je accountmail wordt ",
       "invitedBy": ", uitgenodigd door ",
-      "name": "Je naam",
       "nameRequired": "Voer je naam in",
       "password": "Kies een wachtwoord",
       "confirm": "Bevestig wachtwoord",
@@ -2775,36 +3477,46 @@
       "downloadStarted": "Download gestart voor {{name}}",
       "downloadError": "De download kon niet worden gestart. Probeer het opnieuw.",
       "sortLabel": "Sorteer op",
-      "sortNewest": "Nieuwste eerst",
-      "sortOldest": "Oudste eerst",
-      "sortName": "Op naam",
       "open": "Openen"
     },
-    "layout": {
-      "greeting": "Hallo, {{name}}"
-    },
     "nav": {
-      "galleries": "Galerijen",
-      "calendar": "Agenda",
-      "quotes": "Offertes",
-      "bills": "Facturen",
-      "profile": "Profiel",
-      "soon": "Binnenkort"
+      "soon": "Binnenkort",
+      "new": ""
     },
     "comingSoon": {
       "tag": "Binnenkort"
     },
-    "calendar": {
-      "title": "Agenda",
-      "body": "Aankomende shoots, leverdata van galerijen en andere shoot-gerelateerde gebeurtenissen verschijnen hier. We laten je weten wanneer dit klaar is."
-    },
     "quotes": {
       "title": "Offertes",
-      "body": "Bekijk en accepteer offertes voor aankomende shoots op één plek. We werken er nog aan — je fotograaf blijft tot dan offertes op de gebruikelijke manier sturen."
+      "disabled": "",
+      "loadError": "",
+      "subtitle": "",
+      "empty": "",
+      "popupBlocked": "",
+      "noEventName": "",
+      "viewPdf": "",
+      "openToRespond": ""
     },
     "bills": {
       "title": "Facturen",
-      "body": "Facturen en betaalgeschiedenis voor je shoots verschijnen hier. We sturen een e-mail wanneer dit live is."
+      "disabled": "",
+      "loadError": "",
+      "popupBlocked": "",
+      "subtitle": "",
+      "empty": "",
+      "kind": {
+        "storno": ""
+      },
+      "field": {
+        "issueDate": "",
+        "dueDate": "",
+        "paidAt": "",
+        "outstanding": "",
+        "lateFee": ""
+      },
+      "cancelsLabel": "",
+      "cancelledByLabel": "",
+      "viewPdf": ""
     },
     "profile": {
       "title": "Klantprofiel",
@@ -2871,6 +3583,31 @@
       "successToast": "Wachtwoord bijgewerkt. Log nu in.",
       "invalidSubmission": "Je wachtwoord kon niet worden bijgewerkt.",
       "generalError": "Je wachtwoord kon niet worden bijgewerkt. Probeer het opnieuw."
+    },
+    "filter": {
+      "label": "",
+      "countAll_one": "",
+      "countAll_other": "",
+      "countFiltered": ""
+    },
+    "sort": {
+      "label": "",
+      "newest": "",
+      "oldest": ""
+    },
+    "contracts": {
+      "title": "",
+      "disabled": "",
+      "loadError": "",
+      "subtitle": "",
+      "empty": "",
+      "popupBlocked": "",
+      "issued": "",
+      "signedByYou": "",
+      "counterSigned": "",
+      "openSign": "",
+      "downloadSigned": "",
+      "download": ""
     }
   },
   "customers": {
@@ -2902,16 +3639,7 @@
     "invite": {
       "button": "Klant uitnodigen",
       "title": "Een klant uitnodigen",
-      "description": "Ze ontvangen een e-mail met een link om hun account aan te maken. Zodra ze deze hebben geaccepteerd, kun je ze aan evenementen toewijzen.",
-      "email": "E-mail",
-      "submit": "Uitnodiging versturen",
-      "success": "Uitnodiging verzonden",
-      "error": "Uitnodiging kon niet worden verzonden.",
-      "conflict": "Er bestaat al een klant met dit e-mailadres of er staat een uitnodiging open.",
-      "invalidEmail": "Voer een geldig e-mailadres in",
-      "showPrefill": "+ Contactgegevens toevoegen (optioneel)",
-      "hidePrefill": "− Contactgegevens verbergen",
-      "prefillHint": "Alles wat je invult wordt voorgevuld op de inschrijfpagina van de klant — ze kunnen het nog steeds bewerken."
+      "description": "Ze ontvangen een e-mail met een link om hun account aan te maken. Zodra ze deze hebben geaccepteerd, kun je ze aan evenementen toewijzen."
     },
     "invitations": {
       "empty": "Geen openstaande uitnodigingen.",
@@ -2950,7 +3678,6 @@
       "email": "E-mail",
       "preferredLanguage": "Voorkeurstaal",
       "salutation": "Aanhef",
-      "salutationNone": "—",
       "firstName": "Voornaam",
       "lastName": "Achternaam",
       "displayName": "Weergavenaam",
@@ -2963,7 +3690,6 @@
       "postalCode": "Postcode",
       "city": "Stad",
       "state": "Provincie / regio",
-      "countryCode": "Land (ISO 2)",
       "notesHint": "Alleen zichtbaar voor beheerders. Wordt nooit aan de klant getoond.",
       "featuresSection": "Klantfuncties",
       "featuresHint": "Per-klant overrides voor de tabbladen van de klantenomgeving. De globale schakelaars in Instellingen → Functies zijn de hoofdschakelaar — als globaal UIT staat, ziet niemand het tabblad, ongeacht wat je hier instelt. Standaard staat alles AAN; zet een schakelaar UIT om een tabblad voor deze specifieke klant te verbergen.",
@@ -2975,7 +3701,16 @@
         "error": "Wachtwoordreset kon niet worden verzonden",
         "inactive": "Reactiveer de klant voordat je een reset verstuurt."
       },
-      "manageEvents": "Galerijen beheren"
+      "manageEvents": "Galerijen beheren",
+      "preferredLanguageHint": "",
+      "country": "",
+      "companyName": "",
+      "quotesSection": "",
+      "noQuotes": "",
+      "contractsSection": "",
+      "noContracts": "",
+      "billsSection": "",
+      "noBills": ""
     },
     "reactivate": {
       "button": "Heractiveren",
@@ -3004,10 +3739,126 @@
       "save": "Toewijzingen opslaan",
       "saved": "Toewijzingen bijgewerkt",
       "savedDiff": "Toewijzingen bijgewerkt: {{parts}}",
-      "addedN": "{{count}} toegevoegd",
-      "removedN": "{{count}} verwijderd",
       "error": "Toewijzingen konden niet worden bijgewerkt",
-      "clearSearchAria": "Zoekopdracht wissen"
+      "clearSearchAria": "Zoekopdracht wissen",
+      "addedN_one": "",
+      "addedN_other": "",
+      "removedN_one": "",
+      "removedN_other": ""
+    },
+    "create": {
+      "openButton": "",
+      "passiveSubtitle": "",
+      "title": "",
+      "subtitle": "",
+      "emailRequired": "",
+      "nameRequired": "",
+      "savedActiveToast": "",
+      "inviteFailedToast": "",
+      "savedPassiveToast": "",
+      "saveAsPassive": "",
+      "saveAndInvite": "",
+      "openLink": ""
+    },
+    "passive": {
+      "badge": "",
+      "sendInviteToast": "",
+      "alreadyActive": "",
+      "detailHint": "",
+      "activeLabel": "",
+      "sendInvite": "",
+      "deactivatedHint": ""
+    },
+    "billing": {
+      "triggered": "",
+      "triggerError": "",
+      "section": "",
+      "hint": "",
+      "cadence": "",
+      "perEvent": "",
+      "monthly": "",
+      "quarterly": "",
+      "manual": "",
+      "cycleDay": "",
+      "cycleDayHint": "",
+      "skontoDisabled": "",
+      "skontoDisabledHint": "",
+      "draftPreview": {
+        "titleManual": "",
+        "title": "",
+        "periodRange": ""
+      },
+      "triggerConfirmManual": "",
+      "triggerConfirm": "",
+      "triggerNow": "",
+      "triggerHintManual": "",
+      "triggerHint": ""
+    },
+    "field": {
+      "hourlyRate": "",
+      "hourlyRateHint": ""
+    },
+    "hours": {
+      "toast": {
+        "created": "",
+        "deleted": "",
+        "billed": ""
+      },
+      "error": {
+        "noRate": "",
+        "createFailed": ""
+      },
+      "section": "",
+      "monthlyHint": "",
+      "perEventHint": "",
+      "noRate": {
+        "title": "",
+        "body": "",
+        "setForCustomer": "",
+        "setInstallDefault": ""
+      },
+      "rateSource": {
+        "customer": "",
+        "installDefault": ""
+      },
+      "form": {
+        "title": "",
+        "date": "",
+        "start": "",
+        "end": "",
+        "duration": "",
+        "durationPlaceholder": "",
+        "durationHint": "",
+        "rateOverride": "",
+        "note": "",
+        "notePlaceholder": "",
+        "bookToProject": "",
+        "needRate": "",
+        "save": ""
+      },
+      "unbilledCount_one": "",
+      "unbilledCount_other": "",
+      "billButton": "",
+      "empty": "",
+      "col": {
+        "date": "",
+        "range": "",
+        "hours": "",
+        "rate": "",
+        "total": "",
+        "note": "",
+        "status": ""
+      },
+      "status": {
+        "billedOn": "",
+        "billed": "",
+        "unbilled": ""
+      },
+      "confirmDelete": "",
+      "locked": ""
+    },
+    "hoursLoggingDisabled": {
+      "badge": ""
     }
   },
   "clients": {
@@ -3019,7 +3870,1759 @@
       "body": "Schakel Accounts (of een andere Klanten-subfunctie) in onder Instellingen → Functies om te beginnen."
     },
     "subnav": {
-      "accounts": "Accounts"
+      "accounts": "Accounts",
+      "quotes": "Offertes",
+      "bills": "Facturen",
+      "development": "Ontwikkeling",
+      "overview": "",
+      "calendar": "",
+      "contracts": "",
+      "hours": ""
+    }
+  },
+  "taxReport": {
+    "title": "Belastingrapport",
+    "intro": "Periodegebonden omzetlijst met netto + btw-uitsplitsing gegroepeerd per btw-tarief. Geannuleerde facturen blijven zichtbaar voor de continuïteit van het audit-spoor, maar zijn uitgesloten van de totalen.",
+    "filters": {
+      "period": "Periode",
+      "thisYear": "Dit jaar",
+      "lastYear": "Vorig jaar",
+      "thisQuarter": "Dit kwartaal",
+      "lastQuarter": "Vorig kwartaal",
+      "custom": "Aangepast bereik",
+      "from": "Van",
+      "to": "Tot",
+      "currency": "Valuta"
+    },
+    "exportPdf": "PDF exporteren",
+    "exportCsv": "CSV exporteren",
+    "exportFailed": "Export mislukt. Probeer het opnieuw.",
+    "errorTitle": "Belastingrapport kon niet worden geladen",
+    "empty": "Geen facturen in deze periode.",
+    "statusCancelled": "Geannuleerd",
+    "totalsByVatRate": "Totalen per btw-tarief",
+    "grandTotalNet": "Totaal netto",
+    "grandTotalVat": "Totaal btw",
+    "grandTotalGross": "Totaal bruto",
+    "col": {
+      "date": "Datum",
+      "event": "Evenement",
+      "net": "Netto",
+      "vat": "Btw",
+      "total": "Bruto",
+      "type": "",
+      "reference": "",
+      "party": "",
+      "tax": "",
+      "skonto": ""
+    },
+    "export": {
+      "reportTitle": "",
+      "reportHint": "",
+      "scopeLabel": "",
+      "scopeAll": "",
+      "scopeIncome": "",
+      "scopeCost": "",
+      "journalTitle": ""
+    },
+    "ledgerExportHint": "",
+    "ledgerExportConfigure": "",
+    "ledgerExport": "",
+    "summary": {
+      "outgoingTitle": "",
+      "title": "",
+      "income": "",
+      "costs": "",
+      "result": "",
+      "vatPayable": "",
+      "vatUnconfigured": ""
+    },
+    "cancelledFootnote_one": "",
+    "cancelledFootnote_other": "",
+    "costsErrorTitle": "",
+    "cost": {
+      "company": ""
+    },
+    "skontoTooltip": "",
+    "costsDisclaimer": "",
+    "type": {
+      "expense": "",
+      "outgoing": "",
+      "incoming": ""
+    }
+  },
+  "accounting": {
+    "category": {
+      "infrastructure": "",
+      "equipment": "",
+      "software": "",
+      "material": "",
+      "travel": "",
+      "marketing": "",
+      "services": "",
+      "insurance": "",
+      "training": "",
+      "other": ""
+    },
+    "taxTreatment": {
+      "domestic": "",
+      "reverse_charge_service": "",
+      "foreign_vat_non_reclaimable": "",
+      "import_goods": ""
+    },
+    "booking": {
+      "company": "",
+      "label": "",
+      "event": "",
+      "inboundHint": ""
+    },
+    "subnav": {
+      "incomingInvoices": "",
+      "expenses": "",
+      "taxReport": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "empty": {
+      "title": "",
+      "body": ""
+    },
+    "navAriaLabel": "",
+    "ledger": {
+      "updatedToast": "",
+      "createdToast": "",
+      "editTitle": "",
+      "addTitle": "",
+      "description": "",
+      "addExpense": "",
+      "paidToast": "",
+      "payTitle": "",
+      "paidDate": "",
+      "method": "",
+      "reference": "",
+      "confirmPaid": "",
+      "invoicedToast": "",
+      "invoiceTitle": "",
+      "invoiceHint": "",
+      "addToInvoice": "",
+      "allKinds": "",
+      "empty": "",
+      "untitled": "",
+      "invoiced": "",
+      "paid": "",
+      "markPaid": "",
+      "lockedHint": "",
+      "locked": ""
+    },
+    "expense": {
+      "km": "",
+      "days": "",
+      "kind": "",
+      "rate": "",
+      "rateDefault": "",
+      "computed": "",
+      "who": "",
+      "whoHint": "",
+      "proof": "",
+      "proofExisting": "",
+      "proofRequired": "",
+      "viewProof": ""
+    },
+    "expenseKind": {
+      "amount": "",
+      "mileage": "",
+      "per_diem": ""
+    },
+    "inbox": {
+      "field": {
+        "total": "",
+        "category": "",
+        "categoryNone": "",
+        "customer": "",
+        "markup": "",
+        "supplier": "",
+        "invoiceDate": "",
+        "disposition": "",
+        "note": "",
+        "currency": "",
+        "supplierCountry": "",
+        "supplierCountryNone": "",
+        "supplierCountryHint": "",
+        "reference": "",
+        "referenceHint": "",
+        "noteHint": "",
+        "passthroughCustomerHint": ""
+      },
+      "previewError": "",
+      "previewLoading": "",
+      "prevPage": "",
+      "pageOf": "",
+      "nextPage": "",
+      "qrHint": "",
+      "untitled": "",
+      "status": {
+        "label": "",
+        "declined": "",
+        "unsorted": "",
+        "categorized": "",
+        "duplicate": ""
+      },
+      "saveCategorizePay": "",
+      "saveCategorize": "",
+      "capturedToast": "",
+      "captureTitle": "",
+      "captureBody": "",
+      "scanCamera": "",
+      "uploadFile": "",
+      "empty": "",
+      "noAmount": "",
+      "view": "",
+      "categorize": "",
+      "recategorize": ""
+    },
+    "paymentMethod": {
+      "bank_transfer": "",
+      "cash": "",
+      "twint": "",
+      "paypal": "",
+      "card": "",
+      "other": ""
+    },
+    "markup": {
+      "none": "",
+      "percent": "",
+      "flat": ""
+    },
+    "incoming": {
+      "paidToast": "",
+      "payTitle": "",
+      "outstanding": "",
+      "confirmPaid": "",
+      "pendingRebill": "",
+      "paid": "",
+      "categorizedPaidToast": "",
+      "categorizedToast": "",
+      "triageTitle": "",
+      "bundledToast_one": "",
+      "bundledToast_other": "",
+      "pendingTitle": "",
+      "pendingBody": "",
+      "pendingCount_one": "",
+      "pendingCount_other": "",
+      "billPending": "",
+      "markUnpaid": "",
+      "markPaid": ""
+    },
+    "disposition": {
+      "rebill": "",
+      "durchlaufend": "",
+      "eigener_aufwand": "",
+      "duplikat": "",
+      "abgelehnt": "",
+      "help": {
+        "rebill": "",
+        "durchlaufend": "",
+        "eigener_aufwand": "",
+        "duplikat": "",
+        "abgelehnt": ""
+      }
+    }
+  },
+  "quoteResponse": {
+    "locked": "",
+    "tosRequiredError": "",
+    "notFound": "",
+    "notFoundBody": "",
+    "title": "",
+    "event": "",
+    "issueDate": "",
+    "validUntil": "",
+    "description": "",
+    "qty": "",
+    "unit": "",
+    "total": "",
+    "subtotal": "",
+    "vat": "",
+    "submitting": "",
+    "acceptedLocked": "",
+    "declinedLocked": "",
+    "cannotRespond": "",
+    "changeWithin": "",
+    "intro": "",
+    "tosCheckbox": "",
+    "tosLink": "",
+    "preselectAcceptHint": "",
+    "preselectDeclineHint": "",
+    "accept": "",
+    "decline": ""
+  },
+  "paymentCheck": {
+    "missingToken": "",
+    "alreadyUsed": "",
+    "expired": "",
+    "loadError": "",
+    "partialInvalid": "",
+    "partialTooHigh": "",
+    "submitError": "",
+    "title": "",
+    "subtitle": "",
+    "field": {
+      "invoice": "",
+      "customer": "",
+      "issued": "",
+      "due": "",
+      "total": "",
+      "outstanding": "",
+      "paid": "",
+      "lateFee": ""
+    },
+    "action": {
+      "paidFull": "",
+      "paidFullHelp": "",
+      "paidSkonto": "",
+      "paidSkontoHelp": "",
+      "partial": "",
+      "partialHelp": "",
+      "partialAmount": "",
+      "partialMax": "",
+      "unpaid": "",
+      "unpaidHelp": "",
+      "unpaidWithFee": ""
+    },
+    "submitting": "",
+    "submit": "",
+    "result": {
+      "title": "",
+      "paid": "",
+      "paidSkonto": "",
+      "partial": "",
+      "unpaidMax": "",
+      "unpaid": "",
+      "close": ""
+    }
+  },
+  "publicContract": {
+    "errorAccept": "",
+    "errorName": "",
+    "errorSignatureRequired": "",
+    "notFoundTitle": "",
+    "notFoundBody": "",
+    "fallbackTitle": "",
+    "signed": {
+      "title": "",
+      "by": "",
+      "counterBy": "",
+      "auditTitle": "",
+      "auditBody": "",
+      "contractNumber": "",
+      "signedAt": "",
+      "ipAddress": "",
+      "counterSignedAt": "",
+      "signedSha": "",
+      "unsignedSha": ""
+    },
+    "downloadSigned": "",
+    "download": "",
+    "signTitle": "",
+    "nameField": "",
+    "signaturePromptRequired": "",
+    "signaturePrompt": "",
+    "clearSignature": "",
+    "acceptCheckbox": "",
+    "submit": "",
+    "uploadAlternative": "",
+    "uploadHint": "",
+    "uploadButton": ""
+  },
+  "slideshow": {
+    "notFound": "",
+    "startFailed": "",
+    "start": "",
+    "waiting": "",
+    "ended": "",
+    "watermarkSource": {
+      "logo": "",
+      "logo_dark": "",
+      "favicon": "",
+      "event": "",
+      "notSet": ""
+    },
+    "transitionLabel": "",
+    "transition": {
+      "crossfade": "",
+      "cut": "",
+      "slide": "",
+      "kenburns": "",
+      "dipwhite": "",
+      "dipblack": ""
+    },
+    "intervalLabel": "",
+    "transitionSpeedLabel": "",
+    "colorfilterLabel": "",
+    "colorfilter": {
+      "none": "",
+      "bw": "",
+      "sepia": "",
+      "warm": "",
+      "cool": "",
+      "vignette": ""
+    },
+    "watermarkToggle": "",
+    "watermarkMode": {
+      "inherit": "",
+      "on": "",
+      "off": ""
+    },
+    "watermarkModeHint": "",
+    "linkGenerated": "",
+    "disableConfirm": "",
+    "linkDisabled": "",
+    "settingsSaved": "",
+    "adminTitle": "",
+    "adminDescription": "",
+    "generateLink": "",
+    "linkLabel": "",
+    "regenerate": "",
+    "disable": "",
+    "liveHint": "",
+    "saveSettings": "",
+    "defaultsSaved": "",
+    "globalTitle": "",
+    "globalDescription": "",
+    "fitLabel": "",
+    "fit": {
+      "cover": "",
+      "contain": ""
+    },
+    "fitHint": "",
+    "presetTitle": "",
+    "presetHint": "",
+    "watermarkDescription": "",
+    "watermarkSourceLabel": "",
+    "watermarkPositionLabel": "",
+    "watermarkPosition": {
+      "top-left": "",
+      "top-right": "",
+      "bottom-left": "",
+      "bottom-right": ""
+    },
+    "watermarkOpacityLabel": "",
+    "watermarkStyleLabel": "",
+    "watermarkStyle": {
+      "white": "",
+      "original": ""
+    },
+    "watermarkSizeLabel": "",
+    "orderLabel": "",
+    "order": {
+      "chronological": "",
+      "random": ""
+    },
+    "categoryLabel": "",
+    "categoryAll": ""
+  },
+  "systemHealth": {
+    "retriedToast": "",
+    "dismissedToast": "",
+    "title": "",
+    "subtitle": "",
+    "stuckEmails": {
+      "title": "",
+      "empty": "",
+      "col": {
+        "recipient": "",
+        "type": "",
+        "error": "",
+        "queued": "",
+        "actions": ""
+      },
+      "noError": ""
+    },
+    "retry": "",
+    "dismiss": ""
+  },
+  "crm": {
+    "lineItems": {
+      "description": "",
+      "quantity": "",
+      "unitPrice": "",
+      "total": "",
+      "position": "",
+      "discount": "",
+      "autoTotaledHint": "",
+      "descriptionPlaceholder": "",
+      "detailsFilled": "",
+      "detailsAdd": "",
+      "detailsPlaceholder": "",
+      "autoTotaledNote": "",
+      "addSubItem": "",
+      "saveAsPreset": "",
+      "empty": "",
+      "addRow": "",
+      "addFromPreset": "",
+      "subtotal": "",
+      "vat": "",
+      "shipping": "",
+      "rounding": ""
+    },
+    "customerPicker": {
+      "search": ""
+    }
+  },
+  "ledger": {
+    "vat": {
+      "legacyRate": "",
+      "editTitle": "",
+      "addTitle": "",
+      "code": "",
+      "rate": "",
+      "name": "",
+      "direction": "",
+      "account": "",
+      "noAccount": "",
+      "confirmDelete": ""
+    },
+    "vatDirection": {
+      "input": "",
+      "output": ""
+    },
+    "settingsSaved": "",
+    "vatCodes": {
+      "title": ""
+    },
+    "outputVatMap": {
+      "title": "",
+      "empty": ""
+    },
+    "defaults": {
+      "none": "",
+      "title": "",
+      "ledger_account_debitoren": "",
+      "ledger_account_kreditoren": "",
+      "ledger_account_bank": "",
+      "ledger_account_cash": "",
+      "ledger_account_default_revenue": "",
+      "ledger_account_default_expense": "",
+      "ledger_account_mileage": "",
+      "ledger_account_per_diem": "",
+      "ledger_account_rebilled_revenue": "",
+      "ledger_vat_map": "",
+      "ledger_output_vat_map": ""
+    },
+    "vatMap": {
+      "title": ""
+    },
+    "saveDefaults": "",
+    "account": {
+      "editTitle": "",
+      "addTitle": "",
+      "number": "",
+      "name": "",
+      "type": "",
+      "confirmDelete": ""
+    },
+    "accountType": {
+      "asset": "",
+      "liability": "",
+      "equity": "",
+      "revenue": "",
+      "expense": ""
+    },
+    "intro": "",
+    "categoryMap": {
+      "title": ""
+    },
+    "accounts": {
+      "title": ""
+    },
+    "export": {
+      "format": "",
+      "format_generic": "",
+      "format_banana": "",
+      "format_banana_ie": "",
+      "format_bexio": ""
+    }
+  },
+  "projects": {
+    "picker": {
+      "none": "",
+      "label": ""
+    },
+    "error": {
+      "customerMismatch": ""
+    },
+    "toast": {
+      "created": "",
+      "createFailed": "",
+      "saved": "",
+      "saveFailed": "",
+      "emailAction": "",
+      "emailActionFailed": "",
+      "previewFailed": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "create": {
+      "label": "",
+      "placeholder": "",
+      "button": ""
+    },
+    "search": "",
+    "empty": "",
+    "col": {
+      "name": "",
+      "customer": "",
+      "events": "",
+      "value": "",
+      "status": "",
+      "updated": ""
+    },
+    "events": {
+      "attached": "",
+      "attachFailed": "",
+      "title": "",
+      "none": "",
+      "searchPlaceholder": ""
+    },
+    "feed": {
+      "email": "",
+      "quote": "",
+      "contract": "",
+      "invoice": "",
+      "gallery": "",
+      "hours": "",
+      "title": "",
+      "empty": ""
+    },
+    "notFound": "",
+    "backToList": "",
+    "noCustomer": "",
+    "eventCount_one": "",
+    "eventCount_other": "",
+    "totalHours": "",
+    "value": {
+      "label": "",
+      "paid": ""
+    },
+    "rename": "",
+    "timeline": "",
+    "email": {
+      "preview": "",
+      "reRendered": "",
+      "reRenderedTag": "",
+      "resend": "",
+      "sendNow": "",
+      "cancel": "",
+      "retry": "",
+      "previewTitle": "",
+      "noPreview": ""
+    }
+  },
+  "installments": {
+    "firstRowDefaultLabel": "",
+    "enableLabel": "",
+    "simpleToggle": "",
+    "advancedToggle": "",
+    "advancedHint": "",
+    "simpleHint": "",
+    "percent": "",
+    "label": "",
+    "labelPlaceholder": "",
+    "sendOn": "",
+    "onDeliveryHint": "",
+    "trigger": "",
+    "triggerOption": {
+      "quote_accepted": "",
+      "before_event": "",
+      "after_event": "",
+      "after_delivery": "",
+      "fixed_date": ""
+    },
+    "offsetDays": "",
+    "removeRow": "",
+    "addRow": "",
+    "total": "",
+    "mustSumTo100": ""
+  },
+  "eventReminderOverride": {
+    "invalidOffset": "",
+    "saved": "",
+    "saveError": "",
+    "title": "",
+    "save": "",
+    "help": "",
+    "disabledLabel": "",
+    "offsetLabel": "",
+    "offsetPlaceholder": "",
+    "bodyOverrideLabel": "",
+    "bodyOverridePlaceholder": ""
+  },
+  "dealLineage": {
+    "editPlanEmpty": "",
+    "editPlanSuccess": "",
+    "editPlanLocked": "",
+    "editPlanPercentSumError": "",
+    "editPlanGeneralError": "",
+    "editPlanModalTitle": "",
+    "editPlanHelp": "",
+    "editPlanWarning": "",
+    "editPlanSave": "",
+    "loading": "",
+    "error": "",
+    "title": "",
+    "empty": "",
+    "quotes": "",
+    "contracts": "",
+    "invoices": "",
+    "editPlan": ""
+  },
+  "bills": {
+    "kind": {
+      "storno": "",
+      "reissue": ""
+    },
+    "new": "",
+    "status": {
+      "scheduled": "",
+      "sent": "",
+      "paid": "",
+      "overdue": "",
+      "cancelled": "",
+      "pending_delivery": "",
+      "skipped": "",
+      "draft": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "import": "",
+    "searchPlaceholder": "",
+    "filter": {
+      "unpaidOnly": ""
+    },
+    "empty": "",
+    "table": {
+      "customer": "",
+      "event": "",
+      "installment": "",
+      "issueDate": "",
+      "dueDate": "",
+      "total": "",
+      "status": ""
+    },
+    "importedToast": "",
+    "importError": "",
+    "importTitle": "",
+    "importHelp": "",
+    "field": {
+      "customer": "",
+      "eventName": "",
+      "eventNamePlaceholder": "",
+      "eventDate": "",
+      "invoiceNumber": "",
+      "currency": "",
+      "issueDate": "",
+      "dueDate": "",
+      "total": "",
+      "status": "",
+      "paidAmount": "",
+      "pdfFile": "",
+      "eventTimeStart": "",
+      "eventTimeEnd": "",
+      "dueDateOverrideOn": "",
+      "dueDateOverrideOff": "",
+      "scheduledSendAt": "",
+      "qrFormat": "",
+      "businessBankAccount": "",
+      "bankAccountProfileDefault": "",
+      "bankAccountDefaultBadge": "",
+      "bankAccountHelp": "",
+      "vatRate": "",
+      "shipping": "",
+      "paymentNetDays": "",
+      "selectNetDays": "",
+      "paymentTiming": "",
+      "selectTiming": "",
+      "skontoDisabled": "",
+      "paymentTermHelp": "",
+      "ccPdfEmail": "",
+      "ccPdfEmailPlaceholder": "",
+      "ccPdfPickFromAdmins": "",
+      "ccPdfCustom": "",
+      "installment": "",
+      "paid": "",
+      "outstanding": "",
+      "lateFee": ""
+    },
+    "customerSearch": "",
+    "noMatch": "",
+    "importing": "",
+    "errors": {
+      "customerRequired": "",
+      "popupBlocked": ""
+    },
+    "savedToastMulti": "",
+    "savedToast": "",
+    "edit": "",
+    "saveAndSpawn": "",
+    "section": {
+      "customer": "",
+      "event": "",
+      "details": "",
+      "lineItems": "",
+      "payment": "",
+      "paymentLog": ""
+    },
+    "qrFormat": {
+      "profileDefault": "",
+      "none": "",
+      "swiss": "",
+      "epc": ""
+    },
+    "confirmSend": "",
+    "sentToast": "",
+    "confirmReminder": "",
+    "reminderToast": "",
+    "confirmCancelDraft": "",
+    "confirmCancelIssued": "",
+    "cancelledWithStornoToast": "",
+    "cancelledToast": "",
+    "confirmReissueCancelled": "",
+    "confirmReissue": "",
+    "reissuedWithStornoToast": "",
+    "reissuedToast": "",
+    "confirmRelease": "",
+    "releasedToast": "",
+    "paymentRecordedToast": "",
+    "sendNow": "",
+    "resend": "",
+    "monthlyDraftBadge": "",
+    "releaseForDelivery": "",
+    "markPaid": "",
+    "sendReminder": "",
+    "reissue": "",
+    "cancelAndReissue": "",
+    "stornoCancelsLabel": "",
+    "cancelledByStornoLabel": "",
+    "noPayments": "",
+    "payment": {
+      "paidAt": "",
+      "amount": "",
+      "method": "",
+      "reference": "",
+      "notes": "",
+      "date": "",
+      "withSkonto": "",
+      "methodPlaceholder": "",
+      "methods": {
+        "cash": "",
+        "card": "",
+        "paypal": "",
+        "twint": "",
+        "bankTransfer": ""
+      }
+    },
+    "recordPayment": ""
+  },
+  "quotes": {
+    "new": "",
+    "status": {
+      "draft": "",
+      "sent": "",
+      "accepted": "",
+      "declined": "",
+      "expired": "",
+      "converted": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "searchPlaceholder": "",
+    "empty": "",
+    "table": {
+      "customer": "",
+      "event": "",
+      "issueDate": "",
+      "total": "",
+      "status": ""
+    },
+    "pagination_one": "",
+    "pagination_other": "",
+    "errors": {
+      "customerRequired": "",
+      "popupBlocked": "",
+      "customerFeatureDisabled": ""
+    },
+    "confirmSend": "",
+    "sentToast": "",
+    "savedToast": "",
+    "edit": "",
+    "preview": "",
+    "saveAndSend": "",
+    "section": {
+      "customer": "",
+      "event": "",
+      "lineItems": "",
+      "payment": "",
+      "extras": "",
+      "internalNotes": ""
+    },
+    "customerSearch": "",
+    "field": {
+      "eventName": "",
+      "eventDate": "",
+      "eventTimeStart": "",
+      "eventTimeEnd": "",
+      "expectedDuration": "",
+      "validUntil": "",
+      "vatRate": "",
+      "shipping": "",
+      "currency": "",
+      "paymentNetDays": "",
+      "selectNetDays": "",
+      "paymentTiming": "",
+      "selectTiming": "",
+      "introText": "",
+      "outroText": "",
+      "ccPdfEmail": "",
+      "ccPdfEmailPlaceholder": "",
+      "ccPdfPickFromAdmins": "",
+      "ccPdfCustom": "",
+      "internalNotes": "",
+      "issueDate": "",
+      "sentAt": "",
+      "acceptedAt": "",
+      "declinedAt": "",
+      "declineReason": "",
+      "responseWindow": "",
+      "eventType": "",
+      "eventTypeNone": "",
+      "eventTypeHint": "",
+      "bookingWorkflow": "",
+      "bookingWorkflowNone": "",
+      "bookingWorkflowDisabled": "",
+      "bookingWorkflowHint": ""
+    },
+    "confirmConvert": "",
+    "convertedToast": "",
+    "confirmConvertToInvoice": "",
+    "convertedToInvoiceToast_one": "",
+    "convertedToInvoiceToast_other": "",
+    "confirmConvertToContract": "",
+    "contractAlreadyLinkedToast": "",
+    "convertedToContractToast": "",
+    "confirmAcceptOnBehalf": "",
+    "acceptedOnBehalfToast": "",
+    "declineReasonPrompt": "",
+    "declinedOnBehalfToast": "",
+    "send": "",
+    "resend": "",
+    "acceptOnBehalf": "",
+    "declineOnBehalf": "",
+    "convert": "",
+    "convertToInvoice": "",
+    "convertToContract": "",
+    "responseWindowOpen": "",
+    "trigger": {
+      "quote_accepted": "",
+      "before_event": "",
+      "after_event": "",
+      "after_delivery": "",
+      "fixed_date": ""
+    }
+  },
+  "contracts": {
+    "list": {
+      "new": "",
+      "blocksLibrary": "",
+      "searchPlaceholder": "",
+      "empty": "",
+      "table": {
+        "number": "",
+        "customer": "",
+        "title": "",
+        "issueDate": "",
+        "status": ""
+      },
+      "pagination_one": "",
+      "pagination_other": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "status": {
+      "draft": "",
+      "sent": "",
+      "signed_by_customer": "",
+      "signed_by_admin": "",
+      "fully_signed": "",
+      "cancelled": ""
+    },
+    "editor": {
+      "createdToast": "",
+      "saveError": "",
+      "savedToast": "",
+      "previewAfterSave": "",
+      "popupBlocked": "",
+      "previewError": "",
+      "locked": "",
+      "backToDetail": "",
+      "back": "",
+      "titleEdit": "",
+      "titleNew": "",
+      "preview": "",
+      "save": "",
+      "create": "",
+      "customer": "",
+      "searchCustomer": "",
+      "titleField": "",
+      "titlePlaceholder": "",
+      "language": "",
+      "issueDate": "",
+      "validUntil": "",
+      "eventSection": "",
+      "eventHelp": "",
+      "eventName": "",
+      "eventNamePlaceholder": "",
+      "eventDate": "",
+      "eventTimeStart": "",
+      "eventTimeEnd": "",
+      "intro": "",
+      "outro": "",
+      "disclaimerTitle": "",
+      "disclaimerBody": "",
+      "schriftformWarning": "",
+      "noBlocksInSection": "",
+      "systemBadge": ""
+    },
+    "sections": {
+      "basics": "",
+      "scope": "",
+      "privacy": "",
+      "commercial": "",
+      "nda": "",
+      "closing": ""
+    },
+    "detail": {
+      "sentToast": "",
+      "sendError": "",
+      "cancelledToast": "",
+      "cancelError": "",
+      "countersignedToast": "",
+      "countersignError": "",
+      "uploadedToast": "",
+      "uploadError": "",
+      "resentSignedToast": "",
+      "resendError": "",
+      "alreadyEventToast": "",
+      "convertedToEventToast": "",
+      "convertError": "",
+      "convertedToInvoiceToast_one": "",
+      "convertedToInvoiceToast_other": "",
+      "notFound": "",
+      "popupBlocked": "",
+      "back": "",
+      "edit": "",
+      "previewPdf": "",
+      "send": "",
+      "cancelConfirm": "",
+      "cancel": "",
+      "downloadPdf": "",
+      "downloadSignedPdf": "",
+      "confirmResendSigned": "",
+      "resendSigned": "",
+      "uploadSigned": "",
+      "newInvoice": "",
+      "confirmConvertEvent": "",
+      "convertToEvent": "",
+      "confirmConvertInvoice": "",
+      "convertToInvoice": "",
+      "renderFailedTitle": "",
+      "renderFailedBody": "",
+      "parties": "",
+      "customer": "",
+      "dates": "",
+      "issued": "",
+      "signBy": "",
+      "sentAt": "",
+      "fromQuote": "",
+      "linkedInvoice": "",
+      "signatures": "",
+      "signedByCustomer": "",
+      "noSignatureImage": "",
+      "signedByAdmin": "",
+      "convertedToEvent": "",
+      "blocks": "",
+      "noBlocks": "",
+      "integrity": {
+        "notIssued": "",
+        "missing": "",
+        "match": "",
+        "mismatch": "",
+        "unsignedTitle": "",
+        "signedTitle": "",
+        "expected": "",
+        "actual": "",
+        "title": "",
+        "reverify": "",
+        "verify": "",
+        "help": "",
+        "error": ""
+      },
+      "auditTrail": "",
+      "auditEmpty": "",
+      "auditTrailHelp": "",
+      "countersignTitle": "",
+      "countersignHelp": "",
+      "signedNamePlaceholder": "",
+      "countersignSignaturePrompt": "",
+      "clearSignature": "",
+      "confirmCountersign": "",
+      "restampedToast": "",
+      "restampError": "",
+      "restampTitle": "",
+      "restampHelp": "",
+      "restampCustomer": "",
+      "restampAdmin": "",
+      "confirmRestamp": ""
+    },
+    "blocks": {
+      "createdToast": "",
+      "createError": "",
+      "updatedToast": "",
+      "updateError": "",
+      "deletedToast": "",
+      "deleteError": "",
+      "back": "",
+      "title": "",
+      "hideInactive": "",
+      "disclaimerTitle": "",
+      "disclaimerBody": "",
+      "sidebarHeading": "",
+      "new": "",
+      "systemBadge": "",
+      "empty": "",
+      "selectPrompt": "",
+      "dialog": {
+        "createTitle": "",
+        "editTitle": "",
+        "name": "",
+        "section": "",
+        "description": "",
+        "body": "",
+        "placeholderHint": ""
+      },
+      "active": "",
+      "inactive": "",
+      "deleteConfirm": "",
+      "delete": "",
+      "save": "",
+      "noTranslation": "",
+      "quoteLineItems": {
+        "calloutTitle": "",
+        "calloutBody": "",
+        "previewExample": ""
+      }
+    }
+  },
+  "crmOverview": {
+    "title": "",
+    "loadError": "",
+    "revenue": {
+      "month": "",
+      "quarter": "",
+      "year": "",
+      "yearCalendar": "",
+      "toggleHint": ""
+    },
+    "outstanding": "",
+    "outstandingSub_one": "",
+    "outstandingSub_other": "",
+    "quotes": {
+      "title": ""
+    },
+    "viewAll": "",
+    "invoices": {
+      "title": ""
+    }
+  },
+  "businessProfile": {
+    "savedToast": "",
+    "title": "",
+    "subtitle": "",
+    "section": {
+      "company": "",
+      "contact": "",
+      "defaults": "",
+      "banks": ""
+    },
+    "field": {
+      "companyName": "",
+      "vatId": "",
+      "taxId": "",
+      "addressLine1": "",
+      "addressLine2": "",
+      "postalCode": "",
+      "city": "",
+      "state": "",
+      "countryCode": "",
+      "phone": "",
+      "mobile": "",
+      "email": "",
+      "website": "",
+      "defaultCurrency": "",
+      "defaultLocale": "",
+      "timezone": "",
+      "timezoneSystemDefault": "",
+      "defaultQrFormat": "",
+      "footerLine": "",
+      "pdfLogoHeight": "",
+      "pdfFoldingMarks": "",
+      "pdfShowLogo": "",
+      "pdfShowLogoHelp": "",
+      "pdfShowCompanyName": "",
+      "pdfShowCompanyNameHelp": "",
+      "pdfCompanyNameInline": "",
+      "pdfCompanyNameInlineHelp": "",
+      "pdfQuoteShowNetDays": "",
+      "pdfQuoteShowNetDaysHelp": "",
+      "pdfQuoteShowSkonto": "",
+      "pdfQuoteShowSkontoHelp": "",
+      "pdfLogoUpload": "",
+      "pdfLogoUploadHelp": ""
+    },
+    "movedToAccounting": "",
+    "qrFormat": {
+      "none": "",
+      "swiss": "",
+      "epc": ""
+    },
+    "foldingMarks": {
+      "none": "",
+      "half": "",
+      "third": "",
+      "both": ""
+    },
+    "businessHours": {
+      "title": "",
+      "subtitle": "",
+      "floorToggle": "",
+      "floorToggleHelp": "",
+      "weekday": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": "",
+        "6": "",
+        "7": ""
+      },
+      "closed": "",
+      "addHours": "",
+      "startTime": "",
+      "endTime": "",
+      "addBlock": "",
+      "copyToAll": ""
+    },
+    "qrDisclaimer": {
+      "title": "",
+      "body": ""
+    },
+    "logoUploadedToast": "",
+    "logoConfirmClear": "",
+    "logoClearedToast": "",
+    "bankCreatedToast": "",
+    "bankUpdatedToast": "",
+    "bankDeletedToast": "",
+    "bank": {
+      "label": "",
+      "accountHolder": "",
+      "currency": "",
+      "isDefault": "",
+      "makeDefault": "",
+      "confirmDelete": ""
+    },
+    "addBank": "",
+    "noBanks": ""
+  },
+  "reminderTemplates": {
+    "settingsSaved": "",
+    "settingsSaveError": "",
+    "defaultLabel": "",
+    "saved": "",
+    "saveError": "",
+    "title": "",
+    "globalSection": "",
+    "globalHelp": "",
+    "enableLabel": "",
+    "daysBeforeLabel": "",
+    "saveSettings": "",
+    "sidebarHeading": "",
+    "sectionTemplates": "",
+    "usesDefaultTooltip": "",
+    "usesDefault": "",
+    "saveTemplate": "",
+    "noTranslation": "",
+    "willCreateOnSave": "",
+    "subjectLabel": "",
+    "subjectPlaceholder": "",
+    "bodyLabel": "",
+    "variablesHint": "",
+    "scheduleMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    }
+  },
+  "crmSettings": {
+    "savedToast": "",
+    "title": "",
+    "subtitle": "",
+    "emptyState": "",
+    "section": {
+      "quotes": "",
+      "quotesTos": "",
+      "invoices": "",
+      "installmentDefaults": "",
+      "paymentDefaults": "",
+      "contracts": "",
+      "dashboardOverview": "",
+      "dashboardOverviewHint": ""
+    },
+    "crm_quotes_accept_window_minutes": {
+      "label": ""
+    },
+    "crm_quotes_default_valid_days": {
+      "label": ""
+    },
+    "crm_quotes_number_format": {
+      "label": ""
+    },
+    "crm_quotes_tos_url": {
+      "label": ""
+    },
+    "crm_quotes_tos_text": {
+      "label": "",
+      "placeholder": ""
+    },
+    "crm_invoices_reminder_first_days": {
+      "label": ""
+    },
+    "crm_invoices_reminder_second_days": {
+      "label": ""
+    },
+    "crm_invoices_late_fee_minor": {
+      "label": ""
+    },
+    "crm_invoices_late_fee_label": {
+      "label": ""
+    },
+    "crm_invoices_skonto_percent_default": {
+      "label": ""
+    },
+    "crm_invoices_skonto_business_days": {
+      "label": ""
+    },
+    "crm_invoices_number_format": {
+      "label": ""
+    },
+    "installmentDefaults": {
+      "help": "",
+      "trigger": {
+        "quote_accepted": "",
+        "before_event": "",
+        "after_event": "",
+        "after_delivery": "",
+        "fixed_date": ""
+      }
+    },
+    "crm_invoices_installment_trigger_first": {
+      "label": ""
+    },
+    "crm_invoices_installment_days_before_event": {
+      "label": ""
+    },
+    "crm_invoices_installment_days_after_event": {
+      "label": ""
+    },
+    "paymentDefaults": {
+      "help": "",
+      "none": ""
+    },
+    "crm_invoices_default_payment_net_days_template_id": {
+      "label": ""
+    },
+    "crm_invoices_default_payment_timing_template_id": {
+      "label": ""
+    },
+    "crm_contracts_store_ip": {
+      "help": ""
+    },
+    "crm_contracts_default_valid_days": {
+      "label": ""
+    },
+    "crm_contracts_number_format": {
+      "label": "",
+      "help": ""
+    },
+    "crm_invoices_vat_note_text": {
+      "label": "",
+      "placeholder": "",
+      "help": ""
+    },
+    "dunningMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    },
+    "lateFeeAgb": {
+      "title": "",
+      "body": ""
+    },
+    "crm_invoices_late_fee_type": {
+      "label": ""
+    },
+    "lateFeeType": {
+      "flat": "",
+      "percent": ""
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": ""
+    }
+  },
+  "hoursLogging": {
+    "title": "",
+    "subtitle": "",
+    "pickCustomer": "",
+    "searchPlaceholder": "",
+    "customerLoggingDisabled": "",
+    "openHours": {
+      "title": "",
+      "subtitle": "",
+      "empty": "",
+      "passive": "",
+      "entryLine_one": "",
+      "entryLine_other": "",
+      "needsRate": ""
+    }
+  },
+  "calendar": {
+    "hourEntry": {
+      "saved": "",
+      "featureOffToast": "",
+      "saveFailed": "",
+      "deleted": "",
+      "deleteFailed": "",
+      "untitledCustomer": "",
+      "lockedTooltip": "",
+      "lockedBadge": "",
+      "noDescription": "",
+      "startLabel": "",
+      "endLabel": "",
+      "descriptionLabel": "",
+      "confirmDelete": "",
+      "delete": "",
+      "close": "",
+      "saving": "",
+      "submit": "",
+      "created": "",
+      "createFailed": "",
+      "createTitle": "",
+      "customerLabel": "",
+      "customerSearch": "",
+      "customerLoggingDisabled": "",
+      "descriptionPlaceholder": "",
+      "cancel": "",
+      "movedToast": "",
+      "moveFailed": "",
+      "resizedToast": "",
+      "resizeFailed": ""
+    },
+    "pageTitle": "",
+    "subtitle": "",
+    "viewMonth": "",
+    "viewWeek": "",
+    "loading": "",
+    "legend": {
+      "events": "",
+      "hours": "",
+      "pendingQuotes": "",
+      "pendingContracts": "",
+      "hoursLocked": ""
+    }
+  },
+  "crmDev": {
+    "paymentCheck": {
+      "sentToast": "",
+      "title": "",
+      "help": "",
+      "selectInvoice": "",
+      "selectPlaceholder": "",
+      "noneAvailable": "",
+      "sending": "",
+      "send": ""
+    },
+    "templates": {
+      "sentToast": "",
+      "title": "",
+      "help": "",
+      "empty": "",
+      "notSeeded": "",
+      "sending": "",
+      "send": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "warning": "",
+    "envDisabled": {
+      "title": "",
+      "body": "",
+      "cardHint": ""
+    }
+  },
+  "setup": {
+    "tokenRequired": "",
+    "emailRequired": "",
+    "invalidEmail": "",
+    "passwordRequired": "",
+    "passwordRequirements": "",
+    "passwordMismatch": "",
+    "tooManyAttempts": "",
+    "invalidToken": "",
+    "success": "",
+    "genericError": "",
+    "featuresSaveFailed": "",
+    "title": "",
+    "tokenStepSubtitle": "",
+    "accountStepSubtitle": "",
+    "restoreStepSubtitle": "",
+    "config": {
+      "subtitle": "",
+      "saveFailed": "",
+      "intro": "",
+      "invoicing": "",
+      "invoicingDisclaimer": "",
+      "companyName": "",
+      "addressLine1": "",
+      "postalCode": "",
+      "city": "",
+      "countryCode": "",
+      "currency": "",
+      "vatId": "",
+      "taxId": "",
+      "iban": "",
+      "email": "",
+      "emailHint": "",
+      "smtpHost": "",
+      "smtpPort": "",
+      "smtpUser": "",
+      "smtpPass": "",
+      "fromEmail": "",
+      "fromName": "",
+      "skip": "",
+      "finish": ""
+    },
+    "community": {
+      "subtitle": "",
+      "mission": "",
+      "finish": ""
+    },
+    "usageSubtitle": "",
+    "stepOf": "",
+    "tokenLabel": "",
+    "tokenPlaceholder": "",
+    "tokenHint": "",
+    "tokenCommandLabel": "",
+    "copyCommand": "",
+    "tokenRotatedLink": "",
+    "continue": "",
+    "emailLabel": "",
+    "emailPlaceholder": "",
+    "passwordLabel": "",
+    "passwordPlaceholder": "",
+    "confirmLabel": "",
+    "confirmPlaceholder": "",
+    "submit": "",
+    "back": "",
+    "usageAlwaysOn": "",
+    "restoreEntry": "",
+    "restoreEntryHint": "",
+    "usageDepsNote": "",
+    "finish": "",
+    "usageSkip": "",
+    "restoreIntro": ""
+  },
+  "workflows": {
+    "approvals": {
+      "acted": "",
+      "pendingTitle": "",
+      "openEntity": "",
+      "confirm": "",
+      "deny": "",
+      "viewAll": "",
+      "title": "",
+      "recorded": "",
+      "defaultPrompt": "",
+      "subtitle": "",
+      "empty": ""
+    },
+    "toast": {
+      "createFailed": "",
+      "deleted": "",
+      "deleteFailed": ""
+    },
+    "test": {
+      "failed": "",
+      "title": "",
+      "hint": "",
+      "entityId": "",
+      "run": "",
+      "result": ""
+    },
+    "toggle": {
+      "confirmDisableBuiltin": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "new": "",
+    "empty": "",
+    "builtin": "",
+    "triggerLabel": "",
+    "enabled": "",
+    "disabled": "",
+    "confirmDelete": "",
+    "editor": {
+      "badJson": "",
+      "textNeedsArrays": "",
+      "textNeedsTrigger": "",
+      "textLoaded": "",
+      "saved": "",
+      "saveFailed": "",
+      "namePlaceholder": "",
+      "when": "",
+      "daysBefore": "",
+      "canvasView": "",
+      "textView": "",
+      "cleanUp": "",
+      "textHint": "",
+      "loadText": "",
+      "triggerHint": "",
+      "actionLabel": "",
+      "recipient": "",
+      "recipientCustomer": "",
+      "recipientAdmin": "",
+      "emailTemplate": "",
+      "templateGroup": "",
+      "templateGroupHint": "",
+      "webhookTarget": "",
+      "webhookNone": "",
+      "webhookInactive": "",
+      "webhookHint": "",
+      "condition": "",
+      "exprField": "",
+      "exprOp": "",
+      "exprValue": "",
+      "conditionHint": "",
+      "waitType": "",
+      "waitUntil": "",
+      "waitDelay": "",
+      "waitAnchor": "",
+      "days": "",
+      "hours": "",
+      "minutes": "",
+      "maxIterations": "",
+      "gatePrompt": "",
+      "gatePromptPh": "",
+      "gateTimeout": "",
+      "gateHint": "",
+      "hideAdvanced": "",
+      "showAdvanced": ""
+    }
+  },
+  "migrationBanner": {
+    "title": "",
+    "body": "",
+    "link": ""
+  },
+  "messages": {
+    "syncDisabled": "",
+    "syncUnconfigured": "",
+    "syncBusy": "",
+    "syncOk_one": "",
+    "syncOk_other": "",
+    "syncFailed": "",
+    "newMessage": "",
+    "actionFailed": "",
+    "account": {
+      "all": "",
+      "customers": "",
+      "accounting": "",
+      "automated": ""
+    },
+    "folder": {
+      "inbox": "",
+      "sent": "",
+      "archived": "",
+      "deleted": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "searchPlaceholder": "",
+    "sync": "",
+    "acrossAccounts": "",
+    "unified": "",
+    "systemGenerated": "",
+    "noSubject": "",
+    "noSearchResults": "",
+    "noMessages": "",
+    "selectPrompt": "",
+    "onWrote": "",
+    "reply": "",
+    "loadError": "",
+    "from": "",
+    "to": "",
+    "noBody": "",
+    "attachments": "",
+    "sentAttachHint": "",
+    "notArchived": "",
+    "noInboundBody": "",
+    "viewDocument": "",
+    "openInAccounting": "",
+    "soon": "",
+    "replyAll": "",
+    "forward": "",
+    "bookExpense": "",
+    "rebill": "",
+    "createQuote": "",
+    "createContract": "",
+    "createGallery": "",
+    "createInvoice": "",
+    "restore": "",
+    "archive": "",
+    "deleteForever": "",
+    "delete": "",
+    "document": "",
+    "close": "",
+    "previewUnavailable": "",
+    "rasterNote": "",
+    "sentToast": "",
+    "sendFailed": "",
+    "compose": "",
+    "optional": "",
+    "subject": "",
+    "bodyHint": "",
+    "sendsFromHint": "",
+    "cancel": "",
+    "send": "",
+    "customer": "",
+    "resolvingCustomer": "",
+    "noCustomerMatch": "",
+    "createNewDoc": "",
+    "existingDocs": "",
+    "noExistingDocs": "",
+    "galleryCreateOnly": "",
+    "doc": {
+      "quote": "",
+      "contract": "",
+      "invoice": "",
+      "gallery": ""
     }
   }
 }

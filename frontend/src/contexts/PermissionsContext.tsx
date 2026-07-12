@@ -48,7 +48,7 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({ childr
       const response = await api.get<AdminPermissions>('/admin/users/me/permissions');
       setPermissions(response.data.permissions || []);
       setRole(response.data.role || null);
-    } catch (error) {
+    } catch (_error) {
       // Clear permissions on auth failure
       setPermissions([]);
       setRole(null);

@@ -21,7 +21,7 @@ export default tseslint.config([
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
       'react-hooks/rules-of-hooks': 'off',
       'react-hooks/exhaustive-deps': 'warn',
       'no-useless-escape': 'off',

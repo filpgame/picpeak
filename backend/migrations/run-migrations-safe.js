@@ -251,7 +251,7 @@ async function runMigrations() {
       }
     }
     
-    console.log(`\nMigration Summary:`);
+    console.log('\nMigration Summary:');
     console.log(`- Applied: ${pendingCount} migration(s)`);
     console.log(`- Skipped: ${skippedCount} migration(s) (already applied)`);
     console.log(`- Total: ${migrationFiles.length} migration(s)`);

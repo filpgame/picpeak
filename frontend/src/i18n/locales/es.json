@@ -1406,6 +1406,23 @@
         "copyAllCommands": "Copiar todos los comandos",
         "completeChecklist": "Completa la lista antes de actualizar",
         "error": "Error al cargar instrucciones de actualización"
+      },
+      "card": {
+        "title": "Versión de la aplicación",
+        "upToDate": "Actualizado",
+        "updateAvailable": "Actualización disponible",
+        "updateTo": "Actualizar a {{version}}",
+        "checkAgain": "Verificar de nuevo",
+        "lastChecked": "Última verificación: {{time}}",
+        "updating": "Actualizando…",
+        "updatingDesc": "Actualizando a {{version}} — instalando dependencias y compilando el frontend. El servidor se reiniciará automáticamente.",
+        "restarting": "Reiniciando…",
+        "restartingDesc": "El servidor se está reiniciando — la página se recargará automáticamente cuando esté lista.",
+        "complete": "Actualizado a {{version}} — recargando página…",
+        "errorTitle": "Es posible que la actualización haya encontrado un problema, o el servidor está tardando más de lo esperado en reiniciarse.",
+        "downloadCombinedLog": "Descargar combined.log",
+        "downloadErrorLog": "Descargar error.log",
+        "retry": "Reintentar"
       }
     },
     "notifications": "Notificaciones",

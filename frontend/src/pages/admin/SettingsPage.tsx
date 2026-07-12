@@ -41,13 +41,23 @@ import {
   ThumbnailsTab,
   ApiTokensTab,
   WebhooksTab,
+  AccountingTab,
+  WhatsAppTab,
 } from '../../features/settings';
 import { EmailConfigPage } from './EmailConfigPage';
 import { MessagingConfigPage } from './MessagingConfigPage';
 import { BrandingPage } from './BrandingPage';
 import { EventTypesPage } from './EventTypesPage';
+import { SlideshowSettingsPage } from './SlideshowSettingsPage';
 import { BackupManagement } from './BackupManagement';
 import { CMSPage } from './CMSPage';
+// CRM (#TBD)
+import { SettingsBusinessProfilePage } from './settings/SettingsBusinessProfilePage';
+import { CrmSettingsPage } from './settings/CrmSettingsPage';
+import { ReminderTemplatesPage } from './settings/ReminderTemplatesPage';
+import { BlockLibraryPage } from './contracts/BlockLibraryPage';
+import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
+import { Briefcase, Receipt, ScrollText, Landmark, Smartphone, MonitorPlay } from 'lucide-react';
 
 // Tab keys driving the inner-nav. Must include every key used in
 // `navGroups` below and in the switch at the bottom of the component.
@@ -71,7 +81,16 @@ type TabType =
   | 'webhooks'
   | 'status'
   | 'analytics'
-  | 'backup';
+  | 'backup'
+  // CRM (#TBD): issuer block for quote/invoice PDFs and per-area
+  // CRM behaviour toggles.
+  | 'businessProfile'
+  | 'crm'
+  | 'contracts'
+  | 'reminderTemplates'
+  | 'accounting'
+  | 'whatsapp'
+  | 'slideshow';
 
 interface NavItem {
   key: TabType;
@@ -91,6 +110,8 @@ const ALL_TAB_KEYS: TabType[] = [
   'security', 'imageSecurity', 'seo',
   'apiTokens', 'webhooks',
   'status', 'analytics', 'backup',
+  'businessProfile', 'crm', 'contracts', 'reminderTemplates', 'accounting', 'whatsapp',
+  'slideshow',
 ];
 
 function isValidTab(value: string | null): value is TabType {
@@ -100,6 +121,7 @@ function isValidTab(value: string | null): value is TabType {
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { flags, isLoading: flagsLoading } = useFeatureFlags();
 
   // Read ?tab=… on mount; default to Features per the redesign.
   const initialTab: TabType = isValidTab(searchParams.get('tab'))
@@ -167,6 +189,34 @@ export const SettingsPage: React.FC = () => {
     saveSeoMutation,
   } = useSettingsState();
 
+  // If the active tab refers to an item that's now hidden (e.g. admin
+  // landed on ?tab=reminderTemplates after disabling reminderEmails),
+  // snap to the first key that the dependency-rule flags allow. Effect
+  // re-fires when flags toggle live. MUST stay above the isLoading early
+  // return so React's rules-of-hooks count stays consistent across renders
+  // (was previously after the early return — that's a hooks violation that
+  // surfaced as React error #310 once settled long enough for `isLoading`
+  // to transition true→false in the same mount, #640D pre-existing-bug fix).
+  useEffect(() => {
+    // Wait for the server's actual flag values before deciding whether the
+    // current tab is allowed — during initial load `flags` is the defaults
+    // placeholder which would falsely snap-back away from a tab the server
+    // has actually enabled.
+    if (flagsLoading) return;
+    const gatedOff: Record<string, boolean> = {
+      crm: !(flags.quotes || flags.bills || flags.contracts),
+      contracts: !flags.contracts,
+      reminderTemplates: !flags.reminderEmails,
+      accounting: !flags.accounting,
+      whatsapp: !flags.whatsapp,
+      slideshow: !flags.slideshow,
+    };
+    if (gatedOff[activeTab]) {
+      setActiveTab('features');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flagsLoading, flags.quotes, flags.bills, flags.contracts, flags.reminderEmails, flags.accounting, flags.whatsapp, flags.slideshow, activeTab]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -197,6 +247,9 @@ export const SettingsPage: React.FC = () => {
         { key: 'thumbnails', label: t('settings.thumbnails.title', 'Thumbnails'),  icon: ImageIcon },
         { key: 'styling',    label: t('settings.styling.title',    'Custom CSS'),  icon: Code },
         { key: 'cms',        label: t('settings.cms.title',        'CMS Pages'),   icon: FileText },
+        ...(flags.slideshow
+          ? [{ key: 'slideshow' as const, label: t('settings.slideshow.title', 'Slideshow'), icon: MonitorPlay }]
+          : []),
       ],
     },
     {
@@ -223,6 +276,32 @@ export const SettingsPage: React.FC = () => {
       ],
     },
     {
+      // CRM group. businessProfile is always relevant (the issuer block
+      // feeds every PDF, gallery hero, footer, etc — even with zero
+      // CRM features). The remaining items hide when their matching
+      // master flag is off so admins don't navigate to a tab that
+      // configures a feature they can't actually use.
+      label: t('settings.groups.crm', 'CRM-Settings'),
+      items: [
+        { key: 'businessProfile',    label: t('settings.businessProfile.title', 'Business profile'), icon: Briefcase },
+        ...(flags.quotes || flags.bills || flags.contracts
+          ? [{ key: 'crm' as const,                label: t('settings.crm.title',             'CRM behaviour'),    icon: Receipt }]
+          : []),
+        ...(flags.contracts
+          ? [{ key: 'contracts' as const,          label: t('settings.contracts.title',       'Contracts'),        icon: ScrollText }]
+          : []),
+        ...(flags.reminderEmails
+          ? [{ key: 'reminderTemplates' as const,  label: t('settings.reminderTemplates.title', 'Reminder emails'), icon: Mail }]
+          : []),
+        ...(flags.accounting
+          ? [{ key: 'accounting' as const,         label: t('settings.accounting.title',      'Accounting'),       icon: Landmark }]
+          : []),
+        ...(flags.whatsapp
+          ? [{ key: 'whatsapp' as const,           label: t('settings.whatsapp.title',        'WhatsApp'),         icon: Smartphone }]
+          : []),
+      ],
+    },
+    {
       label: t('settings.groups.system', 'System'),
       items: [
         { key: 'status',    label: t('settings.systemStatus.title'),               icon: Activity },
@@ -234,12 +313,26 @@ export const SettingsPage: React.FC = () => {
 
   const allItems = navGroups.flatMap((g) => g.items);
   const activeItem = allItems.find((i) => i.key === activeTab) ?? allItems[0];
+  // (Visibility snap-back is handled in the useEffect above, which sits
+  // before the isLoading early return to keep hook ordering stable.)
+
+  // If the active tab refers to an item that's now hidden (e.g. admin
+  // landed on ?tab=reminderTemplates after disabling reminderEmails),
+  // snap to the first visible item so the content area doesn't render
+  // a hidden tab's UI. Effect re-fires when flags toggle live.
+  useEffect(() => {
+    const visibleKeys = allItems.map((i) => i.key);
+    if (!visibleKeys.includes(activeTab) && visibleKeys.length > 0) {
+      setActiveTab(visibleKeys[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flags.quotes, flags.bills, flags.contracts, flags.reminderEmails, activeTab]);
 
   // For tabs that mount existing top-level pages OR bring their own
   // header (FeaturesTab has its own icon+title+description block), skip
   // the Settings shell's section heading so the layout doesn't double
   // up.
-  const TABS_WITH_OWN_HEADER: TabType[] = ['features', 'email', 'messaging', 'branding', 'eventTypes', 'backup', 'cms'];
+  const TABS_WITH_OWN_HEADER: TabType[] = ['features', 'email', 'messaging', 'branding', 'eventTypes', 'backup', 'cms', 'contracts', 'reminderTemplates'];
   const showSectionHeading = !TABS_WITH_OWN_HEADER.includes(activeTab);
 
   return (
@@ -363,11 +456,18 @@ export const SettingsPage: React.FC = () => {
           )}
 
           {activeTab === 'eventTypes' && <EventTypesPage />}
+          {activeTab === 'slideshow' && <SlideshowSettingsPage />}
           {activeTab === 'branding' && <BrandingPage />}
           {activeTab === 'cms' && <CMSPage />}
           {activeTab === 'email' && <EmailConfigPage />}
           {activeTab === 'messaging' && <MessagingConfigPage />}
           {activeTab === 'backup' && <BackupManagement />}
+          {activeTab === 'businessProfile' && <SettingsBusinessProfilePage />}
+          {activeTab === 'crm' && <CrmSettingsPage />}
+          {activeTab === 'contracts' && <BlockLibraryPage />}
+          {activeTab === 'reminderTemplates' && <ReminderTemplatesPage />}
+          {activeTab === 'accounting' && <AccountingTab />}
+          {activeTab === 'whatsapp' && <WhatsAppTab />}
 
           {activeTab === 'status' && (
             <StatusTab

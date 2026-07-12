@@ -26,7 +26,7 @@ exports.up = async function(knex) {
       await knex.raw('CREATE INDEX IF NOT EXISTS idx_photos_captured_at ON photos(captured_at)');
     } else if (client === 'sqlite3' || client === 'better-sqlite3') {
       // SQLite doesn't support IF NOT EXISTS for indexes, so we need to check first
-      const existingIndexes = await knex.raw("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_photos_captured_at'");
+      const existingIndexes = await knex.raw('SELECT name FROM sqlite_master WHERE type=\'index\' AND name=\'idx_photos_captured_at\'');
       if (existingIndexes.length === 0) {
         await knex.raw('CREATE INDEX idx_photos_captured_at ON photos(captured_at)');
       }

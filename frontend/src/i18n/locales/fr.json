@@ -71,7 +71,23 @@
     "confirmCancelInvitation": {
       "title": "Annuler l'invitation",
       "message": "Êtes-vous sûr de vouloir annuler l'invitation pour {{email}} ?"
-    }
+    },
+    "userActivated": "",
+    "activateUserError": "",
+    "userDeleted": "",
+    "deleteUserError": "",
+    "activateUser": "",
+    "deleteUser": "",
+    "confirmActivate": {
+      "title": "",
+      "message": ""
+    },
+    "confirmDelete": {
+      "title": "",
+      "message": ""
+    },
+    "activate": "",
+    "delete": ""
   },
   "common": {
     "loading": "Chargement...",
@@ -115,8 +131,6 @@
     "collapse": "Réduire",
     "expand": "Développer",
     "submitting": "Envoi en cours...",
-    "copy": "Copier",
-    "copied": "Copié !",
     "applying": "Application en cours...",
     "done": "Terminé",
     "retry": "Réessayer",
@@ -124,7 +138,24 @@
     "saveChanges": "Enregistrer les modifications",
     "resetChanges": "Réinitialiser les modifications",
     "dismiss": "Ignorer",
-    "discard": "Abandonner"
+    "discard": "Abandonner",
+    "confirm": "",
+    "menu": "",
+    "selectCountry": "",
+    "saved": "",
+    "saving": "",
+    "deleted": "",
+    "actions": "",
+    "showAll": "",
+    "searching": "",
+    "language": "",
+    "configureInSettings": "",
+    "preview": "",
+    "duplicate": "",
+    "show": "",
+    "copyFailed": "",
+    "copy": "",
+    "copied": ""
   },
   "upload": {
     "photoCategory": "Catégorie de la photo",
@@ -154,21 +185,33 @@
     "processingFailed_one": "{{count}} photo n'a pas pu être traitée",
     "processingFailed_other": "{{count}} photos n'ont pas pu être traitées",
     "uploadingChunks_one": "{{count}} bloc en cours de téléversement",
-    "uploadingChunks_other": "{{count}} blocs en cours de téléversement"
+    "uploadingChunks_other": "{{count}} blocs en cours de téléversement",
+    "replacedFiles_many": "",
+    "processingFailed_many": "",
+    "uploadingChunks_many": "",
+    "failures": {
+      "unknownFile": "",
+      "unknownReason": "",
+      "transferReason": "",
+      "toast_many": "",
+      "toast_one": "",
+      "toast_other": "",
+      "title_many": "",
+      "title_one": "",
+      "title_other": "",
+      "kindRejected": "",
+      "kindTransfer": "",
+      "kindProcessing": ""
+    }
   },
   "navigation": {
     "dashboard": "Tableau de bord",
     "events": "Événements",
     "archives": "Archives",
     "settings": "Paramètres",
-    "eventTypes": "Types d'événements",
-    "branding": "Marque",
-    "emailSettings": "Paramètres e-mail",
-    "backup": "Sauvegarde & Restauration",
-    "cmsPages": "Pages CMS",
     "users": "Utilisateurs",
-    "calendar": "Calendrier",
-    "clients": "Clients"
+    "clients": "Clients",
+    "betaTag": ""
   },
   "archives": {
     "title": "Archives",
@@ -218,7 +261,14 @@
     "wrongPassword": "Mot de passe incorrect. Veuillez vérifier votre mot de passe et réessayer.",
     "tooManyAttempts": "Trop de tentatives de connexion échouées. Veuillez réessayer plus tard.",
     "pleaseEnterPassword": "Veuillez entrer un mot de passe",
-    "passwordHint": "Le mot de passe a été fourni par l'organisateur de l'événement. Contactez-le si vous ne l'avez pas."
+    "passwordHint": "Le mot de passe a été fourni par l'organisateur de l'événement. Contactez-le si vous ne l'avez pas.",
+    "iab": {
+      "instagram": {
+        "title": "",
+        "ios": "",
+        "android": ""
+      }
+    }
   },
   "gallery": {
     "expires": "Expire",
@@ -334,14 +384,17 @@
     "photosSelected_one": "{{count}} photo sélectionnée",
     "photosSelected_other": "{{count}} photos sélectionnées",
     "downloadSelected_one": "Télécharger {{count}} photo",
-    "downloadSelected_other": "Télécharger {{count}} photos"
+    "downloadSelected_other": "Télécharger {{count}} photos",
+    "expiresIn_many": "",
+    "downloading_many": "",
+    "photosSelected_many": "",
+    "downloadSelected_many": "",
+    "photosCount_many": ""
   },
   "categories": {
     "title": "Catégories de photos",
     "addCategory": "Ajouter une catégorie",
-    "eventSpecificCategories": "Catégories spécifiques à l'événement",
     "noEventSpecificCategories": "Aucune catégorie spécifique à l'événement. Les catégories globales sont disponibles par défaut.",
-    "globalCategoriesAlwaysAvailable": "Catégories globales (toujours disponibles) :",
     "deleteCategoryTitle": "Supprimer la catégorie",
     "categoryCreatedSuccess": "Catégorie créée avec succès",
     "categoryDeletedSuccess": "Catégorie supprimée avec succès",
@@ -355,7 +408,21 @@
     "coverPhotoSet": "Photo de couverture définie avec succès",
     "coverPhotoRemoved": "Photo de couverture retirée",
     "failedToSetCoverPhoto": "Échec de la définition de la photo de couverture",
-    "categoryHeroHint": "Si aucune photo de couverture n'est définie pour une catégorie, la photo par défaut sera utilisée."
+    "categoryHeroHint": "Si aucune photo de couverture n'est définie pour une catégorie, la photo par défaut sera utilisée.",
+    "downloadsEnabled": "",
+    "downloadsDisabled": "",
+    "failedToToggleDownloads": "",
+    "enableDownloadsTitle": "",
+    "disableDownloadsTitle": "",
+    "failedToReorder": "",
+    "orderReset": "",
+    "galleryOrder": "",
+    "resetToDefault": "",
+    "orderCustomisedHint": "",
+    "orderDefaultHint": "",
+    "moveUp": "",
+    "moveDown": "",
+    "sharedBadge": ""
   },
   "events": {
     "title": "Événements",
@@ -420,9 +487,6 @@
     "resendCreationEmail": "Renvoyer l'e-mail de création",
     "creationEmailResent": "L'e-mail de création a été mis en file d'attente pour envoi",
     "failedToResendEmail": "Échec de l'envoi de l'e-mail de création",
-    "resendWhatsApp": "Renvoyer WhatsApp",
-    "whatsappResent": "Message WhatsApp envoyé",
-    "failedToResendWhatsApp": "Échec du renvoi WhatsApp",
     "photoStatistics": "Statistiques des photos",
     "totalPhotos": "Photos totales",
     "managePhotos": "Gérer les photos",
@@ -462,7 +526,9 @@
       "toastError": "Échec de la réinitialisation du mot de passe",
       "toastCopied": "Mot de passe copié dans le presse-papiers",
       "errorMinLength": "Le mot de passe doit comporter au moins 6 caractères",
-      "errorMismatch": "Les mots de passe ne correspondent pas"
+      "errorMismatch": "Les mots de passe ne correspondent pas",
+      "hide": "",
+      "show": ""
     },
     "themeAndStyle": "Thème & Style",
     "galleryExpiration": "Expiration de la galerie",
@@ -532,7 +598,6 @@
     "expired": "Expiré",
     "draft": "Brouillon",
     "publishAndNotify": "Publier et notifier le client",
-    "publishConfirm": "Cela rendra la galerie accessible et enverra l'e-mail de notification au client. Continuer ?",
     "publishSuccess": "Galerie publiée et client notifié !",
     "draftBanner": "Cette galerie est en mode brouillon. Téléversez vos photos, puis publiez lorsque vous êtes prêt.",
     "subtitle": "Gérez vos galeries de photos et événements",
@@ -553,7 +618,11 @@
       "processing_one": "Suppression de {{count}} événement. Cela peut prendre quelques minutes — ne fermez pas cette fenêtre.",
       "processing_other": "Suppression de {{count}} événements. Cela peut prendre quelques minutes — ne fermez pas cette fenêtre.",
       "submit_one": "Supprimer {{count}} événement",
-      "submit_other": "Supprimer {{count}} événements"
+      "submit_other": "Supprimer {{count}} événements",
+      "successAll_many": "",
+      "title_many": "",
+      "processing_many": "",
+      "submit_many": ""
     },
     "searchEventsPlaceholder": "Rechercher des événements...",
     "all": "Tous",
@@ -622,7 +691,8 @@
       "warningTitle": "Veuillez noter :",
       "warning1": "L'URL de la galerie changera",
       "warning2": "Les anciennes URL redirigeront automatiquement vers la nouvelle URL",
-      "warning3": "Les fichiers photo peuvent être renommés"
+      "warning3": "Les fichiers photo peuvent être renommés",
+      "filesRenamed_many": ""
     },
     "bulkArchiveSuccess_one": "Archivage réussi de {{count}} événement",
     "bulkArchiveSuccess_other": "Archivage réussi de {{count}} événements",
@@ -652,13 +722,83 @@
       "mode_custom": "Remplacement personnalisé pour cet événement",
       "mode_off": "Désactivé (masquer pour cet événement)",
       "placeholder": "Contenu Markdown (ex. : **Offre spéciale :** [réservez votre prochaine séance](https://example.com))",
-      "preview": "Aperçu"
+      "preview": "Aperçu",
+      "mode_managed": "",
+      "mode_reference": ""
     },
     "ogShare": {
       "title": "Utiliser la photo d'en-tête comme aperçu de partage social",
       "help": "Lorsque cette URL de galerie est partagée sur WhatsApp, Facebook, Slack, etc., l'aperçu du lien affichera la photo d'en-tête ci-dessus. La miniature est récupérée de manière non authentifiée par les robots d'aperçu de lien — toute personne disposant de l'URL peut effectivement rendre cette image publique. Désactivé par défaut ; choisissez une photo d'en-tête que vous êtes prêt à afficher publiquement avant d'activer.",
       "heroRequired": "D'abord, choisissez une photo d'en-tête ci-dessus — cette option l'utilise comme image d'aperçu pour WhatsApp / Facebook / Slack."
-    }
+    },
+    "bulkArchiveSuccess_many": "",
+    "daysLeft_many": "",
+    "eventsSelected_many": "",
+    "duplicateDialog": {
+      "successToast": "",
+      "errorNameRequired": "",
+      "title": "",
+      "description": "",
+      "eventNameLabel": "",
+      "eventNamePlaceholder": "",
+      "eventDateLabel": "",
+      "eventDateHelp": "",
+      "customerNameLabel": "",
+      "customerNamePlaceholder": "",
+      "customerEmailLabel": "",
+      "customerEmailPlaceholder": "",
+      "confirm": ""
+    },
+    "createInvoice": "",
+    "duplicateEvent": "",
+    "fullDay": "",
+    "eventTimeStart": "",
+    "eventTimeEnd": "",
+    "publishDialog": {
+      "errorMinLength": "",
+      "title": "",
+      "descriptionWithEmail": "",
+      "descriptionNoEmail": "",
+      "passwordLabel": "",
+      "passwordPlaceholder": "",
+      "passwordHelp": "",
+      "descriptionAssignedAccount_many": "",
+      "descriptionAssignedAccount_one": "",
+      "descriptionAssignedAccount_other": "",
+      "justPublish": ""
+    },
+    "customerPicker": {
+      "help": "",
+      "label": "",
+      "removeAria": "",
+      "placeholder": "",
+      "searching": "",
+      "noResults": ""
+    },
+    "shortUrls": {
+      "created": "",
+      "errors": {
+        "slugTaken": "",
+        "invalidSlug": ""
+      },
+      "deleted": "",
+      "confirmDelete": "",
+      "title": "",
+      "description": "",
+      "slugPlaceholder": "",
+      "create": "",
+      "useSuggested": "",
+      "slugHelp": "",
+      "empty": "",
+      "hits_many": "",
+      "hits_one": "",
+      "hits_other": "",
+      "lastHit": "",
+      "createdAt": ""
+    },
+    "heroLogoInherit": "",
+    "heroLogoShow": "",
+    "heroLogoHide": ""
   },
   "settings": {
     "title": "Paramètres système",
@@ -701,7 +841,11 @@
       "accountEmailRequired": "L'adresse e-mail est requise",
       "accountEmailInvalid": "Entrez une adresse e-mail valide",
       "accountSaveButton": "Enregistrer les détails du compte",
-      "accountSaveSuccess": "Détails du compte mis à jour"
+      "accountSaveSuccess": "Détails du compte mis à jour",
+      "timeFormat": "",
+      "timeFormat24h": "",
+      "timeFormat12h": "",
+      "timeFormatHelp": ""
     },
     "publicSite": {
       "badge": "Page d'accueil publique",
@@ -780,13 +924,14 @@
       "attemptWindowMinutesHelp": "Période de temps à prendre en compte lors du comptage des tentatives de connexion échouées",
       "lockoutDurationMinutes": "Durée de verrouillage (minutes)",
       "lockoutDurationMinutesHelp": "Durée pendant laquelle la galerie ou le compte reste verrouillé après trop d'échecs",
-      "enable2FA": "Activer l'authentification à deux facteurs pour les administrateurs",
       "recaptchaSettings": "Paramètres reCAPTCHA",
       "enableRecaptcha": "Activer reCAPTCHA pour les formulaires de connexion",
       "siteKey": "Clé du site",
       "secretKey": "Clé secrète",
       "recaptchaHelp": "Obtenez vos clés reCAPTCHA depuis",
-      "saveSecuritySettings": "Enregistrer les paramètres de sécurité"
+      "saveSecuritySettings": "Enregistrer les paramètres de sécurité",
+      "twoFactorTitle": "",
+      "twoFactorNote": ""
     },
     "categories": {
       "title": "Catégories",
@@ -849,7 +994,8 @@
       "checkNoAction": "Aucune notification nécessaire : {{reason}}",
       "checkError": "Échec de la vérification des mises à jour",
       "emailSent_one": "E-mail de notification envoyé à {{count}} destinataire",
-      "emailSent_other": "E-mail de notification envoyé à {{count}} destinataires"
+      "emailSent_other": "E-mail de notification envoyé à {{count}} destinataires",
+      "emailSent_many": ""
     },
     "events": {
       "title": "Création d'événements",
@@ -877,7 +1023,9 @@
       "showGalleryFilterBar": "Afficher la barre de filtre dans les galeries",
       "showGalleryFilterBarHelp": "Afficher la recherche par nom de fichier et les contrôles de tri au-dessus des galeries en disposition grille. Désactivez pour une disposition plus épurée.",
       "enablePhoneField": "Activer le champ de numéro de téléphone",
-      "enablePhoneFieldHelp": "Ajoute une entrée de numéro de téléphone optionnelle dans le formulaire d'événement. Utile pour les automatisations en aval comme la livraison WhatsApp via n8n. Toujours optionnel même lorsqu'il est activé."
+      "enablePhoneFieldHelp": "Ajoute une entrée de numéro de téléphone optionnelle dans le formulaire d'événement. Utile pour les automatisations en aval comme la livraison WhatsApp via n8n. Toujours optionnel même lorsqu'il est activé.",
+      "defaultFeedbackEnabled": "",
+      "defaultFeedbackEnabledHelp": ""
     },
     "imageSecurity": {
       "title": "Protection des images",
@@ -1004,17 +1152,12 @@
     },
     "analytics": {
       "title": "Analytique",
-      "umamiIntegration": "Intégration Umami Analytics",
-      "enableUmami": "Activer Umami Analytics",
       "umamiUrl": "URL Umami",
       "umamiUrlHelp": "L'URL de votre instance Umami (ex. : https://analytics.yourdomain.com)",
       "websiteId": "ID du site web",
       "websiteIdHelp": "Votre ID de site web Umami (trouvé dans le tableau de bord Umami)",
       "shareUrl": "URL de partage (optionnel)",
       "shareUrlHelp": "URL de partage publique pour intégrer le tableau de bord complet (créé dans Umami)",
-      "umamiInfo": "À propos d'Umami Analytics",
-      "umamiInfoText": "Umami est une plateforme d'analytique open-source axée sur la confidentialité. Elle suit les vues de pages, les visiteurs uniques et les événements personnalisés sans utiliser de cookies.",
-      "learnMore": "En savoir plus sur Umami",
       "saveAnalyticsSettings": "Enregistrer les paramètres d'analytique",
       "backendAnalytics": "Analytique backend",
       "backendAnalyticsText": "Le système suit également des analytiques de base côté serveur pour la sécurité et la surveillance des performances.",
@@ -1024,16 +1167,38 @@
       "uniqueVisitors": "Visiteurs uniques par IP",
       "deviceTypes": "Types d'appareils à partir des agents utilisateurs",
       "privacy": "Confidentialité",
-      "privacyText": "Les adresses IP sont hachées pour la confidentialité. Aucune donnée personnelle n'est stockée. Les données analytiques sont conservées pendant 90 jours."
+      "privacyText": "Les adresses IP sont hachées pour la confidentialité. Aucune donnée personnelle n'est stockée. Les données analytiques sont conservées pendant 90 jours.",
+      "providerHeading": "",
+      "providerDescription": "",
+      "providerLabel": "",
+      "provider": {
+        "none": "",
+        "umami": "",
+        "rybbit": "",
+        "custom": ""
+      },
+      "umamiApiKey": "",
+      "umamiApiKeyHelp": "",
+      "rybbitUrl": "",
+      "rybbitUrlHelp": "",
+      "rybbitWebsiteId": "",
+      "rybbitWebsiteIdHelp": "",
+      "rybbitApiKey": "",
+      "rybbitApiKeyHelp": "",
+      "customHeadHtml": "",
+      "customHeadHtmlHelp": "",
+      "customCspWarning": "",
+      "customCspWarningText": "",
+      "providerNoneInfo": ""
     },
     "groups": {
       "general": "Général",
-      "display": "Affichage",
       "privacySecurity": "Confidentialité & Sécurité",
       "integrations": "Intégrations",
       "system": "Système",
       "appearance": "Contenu & Apparence",
-      "communication": "Communication"
+      "communication": "Communication",
+      "crm": ""
     },
     "apiTokens": {
       "title": "Jetons API",
@@ -1057,7 +1222,8 @@
       "statusActive": "Actif",
       "confirmRevoke": "Voulez-vous révoquer ce jeton ? Cette action ne peut pas être annulée.",
       "revoke": "Révoquer",
-      "empty": "Aucun jeton pour l'instant. Générez-en un ci-dessus pour commencer."
+      "empty": "Aucun jeton pour l'instant. Générez-en un ci-dessus pour commencer.",
+      "preview": ""
     },
     "webhooks": {
       "title": "Webhooks",
@@ -1071,7 +1237,39 @@
       "template": "Modèle (optionnel)",
       "create": "Créer un webhook",
       "existing": "Webhooks existants",
-      "empty": "Aucun webhook pour l'instant. Créez-en un ci-dessus pour commencer à recevoir des notifications d'événements."
+      "empty": "Aucun webhook pour l'instant. Créez-en un ci-dessus pour commencer à recevoir des notifications d'événements.",
+      "filterError": "",
+      "createError": "",
+      "updateError": "",
+      "deletedToast": "",
+      "deleteError": "",
+      "copied": "",
+      "copyFailed": "",
+      "copyButton": "",
+      "dismiss": "",
+      "namePlaceholder": "",
+      "urlPlaceholder": "",
+      "hideAdvanced": "",
+      "showAdvanced": "",
+      "filterHelp": "",
+      "templatePlaceholder": "",
+      "templateHelp": "",
+      "colName": "",
+      "colUrl": "",
+      "colEvents": "",
+      "colLastDelivery": "",
+      "colStatus": "",
+      "colActions": "",
+      "eventsSubscribed_many": "",
+      "eventsSubscribed_one": "",
+      "eventsSubscribed_other": "",
+      "toggleToDisable": "",
+      "toggleToEnable": "",
+      "statusActive": "",
+      "statusDisabled": "",
+      "deliveriesLink": "",
+      "confirmDelete": "",
+      "delete": ""
     },
     "sectionLabel": "Section des paramètres",
     "navAriaLabel": "Navigation des paramètres",
@@ -1107,8 +1305,9 @@
         "scheduling": "Planification",
         "sales": "Ventes",
         "insights": "Analytique & Accès",
-        "customers": "Clients",
-        "clients": "Clients"
+        "clients": "Clients",
+        "accounting": "",
+        "automation": ""
       },
       "status": {
         "stable": "stable",
@@ -1161,7 +1360,73 @@
       },
       "clients": {
         "title": "Clients",
-        "description": "Interrupteur principal pour la section Clients de la barre latérale. Désactivé masque la section et toutes les sous-fonctionnalités ci-dessous, quel que soit leur état individuel — réactivez pour restaurer selon ce que vous avez défini en dernier."
+        "description": ""
+      },
+      "calendarBooking": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "slideshow": {
+        "title": "",
+        "description": ""
+      },
+      "incomingMail": {
+        "title": "",
+        "description": ""
+      },
+      "whatsapp": {
+        "title": "",
+        "description": ""
+      },
+      "contracts": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "hoursLogging": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "projects": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "accounting": {
+        "title": "",
+        "description": "",
+        "sidebar": "",
+        "requiredByBills": ""
+      },
+      "taxReport": {
+        "title": "",
+        "description": "",
+        "sidebar": "",
+        "requiresAccounting": ""
+      },
+      "incomingInvoices": {
+        "title": "",
+        "description": "",
+        "sidebar": "",
+        "requiresAccounting": ""
+      },
+      "expenses": {
+        "title": "",
+        "description": "",
+        "sidebar": "",
+        "requiresAccounting": ""
+      },
+      "crmDevelopment": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
+      },
+      "workflows": {
+        "title": "",
+        "description": "",
+        "sidebar": ""
       }
     },
     "customerSurface": {
@@ -1196,6 +1461,119 @@
       "saveFailed": "Échec de la sauvegarde",
       "testSent": "Message de test envoyé !",
       "testFailed": "Échec du message de test"
+    },
+    "slideshow": {
+      "title": "",
+      "subtitle": ""
+    },
+    "businessProfile": {
+      "title": ""
+    },
+    "crm": {
+      "title": ""
+    },
+    "contracts": {
+      "title": ""
+    },
+    "reminderTemplates": {
+      "title": ""
+    },
+    "accounting": {
+      "title": "",
+      "savedToast": "",
+      "subtitle": "",
+      "kmRate": "",
+      "kmRateHint": "",
+      "perDiemRate": "",
+      "perDiemRateHint": "",
+      "profileFields": {
+        "hourlyRate": "",
+        "hourlyRatePlaceholder": "",
+        "hourlyRateHint": "",
+        "vatLabel": "",
+        "vatLabelHint": ""
+      },
+      "requireProof": "",
+      "disclaimer": "",
+      "vat": {
+        "title": "",
+        "registered": "",
+        "registeredHint": "",
+        "reclaimCountries": "",
+        "reclaimCountriesHint": "",
+        "defaultOutputCode": "",
+        "defaultOutputCodeNone": "",
+        "defaultOutputCodeHint": ""
+      }
+    },
+    "whatsapp": {
+      "title": "",
+      "savedToast": "",
+      "testSentToast": "",
+      "subtitle": "",
+      "phoneNumberId": "",
+      "phoneNumberIdHint": "",
+      "wabaId": "",
+      "wabaIdHint": "",
+      "accessToken": "",
+      "accessTokenPlaceholder": "",
+      "accessTokenHint": "",
+      "templateName": "",
+      "templateNameHint": "",
+      "templateLanguage": "",
+      "templateLanguagePlaceholder": "",
+      "templateLanguageHint": "",
+      "templateParams": "",
+      "templateParamsHint": "",
+      "params": {
+        "customer_name": "",
+        "event_name": "",
+        "gallery_link": "",
+        "password_line": "",
+        "expiry_date": ""
+      },
+      "paramMoveUp": "",
+      "paramMoveDown": "",
+      "templateParamsEmpty": "",
+      "templateParamsPreview": "",
+      "enabled": "",
+      "testHeading": "",
+      "testHelp": "",
+      "testSending": "",
+      "testSend": ""
+    },
+    "mfa": {
+      "copyFailed": "",
+      "recoveryCodesWarning": "",
+      "copied": "",
+      "copy": "",
+      "download": "",
+      "recoveryCodesAck": "",
+      "done": "",
+      "disabledToast": "",
+      "disablePrompt": "",
+      "codeRequired": "",
+      "disableConfirmTitle": "",
+      "disableConfirmMessage": "",
+      "disableConfirmButton": "",
+      "title": "",
+      "description": "",
+      "enabledBadge": "",
+      "recoveryCodesRemaining_many": "",
+      "recoveryCodesRemaining_one": "",
+      "recoveryCodesRemaining_other": "",
+      "regenerateHelp": "",
+      "codePlaceholder": "",
+      "regenerateConfirm": "",
+      "regenerate": "",
+      "disable": "",
+      "setupScanInstruction": "",
+      "qrAlt": "",
+      "manualEntry": "",
+      "enterCodeLabel": "",
+      "enable": "",
+      "notEnrolled": "",
+      "setUp": ""
     }
   },
   "analytics": {
@@ -1386,6 +1764,11 @@
     "saveTheme": "Enregistrer le thème",
     "previewLayout": "Aperçu de la disposition",
     "livePreview": "Aperçu en direct",
+    "pdfTypography": "Typographie PDF",
+    "pdfTypographyHelp": "Utilisée pour les en-têtes de factures et de devis. Choisissez l'une des polices fournies ou laissez la valeur par défaut pour utiliser Helvetica.",
+    "pdfFontFamily": "Police du corps",
+    "pdfFontFamilyDefault": "Utiliser Helvetica (par défaut)",
+    "pdfFontFamilyMissing": "manquante",
     "heroPlaceholderText": "La photo d'en-tête de votre événement apparaîtra ici",
     "whiteLabel": "Marque blanche",
     "hidePoweredBy": "Masquer la mention \"Propulsé par PicPeak\"",
@@ -1400,6 +1783,7 @@
     "logoMaxHeight": "Hauteur maximale (pixels)",
     "logoMaxHeightHelp": "Définissez une hauteur maximale personnalisée pour le logo (20-200 pixels)",
     "logoPosition": "Position du logo dans l'en-tête",
+    "positionSidepanelHelp": "Le logo apparaît dans la barre latérale admin au lieu de l'en-tête. Lorsque la barre latérale est repliée, la favicon est affichée.",
     "logoDisplayMode": "Mode d'affichage",
     "logoOnly": "Logo uniquement",
     "textOnly": "Nom de l'entreprise uniquement",
@@ -1503,8 +1887,26 @@
       "alignment": "Alignement",
       "alignLeft": "Gauche",
       "alignCenter": "Centre (par défaut — correspond au pied de page)",
-      "alignRight": "Droite"
-    }
+      "alignRight": "Droite",
+      "title": "",
+      "help": "",
+      "position": "",
+      "aboveFooter": "",
+      "belowFooter": "",
+      "content": "",
+      "placeholder": "",
+      "markdownHelp": "",
+      "preview": ""
+    },
+    "socialMedia": {
+      "title": "",
+      "help": "",
+      "whatsappHelp": ""
+    },
+    "logoDark": "",
+    "logoDarkHelp": "",
+    "forcedModeBrandingHint": "",
+    "forcedModeGalleryNote": ""
   },
   "admin": {
     "title": "Panneau d'administration",
@@ -1524,27 +1926,46 @@
       "checking": "Vérification en cours..."
     },
     "updates": {
-      "available": "Mise à jour disponible",
-      "newVersion": "La version {{version}} est disponible",
-      "currentVersion": "Actuelle : {{version}}",
-      "channel": "Canal : {{channel}}",
-      "channelStable": "Stable",
-      "channelBeta": "Bêta",
       "beta": "BÊTA",
-      "viewReleaseNotes": "Voir les notes de version",
       "updateAvailableShort": "v{{version}} disponible",
-      "upToDate": "Vous êtes à jour",
-      "updateNow": "Mettre à jour maintenant",
-      "updateDialog": {
-        "title": "Mettre à jour PicPeak",
-        "detectedEnv": "Environnement détecté",
-        "beforeUpdating": "Avant de mettre à jour :",
-        "updateCommands": "Commandes de mise à jour :",
-        "afterUpdating": "Après la mise à jour :",
-        "copyAllCommands": "Copier toutes les commandes",
-        "completeChecklist": "Complétez la liste de contrôle avant de mettre à jour",
-        "error": "Échec du chargement des instructions de mise à jour"
-      }
+      "card": {
+        "title": "Version de l'application",
+        "upToDate": "À jour",
+        "updateTo": "Mettre à jour vers {{version}}",
+        "checkAgain": "Vérifier à nouveau",
+        "lastChecked": "Dernière vérification : {{time}}",
+        "updating": "Mise à jour en cours…",
+        "updatingDesc": "Mise à jour vers {{version}} — installation des dépendances et compilation du frontend. Le serveur redémarrera automatiquement.",
+        "restarting": "Redémarrage…",
+        "restartingDesc": "Le serveur redémarre — la page se rechargera automatiquement dès qu'il sera prêt.",
+        "complete": "Mis à jour vers {{version}} — rechargement de la page…",
+        "errorTitle": "La mise à jour a peut-être rencontré un problème, ou le serveur prend plus de temps que prévu pour redémarrer.",
+        "downloadCombinedLog": "Télécharger combined.log",
+        "downloadErrorLog": "Télécharger error.log",
+        "retry": "Réessayer"
+      },
+      "viewDetails": "",
+      "copyFailed": "",
+      "modalTitle": "",
+      "modalSubtitle": "",
+      "howToUpgrade": "",
+      "detectedEnv": "",
+      "copyCommand": "",
+      "releaseNotes": "",
+      "changelogError": "",
+      "noReleases": "",
+      "viewOnGitHub": "",
+      "noNotes": "",
+      "dismissUntilNext": "",
+      "channelBeta": "",
+      "channelStable": "",
+      "available": "",
+      "newVersion": "",
+      "currentVersion": "",
+      "channel": "",
+      "newFeatures": "",
+      "updateNow": "",
+      "viewReleaseNotes": ""
     },
     "notifications": "Notifications",
     "markAllRead": "Tout marquer comme lu",
@@ -1616,18 +2037,24 @@
       "eventPublished": "Événement publié : {{eventName}}",
       "eventLogoUploaded": "Logo de l'événement téléversé pour {{eventName}}",
       "eventLogoRemoved": "Logo de l'événement supprimé pour {{eventName}}",
-      "bulkDeleteCompleted": "Suppression en masse terminée : {{count}} événements supprimés",
       "photoReplaced": "Photo remplacée dans {{eventName}}",
       "photoUploaded": "Photo téléversée dans {{eventName}}",
       "categoryHeroUpdated": "Photo de couverture de catégorie mise à jour",
       "publicSiteResetToDefault": "Site public réinitialisé aux valeurs par défaut",
       "cmsPageLogoUploaded": "Logo de la page CMS téléversé : {{slug}}",
-      "adminPasswordResetByAdmin": "Réinitialisation du mot de passe admin par un autre admin : {{username}}"
+      "adminPasswordResetByAdmin": "Réinitialisation du mot de passe admin par un autre admin : {{username}}",
+      "photosUploaded_many": "",
+      "photosBulkDeleted_many": "",
+      "bulkDownload_many": "",
+      "bulkDeleteCompleted_many": "",
+      "bulkDeleteCompleted_one": "",
+      "bulkDeleteCompleted_other": ""
     },
     "notificationToasts": {
       "markedAllRead": "Toutes les notifications marquées comme lues",
       "clearedAll_one": "{{count}} notification effacée",
-      "clearedAll_other": "{{count}} notifications effacées"
+      "clearedAll_other": "{{count}} notifications effacées",
+      "clearedAll_many": ""
     },
     "changePassword": "Modifier le mot de passe",
     "darkMode": "Passer en mode sombre",
@@ -1651,7 +2078,22 @@
       "visibleSuccess": "Photos maintenant visibles pour les invités",
       "processingStatus": "Traitement en cours…",
       "processingFailed": "Échec du traitement",
-      "retryQueued": "Nouvelle tentative en file d'attente"
+      "retryQueued": "Nouvelle tentative en file d'attente",
+      "viewMode": "",
+      "gridView": "",
+      "listView": "",
+      "columns": {
+        "photo": "",
+        "category": "",
+        "uploaded": "",
+        "engagement": "",
+        "feedback": "",
+        "size": "",
+        "actions": "",
+        "views": "",
+        "downloads": "",
+        "likes": ""
+      }
     },
     "events": {
       "tabs": {
@@ -1725,7 +2167,9 @@
         "pending": "En attente",
         "redeemed": "Utilisé",
         "revoked": "Révoqué"
-      }
+      },
+      "mergeConfirm_many": "",
+      "mergeSelected_many": ""
     },
     "analytics": "Analytique",
     "activities": {
@@ -1780,7 +2224,6 @@
       "unknown": "Activité inconnue",
       "feature_enabled": "{{label}} activé",
       "feature_disabled": "{{label}} désactivé",
-      "feature_flags_summary": "{{count}} fonctionnalités mises à jour : {{summary}}",
       "feature_flags_noop": "Drapeaux de fonctionnalités revus (aucun changement)",
       "customer_login": "Client connecté : {{email}}",
       "customer_invitation_created": "Invitation client envoyée à {{email}}",
@@ -1819,8 +2262,25 @@
       "photo_uploaded": "Photo téléversée dans {{eventName}}",
       "category_hero_updated": "Photo de couverture de catégorie mise à jour",
       "public_site_reset_to_default": "Site public réinitialisé aux valeurs par défaut",
-      "cms_page_logo_uploaded": "Logo de la page CMS téléversé : {{slug}}"
-    }
+      "cms_page_logo_uploaded": "Logo de la page CMS téléversé : {{slug}}",
+      "feature_flags_summary_many": "",
+      "feature_flags_summary_one": "",
+      "feature_flags_summary_other": "",
+      "feature_flags_updated": ""
+    },
+    "daysLeft_many": "",
+    "viewAllExpiringEvents_many": "",
+    "viewReleaseNotes": "",
+    "expandSidebar": "",
+    "collapseSidebar": "",
+    "whatsnew": {
+      "title": "",
+      "viewAll": "",
+      "modalTitle": "",
+      "fullChangelog": "",
+      "gotIt": ""
+    },
+    "viewOnGithub": ""
   },
   "acceptInvitation": {
     "title": "Accepter l'invitation",
@@ -1900,7 +2360,6 @@
     "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
     "expirationRange": "L'expiration doit être comprise entre 1 et 365 jours",
     "required": "Ce champ est requis",
-    "expirationRequired": "La date d'expiration est requise.",
     "eventDateRequired": "La date de l'événement est requise.",
     "passwordTooSimple": "Le mot de passe ne peut pas être uniquement des chiffres. Envisagez d'utiliser un format de date comme \"04.07.2025\""
   },
@@ -2008,20 +2467,112 @@
     "buttonTextColor": "Texte des boutons",
     "buttonTextColorHelp": "Couleur du texte sur les boutons remplis. Doit contraster clairement avec la couleur principale. Pas d'équivalent dans Marque — généralement blanc.",
     "categories": {
-      "core": "Noyau",
-      "customers": "Clients",
-      "calendar": "Calendrier",
-      "quotes": "Devis",
-      "billing": "Facturation"
+      "core": "Noyau"
     },
     "featureOff": "Fonctionnalité désactivée",
     "featureOffTooltip": "La fonctionnalité à laquelle ce modèle appartient est actuellement désactivée. Vous pouvez toujours modifier le modèle — il sera utilisé une fois la fonctionnalité réactivée.",
     "subcategories": {
-      "gallery": "Galeries",
-      "admin": "Comptes administrateurs",
-      "backup": "Sauvegarde & restauration",
-      "system": "Mises à jour système",
       "other": "Autre"
+    },
+    "flushQueue": {
+      "empty": "",
+      "success": "",
+      "title": "",
+      "help": "",
+      "button": ""
+    },
+    "sentEmails": {
+      "tab": "",
+      "title": "",
+      "subtitle": "",
+      "searchPlaceholder": "",
+      "from": "",
+      "to": "",
+      "status": {
+        "pending": "",
+        "sent": "",
+        "failed": ""
+      },
+      "empty": "",
+      "col": {
+        "recipient": "",
+        "type": "",
+        "status": "",
+        "created": "",
+        "sent": "",
+        "event": ""
+      },
+      "retries_many": "",
+      "retries_one": "",
+      "retries_other": "",
+      "pagination_many": "",
+      "pagination_one": "",
+      "pagination_other": ""
+    },
+    "received": {
+      "tab": "",
+      "empty": "",
+      "from": "",
+      "subject": "",
+      "received": "",
+      "status": "",
+      "inbox": ""
+    },
+    "incoming": {
+      "requiredFields": "",
+      "savedToast": "",
+      "testOk": "",
+      "testFailed": "",
+      "roundTripOk": "",
+      "roundTripFailed": "",
+      "pollDisabled": "",
+      "pollUnconfigured": "",
+      "pollBusy": "",
+      "pollOk_many": "",
+      "pollOk_one": "",
+      "pollOk_other": "",
+      "pollFailed": "",
+      "foldersDetected_many": "",
+      "foldersDetected_one": "",
+      "foldersDetected_other": "",
+      "noFolders": "",
+      "detectFailed": "",
+      "title": "",
+      "subtitle": "",
+      "host": "",
+      "port": "",
+      "security": "",
+      "ssl": "",
+      "plain": "",
+      "user": "",
+      "pass": "",
+      "folder": "",
+      "detectFolders": "",
+      "folderHint": "",
+      "test": "",
+      "roundTripHint": "",
+      "roundTrip": "",
+      "pollHint": "",
+      "poll": "",
+      "save": ""
+    },
+    "customerMailbox": {
+      "requiredFields": "",
+      "savedToast": "",
+      "testOk": "",
+      "testFailed": "",
+      "title": "",
+      "subtitle": "",
+      "enabled": "",
+      "outgoing": "",
+      "outgoingHint": "",
+      "fromEmail": "",
+      "smtpHost": "",
+      "smtpSsl": "",
+      "smtpStarttls": "",
+      "smtpUser": "",
+      "smtpPass": "",
+      "save": ""
     }
   },
   "cms": {
@@ -2051,7 +2602,9 @@
     "noLogo": "pas de remplacement",
     "replaceLogo": "Remplacer le logo",
     "uploadLogo": "Téléverser le logo",
-    "clearLogo": "Utiliser le logo par défaut du site"
+    "clearLogo": "Utiliser le logo par défaut du site",
+    "showInFooter": "",
+    "showInFooterHelp": ""
   },
   "eventTypes": {
     "title": "Types d'événements",
@@ -2108,7 +2661,9 @@
       "dashboard": "Tableau de bord",
       "configuration": "Configuration",
       "history": "Historique des sauvegardes",
-      "restore": "Restaurer"
+      "restore": "Restaurer",
+      "integrity": "",
+      "coverage": ""
     },
     "status": {
       "inProgress": "Sauvegarde en cours...",
@@ -2174,6 +2729,16 @@
         "good": "Bon",
         "warning": "Avertissement",
         "critical": "Critique"
+      },
+      "lastSuccessful": "",
+      "lastAttempt": "",
+      "zombieRuns_many": "",
+      "zombieRuns_one": "",
+      "zombieRuns_other": "",
+      "status": {
+        "completed": "",
+        "failed": "",
+        "running": ""
       }
     },
     "configuration": {
@@ -2275,7 +2840,9 @@
         "completed": "Terminé",
         "contentBackedUp": "Contenu sauvegardé",
         "errorDetails": "Détails de l'erreur",
-        "manifest": "Manifeste"
+        "manifest": "Manifeste",
+        "totalFiles": "",
+        "otherFiles": ""
       },
       "pagination": {
         "showing": "Affichage de {{from}}-{{to}} sur {{total}} sauvegardes",
@@ -2305,7 +2872,15 @@
         "upload": {
           "name": "Téléverser la sauvegarde",
           "description": "Téléverser un fichier de sauvegarde",
-          "comingSoon": "Fonctionnalité de téléversement bientôt disponible"
+          "picpeak": {
+            "name": "",
+            "description": ""
+          },
+          "manifest": {
+            "name": "",
+            "description": ""
+          },
+          "manifestComingSoon": ""
         },
         "configuration": {
           "s3": "Configuration S3",
@@ -2322,7 +2897,15 @@
         "encrypted": "Sauvegarde chiffrée",
         "encryptedMessage": "Vous devrez fournir la phrase de passe de chiffrement pour restaurer cette sauvegarde.",
         "enterPassphrase": "Entrer la phrase de passe de chiffrement",
-        "at": "à"
+        "at": "à",
+        "filesOnlyHint": "",
+        "filesOnlyBadge": "",
+        "corruptHint": "",
+        "corruptBadge": "",
+        "filesOnlyWarning": {
+          "title": "",
+          "message": ""
+        }
       },
       "restoreTypes": {
         "full": {
@@ -2395,8 +2978,14 @@
         "restoreLogs": "Journaux de restauration",
         "success": {
           "title": "Restauration terminée avec succès",
-          "message": "Vos données ont été restaurées. Veuillez vérifier que tout fonctionne correctement."
-        }
+          "message": "Vos données ont été restaurées. Veuillez vérifier que tout fonctionne correctement.",
+          "verifyIntegrity": ""
+        },
+        "failedSubtitle": "",
+        "idle": "",
+        "errorTitle": "",
+        "errorUnknown": "",
+        "rolledBack": ""
       },
       "actions": {
         "back": "Retour",
@@ -2412,6 +3001,102 @@
       "backupFailed": "Échec du démarrage de la sauvegarde",
       "configUpdated": "Configuration de sauvegarde mise à jour",
       "configUpdateFailed": "Échec de la mise à jour de la configuration"
+    },
+    "integrity": {
+      "title": "",
+      "description": "",
+      "running": "",
+      "runNow": "",
+      "error": "",
+      "summary": {
+        "total": "",
+        "verifiedOk": "",
+        "existsButNoHash": "",
+        "existsButNoHashHint": "",
+        "missingFiles": "",
+        "hashMismatches": ""
+      },
+      "scannedAt": "",
+      "missing": {
+        "heading": "",
+        "caption": ""
+      },
+      "hashMismatches": {
+        "heading": "",
+        "caption": ""
+      },
+      "emptyState": "",
+      "results": {
+        "table": "",
+        "rowId": "",
+        "column": "",
+        "detail": ""
+      }
+    },
+    "coverage": {
+      "generatedAt": "",
+      "title": "",
+      "description": "",
+      "refresh": "",
+      "error": "",
+      "fallbackInUse": "",
+      "database": {
+        "title": "",
+        "mode": "",
+        "modeInline": "",
+        "modeScheduled": "",
+        "lastDump": "",
+        "lastDumpSize": "",
+        "noDump": "",
+        "staleLabel": "",
+        "stale": ""
+      },
+      "summary": {
+        "title": "",
+        "willScan": "",
+        "skippedByToggle": "",
+        "skippedByFlag": "",
+        "missingOnDisk": "",
+        "drift": ""
+      },
+      "paths": {
+        "heading": "",
+        "path": "",
+        "coverage": "",
+        "featureFlag": "",
+        "description": ""
+      },
+      "drift": {
+        "none": "",
+        "heading": "",
+        "caption": ""
+      },
+      "coverage": {
+        "willScan": "",
+        "skippedByToggle": "",
+        "skippedByFlag": "",
+        "missingOnDisk": ""
+      }
+    },
+    "picpeak": {
+      "downloadFailed": "",
+      "title": "",
+      "intro": "",
+      "includePhotos": "",
+      "secretsWarning": "",
+      "download": "",
+      "restoreDone": "",
+      "restoreFailed": "",
+      "restoreTitle": "",
+      "restoreIntro": "",
+      "chooseFile": "",
+      "restoreSummary": "",
+      "externalMediaNote": "",
+      "externalMediaLink": "",
+      "reload": "",
+      "confirmTitle": "",
+      "confirmBody": "",
+      "confirmRestore": ""
     }
   },
   "cssTemplates": {
@@ -2544,7 +3229,13 @@
       "enableRateLimiting": "Activer la limitation de débit",
       "rateLimitingDesc": "Empêcher le spam en limitant la fréquence des commentaires",
       "timeWindow": "Fenêtre de temps (minutes)",
-      "maxRequests": "Nombre maximal de requêtes"
+      "maxRequests": "Nombre maximal de requêtes",
+      "perGuestLimits": "",
+      "perGuestLimitsDesc": "",
+      "maxFavoritesPerGuest": "",
+      "maxFavoritesPerGuestHint": "",
+      "maxLikesPerGuest": "",
+      "maxLikesPerGuestHint": ""
     },
     "settingsUpdated": "Paramètres de commentaires mis à jour",
     "settingsUpdateError": "Échec de la mise à jour des paramètres",
@@ -2618,7 +3309,23 @@
     "onPhoto": "Sur la photo",
     "showAll_one": "Afficher tous les {{count}} commentaire en attente",
     "showAll_other": "Afficher tous les {{count}} commentaires en attente",
-    "viewAllFeedback": "Voir tous les commentaires et paramètres"
+    "viewAllFeedback": "Voir tous les commentaires et paramètres",
+    "exportShapeLabel": "",
+    "exportShapeLong": "",
+    "exportShapePivot": "",
+    "totalRatings_many": "",
+    "pendingModeration_many": "",
+    "rateStar_many": "",
+    "ratingsCount_many": "",
+    "showAll_many": "",
+    "limit": {
+      "favoriteTitle": "",
+      "likeTitle": "",
+      "favoriteBody": "",
+      "likeBody": "",
+      "counter": "",
+      "ok": ""
+    }
   },
   "filter": {
     "feedbackFilters": "Filtres de commentaires",
@@ -2659,7 +3366,25 @@
     "generalError": "Une erreur est survenue. Veuillez réessayer.",
     "needHelp": "Besoin d'aide ? Contactez",
     "poweredBy": "Propulsé par PicPeak",
-    "devModeHint": "Mode développement : Utilisez l'e-mail : admin@example.com, mot de passe : admin123"
+    "devModeHint": "Mode développement : Utilisez l'e-mail : admin@example.com, mot de passe : admin123",
+    "mfa": {
+      "codeRequired": "",
+      "sessionExpired": "",
+      "lockedRetry": "",
+      "locked": "",
+      "invalidCode": "",
+      "title": "",
+      "recoverySubtitle": "",
+      "subtitle": "",
+      "recoveryCodeLabel": "",
+      "codeLabel": "",
+      "recoveryCodePlaceholder": "",
+      "codePlaceholder": "",
+      "verify": "",
+      "back": "",
+      "useAuthenticator": "",
+      "useRecoveryCode": ""
+    }
   },
   "clientAccess": {
     "title": "Accès client",
@@ -2693,7 +3418,19 @@
     "exportFiltered": "Exporter les photos filtrées",
     "hint": "Sélectionnez des photos ou appliquez des filtres pour exporter",
     "exportSelected_one": "Exporter {{count}} sélectionné",
-    "exportSelected_other": "Exporter {{count}} sélectionnés"
+    "exportSelected_other": "Exporter {{count}} sélectionnés",
+    "exportSelected_many": "",
+    "preview": {
+      "copied": "",
+      "copyFailed": "",
+      "titleCsv": "",
+      "titleTxt": "",
+      "helpCsv": "",
+      "helpTxt": "",
+      "download": "",
+      "copiedShort": "",
+      "copyButton": ""
+    }
   },
   "photoSort": {
     "defaultSort": "Tri par défaut des photos",
@@ -2715,7 +3452,9 @@
     "movedToCategory_one": "{{count}} photo déplacée vers {{category}}",
     "movedToCategory_other": "{{count}} photos déplacées vers {{category}}",
     "moveToCategoryFailed": "Échec du déplacement des photos vers la catégorie",
-    "moveToCategory": "Déplacer vers la catégorie"
+    "moveToCategory": "Déplacer vers la catégorie",
+    "moveToCategory_many": "",
+    "movedToCategory_many": ""
   },
   "customer": {
     "login": {
@@ -2735,7 +3474,6 @@
       "networkError": "Impossible de joindre le serveur. Veuillez réessayer.",
       "generalError": "Échec de la connexion. Veuillez réessayer.",
       "acceptedToast": "Compte prêt — veuillez vous connecter.",
-      "adminHint": "Vous cherchez le panneau d'administration ? Visitez /admin/login.",
       "emailPlaceholder": "vous@example.com",
       "passwordPlaceholder": "Votre mot de passe",
       "needHelp": "Besoin d'aide ?",
@@ -2746,7 +3484,6 @@
       "invalidToken": "Ce lien d'invitation est invalide ou a expiré. Veuillez contacter votre photographe pour obtenir une nouvelle invitation.",
       "emailWillBe": "Votre e-mail de compte sera ",
       "invitedBy": ", invité par ",
-      "name": "Votre nom",
       "nameRequired": "Veuillez entrer votre nom",
       "password": "Choisissez un mot de passe",
       "confirm": "Confirmer le mot de passe",
@@ -2786,36 +3523,46 @@
       "downloadStarted": "Téléchargement démarré pour {{name}}",
       "downloadError": "Impossible de démarrer le téléchargement. Veuillez réessayer.",
       "sortLabel": "Trier par",
-      "sortNewest": "Du plus récent au plus ancien",
-      "sortOldest": "Du plus ancien au plus récent",
-      "sortName": "Par nom",
       "open": "Ouvrir"
     },
-    "layout": {
-      "greeting": "Bonjour, {{name}}"
-    },
     "nav": {
-      "galleries": "Galeries",
-      "calendar": "Calendrier",
-      "quotes": "Devis",
-      "bills": "Factures",
-      "profile": "Profil",
-      "soon": "Bientôt"
+      "soon": "Bientôt",
+      "new": ""
     },
     "comingSoon": {
       "tag": "Bientôt disponible"
     },
-    "calendar": {
-      "title": "Calendrier",
-      "body": "Les séances à venir, les dates de livraison des galeries et autres événements liés aux séances s'afficheront ici. Nous vous préviendrons quand ce sera prêt."
-    },
     "quotes": {
       "title": "Devis",
-      "body": "Passez en revue et acceptez les devis pour les séances à venir en un seul endroit. Nous sommes encore en train de construire cela — pour l'instant, votre photographe continuera à vous envoyer les devis de la manière habituelle."
+      "disabled": "",
+      "loadError": "",
+      "subtitle": "",
+      "empty": "",
+      "popupBlocked": "",
+      "noEventName": "",
+      "viewPdf": "",
+      "openToRespond": ""
     },
     "bills": {
       "title": "Factures",
-      "body": "Les factures et l'historique de paiement pour vos séances seront disponibles ici. Nous vous enverrons un e-mail lorsque cela sera opérationnel."
+      "disabled": "",
+      "loadError": "",
+      "popupBlocked": "",
+      "subtitle": "",
+      "empty": "",
+      "kind": {
+        "storno": ""
+      },
+      "field": {
+        "issueDate": "",
+        "dueDate": "",
+        "paidAt": "",
+        "outstanding": "",
+        "lateFee": ""
+      },
+      "cancelsLabel": "",
+      "cancelledByLabel": "",
+      "viewPdf": ""
     },
     "profile": {
       "title": "Profil client",
@@ -2882,6 +3629,32 @@
       "successToast": "Mot de passe mis à jour. Veuillez vous connecter.",
       "invalidSubmission": "Impossible de mettre à jour votre mot de passe.",
       "generalError": "Impossible de mettre à jour votre mot de passe. Veuillez réessayer."
+    },
+    "filter": {
+      "label": "",
+      "countAll_many": "",
+      "countAll_one": "",
+      "countAll_other": "",
+      "countFiltered": ""
+    },
+    "sort": {
+      "label": "",
+      "newest": "",
+      "oldest": ""
+    },
+    "contracts": {
+      "title": "",
+      "disabled": "",
+      "loadError": "",
+      "subtitle": "",
+      "empty": "",
+      "popupBlocked": "",
+      "issued": "",
+      "signedByYou": "",
+      "counterSigned": "",
+      "openSign": "",
+      "downloadSigned": "",
+      "download": ""
     }
   },
   "customers": {
@@ -2913,16 +3686,7 @@
     "invite": {
       "button": "Inviter un client",
       "title": "Inviter un client",
-      "description": "Il/elle recevra un e-mail avec un lien pour configurer son compte. Une fois qu'il/elle aura accepté, vous pourrez l'assigner à des événements.",
-      "email": "E-mail",
-      "submit": "Envoyer l'invitation",
-      "success": "Invitation envoyée",
-      "error": "Impossible d'envoyer l'invitation.",
-      "conflict": "Un client avec cet e-mail existe déjà ou a une invitation en attente.",
-      "invalidEmail": "Veuillez entrer un e-mail valide",
-      "showPrefill": "+ Ajouter les détails de contact (optionnel)",
-      "hidePrefill": "− Masquer les détails de contact",
-      "prefillHint": "Tout ce que vous remplissez sera pré-rempli sur la page d'inscription du client — il pourra toujours le modifier."
+      "description": "Il/elle recevra un e-mail avec un lien pour configurer son compte. Une fois qu'il/elle aura accepté, vous pourrez l'assigner à des événements."
     },
     "invitations": {
       "empty": "Aucune invitation en attente.",
@@ -2961,7 +3725,6 @@
       "email": "E-mail",
       "preferredLanguage": "Langue préférée",
       "salutation": "Civilité",
-      "salutationNone": "—",
       "firstName": "Prénom",
       "lastName": "Nom",
       "displayName": "Nom d'affichage",
@@ -2974,7 +3737,6 @@
       "postalCode": "Code postal",
       "city": "Ville",
       "state": "État / région",
-      "countryCode": "Pays (ISO 2)",
       "notesHint": "Visible uniquement par les administrateurs. Jamais montré au client.",
       "featuresSection": "Fonctionnalités client",
       "featuresHint": "Remplacements par client pour les onglets de la surface client. Les bascules globales dans Paramètres → Surface client sont le commutateur principal — lorsque le global est désactivé, personne ne voit l'onglet, quel que soit ce que vous définissez ici. Par défaut, tout est activé, donc désactivez un commutateur pour masquer un onglet pour ce client spécifique.",
@@ -2986,7 +3748,16 @@
         "error": "Impossible d'envoyer la réinitialisation du mot de passe",
         "inactive": "Réactivez le client avant d'envoyer une réinitialisation."
       },
-      "manageEvents": "Gérer les galeries"
+      "manageEvents": "Gérer les galeries",
+      "preferredLanguageHint": "",
+      "country": "",
+      "companyName": "",
+      "quotesSection": "",
+      "noQuotes": "",
+      "contractsSection": "",
+      "noContracts": "",
+      "billsSection": "",
+      "noBills": ""
     },
     "reactivate": {
       "button": "Réactiver",
@@ -3015,10 +3786,129 @@
       "save": "Enregistrer les assignations",
       "saved": "Assignations mises à jour",
       "savedDiff": "Assignations mises à jour : {{parts}}",
-      "addedN": "{{count}} ajouté",
-      "removedN": "{{count}} supprimé",
       "error": "Impossible de mettre à jour les assignations",
-      "clearSearchAria": "Effacer la recherche"
+      "clearSearchAria": "Effacer la recherche",
+      "addedN_many": "",
+      "addedN_one": "",
+      "addedN_other": "",
+      "removedN_many": "",
+      "removedN_one": "",
+      "removedN_other": ""
+    },
+    "create": {
+      "openButton": "",
+      "passiveSubtitle": "",
+      "title": "",
+      "subtitle": "",
+      "emailRequired": "",
+      "nameRequired": "",
+      "savedActiveToast": "",
+      "inviteFailedToast": "",
+      "savedPassiveToast": "",
+      "saveAsPassive": "",
+      "saveAndInvite": "",
+      "openLink": ""
+    },
+    "passive": {
+      "badge": "",
+      "sendInviteToast": "",
+      "alreadyActive": "",
+      "detailHint": "",
+      "activeLabel": "",
+      "sendInvite": "",
+      "deactivatedHint": ""
+    },
+    "billing": {
+      "triggered": "",
+      "triggerError": "",
+      "section": "",
+      "hint": "",
+      "cadence": "",
+      "perEvent": "",
+      "monthly": "",
+      "quarterly": "",
+      "manual": "",
+      "cycleDay": "",
+      "cycleDayHint": "",
+      "skontoDisabled": "",
+      "skontoDisabledHint": "",
+      "draftPreview": {
+        "titleManual": "",
+        "title": "",
+        "periodRange": ""
+      },
+      "triggerConfirmManual": "",
+      "triggerConfirm": "",
+      "triggerNow": "",
+      "triggerHintManual": "",
+      "triggerHint": ""
+    },
+    "field": {
+      "hourlyRate": "",
+      "hourlyRateHint": ""
+    },
+    "hours": {
+      "toast": {
+        "created": "",
+        "deleted": "",
+        "billed": ""
+      },
+      "error": {
+        "noRate": "",
+        "createFailed": ""
+      },
+      "section": "",
+      "monthlyHint": "",
+      "perEventHint": "",
+      "noRate": {
+        "title": "",
+        "body": "",
+        "setForCustomer": "",
+        "setInstallDefault": ""
+      },
+      "rateSource": {
+        "customer": "",
+        "installDefault": ""
+      },
+      "form": {
+        "title": "",
+        "date": "",
+        "start": "",
+        "end": "",
+        "duration": "",
+        "durationPlaceholder": "",
+        "durationHint": "",
+        "rateOverride": "",
+        "note": "",
+        "notePlaceholder": "",
+        "bookToProject": "",
+        "needRate": "",
+        "save": ""
+      },
+      "unbilledCount_many": "",
+      "unbilledCount_one": "",
+      "unbilledCount_other": "",
+      "billButton": "",
+      "empty": "",
+      "col": {
+        "date": "",
+        "range": "",
+        "hours": "",
+        "rate": "",
+        "total": "",
+        "note": "",
+        "status": ""
+      },
+      "status": {
+        "billedOn": "",
+        "billed": "",
+        "unbilled": ""
+      },
+      "confirmDelete": "",
+      "locked": ""
+    },
+    "hoursLoggingDisabled": {
+      "badge": ""
     }
   },
   "clients": {
@@ -3030,7 +3920,1770 @@
       "body": "Activez Comptes (ou une autre sous-fonctionnalité Clients) dans Paramètres → Fonctionnalités pour commencer."
     },
     "subnav": {
-      "accounts": "Comptes"
+      "accounts": "Comptes",
+      "quotes": "Devis",
+      "bills": "Factures",
+      "development": "Développement",
+      "overview": "",
+      "calendar": "",
+      "contracts": "",
+      "hours": ""
+    }
+  },
+  "taxReport": {
+    "title": "Rapport fiscal",
+    "intro": "Liste des revenus sur une période donnée avec ventilation net + TVA groupée par taux de TVA. Les factures annulées restent visibles pour la continuité de la piste d'audit, mais sont exclues des totaux.",
+    "filters": {
+      "period": "Période",
+      "thisYear": "Cette année",
+      "lastYear": "Année dernière",
+      "thisQuarter": "Ce trimestre",
+      "lastQuarter": "Trimestre dernier",
+      "custom": "Plage personnalisée",
+      "from": "Du",
+      "to": "Au",
+      "currency": "Devise"
+    },
+    "exportPdf": "Exporter en PDF",
+    "exportCsv": "Exporter en CSV",
+    "exportFailed": "Échec de l'export. Veuillez réessayer.",
+    "errorTitle": "Impossible de charger le rapport fiscal",
+    "empty": "Aucune facture sur cette période.",
+    "statusCancelled": "Annulée",
+    "totalsByVatRate": "Totaux par taux de TVA",
+    "grandTotalNet": "Total net",
+    "grandTotalVat": "Total TVA",
+    "grandTotalGross": "Total brut",
+    "col": {
+      "date": "Date",
+      "event": "Événement",
+      "net": "Net",
+      "vat": "TVA",
+      "total": "Brut",
+      "type": "",
+      "reference": "",
+      "party": "",
+      "tax": "",
+      "skonto": ""
+    },
+    "export": {
+      "reportTitle": "",
+      "reportHint": "",
+      "scopeLabel": "",
+      "scopeAll": "",
+      "scopeIncome": "",
+      "scopeCost": "",
+      "journalTitle": ""
+    },
+    "ledgerExportHint": "",
+    "ledgerExportConfigure": "",
+    "ledgerExport": "",
+    "summary": {
+      "outgoingTitle": "",
+      "title": "",
+      "income": "",
+      "costs": "",
+      "result": "",
+      "vatPayable": "",
+      "vatUnconfigured": ""
+    },
+    "cancelledFootnote_many": "",
+    "cancelledFootnote_one": "",
+    "cancelledFootnote_other": "",
+    "costsErrorTitle": "",
+    "cost": {
+      "company": ""
+    },
+    "skontoTooltip": "",
+    "costsDisclaimer": "",
+    "type": {
+      "expense": "",
+      "outgoing": "",
+      "incoming": ""
+    }
+  },
+  "accounting": {
+    "category": {
+      "infrastructure": "",
+      "equipment": "",
+      "software": "",
+      "material": "",
+      "travel": "",
+      "marketing": "",
+      "services": "",
+      "insurance": "",
+      "training": "",
+      "other": ""
+    },
+    "taxTreatment": {
+      "domestic": "",
+      "reverse_charge_service": "",
+      "foreign_vat_non_reclaimable": "",
+      "import_goods": ""
+    },
+    "booking": {
+      "company": "",
+      "label": "",
+      "event": "",
+      "inboundHint": ""
+    },
+    "subnav": {
+      "incomingInvoices": "",
+      "expenses": "",
+      "taxReport": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "empty": {
+      "title": "",
+      "body": ""
+    },
+    "navAriaLabel": "",
+    "ledger": {
+      "updatedToast": "",
+      "createdToast": "",
+      "editTitle": "",
+      "addTitle": "",
+      "description": "",
+      "addExpense": "",
+      "paidToast": "",
+      "payTitle": "",
+      "paidDate": "",
+      "method": "",
+      "reference": "",
+      "confirmPaid": "",
+      "invoicedToast": "",
+      "invoiceTitle": "",
+      "invoiceHint": "",
+      "addToInvoice": "",
+      "allKinds": "",
+      "empty": "",
+      "untitled": "",
+      "invoiced": "",
+      "paid": "",
+      "markPaid": "",
+      "lockedHint": "",
+      "locked": ""
+    },
+    "expense": {
+      "km": "",
+      "days": "",
+      "kind": "",
+      "rate": "",
+      "rateDefault": "",
+      "computed": "",
+      "who": "",
+      "whoHint": "",
+      "proof": "",
+      "proofExisting": "",
+      "proofRequired": "",
+      "viewProof": ""
+    },
+    "expenseKind": {
+      "amount": "",
+      "mileage": "",
+      "per_diem": ""
+    },
+    "inbox": {
+      "field": {
+        "total": "",
+        "category": "",
+        "categoryNone": "",
+        "customer": "",
+        "markup": "",
+        "supplier": "",
+        "invoiceDate": "",
+        "disposition": "",
+        "note": "",
+        "currency": "",
+        "supplierCountry": "",
+        "supplierCountryNone": "",
+        "supplierCountryHint": "",
+        "reference": "",
+        "referenceHint": "",
+        "noteHint": "",
+        "passthroughCustomerHint": ""
+      },
+      "previewError": "",
+      "previewLoading": "",
+      "prevPage": "",
+      "pageOf": "",
+      "nextPage": "",
+      "qrHint": "",
+      "untitled": "",
+      "status": {
+        "label": "",
+        "declined": "",
+        "unsorted": "",
+        "categorized": "",
+        "duplicate": ""
+      },
+      "saveCategorizePay": "",
+      "saveCategorize": "",
+      "capturedToast": "",
+      "captureTitle": "",
+      "captureBody": "",
+      "scanCamera": "",
+      "uploadFile": "",
+      "empty": "",
+      "noAmount": "",
+      "view": "",
+      "categorize": "",
+      "recategorize": ""
+    },
+    "paymentMethod": {
+      "bank_transfer": "",
+      "cash": "",
+      "twint": "",
+      "paypal": "",
+      "card": "",
+      "other": ""
+    },
+    "markup": {
+      "none": "",
+      "percent": "",
+      "flat": ""
+    },
+    "incoming": {
+      "paidToast": "",
+      "payTitle": "",
+      "outstanding": "",
+      "confirmPaid": "",
+      "pendingRebill": "",
+      "paid": "",
+      "categorizedPaidToast": "",
+      "categorizedToast": "",
+      "triageTitle": "",
+      "bundledToast_many": "",
+      "bundledToast_one": "",
+      "bundledToast_other": "",
+      "pendingTitle": "",
+      "pendingBody": "",
+      "pendingCount_many": "",
+      "pendingCount_one": "",
+      "pendingCount_other": "",
+      "billPending": "",
+      "markUnpaid": "",
+      "markPaid": ""
+    },
+    "disposition": {
+      "rebill": "",
+      "durchlaufend": "",
+      "eigener_aufwand": "",
+      "duplikat": "",
+      "abgelehnt": "",
+      "help": {
+        "rebill": "",
+        "durchlaufend": "",
+        "eigener_aufwand": "",
+        "duplikat": "",
+        "abgelehnt": ""
+      }
+    }
+  },
+  "quoteResponse": {
+    "locked": "",
+    "tosRequiredError": "",
+    "notFound": "",
+    "notFoundBody": "",
+    "title": "",
+    "event": "",
+    "issueDate": "",
+    "validUntil": "",
+    "description": "",
+    "qty": "",
+    "unit": "",
+    "total": "",
+    "subtotal": "",
+    "vat": "",
+    "submitting": "",
+    "acceptedLocked": "",
+    "declinedLocked": "",
+    "cannotRespond": "",
+    "changeWithin": "",
+    "intro": "",
+    "tosCheckbox": "",
+    "tosLink": "",
+    "preselectAcceptHint": "",
+    "preselectDeclineHint": "",
+    "accept": "",
+    "decline": ""
+  },
+  "paymentCheck": {
+    "missingToken": "",
+    "alreadyUsed": "",
+    "expired": "",
+    "loadError": "",
+    "partialInvalid": "",
+    "partialTooHigh": "",
+    "submitError": "",
+    "title": "",
+    "subtitle": "",
+    "field": {
+      "invoice": "",
+      "customer": "",
+      "issued": "",
+      "due": "",
+      "total": "",
+      "outstanding": "",
+      "paid": "",
+      "lateFee": ""
+    },
+    "action": {
+      "paidFull": "",
+      "paidFullHelp": "",
+      "paidSkonto": "",
+      "paidSkontoHelp": "",
+      "partial": "",
+      "partialHelp": "",
+      "partialAmount": "",
+      "partialMax": "",
+      "unpaid": "",
+      "unpaidHelp": "",
+      "unpaidWithFee": ""
+    },
+    "submitting": "",
+    "submit": "",
+    "result": {
+      "title": "",
+      "paid": "",
+      "paidSkonto": "",
+      "partial": "",
+      "unpaidMax": "",
+      "unpaid": "",
+      "close": ""
+    }
+  },
+  "publicContract": {
+    "errorAccept": "",
+    "errorName": "",
+    "errorSignatureRequired": "",
+    "notFoundTitle": "",
+    "notFoundBody": "",
+    "fallbackTitle": "",
+    "signed": {
+      "title": "",
+      "by": "",
+      "counterBy": "",
+      "auditTitle": "",
+      "auditBody": "",
+      "contractNumber": "",
+      "signedAt": "",
+      "ipAddress": "",
+      "counterSignedAt": "",
+      "signedSha": "",
+      "unsignedSha": ""
+    },
+    "downloadSigned": "",
+    "download": "",
+    "signTitle": "",
+    "nameField": "",
+    "signaturePromptRequired": "",
+    "signaturePrompt": "",
+    "clearSignature": "",
+    "acceptCheckbox": "",
+    "submit": "",
+    "uploadAlternative": "",
+    "uploadHint": "",
+    "uploadButton": ""
+  },
+  "slideshow": {
+    "notFound": "",
+    "startFailed": "",
+    "start": "",
+    "waiting": "",
+    "ended": "",
+    "watermarkSource": {
+      "logo": "",
+      "logo_dark": "",
+      "favicon": "",
+      "event": "",
+      "notSet": ""
+    },
+    "transitionLabel": "",
+    "transition": {
+      "crossfade": "",
+      "cut": "",
+      "slide": "",
+      "kenburns": "",
+      "dipwhite": "",
+      "dipblack": ""
+    },
+    "intervalLabel": "",
+    "transitionSpeedLabel": "",
+    "colorfilterLabel": "",
+    "colorfilter": {
+      "none": "",
+      "bw": "",
+      "sepia": "",
+      "warm": "",
+      "cool": "",
+      "vignette": ""
+    },
+    "watermarkToggle": "",
+    "watermarkMode": {
+      "inherit": "",
+      "on": "",
+      "off": ""
+    },
+    "watermarkModeHint": "",
+    "linkGenerated": "",
+    "disableConfirm": "",
+    "linkDisabled": "",
+    "settingsSaved": "",
+    "adminTitle": "",
+    "adminDescription": "",
+    "generateLink": "",
+    "linkLabel": "",
+    "regenerate": "",
+    "disable": "",
+    "liveHint": "",
+    "saveSettings": "",
+    "defaultsSaved": "",
+    "globalTitle": "",
+    "globalDescription": "",
+    "fitLabel": "",
+    "fit": {
+      "cover": "",
+      "contain": ""
+    },
+    "fitHint": "",
+    "presetTitle": "",
+    "presetHint": "",
+    "watermarkDescription": "",
+    "watermarkSourceLabel": "",
+    "watermarkPositionLabel": "",
+    "watermarkPosition": {
+      "top-left": "",
+      "top-right": "",
+      "bottom-left": "",
+      "bottom-right": ""
+    },
+    "watermarkOpacityLabel": "",
+    "watermarkStyleLabel": "",
+    "watermarkStyle": {
+      "white": "",
+      "original": ""
+    },
+    "watermarkSizeLabel": "",
+    "orderLabel": "",
+    "order": {
+      "chronological": "",
+      "random": ""
+    },
+    "categoryLabel": "",
+    "categoryAll": ""
+  },
+  "systemHealth": {
+    "retriedToast": "",
+    "dismissedToast": "",
+    "title": "",
+    "subtitle": "",
+    "stuckEmails": {
+      "title": "",
+      "empty": "",
+      "col": {
+        "recipient": "",
+        "type": "",
+        "error": "",
+        "queued": "",
+        "actions": ""
+      },
+      "noError": ""
+    },
+    "retry": "",
+    "dismiss": ""
+  },
+  "crm": {
+    "lineItems": {
+      "description": "",
+      "quantity": "",
+      "unitPrice": "",
+      "total": "",
+      "position": "",
+      "discount": "",
+      "autoTotaledHint": "",
+      "descriptionPlaceholder": "",
+      "detailsFilled": "",
+      "detailsAdd": "",
+      "detailsPlaceholder": "",
+      "autoTotaledNote": "",
+      "addSubItem": "",
+      "saveAsPreset": "",
+      "empty": "",
+      "addRow": "",
+      "addFromPreset": "",
+      "subtotal": "",
+      "vat": "",
+      "shipping": "",
+      "rounding": ""
+    },
+    "customerPicker": {
+      "search": ""
+    }
+  },
+  "ledger": {
+    "vat": {
+      "legacyRate": "",
+      "editTitle": "",
+      "addTitle": "",
+      "code": "",
+      "rate": "",
+      "name": "",
+      "direction": "",
+      "account": "",
+      "noAccount": "",
+      "confirmDelete": ""
+    },
+    "vatDirection": {
+      "input": "",
+      "output": ""
+    },
+    "settingsSaved": "",
+    "vatCodes": {
+      "title": ""
+    },
+    "outputVatMap": {
+      "title": "",
+      "empty": ""
+    },
+    "defaults": {
+      "none": "",
+      "title": "",
+      "ledger_account_debitoren": "",
+      "ledger_account_kreditoren": "",
+      "ledger_account_bank": "",
+      "ledger_account_cash": "",
+      "ledger_account_default_revenue": "",
+      "ledger_account_default_expense": "",
+      "ledger_account_mileage": "",
+      "ledger_account_per_diem": "",
+      "ledger_account_rebilled_revenue": "",
+      "ledger_vat_map": "",
+      "ledger_output_vat_map": ""
+    },
+    "vatMap": {
+      "title": ""
+    },
+    "saveDefaults": "",
+    "account": {
+      "editTitle": "",
+      "addTitle": "",
+      "number": "",
+      "name": "",
+      "type": "",
+      "confirmDelete": ""
+    },
+    "accountType": {
+      "asset": "",
+      "liability": "",
+      "equity": "",
+      "revenue": "",
+      "expense": ""
+    },
+    "intro": "",
+    "categoryMap": {
+      "title": ""
+    },
+    "accounts": {
+      "title": ""
+    },
+    "export": {
+      "format": "",
+      "format_generic": "",
+      "format_banana": "",
+      "format_banana_ie": "",
+      "format_bexio": ""
+    }
+  },
+  "projects": {
+    "picker": {
+      "none": "",
+      "label": ""
+    },
+    "error": {
+      "customerMismatch": ""
+    },
+    "toast": {
+      "created": "",
+      "createFailed": "",
+      "saved": "",
+      "saveFailed": "",
+      "emailAction": "",
+      "emailActionFailed": "",
+      "previewFailed": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "create": {
+      "label": "",
+      "placeholder": "",
+      "button": ""
+    },
+    "search": "",
+    "empty": "",
+    "col": {
+      "name": "",
+      "customer": "",
+      "events": "",
+      "value": "",
+      "status": "",
+      "updated": ""
+    },
+    "events": {
+      "attached": "",
+      "attachFailed": "",
+      "title": "",
+      "none": "",
+      "searchPlaceholder": ""
+    },
+    "feed": {
+      "email": "",
+      "quote": "",
+      "contract": "",
+      "invoice": "",
+      "gallery": "",
+      "hours": "",
+      "title": "",
+      "empty": ""
+    },
+    "notFound": "",
+    "backToList": "",
+    "noCustomer": "",
+    "eventCount_many": "",
+    "eventCount_one": "",
+    "eventCount_other": "",
+    "totalHours": "",
+    "value": {
+      "label": "",
+      "paid": ""
+    },
+    "rename": "",
+    "timeline": "",
+    "email": {
+      "preview": "",
+      "reRendered": "",
+      "reRenderedTag": "",
+      "resend": "",
+      "sendNow": "",
+      "cancel": "",
+      "retry": "",
+      "previewTitle": "",
+      "noPreview": ""
+    }
+  },
+  "installments": {
+    "firstRowDefaultLabel": "",
+    "enableLabel": "",
+    "simpleToggle": "",
+    "advancedToggle": "",
+    "advancedHint": "",
+    "simpleHint": "",
+    "percent": "",
+    "label": "",
+    "labelPlaceholder": "",
+    "sendOn": "",
+    "onDeliveryHint": "",
+    "trigger": "",
+    "triggerOption": {
+      "quote_accepted": "",
+      "before_event": "",
+      "after_event": "",
+      "after_delivery": "",
+      "fixed_date": ""
+    },
+    "offsetDays": "",
+    "removeRow": "",
+    "addRow": "",
+    "total": "",
+    "mustSumTo100": ""
+  },
+  "eventReminderOverride": {
+    "invalidOffset": "",
+    "saved": "",
+    "saveError": "",
+    "title": "",
+    "save": "",
+    "help": "",
+    "disabledLabel": "",
+    "offsetLabel": "",
+    "offsetPlaceholder": "",
+    "bodyOverrideLabel": "",
+    "bodyOverridePlaceholder": ""
+  },
+  "dealLineage": {
+    "editPlanEmpty": "",
+    "editPlanSuccess": "",
+    "editPlanLocked": "",
+    "editPlanPercentSumError": "",
+    "editPlanGeneralError": "",
+    "editPlanModalTitle": "",
+    "editPlanHelp": "",
+    "editPlanWarning": "",
+    "editPlanSave": "",
+    "loading": "",
+    "error": "",
+    "title": "",
+    "empty": "",
+    "quotes": "",
+    "contracts": "",
+    "invoices": "",
+    "editPlan": ""
+  },
+  "bills": {
+    "kind": {
+      "storno": "",
+      "reissue": ""
+    },
+    "new": "",
+    "status": {
+      "scheduled": "",
+      "sent": "",
+      "paid": "",
+      "overdue": "",
+      "cancelled": "",
+      "pending_delivery": "",
+      "skipped": "",
+      "draft": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "import": "",
+    "searchPlaceholder": "",
+    "filter": {
+      "unpaidOnly": ""
+    },
+    "empty": "",
+    "table": {
+      "customer": "",
+      "event": "",
+      "installment": "",
+      "issueDate": "",
+      "dueDate": "",
+      "total": "",
+      "status": ""
+    },
+    "importedToast": "",
+    "importError": "",
+    "importTitle": "",
+    "importHelp": "",
+    "field": {
+      "customer": "",
+      "eventName": "",
+      "eventNamePlaceholder": "",
+      "eventDate": "",
+      "invoiceNumber": "",
+      "currency": "",
+      "issueDate": "",
+      "dueDate": "",
+      "total": "",
+      "status": "",
+      "paidAmount": "",
+      "pdfFile": "",
+      "eventTimeStart": "",
+      "eventTimeEnd": "",
+      "dueDateOverrideOn": "",
+      "dueDateOverrideOff": "",
+      "scheduledSendAt": "",
+      "qrFormat": "",
+      "businessBankAccount": "",
+      "bankAccountProfileDefault": "",
+      "bankAccountDefaultBadge": "",
+      "bankAccountHelp": "",
+      "vatRate": "",
+      "shipping": "",
+      "paymentNetDays": "",
+      "selectNetDays": "",
+      "paymentTiming": "",
+      "selectTiming": "",
+      "skontoDisabled": "",
+      "paymentTermHelp": "",
+      "ccPdfEmail": "",
+      "ccPdfEmailPlaceholder": "",
+      "ccPdfPickFromAdmins": "",
+      "ccPdfCustom": "",
+      "installment": "",
+      "paid": "",
+      "outstanding": "",
+      "lateFee": ""
+    },
+    "customerSearch": "",
+    "noMatch": "",
+    "importing": "",
+    "errors": {
+      "customerRequired": "",
+      "popupBlocked": ""
+    },
+    "savedToastMulti": "",
+    "savedToast": "",
+    "edit": "",
+    "saveAndSpawn": "",
+    "section": {
+      "customer": "",
+      "event": "",
+      "details": "",
+      "lineItems": "",
+      "payment": "",
+      "paymentLog": ""
+    },
+    "qrFormat": {
+      "profileDefault": "",
+      "none": "",
+      "swiss": "",
+      "epc": ""
+    },
+    "confirmSend": "",
+    "sentToast": "",
+    "confirmReminder": "",
+    "reminderToast": "",
+    "confirmCancelDraft": "",
+    "confirmCancelIssued": "",
+    "cancelledWithStornoToast": "",
+    "cancelledToast": "",
+    "confirmReissueCancelled": "",
+    "confirmReissue": "",
+    "reissuedWithStornoToast": "",
+    "reissuedToast": "",
+    "confirmRelease": "",
+    "releasedToast": "",
+    "paymentRecordedToast": "",
+    "sendNow": "",
+    "resend": "",
+    "monthlyDraftBadge": "",
+    "releaseForDelivery": "",
+    "markPaid": "",
+    "sendReminder": "",
+    "reissue": "",
+    "cancelAndReissue": "",
+    "stornoCancelsLabel": "",
+    "cancelledByStornoLabel": "",
+    "noPayments": "",
+    "payment": {
+      "paidAt": "",
+      "amount": "",
+      "method": "",
+      "reference": "",
+      "notes": "",
+      "date": "",
+      "withSkonto": "",
+      "methodPlaceholder": "",
+      "methods": {
+        "cash": "",
+        "card": "",
+        "paypal": "",
+        "twint": "",
+        "bankTransfer": ""
+      }
+    },
+    "recordPayment": ""
+  },
+  "quotes": {
+    "new": "",
+    "status": {
+      "draft": "",
+      "sent": "",
+      "accepted": "",
+      "declined": "",
+      "expired": "",
+      "converted": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "searchPlaceholder": "",
+    "empty": "",
+    "table": {
+      "customer": "",
+      "event": "",
+      "issueDate": "",
+      "total": "",
+      "status": ""
+    },
+    "pagination_many": "",
+    "pagination_one": "",
+    "pagination_other": "",
+    "errors": {
+      "customerRequired": "",
+      "popupBlocked": "",
+      "customerFeatureDisabled": ""
+    },
+    "confirmSend": "",
+    "sentToast": "",
+    "savedToast": "",
+    "edit": "",
+    "preview": "",
+    "saveAndSend": "",
+    "section": {
+      "customer": "",
+      "event": "",
+      "lineItems": "",
+      "payment": "",
+      "extras": "",
+      "internalNotes": ""
+    },
+    "customerSearch": "",
+    "field": {
+      "eventName": "",
+      "eventDate": "",
+      "eventTimeStart": "",
+      "eventTimeEnd": "",
+      "expectedDuration": "",
+      "validUntil": "",
+      "vatRate": "",
+      "shipping": "",
+      "currency": "",
+      "paymentNetDays": "",
+      "selectNetDays": "",
+      "paymentTiming": "",
+      "selectTiming": "",
+      "introText": "",
+      "outroText": "",
+      "ccPdfEmail": "",
+      "ccPdfEmailPlaceholder": "",
+      "ccPdfPickFromAdmins": "",
+      "ccPdfCustom": "",
+      "internalNotes": "",
+      "issueDate": "",
+      "sentAt": "",
+      "acceptedAt": "",
+      "declinedAt": "",
+      "declineReason": "",
+      "responseWindow": "",
+      "eventType": "",
+      "eventTypeNone": "",
+      "eventTypeHint": "",
+      "bookingWorkflow": "",
+      "bookingWorkflowNone": "",
+      "bookingWorkflowDisabled": "",
+      "bookingWorkflowHint": ""
+    },
+    "confirmConvert": "",
+    "convertedToast": "",
+    "confirmConvertToInvoice": "",
+    "convertedToInvoiceToast_many": "",
+    "convertedToInvoiceToast_one": "",
+    "convertedToInvoiceToast_other": "",
+    "confirmConvertToContract": "",
+    "contractAlreadyLinkedToast": "",
+    "convertedToContractToast": "",
+    "confirmAcceptOnBehalf": "",
+    "acceptedOnBehalfToast": "",
+    "declineReasonPrompt": "",
+    "declinedOnBehalfToast": "",
+    "send": "",
+    "resend": "",
+    "acceptOnBehalf": "",
+    "declineOnBehalf": "",
+    "convert": "",
+    "convertToInvoice": "",
+    "convertToContract": "",
+    "responseWindowOpen": "",
+    "trigger": {
+      "quote_accepted": "",
+      "before_event": "",
+      "after_event": "",
+      "after_delivery": "",
+      "fixed_date": ""
+    }
+  },
+  "contracts": {
+    "list": {
+      "new": "",
+      "blocksLibrary": "",
+      "searchPlaceholder": "",
+      "empty": "",
+      "table": {
+        "number": "",
+        "customer": "",
+        "title": "",
+        "issueDate": "",
+        "status": ""
+      },
+      "pagination_many": "",
+      "pagination_one": "",
+      "pagination_other": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "status": {
+      "draft": "",
+      "sent": "",
+      "signed_by_customer": "",
+      "signed_by_admin": "",
+      "fully_signed": "",
+      "cancelled": ""
+    },
+    "editor": {
+      "createdToast": "",
+      "saveError": "",
+      "savedToast": "",
+      "previewAfterSave": "",
+      "popupBlocked": "",
+      "previewError": "",
+      "locked": "",
+      "backToDetail": "",
+      "back": "",
+      "titleEdit": "",
+      "titleNew": "",
+      "preview": "",
+      "save": "",
+      "create": "",
+      "customer": "",
+      "searchCustomer": "",
+      "titleField": "",
+      "titlePlaceholder": "",
+      "language": "",
+      "issueDate": "",
+      "validUntil": "",
+      "eventSection": "",
+      "eventHelp": "",
+      "eventName": "",
+      "eventNamePlaceholder": "",
+      "eventDate": "",
+      "eventTimeStart": "",
+      "eventTimeEnd": "",
+      "intro": "",
+      "outro": "",
+      "disclaimerTitle": "",
+      "disclaimerBody": "",
+      "schriftformWarning": "",
+      "noBlocksInSection": "",
+      "systemBadge": ""
+    },
+    "sections": {
+      "basics": "",
+      "scope": "",
+      "privacy": "",
+      "commercial": "",
+      "nda": "",
+      "closing": ""
+    },
+    "detail": {
+      "sentToast": "",
+      "sendError": "",
+      "cancelledToast": "",
+      "cancelError": "",
+      "countersignedToast": "",
+      "countersignError": "",
+      "uploadedToast": "",
+      "uploadError": "",
+      "resentSignedToast": "",
+      "resendError": "",
+      "alreadyEventToast": "",
+      "convertedToEventToast": "",
+      "convertError": "",
+      "convertedToInvoiceToast_many": "",
+      "convertedToInvoiceToast_one": "",
+      "convertedToInvoiceToast_other": "",
+      "notFound": "",
+      "popupBlocked": "",
+      "back": "",
+      "edit": "",
+      "previewPdf": "",
+      "send": "",
+      "cancelConfirm": "",
+      "cancel": "",
+      "downloadPdf": "",
+      "downloadSignedPdf": "",
+      "confirmResendSigned": "",
+      "resendSigned": "",
+      "uploadSigned": "",
+      "newInvoice": "",
+      "confirmConvertEvent": "",
+      "convertToEvent": "",
+      "confirmConvertInvoice": "",
+      "convertToInvoice": "",
+      "renderFailedTitle": "",
+      "renderFailedBody": "",
+      "parties": "",
+      "customer": "",
+      "dates": "",
+      "issued": "",
+      "signBy": "",
+      "sentAt": "",
+      "fromQuote": "",
+      "linkedInvoice": "",
+      "signatures": "",
+      "signedByCustomer": "",
+      "noSignatureImage": "",
+      "signedByAdmin": "",
+      "convertedToEvent": "",
+      "blocks": "",
+      "noBlocks": "",
+      "integrity": {
+        "notIssued": "",
+        "missing": "",
+        "match": "",
+        "mismatch": "",
+        "unsignedTitle": "",
+        "signedTitle": "",
+        "expected": "",
+        "actual": "",
+        "title": "",
+        "reverify": "",
+        "verify": "",
+        "help": "",
+        "error": ""
+      },
+      "auditTrail": "",
+      "auditEmpty": "",
+      "auditTrailHelp": "",
+      "countersignTitle": "",
+      "countersignHelp": "",
+      "signedNamePlaceholder": "",
+      "countersignSignaturePrompt": "",
+      "clearSignature": "",
+      "confirmCountersign": "",
+      "restampedToast": "",
+      "restampError": "",
+      "restampTitle": "",
+      "restampHelp": "",
+      "restampCustomer": "",
+      "restampAdmin": "",
+      "confirmRestamp": ""
+    },
+    "blocks": {
+      "createdToast": "",
+      "createError": "",
+      "updatedToast": "",
+      "updateError": "",
+      "deletedToast": "",
+      "deleteError": "",
+      "back": "",
+      "title": "",
+      "hideInactive": "",
+      "disclaimerTitle": "",
+      "disclaimerBody": "",
+      "sidebarHeading": "",
+      "new": "",
+      "systemBadge": "",
+      "empty": "",
+      "selectPrompt": "",
+      "dialog": {
+        "createTitle": "",
+        "editTitle": "",
+        "name": "",
+        "section": "",
+        "description": "",
+        "body": "",
+        "placeholderHint": ""
+      },
+      "active": "",
+      "inactive": "",
+      "deleteConfirm": "",
+      "delete": "",
+      "save": "",
+      "noTranslation": "",
+      "quoteLineItems": {
+        "calloutTitle": "",
+        "calloutBody": "",
+        "previewExample": ""
+      }
+    }
+  },
+  "crmOverview": {
+    "title": "",
+    "loadError": "",
+    "revenue": {
+      "month": "",
+      "quarter": "",
+      "year": "",
+      "yearCalendar": "",
+      "toggleHint": ""
+    },
+    "outstanding": "",
+    "outstandingSub_many": "",
+    "outstandingSub_one": "",
+    "outstandingSub_other": "",
+    "quotes": {
+      "title": ""
+    },
+    "viewAll": "",
+    "invoices": {
+      "title": ""
+    }
+  },
+  "businessProfile": {
+    "savedToast": "",
+    "title": "",
+    "subtitle": "",
+    "section": {
+      "company": "",
+      "contact": "",
+      "defaults": "",
+      "banks": ""
+    },
+    "field": {
+      "companyName": "",
+      "vatId": "",
+      "taxId": "",
+      "addressLine1": "",
+      "addressLine2": "",
+      "postalCode": "",
+      "city": "",
+      "state": "",
+      "countryCode": "",
+      "phone": "",
+      "mobile": "",
+      "email": "",
+      "website": "",
+      "defaultCurrency": "",
+      "defaultLocale": "",
+      "timezone": "",
+      "timezoneSystemDefault": "",
+      "defaultQrFormat": "",
+      "footerLine": "",
+      "pdfLogoHeight": "",
+      "pdfFoldingMarks": "",
+      "pdfShowLogo": "",
+      "pdfShowLogoHelp": "",
+      "pdfShowCompanyName": "",
+      "pdfShowCompanyNameHelp": "",
+      "pdfCompanyNameInline": "",
+      "pdfCompanyNameInlineHelp": "",
+      "pdfQuoteShowNetDays": "",
+      "pdfQuoteShowNetDaysHelp": "",
+      "pdfQuoteShowSkonto": "",
+      "pdfQuoteShowSkontoHelp": "",
+      "pdfLogoUpload": "",
+      "pdfLogoUploadHelp": ""
+    },
+    "movedToAccounting": "",
+    "qrFormat": {
+      "none": "",
+      "swiss": "",
+      "epc": ""
+    },
+    "foldingMarks": {
+      "none": "",
+      "half": "",
+      "third": "",
+      "both": ""
+    },
+    "businessHours": {
+      "title": "",
+      "subtitle": "",
+      "floorToggle": "",
+      "floorToggleHelp": "",
+      "weekday": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": "",
+        "6": "",
+        "7": ""
+      },
+      "closed": "",
+      "addHours": "",
+      "startTime": "",
+      "endTime": "",
+      "addBlock": "",
+      "copyToAll": ""
+    },
+    "qrDisclaimer": {
+      "title": "",
+      "body": ""
+    },
+    "logoUploadedToast": "",
+    "logoConfirmClear": "",
+    "logoClearedToast": "",
+    "bankCreatedToast": "",
+    "bankUpdatedToast": "",
+    "bankDeletedToast": "",
+    "bank": {
+      "label": "",
+      "accountHolder": "",
+      "currency": "",
+      "isDefault": "",
+      "makeDefault": "",
+      "confirmDelete": ""
+    },
+    "addBank": "",
+    "noBanks": ""
+  },
+  "reminderTemplates": {
+    "settingsSaved": "",
+    "settingsSaveError": "",
+    "defaultLabel": "",
+    "saved": "",
+    "saveError": "",
+    "title": "",
+    "globalSection": "",
+    "globalHelp": "",
+    "enableLabel": "",
+    "daysBeforeLabel": "",
+    "saveSettings": "",
+    "sidebarHeading": "",
+    "sectionTemplates": "",
+    "usesDefaultTooltip": "",
+    "usesDefault": "",
+    "saveTemplate": "",
+    "noTranslation": "",
+    "willCreateOnSave": "",
+    "subjectLabel": "",
+    "subjectPlaceholder": "",
+    "bodyLabel": "",
+    "variablesHint": "",
+    "scheduleMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    }
+  },
+  "crmSettings": {
+    "savedToast": "",
+    "title": "",
+    "subtitle": "",
+    "emptyState": "",
+    "section": {
+      "quotes": "",
+      "quotesTos": "",
+      "invoices": "",
+      "installmentDefaults": "",
+      "paymentDefaults": "",
+      "contracts": "",
+      "dashboardOverview": "",
+      "dashboardOverviewHint": ""
+    },
+    "crm_quotes_accept_window_minutes": {
+      "label": ""
+    },
+    "crm_quotes_default_valid_days": {
+      "label": ""
+    },
+    "crm_quotes_number_format": {
+      "label": ""
+    },
+    "crm_quotes_tos_url": {
+      "label": ""
+    },
+    "crm_quotes_tos_text": {
+      "label": "",
+      "placeholder": ""
+    },
+    "crm_invoices_reminder_first_days": {
+      "label": ""
+    },
+    "crm_invoices_reminder_second_days": {
+      "label": ""
+    },
+    "crm_invoices_late_fee_minor": {
+      "label": ""
+    },
+    "crm_invoices_late_fee_label": {
+      "label": ""
+    },
+    "crm_invoices_skonto_percent_default": {
+      "label": ""
+    },
+    "crm_invoices_skonto_business_days": {
+      "label": ""
+    },
+    "crm_invoices_number_format": {
+      "label": ""
+    },
+    "installmentDefaults": {
+      "help": "",
+      "trigger": {
+        "quote_accepted": "",
+        "before_event": "",
+        "after_event": "",
+        "after_delivery": "",
+        "fixed_date": ""
+      }
+    },
+    "crm_invoices_installment_trigger_first": {
+      "label": ""
+    },
+    "crm_invoices_installment_days_before_event": {
+      "label": ""
+    },
+    "crm_invoices_installment_days_after_event": {
+      "label": ""
+    },
+    "paymentDefaults": {
+      "help": "",
+      "none": ""
+    },
+    "crm_invoices_default_payment_net_days_template_id": {
+      "label": ""
+    },
+    "crm_invoices_default_payment_timing_template_id": {
+      "label": ""
+    },
+    "crm_contracts_store_ip": {
+      "help": ""
+    },
+    "crm_contracts_default_valid_days": {
+      "label": ""
+    },
+    "crm_contracts_number_format": {
+      "label": "",
+      "help": ""
+    },
+    "crm_invoices_vat_note_text": {
+      "label": "",
+      "placeholder": "",
+      "help": ""
+    },
+    "dunningMoved": {
+      "title": "",
+      "body": "",
+      "link": ""
+    },
+    "lateFeeAgb": {
+      "title": "",
+      "body": ""
+    },
+    "crm_invoices_late_fee_type": {
+      "label": ""
+    },
+    "lateFeeType": {
+      "flat": "",
+      "percent": ""
+    },
+    "crm_invoices_late_fee_percent": {
+      "label": ""
+    }
+  },
+  "hoursLogging": {
+    "title": "",
+    "subtitle": "",
+    "pickCustomer": "",
+    "searchPlaceholder": "",
+    "customerLoggingDisabled": "",
+    "openHours": {
+      "title": "",
+      "subtitle": "",
+      "empty": "",
+      "passive": "",
+      "entryLine_many": "",
+      "entryLine_one": "",
+      "entryLine_other": "",
+      "needsRate": ""
+    }
+  },
+  "calendar": {
+    "hourEntry": {
+      "saved": "",
+      "featureOffToast": "",
+      "saveFailed": "",
+      "deleted": "",
+      "deleteFailed": "",
+      "untitledCustomer": "",
+      "lockedTooltip": "",
+      "lockedBadge": "",
+      "noDescription": "",
+      "startLabel": "",
+      "endLabel": "",
+      "descriptionLabel": "",
+      "confirmDelete": "",
+      "delete": "",
+      "close": "",
+      "saving": "",
+      "submit": "",
+      "created": "",
+      "createFailed": "",
+      "createTitle": "",
+      "customerLabel": "",
+      "customerSearch": "",
+      "customerLoggingDisabled": "",
+      "descriptionPlaceholder": "",
+      "cancel": "",
+      "movedToast": "",
+      "moveFailed": "",
+      "resizedToast": "",
+      "resizeFailed": ""
+    },
+    "pageTitle": "",
+    "subtitle": "",
+    "viewMonth": "",
+    "viewWeek": "",
+    "loading": "",
+    "legend": {
+      "events": "",
+      "hours": "",
+      "pendingQuotes": "",
+      "pendingContracts": "",
+      "hoursLocked": ""
+    }
+  },
+  "crmDev": {
+    "paymentCheck": {
+      "sentToast": "",
+      "title": "",
+      "help": "",
+      "selectInvoice": "",
+      "selectPlaceholder": "",
+      "noneAvailable": "",
+      "sending": "",
+      "send": ""
+    },
+    "templates": {
+      "sentToast": "",
+      "title": "",
+      "help": "",
+      "empty": "",
+      "notSeeded": "",
+      "sending": "",
+      "send": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "warning": "",
+    "envDisabled": {
+      "title": "",
+      "body": "",
+      "cardHint": ""
+    }
+  },
+  "setup": {
+    "tokenRequired": "",
+    "emailRequired": "",
+    "invalidEmail": "",
+    "passwordRequired": "",
+    "passwordRequirements": "",
+    "passwordMismatch": "",
+    "tooManyAttempts": "",
+    "invalidToken": "",
+    "success": "",
+    "genericError": "",
+    "featuresSaveFailed": "",
+    "title": "",
+    "tokenStepSubtitle": "",
+    "accountStepSubtitle": "",
+    "restoreStepSubtitle": "",
+    "config": {
+      "subtitle": "",
+      "saveFailed": "",
+      "intro": "",
+      "invoicing": "",
+      "invoicingDisclaimer": "",
+      "companyName": "",
+      "addressLine1": "",
+      "postalCode": "",
+      "city": "",
+      "countryCode": "",
+      "currency": "",
+      "vatId": "",
+      "taxId": "",
+      "iban": "",
+      "email": "",
+      "emailHint": "",
+      "smtpHost": "",
+      "smtpPort": "",
+      "smtpUser": "",
+      "smtpPass": "",
+      "fromEmail": "",
+      "fromName": "",
+      "skip": "",
+      "finish": ""
+    },
+    "community": {
+      "subtitle": "",
+      "mission": "",
+      "finish": ""
+    },
+    "usageSubtitle": "",
+    "stepOf": "",
+    "tokenLabel": "",
+    "tokenPlaceholder": "",
+    "tokenHint": "",
+    "tokenCommandLabel": "",
+    "copyCommand": "",
+    "tokenRotatedLink": "",
+    "continue": "",
+    "emailLabel": "",
+    "emailPlaceholder": "",
+    "passwordLabel": "",
+    "passwordPlaceholder": "",
+    "confirmLabel": "",
+    "confirmPlaceholder": "",
+    "submit": "",
+    "back": "",
+    "usageAlwaysOn": "",
+    "restoreEntry": "",
+    "restoreEntryHint": "",
+    "usageDepsNote": "",
+    "finish": "",
+    "usageSkip": "",
+    "restoreIntro": ""
+  },
+  "workflows": {
+    "approvals": {
+      "acted": "",
+      "pendingTitle": "",
+      "openEntity": "",
+      "confirm": "",
+      "deny": "",
+      "viewAll": "",
+      "title": "",
+      "recorded": "",
+      "defaultPrompt": "",
+      "subtitle": "",
+      "empty": ""
+    },
+    "toast": {
+      "createFailed": "",
+      "deleted": "",
+      "deleteFailed": ""
+    },
+    "test": {
+      "failed": "",
+      "title": "",
+      "hint": "",
+      "entityId": "",
+      "run": "",
+      "result": ""
+    },
+    "toggle": {
+      "confirmDisableBuiltin": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "new": "",
+    "empty": "",
+    "builtin": "",
+    "triggerLabel": "",
+    "enabled": "",
+    "disabled": "",
+    "confirmDelete": "",
+    "editor": {
+      "badJson": "",
+      "textNeedsArrays": "",
+      "textNeedsTrigger": "",
+      "textLoaded": "",
+      "saved": "",
+      "saveFailed": "",
+      "namePlaceholder": "",
+      "when": "",
+      "daysBefore": "",
+      "canvasView": "",
+      "textView": "",
+      "cleanUp": "",
+      "textHint": "",
+      "loadText": "",
+      "triggerHint": "",
+      "actionLabel": "",
+      "recipient": "",
+      "recipientCustomer": "",
+      "recipientAdmin": "",
+      "emailTemplate": "",
+      "templateGroup": "",
+      "templateGroupHint": "",
+      "webhookTarget": "",
+      "webhookNone": "",
+      "webhookInactive": "",
+      "webhookHint": "",
+      "condition": "",
+      "exprField": "",
+      "exprOp": "",
+      "exprValue": "",
+      "conditionHint": "",
+      "waitType": "",
+      "waitUntil": "",
+      "waitDelay": "",
+      "waitAnchor": "",
+      "days": "",
+      "hours": "",
+      "minutes": "",
+      "maxIterations": "",
+      "gatePrompt": "",
+      "gatePromptPh": "",
+      "gateTimeout": "",
+      "gateHint": "",
+      "hideAdvanced": "",
+      "showAdvanced": ""
+    }
+  },
+  "migrationBanner": {
+    "title": "",
+    "body": "",
+    "link": ""
+  },
+  "messages": {
+    "syncDisabled": "",
+    "syncUnconfigured": "",
+    "syncBusy": "",
+    "syncOk_many": "",
+    "syncOk_one": "",
+    "syncOk_other": "",
+    "syncFailed": "",
+    "newMessage": "",
+    "actionFailed": "",
+    "account": {
+      "all": "",
+      "customers": "",
+      "accounting": "",
+      "automated": ""
+    },
+    "folder": {
+      "inbox": "",
+      "sent": "",
+      "archived": "",
+      "deleted": ""
+    },
+    "title": "",
+    "subtitle": "",
+    "searchPlaceholder": "",
+    "sync": "",
+    "acrossAccounts": "",
+    "unified": "",
+    "systemGenerated": "",
+    "noSubject": "",
+    "noSearchResults": "",
+    "noMessages": "",
+    "selectPrompt": "",
+    "onWrote": "",
+    "reply": "",
+    "loadError": "",
+    "from": "",
+    "to": "",
+    "noBody": "",
+    "attachments": "",
+    "sentAttachHint": "",
+    "notArchived": "",
+    "noInboundBody": "",
+    "viewDocument": "",
+    "openInAccounting": "",
+    "soon": "",
+    "replyAll": "",
+    "forward": "",
+    "bookExpense": "",
+    "rebill": "",
+    "createQuote": "",
+    "createContract": "",
+    "createGallery": "",
+    "createInvoice": "",
+    "restore": "",
+    "archive": "",
+    "deleteForever": "",
+    "delete": "",
+    "document": "",
+    "close": "",
+    "previewUnavailable": "",
+    "rasterNote": "",
+    "sentToast": "",
+    "sendFailed": "",
+    "compose": "",
+    "optional": "",
+    "subject": "",
+    "bodyHint": "",
+    "sendsFromHint": "",
+    "cancel": "",
+    "send": "",
+    "customer": "",
+    "resolvingCustomer": "",
+    "noCustomerMatch": "",
+    "createNewDoc": "",
+    "existingDocs": "",
+    "noExistingDocs": "",
+    "galleryCreateOnly": "",
+    "doc": {
+      "quote": "",
+      "contract": "",
+      "invoice": "",
+      "gallery": ""
     }
   }
 }

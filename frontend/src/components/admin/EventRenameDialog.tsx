@@ -76,7 +76,7 @@ export const EventRenameDialog: React.FC<EventRenameDialogProps> = ({
       try {
         const result = await onValidate(newName.trim());
         setValidationResult(result);
-      } catch (error) {
+      } catch (_error) {
         setValidationResult({ valid: false, error: 'Validation failed' });
       } finally {
         setIsValidating(false);

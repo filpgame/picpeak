@@ -67,7 +67,7 @@ export const PasswordGenerator: React.FC<PasswordGeneratorProps> = ({
       await navigator.clipboard.writeText(password);
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 2000);
-    } catch (err) {
+    } catch (_err) {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = password;
