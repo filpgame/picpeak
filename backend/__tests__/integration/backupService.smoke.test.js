@@ -100,7 +100,7 @@ describe('backupService — config + file collection + manifest (smoke)', () => 
       const abs = seedFile('events/active/E9/pic.jpg', content);
 
       const files = await backupService.getFilesToBackup({ backup_include_archived: true });
-      const entry = files.find((f) => f.relativePath === path.join('events/active/E9', 'pic.jpg'));
+      const entry = files.find((f) => f.relativePath === 'events/active/E9/pic.jpg');
 
       expect(entry).toBeDefined();
       expect(entry.path).toBe(abs);
