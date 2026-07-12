@@ -2,7 +2,7 @@ name: Release Please (Beta)
 
 on:
   push:
-    branches: [main]
+    branches: [beta]
 
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config-beta.json
           manifest-file: .release-please-manifest-beta.json
-          target-branch: main
+          target-branch: beta
 
       # Auto-approve + enable auto-merge on the open release PR so betas publish
       # with no manual clicks. Approval uses GITHUB_TOKEN (github-actions[bot]) —
@@ -49,7 +49,7 @@ jobs:
             echo "RELEASE_PLEASE_TOKEN not set — skipping auto-merge (manual review still required)."
             exit 0
           fi
-          pr=$(gh pr list --head release-please--branches--main --state open --json number --jq '.[0].number // empty')
+          pr=$(gh pr list --head release-please--branches--beta --state open --json number --jq '.[0].number // empty')
           if [ -n "$pr" ]; then
             # Approve as github-actions[bot] (GITHUB_TOKEN) — a different identity
             # than the PR author (the PAT) — so it counts as a valid review.
