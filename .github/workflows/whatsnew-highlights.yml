@@ -1,7 +1,8 @@
 # What's New highlights — GitHub Models release step (reusable)
 #
-# Called by the release-please workflows AFTER a release is created
-# (release-please.yml for `stable`, release-please-beta.yml for `main`). It runs
+# Called by the release-please workflow AFTER a release is created
+# (release-please.yml triggers on `main` for stable releases on this fork).
+# It runs
 # as a job in the SAME workflow run rather than on its own `release: published`
 # trigger, because release-please creates the release with the default
 # GITHUB_TOKEN and GitHub does not start new workflow runs from token-generated
