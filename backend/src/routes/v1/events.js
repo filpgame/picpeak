@@ -26,6 +26,10 @@ const logger = require('../../utils/logger');
 const { slugify } = require('../../utils/slug');
 const { formatBoolean } = require('../../utils/dbCompat');
 const { parseBooleanInput } = require('../../utils/parsers');
+const {
+  encrypt: encryptPassword,
+  isEncryptionAvailable,
+} = require('../../utils/passwordEncryption');
 
 const router = express.Router();
 
@@ -251,6 +255,16 @@ router.post(
         ? await bcrypt.hash(password, 10)
         : await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
 
+      let encryptedPasswordFields = {};
+      if (require_password && password && isEncryptionAvailable()) {
+        const value = encryptPassword(password);
+        encryptedPasswordFields = {
+          password_encrypted: value.encrypted,
+          password_iv: value.iv,
+          password_key_version: value.keyVersion,
+        };
+      }
+
       const insertResult = await db('events').insert({
         slug,
         event_type,
@@ -260,6 +274,7 @@ router.post(
         host_email: customer_email,
         admin_email,
         password_hash: passwordHash,
+        ...encryptedPasswordFields,
         language: null,
         require_password,
         share_link: shareLinkToStore,
@@ -472,8 +487,13 @@ router.get('/events/:id', apiTokenAuth, requireApiScope('read'), async (req, res
   try {
     const event = await db('events').where({ id: req.params.id }).first();
     if (!event) return res.status(404).json({ error: 'Event not found' });
+    const hasEncryptedPassword = !!event.password_encrypted;
     delete event.password_hash;
     delete event.client_password_hash;
+    delete event.password_encrypted;
+    delete event.password_iv;
+    delete event.password_key_version;
+    event.has_encrypted_password = hasEncryptedPassword;
     res.json(event);
   } catch (error) {
     logger.error('v1 GET /events/:id failed', { error: error.message });

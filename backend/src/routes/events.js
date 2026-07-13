@@ -15,6 +15,10 @@ const { parseBooleanInput, parseStringInput } = require('../utils/parsers');
 const eventTypeService = require('../services/eventTypeService');
 const { IDENTITY_PRESERVING_NORMALIZE_EMAIL } = require('../utils/emailNormalization');
 const logger = require('../utils/logger');
+const {
+  encrypt: encryptPassword,
+  isEncryptionAvailable,
+} = require('../utils/passwordEncryption');
 
 // Use parseStringInput from shared parsers for customer data extraction
 const getCustomerNameFromPayload = (payload = {}) => parseStringInput(payload.customer_name);
@@ -48,13 +52,19 @@ const mapEventForApi = (event) => {
     host_email,
     customer_name,
     customer_email,
+    password_hash: _ph,
+    client_password_hash: _cph,
+    password_encrypted: _pe,
+    password_iv: _piv,
+    password_key_version: _pkv,
     ...rest
   } = event;
 
   return {
     ...rest,
     customer_name: customer_name ?? host_name ?? null,
-    customer_email: customer_email ?? host_email ?? null
+    customer_email: customer_email ?? host_email ?? null,
+    has_encrypted_password: !!event.password_encrypted
   };
 };
 
@@ -169,7 +179,17 @@ router.post('/', adminAuth, [
     const password_hash = requirePassword
       ? await bcrypt.hash(password, getBcryptRounds())
       : await bcrypt.hash(crypto.randomBytes(32).toString('hex'), getBcryptRounds());
-    
+
+    let encryptedPasswordFields = {};
+    if (requirePassword && password && isEncryptionAvailable()) {
+      const value = encryptPassword(password);
+      encryptedPasswordFields = {
+        password_encrypted: value.encrypted,
+        password_iv: value.iv,
+        password_key_version: value.keyVersion,
+      };
+    }
+
     // Calculate expiration date (days after event date)
     const expires_at = new Date(event_date);
     expires_at.setDate(expires_at.getDate() + parseInt(expiration_days, 10));
@@ -192,6 +212,7 @@ router.post('/', adminAuth, [
       host_email: customerEmail,
       admin_email,
       password_hash,
+      ...encryptedPasswordFields,
       welcome_message,
       color_theme,
       share_link: shareLinkToStore,
@@ -388,8 +409,21 @@ router.put('/:id', adminAuth, [
 
     if (newPasswordPlain) {
       updates.password_hash = await bcrypt.hash(newPasswordPlain, getBcryptRounds());
+      if (isEncryptionAvailable()) {
+        const value = encryptPassword(newPasswordPlain);
+        updates.password_encrypted = value.encrypted;
+        updates.password_iv = value.iv;
+        updates.password_key_version = value.keyVersion;
+      } else {
+        updates.password_encrypted = null;
+        updates.password_iv = null;
+        updates.password_key_version = null;
+      }
     } else if (hasRequirePasswordUpdate && requirePasswordUpdate === false && currentRequirePassword) {
       updates.password_hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), getBcryptRounds());
+      updates.password_encrypted = null;
+      updates.password_iv = null;
+      updates.password_key_version = null;
     }
     
     await db('events').where('id', id).update(updates);

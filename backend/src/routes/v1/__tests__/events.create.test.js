@@ -17,6 +17,18 @@
 
 const request = require('supertest');
 const express = require('express');
+const crypto = require('crypto');
+const { decrypt } = require('../../../utils/passwordEncryption');
+const previousEncryptionKey = process.env.GALLERY_ENCRYPTION_KEY_V1;
+
+beforeAll(() => {
+  process.env.GALLERY_ENCRYPTION_KEY_V1 = crypto.randomBytes(32).toString('hex');
+});
+
+afterAll(() => {
+  if (previousEncryptionKey === undefined) delete process.env.GALLERY_ENCRYPTION_KEY_V1;
+  else process.env.GALLERY_ENCRYPTION_KEY_V1 = previousEncryptionKey;
+});
 
 const buildChain = ({ firstResult, insertResult, returningResult, selectResult } = {}) => {
   const chain = {
@@ -231,5 +243,57 @@ describe('v1 POST /events — issue #550 (color_theme + feedback row)', () => {
       .post('/events')
       .send({ ...BASE_BODY, feedback_enabled: 'maybe' })
       .expect(400);
+  });
+
+  it('encrypts protected gallery passwords on create', async () => {
+    const slugChain = buildChain({ firstResult: null });
+    const insertChain = buildChain({ returningResult: [{ id: 44 }] });
+    db.__setImplementations(...baseSettingsChains(), slugChain, insertChain);
+
+    await request(buildApp())
+      .post('/events')
+      .send({
+        ...BASE_BODY,
+        require_password: true,
+        password: 'ApiPass123!',
+      })
+      .expect(201);
+
+    const insertedRow = insertChain.insert.mock.calls[0][0];
+    expect(decrypt(
+      insertedRow.password_encrypted,
+      insertedRow.password_iv,
+      insertedRow.password_key_version,
+    )).toBe('ApiPass123!');
+  });
+});
+
+describe('v1 GET /events/:id — sanitized response', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('removes encrypted fields and exposes only the safe boolean on GET', async () => {
+    const eventChain = {
+      where: jest.fn().mockReturnThis(),
+      first: jest.fn().mockResolvedValueOnce({
+        id: 42,
+        password_hash: 'hash',
+        client_password_hash: 'client-hash',
+        password_encrypted: 'ciphertext',
+        password_iv: 'iv',
+        password_key_version: 1,
+      }),
+    };
+    db.__setImplementations(eventChain);
+
+    const res = await request(buildApp()).get('/events/42').expect(200);
+
+    expect(res.body.has_encrypted_password).toBe(true);
+    expect(res.body).not.toHaveProperty('password_hash');
+    expect(res.body).not.toHaveProperty('client_password_hash');
+    expect(res.body).not.toHaveProperty('password_encrypted');
+    expect(res.body).not.toHaveProperty('password_iv');
+    expect(res.body).not.toHaveProperty('password_key_version');
   });
 });
