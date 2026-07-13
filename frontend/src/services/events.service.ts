@@ -232,8 +232,13 @@ export const eventsService = {
   },
 
   // Resend creation email
-  async resendCreationEmail(eventId: number): Promise<{ success: boolean; message: string }> {
-    const response = await api.post(`/admin/events/${eventId}/resend-email`);
+  async resendCreationEmail(
+    eventId: number,
+    password?: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const body: { password?: string } = {};
+    if (password) body.password = password;
+    const response = await api.post(`/admin/events/${eventId}/resend-email`, body);
     return response.data;
   },
 
