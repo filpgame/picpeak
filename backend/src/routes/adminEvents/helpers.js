@@ -176,13 +176,14 @@ const mapEventForApi = (event) => {
     customer_name,
     customer_email,
     customer_phone,
-    password_hash: _ph,
-    client_password_hash: _cph,
-    password_encrypted: _pe,
-    password_iv: _piv,
-    password_key_version: _pkv,
     ...rest
   } = event;
+
+  delete rest.password_hash;
+  delete rest.client_password_hash;
+  delete rest.password_encrypted;
+  delete rest.password_iv;
+  delete rest.password_key_version;
 
   return {
     ...rest,
