@@ -130,6 +130,7 @@ describe('v1 POST /events — issue #550 (color_theme + feedback row)', () => {
       event_name: 'Issue 550 Wedding',
       color_theme: 'default',
     });
+    expect(insertedRow.language).toBeNull();
   });
 
   it('accepts a JSON-encoded theme string and persists it verbatim', async () => {

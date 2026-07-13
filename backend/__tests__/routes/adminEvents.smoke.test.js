@@ -106,6 +106,7 @@ describe('admin events CRUD endpoints (smoke)', () => {
       expect(row).toBeDefined();
       expect(row.event_name).toBe('Smoke Wedding');
       expect(row.created_by).toBe(adminId);
+      expect(row.language).toBeNull();
 
       // Folder structure is created under STORAGE_PATH/events/active/<slug>.
       const eventDir = path.join(process.env.STORAGE_PATH, 'events/active', res.body.slug);
@@ -125,6 +126,17 @@ describe('admin events CRUD endpoints (smoke)', () => {
       });
       expect(res.status).toBe(400);
       expect(Array.isArray(res.body.errors)).toBe(true);
+    });
+
+    it('duplicates an event with system-default language', async () => {
+      const sourceId = await insertEvent(db, adminId, { language: 'de' });
+      const res = await auth(request(app)
+        .post(`/api/admin/events/${sourceId}/duplicate`))
+        .send({ event_name: 'Duplicated event', event_date: '2026-10-01' });
+
+      expect(res.status).toBe(200);
+      const duplicate = await db('events').where({ id: res.body.id }).first();
+      expect(duplicate.language).toBeNull();
     });
   });
 

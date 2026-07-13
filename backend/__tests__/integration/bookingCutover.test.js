@@ -65,6 +65,7 @@ describe('booking cutover — draft invoices on hold', () => {
 
     const ev = await db('events').where({ id: res.eventId }).first();
     expect(ev.is_draft == true || ev.is_draft === 1).toBe(true); // created as a draft gallery
+    expect(ev.language).toBeNull();
 
     // Every invoice the event scheduled is held (no auto-send before the gate).
     const invs = await db('invoices').whereIn('id', res.invoiceIds);
@@ -166,5 +167,23 @@ describe('booking cutover — draft invoices on hold', () => {
     expect(res.alreadyConverted).toBe(false);
     const c = await db('contracts').where({ id: res.contractId }).first();
     expect(c).toBeTruthy();
+  });
+
+  it('standalone contract conversion creates an event with system-default language', async () => {
+    const contractNumber = `C-${crypto.randomUUID().slice(0, 8)}`;
+    const [contractId] = await db('contracts').insert({
+      contract_number: contractNumber,
+      customer_account_id: customerId,
+      status: 'fully_signed',
+      issue_date: '2026-01-01',
+      event_name: 'Contract event',
+      created_by_admin_id: adminId,
+    });
+    const { convertToEvent } = require('../../src/services/contract/conversions');
+
+    const result = await convertToEvent(contractId, adminId);
+
+    const event = await db('events').where({ id: result.eventId }).first();
+    expect(event.language).toBeNull();
   });
 });

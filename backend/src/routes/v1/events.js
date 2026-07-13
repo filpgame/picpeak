@@ -260,6 +260,7 @@ router.post(
         host_email: customer_email,
         admin_email,
         password_hash: passwordHash,
+        language: null,
         require_password,
         share_link: shareLinkToStore,
         share_token: shareToken,

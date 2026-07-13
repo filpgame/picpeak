@@ -1668,6 +1668,7 @@ async function convertToEvent(quoteId, adminId, options = {}) {
       admin_email: adminEmail,
       event_type: eventType,
       password_hash: placeholder,
+      language: null,
       share_link: shareLink,
       share_token: shareLink,
       expires_at: oneYearAfterEvent,
