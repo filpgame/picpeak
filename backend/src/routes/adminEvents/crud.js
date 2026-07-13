@@ -877,30 +877,30 @@ module.exports = (router) => {
       }
       await db('events').where('id', id).update(publishUpdates);
 
+      let galleryPasswordForEmail;
+      if (!requirePassword) {
+        galleryPasswordForEmail = 'No password required';
+      } else if (password) {
+        // Admin re-typed the password in the publish dialog — put it straight
+        // into the email so the customer can actually log in (#627).
+        galleryPasswordForEmail = password;
+      } else if (event.password_encrypted && event.password_iv && isEncryptionAvailable()) {
+        galleryPasswordForEmail = decryptPassword(
+          event.password_encrypted,
+          event.password_iv,
+          event.password_key_version ?? 1,
+        );
+      } else {
+        // Legacy fallback for API-only publishes that don't carry the password.
+        galleryPasswordForEmail = '{{password_security_message}}';
+      }
+
       // Queue creation email
       const customerEmail = event.customer_email || event.host_email;
       const customerName = event.customer_name || event.host_name;
       if (customerEmail) {
         const frontendBase = await getFrontendBaseUrl();
         const { shareUrl } = await buildShareLinkVariants({ slug: event.slug, shareToken: event.share_token });
-
-        let galleryPasswordForEmail;
-        if (!requirePassword) {
-          galleryPasswordForEmail = 'No password required';
-        } else if (password) {
-        // Admin re-typed the password in the publish dialog — put it straight
-        // into the email so the customer can actually log in (#627).
-          galleryPasswordForEmail = password;
-        } else if (event.password_encrypted && event.password_iv && isEncryptionAvailable()) {
-          galleryPasswordForEmail = decryptPassword(
-            event.password_encrypted,
-            event.password_iv,
-            event.password_key_version ?? 1,
-          );
-        } else {
-        // Legacy fallback for API-only publishes that don't carry the password.
-          galleryPasswordForEmail = '{{password_security_message}}';
-        }
 
         const emailData = {
           customer_name: customerName,
@@ -955,10 +955,10 @@ module.exports = (router) => {
               customer_name: event.customer_name || event.host_name || '',
               event_name: event.event_name,
               gallery_link: shareUrlForWa || `${await getFrontendBaseUrl()}/gallery/${event.slug}`,
-              // Plaintext only when the admin re-typed at publish; otherwise
-              // omit so the buildComponents() helper renders an empty {{4}}
-              // line instead of leaking the "(set at creation)" sentinel.
-              gallery_password: requirePassword && password ? password : '',
+              // Reuse the email's resolved password — admin re-typed,
+              // decrypted ciphertext, or sentinel — so WhatsApp never
+              // leaks "(set at creation)" / empty when ciphertext exists.
+              gallery_password: requirePassword ? galleryPasswordForEmail : '',
               expiry_date: event.expires_at ? new Date(event.expires_at).toISOString() : null,
               language: null, // resolved by processor via general_default_language
             });

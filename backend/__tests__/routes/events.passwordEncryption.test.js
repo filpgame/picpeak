@@ -45,6 +45,28 @@ describe('legacy events password encryption', () => {
   });
 
   it('encrypts create and update while sanitizing list responses', async () => {
+    await db.schema.alterTable('events', (table) => {
+      table.string('language', 5).defaultTo('en').alter();
+    });
+    const { adminId } = require('../integration/helpers/crmDb');
+    const probeId = await db('events').insert({
+      slug: `legacy-default-${Date.now()}`,
+      event_type: 'wedding',
+      event_name: 'Legacy default language sentinel',
+      event_date: '2026-11-01',
+      host_email: 'host2@example.com',
+      admin_email: 'admin@example.com',
+      password_hash: 'x',
+      share_link: '/gallery/default',
+      share_token: 'tok-default',
+      expires_at: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+      is_active: 1, is_archived: 0, is_draft: 0,
+      created_by: adminId,
+      created_at: new Date().toISOString(),
+    }).then((r) => r[0]?.id ?? r[0]);
+    const defaultedRow = await db('events').where({ id: probeId }).first();
+    expect(defaultedRow.language).toBe('en');
+
     const create = await request(app)
       .post('/api/events')
       .set('Authorization', `Bearer ${token}`)
@@ -63,6 +85,11 @@ describe('legacy events password encryption', () => {
     let row = await db('events').where({ id: create.body.id }).first();
     expect(decrypt(row.password_encrypted, row.password_iv, row.password_key_version))
       .toBe('LegacyPass123!');
+    expect(row.language).toBeNull();
+
+    await db.schema.alterTable('events', (table) => {
+      table.string('language', 5).nullable().defaultTo(null).alter();
+    });
 
     const list = await request(app)
       .get('/api/events')

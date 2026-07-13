@@ -351,4 +351,36 @@ describe('admin events CRUD endpoints (smoke)', () => {
     expect(row.password_iv).toBeNull();
     expect(row.password_key_version).toBeNull();
   });
+
+  it('decrypts stored draft password for WhatsApp when publishing without a request password', async () => {
+    const stored = encrypt('DraftWaPass123!');
+    const id = await insertEvent(db, adminId, {
+      is_draft: 1,
+      require_password: 1,
+      customer_email: null,
+      customer_phone: '+15555550100',
+      password_encrypted: stored.encrypted,
+      password_iv: stored.iv,
+      password_key_version: stored.keyVersion,
+    });
+
+    const queueWhatsapp = jest.fn().mockResolvedValue(undefined);
+    const getWhatsAppConfig = jest.fn().mockResolvedValue({ enabled: true });
+    const whatsappProcessor = require('../../src/services/whatsappProcessor');
+    const originalQueue = whatsappProcessor.queueWhatsapp;
+    const originalConfig = whatsappProcessor.getWhatsAppConfig;
+    whatsappProcessor.queueWhatsapp = queueWhatsapp;
+    whatsappProcessor.getWhatsAppConfig = getWhatsAppConfig;
+
+    try {
+      await auth(request(app).post(`/api/admin/events/${id}/publish`)).send({}).expect(200);
+    } finally {
+      whatsappProcessor.queueWhatsapp = originalQueue;
+      whatsappProcessor.getWhatsAppConfig = originalConfig;
+    }
+
+    expect(queueWhatsapp).toHaveBeenCalledTimes(1);
+    const payload = queueWhatsapp.mock.calls[0][3];
+    expect(payload.gallery_password).toBe('DraftWaPass123!');
+  });
 });

@@ -214,6 +214,7 @@ router.post('/', adminAuth, [
       admin_email,
       password_hash,
       ...encryptedPasswordFields,
+      language: null,
       welcome_message,
       color_theme,
       share_link: shareLinkToStore,
