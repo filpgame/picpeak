@@ -320,6 +320,10 @@ generate_jwt_secret() {
     openssl rand -base64 64 | tr -d "\n"
 }
 
+generate_gallery_encryption_key() {
+    openssl rand -hex 32
+}
+
 get_available_ram_mb() {
     # Prefer /proc/meminfo (always available on Linux), fallback to free(1)
     if [[ -r /proc/meminfo ]]; then
@@ -593,6 +597,8 @@ setup_docker_installation() {
     local jwt_secret=$(generate_jwt_secret)
     local db_password=$(generate_password)
     local redis_password=$(generate_password)
+    local gallery_key
+    gallery_key=$(generate_gallery_encryption_key)
 
     local frontend_port="${CUSTOM_PORT:-3000}"
     local site_url; site_url="$(base_url)"
@@ -614,6 +620,7 @@ NODE_ENV=production
 JWT_SECRET=$jwt_secret
 DB_PASSWORD=$db_password
 REDIS_PASSWORD=$redis_password
+GALLERY_ENCRYPTION_KEY_V1=$gallery_key
 
 # Database
 DB_HOST=postgres
@@ -825,7 +832,9 @@ setup_native_installation() {
     
     # Generate secrets
     local jwt_secret=$(generate_jwt_secret)
-    
+    local gallery_key
+    gallery_key=$(generate_gallery_encryption_key)
+
     # Create .env file
     log_step "Creating configuration..."
     cat > "$NATIVE_APP_DIR/app/backend/.env" <<EOF
@@ -836,6 +845,7 @@ setup_native_installation() {
 NODE_ENV=production
 PORT=${CUSTOM_PORT:-$DEFAULT_PORT}
 JWT_SECRET=$jwt_secret
+GALLERY_ENCRYPTION_KEY_V1=$gallery_key
 
 # Admin — created in the browser via a one-time /setup token unless a password
 # is seeded here (--admin-password).
@@ -1218,7 +1228,15 @@ update_docker_installation() {
     
     # Backup current configuration
     cp .env .env.backup-$(date +%Y%m%d-%H%M%S)
-    
+
+    if ! grep -q '^GALLERY_ENCRYPTION_KEY_V1=' .env; then
+        local gallery_key
+        gallery_key=$(generate_gallery_encryption_key)
+        echo "" >> .env
+        echo "GALLERY_ENCRYPTION_KEY_V1=$gallery_key" >> .env
+        log_success "Generated gallery password encryption key"
+    fi
+
     # Pull latest code (new compose file / defaults) and refresh the images.
     git pull
 
@@ -1297,6 +1315,14 @@ update_native_installation() {
     fi
     if ! grep -q '^FRONTEND_DIR=' "$NATIVE_APP_DIR/app/backend/.env"; then
       echo "FRONTEND_DIR=$NATIVE_APP_DIR/app/frontend/dist" >> "$NATIVE_APP_DIR/app/backend/.env"
+    fi
+
+    if ! grep -q '^GALLERY_ENCRYPTION_KEY_V1=' "$NATIVE_APP_DIR/app/backend/.env"; then
+        local gallery_key
+        gallery_key=$(generate_gallery_encryption_key)
+        echo "" >> "$NATIVE_APP_DIR/app/backend/.env"
+        echo "GALLERY_ENCRYPTION_KEY_V1=$gallery_key" >> "$NATIVE_APP_DIR/app/backend/.env"
+        log_success "Generated gallery password encryption key"
     fi
 
     ensure_storage_layout "$NATIVE_APP_DIR"

@@ -58,11 +58,17 @@ echo "Generating secure passwords..."
 JWT_SECRET=$(openssl rand -base64 32)
 DB_PASSWORD=$(openssl rand -base64 32)
 UMAMI_HASH_SALT=$(openssl rand -base64 32)
+GALLERY_ENCRYPTION_KEY_V1=$(openssl rand -hex 32)
 
 # Update .env file with generated values
 sed -i "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" .env
 sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=$DB_PASSWORD/" .env
 sed -i "s/UMAMI_HASH_SALT=.*/UMAMI_HASH_SALT=$UMAMI_HASH_SALT/" .env
+if grep -q '^GALLERY_ENCRYPTION_KEY_V1=' .env; then
+    sed -i "s/GALLERY_ENCRYPTION_KEY_V1=.*/GALLERY_ENCRYPTION_KEY_V1=$GALLERY_ENCRYPTION_KEY_V1/" .env
+else
+    echo "GALLERY_ENCRYPTION_KEY_V1=$GALLERY_ENCRYPTION_KEY_V1" >> .env
+fi
 
 echo ""
 echo "Installation complete!"

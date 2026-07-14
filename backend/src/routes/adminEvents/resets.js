@@ -12,6 +12,11 @@ const logger = require('../../utils/logger');
 const { errorResponse } = require('../../utils/routeHelpers');
 const { buildShareLinkVariants } = require('../../services/shareLinkService');
 const { requireEventOwnership } = require('../../middleware/ownership');
+const {
+  encrypt: encryptPassword,
+  decrypt: decryptPassword,
+  isEncryptionAvailable,
+} = require('../../utils/passwordEncryption');
 
 module.exports = (router) => {
 
@@ -59,12 +64,24 @@ module.exports = (router) => {
         newPassword = generateReadablePassword();
       }
       const passwordHash = await bcrypt.hash(newPassword, getBcryptRounds());
+      const resetEncryptedFields = {
+        password_encrypted: null,
+        password_iv: null,
+        password_key_version: null,
+      };
+      if (isEncryptionAvailable()) {
+        const value = encryptPassword(newPassword);
+        resetEncryptedFields.password_encrypted = value.encrypted;
+        resetEncryptedFields.password_iv = value.iv;
+        resetEncryptedFields.password_key_version = value.keyVersion;
+      }
 
       // Update event with new password
       await db('events')
         .where('id', id)
         .update({
-          password_hash: passwordHash
+          password_hash: passwordHash,
+          ...resetEncryptedFields
         });
 
       // Log activity
@@ -131,13 +148,15 @@ module.exports = (router) => {
       // For resending creation email, we need the actual password
       // First, try to get it from the request body if provided
       // Use optional chaining to handle cases where req.body might be undefined
-      let galleryPassword = req.body?.password;
-    
-      // If no password provided, we can't decrypt the existing one
-      // So we'll show a security message
-      if (!galleryPassword) {
-      // We'll let the email processor determine the language for the security message
-        galleryPassword = '{{password_security_message}}';
+      let galleryPassword = '{{password_security_message}}';
+      if (event.password_encrypted && event.password_iv && isEncryptionAvailable()) {
+        galleryPassword = decryptPassword(
+          event.password_encrypted,
+          event.password_iv,
+          event.password_key_version ?? 1,
+        );
+      } else if (req.body?.password) {
+        galleryPassword = req.body.password;
       }
     
       // Dates will be formatted by the email processor based on recipient language

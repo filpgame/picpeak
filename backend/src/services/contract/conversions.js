@@ -238,6 +238,7 @@ async function convertToEvent(contractId, adminId) {
     admin_email: adminEmail,
     event_type: 'wedding',
     password_hash: placeholderHash,
+    language: null,
     share_link: shareToken,
     share_token: shareToken,
     expires_at: oneYearFromNow,

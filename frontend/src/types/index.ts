@@ -19,6 +19,7 @@ export interface Event {
   archive_path?: string;
   archived_at?: string;
   require_password?: boolean;
+  has_encrypted_password?: boolean;
   photo_count?: number;
   total_size?: number;
   recent_photos?: Array<{

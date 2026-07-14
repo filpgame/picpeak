@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { Copy, CheckCircle, Key, Mail } from 'lucide-react';
+import { Copy, CheckCircle, Key, Mail, X } from 'lucide-react';
 import type { Event } from '../../../types';
 import { Button, Card } from '../../../components/common';
 import { eventsService } from '../../../services/events.service';
@@ -16,6 +16,9 @@ interface ShareLinkCardProps {
 export const ShareLinkCard: React.FC<ShareLinkCardProps> = ({ event, setShowPasswordReset }) => {
   const { t } = useTranslation();
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showResendEmailModal, setShowResendEmailModal] = useState(false);
+  const [resendEmailPassword, setResendEmailPassword] = useState('');
+  const [resendEmailLoading, setResendEmailLoading] = useState(false);
 
   const handleCopyLink = async () => {
     try {
@@ -47,12 +50,28 @@ export const ShareLinkCard: React.FC<ShareLinkCardProps> = ({ event, setShowPass
         }
       }
 
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
-      toast.success(t('toast.linkCopied'));
+setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+    toast.success(t('toast.linkCopied'));
     } catch (err) {
       console.error('Copy failed:', err);
       toast.error(t('errors.copyFailed', 'Failed to copy link. Please copy manually.'));
+    }
+  };
+
+  const handleResendCreationEmail = async () => {
+    setResendEmailLoading(true);
+    try {
+      await eventsService.resendCreationEmail(
+        event.id,
+        resendEmailPassword || undefined,
+      );
+      toast.success(t('events.creationEmailResent'));
+      setShowResendEmailModal(false);
+    } catch {
+      toast.error(t('events.failedToResendEmail'));
+    } finally {
+      setResendEmailLoading(false);
     }
   };
 
@@ -98,18 +117,89 @@ export const ShareLinkCard: React.FC<ShareLinkCardProps> = ({ event, setShowPass
             variant="outline"
             size="sm"
             leftIcon={<Mail className="w-4 h-4" />}
-            onClick={async () => {
-              try {
-                await eventsService.resendCreationEmail(event.id);
-                toast.success(t('events.creationEmailResent'));
-              } catch {
-                toast.error(t('events.failedToResendEmail'));
-              }
+            onClick={() => {
+              setResendEmailPassword('');
+              setShowResendEmailModal(true);
             }}
             className="w-full justify-center"
           >
             {t('events.resendCreationEmail')}
           </Button>
+        </div>
+      )}
+
+      {showResendEmailModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="resend-email-title"
+        >
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-neutral-800">
+            <div className="mb-4 flex items-center justify-between">
+              <h2
+                id="resend-email-title"
+                className="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
+              >
+                {t('events.resendCreationEmail')}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowResendEmailModal(false)}
+                aria-label={t('common.close', 'Close')}
+                className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {event.require_password && !event.has_encrypted_password && (
+              <div className="mb-4">
+                <label
+                  htmlFor="resend-email-password"
+                  className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                >
+                  {t('events.resendEmailPasswordLabel', 'Gallery password (optional)')}
+                </label>
+                <input
+                  id="resend-email-password"
+                  type="password"
+                  value={resendEmailPassword}
+                  onChange={(event) => setResendEmailPassword(event.target.value)}
+                  placeholder={t(
+                    'events.resendEmailPasswordPlaceholder',
+                    'Enter password to include in email',
+                  )}
+                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+                />
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  {t(
+                    'events.resendEmailPasswordHint',
+                    'If left blank, the email will say the password is not shown for security reasons.',
+                  )}
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowResendEmailModal(false)}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                isLoading={resendEmailLoading}
+                leftIcon={<Mail className="h-4 w-4" />}
+                onClick={handleResendCreationEmail}
+              >
+                {t('events.sendEmail', 'Send email')}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </Card>

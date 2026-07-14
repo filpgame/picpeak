@@ -23,7 +23,12 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'admin-events-test-secret';
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const request = require('supertest');
+const crypto = require('crypto');
 const { bootCrmDb, seedMinimal, assignAdminRole, mintAdminToken } = require('../integration/helpers/crmDb');
+const {
+  encrypt,
+  decrypt,
+} = require('../../src/utils/passwordEncryption');
 
 async function insertEvent(db, adminId, over = {}) {
   const base = {
@@ -49,6 +54,8 @@ async function insertEvent(db, adminId, over = {}) {
 describe('admin events CRUD endpoints (smoke)', () => {
   let db; let cleanup; let app; let adminId; let token;
 
+  const previousEncryptionKey = process.env.GALLERY_ENCRYPTION_KEY_V1;
+
   // bootCrmDb's full migration run intermittently exceeds Jest's default
   // 5s beforeAll timeout on slower CI runners; raise it.
   beforeAll(async () => {
@@ -67,9 +74,14 @@ describe('admin events CRUD endpoints (smoke)', () => {
     });
   }, 120000);
 
-  afterAll(async () => { await cleanup(); });
+  afterAll(async () => {
+    if (previousEncryptionKey === undefined) delete process.env.GALLERY_ENCRYPTION_KEY_V1;
+    else process.env.GALLERY_ENCRYPTION_KEY_V1 = previousEncryptionKey;
+    await cleanup();
+  });
 
   beforeEach(async () => {
+    process.env.GALLERY_ENCRYPTION_KEY_V1 = crypto.randomBytes(32).toString('hex');
     await db('email_queue').del();
     await db('events').del();
   });
@@ -106,6 +118,7 @@ describe('admin events CRUD endpoints (smoke)', () => {
       expect(row).toBeDefined();
       expect(row.event_name).toBe('Smoke Wedding');
       expect(row.created_by).toBe(adminId);
+      expect(row.language).toBeNull();
 
       // Folder structure is created under STORAGE_PATH/events/active/<slug>.
       const eventDir = path.join(process.env.STORAGE_PATH, 'events/active', res.body.slug);
@@ -125,6 +138,17 @@ describe('admin events CRUD endpoints (smoke)', () => {
       });
       expect(res.status).toBe(400);
       expect(Array.isArray(res.body.errors)).toBe(true);
+    });
+
+    it('duplicates an event with system-default language', async () => {
+      const sourceId = await insertEvent(db, adminId, { language: 'de' });
+      const res = await auth(request(app)
+        .post(`/api/admin/events/${sourceId}/duplicate`))
+        .send({ event_name: 'Duplicated event', event_date: '2026-10-01' });
+
+      expect(res.status).toBe(200);
+      const duplicate = await db('events').where({ id: res.body.id }).first();
+      expect(duplicate.language).toBeNull();
     });
   });
 
@@ -196,5 +220,167 @@ describe('admin events CRUD endpoints (smoke)', () => {
       const res = await auth(request(app).delete('/api/admin/events/999999'));
       expect(res.status).toBe(404);
     });
+  });
+
+  it('encrypts a protected password and sanitizes admin detail responses', async () => {
+    const res = await auth(request(app).post('/api/admin/events')).send({
+      event_type: 'wedding',
+      event_name: 'Encrypted Wedding',
+      event_date: '2026-09-01',
+      customer_name: 'Client Person',
+      customer_email: 'client@example.com',
+      admin_email: 'admin@example.com',
+      require_password: true,
+      password: 'StrongPass123!',
+      is_draft: true,
+    });
+
+    expect(res.status).toBe(200);
+    const row = await db('events').where({ id: res.body.id }).first();
+    expect(decrypt(
+      row.password_encrypted,
+      row.password_iv,
+      row.password_key_version,
+    )).toBe('StrongPass123!');
+
+    const detail = await auth(request(app).get(`/api/admin/events/${res.body.id}`));
+    expect(detail.body.has_encrypted_password).toBe(true);
+    expect(detail.body).not.toHaveProperty('password_encrypted');
+    expect(detail.body).not.toHaveProperty('password_iv');
+    expect(detail.body).not.toHaveProperty('password_key_version');
+  });
+
+  it('re-encrypts updates and clears ciphertext when password protection is disabled', async () => {
+    const stored = encrypt('OldPass123!');
+    const id = await insertEvent(db, adminId, {
+      require_password: 1,
+      password_encrypted: stored.encrypted,
+      password_iv: stored.iv,
+      password_key_version: stored.keyVersion,
+    });
+
+    await auth(request(app).put(`/api/admin/events/${id}`)).send({
+      password: 'NewPass123!',
+    }).expect(200);
+    let row = await db('events').where({ id }).first();
+    expect(decrypt(row.password_encrypted, row.password_iv, row.password_key_version))
+      .toBe('NewPass123!');
+
+    await auth(request(app).put(`/api/admin/events/${id}`)).send({
+      require_password: false,
+    }).expect(200);
+    row = await db('events').where({ id }).first();
+    expect(row.password_encrypted).toBeNull();
+    expect(row.password_iv).toBeNull();
+    expect(row.password_key_version).toBeNull();
+  });
+
+  it('encrypts reset passwords and auto-decrypts them for resend', async () => {
+    const id = await insertEvent(db, adminId, {
+      require_password: 1,
+      customer_email: 'client@example.com',
+    });
+
+    await auth(request(app).post(`/api/admin/events/${id}/reset-password`)).send({
+      sendEmail: false,
+      password: 'ResetPass123!',
+    }).expect(200);
+
+    const row = await db('events').where({ id }).first();
+    expect(decrypt(row.password_encrypted, row.password_iv, row.password_key_version))
+      .toBe('ResetPass123!');
+
+    await auth(request(app).post(`/api/admin/events/${id}/resend-email`)).send({}).expect(200);
+    const queued = await db('email_queue').where({ event_id: id }).orderBy('id', 'desc').first();
+    expect(JSON.parse(queued.email_data).gallery_password).toBe('ResetPass123!');
+  });
+
+  it('decrypts a stored draft password when publishing without a request password', async () => {
+    const stored = encrypt('DraftPass123!');
+    const id = await insertEvent(db, adminId, {
+      is_draft: 1,
+      require_password: 1,
+      customer_email: 'client@example.com',
+      password_encrypted: stored.encrypted,
+      password_iv: stored.iv,
+      password_key_version: stored.keyVersion,
+    });
+
+    await auth(request(app).post(`/api/admin/events/${id}/publish`)).send({}).expect(200);
+    const queued = await db('email_queue').where({ event_id: id }).orderBy('id', 'desc').first();
+    expect(JSON.parse(queued.email_data).gallery_password).toBe('DraftPass123!');
+  });
+
+  it('encrypts a password supplied while publishing a draft', async () => {
+    const id = await insertEvent(db, adminId, {
+      is_draft: 1,
+      require_password: 1,
+      customer_email: 'client@example.com',
+    });
+
+    await auth(request(app).post(`/api/admin/events/${id}/publish`)).send({
+      password: 'PublishedPass123!',
+    }).expect(200);
+
+    const row = await db('events').where({ id }).first();
+    expect(decrypt(row.password_encrypted, row.password_iv, row.password_key_version))
+      .toBe('PublishedPass123!');
+  });
+
+  it('clears stale ciphertext when a password changes without an encryption key', async () => {
+    const stored = encrypt('OldPass123!');
+    const id = await insertEvent(db, adminId, {
+      require_password: 1,
+      password_encrypted: stored.encrypted,
+      password_iv: stored.iv,
+      password_key_version: stored.keyVersion,
+    });
+    const configuredKey = process.env.GALLERY_ENCRYPTION_KEY_V1;
+    delete process.env.GALLERY_ENCRYPTION_KEY_V1;
+
+    try {
+      await auth(request(app).put(`/api/admin/events/${id}`)).send({
+        password: 'ChangedWithoutKey123!',
+      }).expect(200);
+    } finally {
+      process.env.GALLERY_ENCRYPTION_KEY_V1 = configuredKey;
+    }
+
+    const row = await db('events').where({ id }).first();
+    expect(row.password_encrypted).toBeNull();
+    expect(row.password_iv).toBeNull();
+    expect(row.password_key_version).toBeNull();
+  });
+
+  it('decrypts stored draft password for WhatsApp when publishing without a request password', async () => {
+    const stored = encrypt('DraftWaPass123!');
+    const id = await insertEvent(db, adminId, {
+      is_draft: 1,
+      require_password: 1,
+      customer_email: null,
+      customer_phone: '+15555550100',
+      password_encrypted: stored.encrypted,
+      password_iv: stored.iv,
+      password_key_version: stored.keyVersion,
+    });
+
+    const queueWhatsapp = jest.fn().mockResolvedValue(undefined);
+    const getWhatsAppConfig = jest.fn().mockResolvedValue({ enabled: true });
+    const whatsappProcessor = require('../../src/services/whatsappProcessor');
+    const originalQueue = whatsappProcessor.queueWhatsapp;
+    const originalConfig = whatsappProcessor.getWhatsAppConfig;
+    whatsappProcessor.queueWhatsapp = queueWhatsapp;
+    whatsappProcessor.getWhatsAppConfig = getWhatsAppConfig;
+
+    try {
+      await auth(request(app).post(`/api/admin/events/${id}/publish`)).send({}).expect(200);
+    } finally {
+      whatsappProcessor.queueWhatsapp = originalQueue;
+      whatsappProcessor.getWhatsAppConfig = originalConfig;
+    }
+
+    expect(queueWhatsapp).toHaveBeenCalledTimes(1);
+    const payload = queueWhatsapp.mock.calls[0][3];
+    expect(payload.gallery_password).toBe('DraftWaPass123!');
   });
 });

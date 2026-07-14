@@ -27,6 +27,11 @@ const { getAppSetting } = require('../../utils/appSettings');
 const { clampIntOrUndefined } = require('../../utils/numericHelpers');
 const { getFrontendBaseUrl } = require('../../utils/frontendUrl');
 const downloadZipService = require('../../services/downloadZipService');
+const {
+  encrypt: encryptPassword,
+  decrypt: decryptPassword,
+  isEncryptionAvailable,
+} = require('../../utils/passwordEncryption');
 const { validateHeroImageAnchor, getEventFieldRequirements, readBooleanSetting, getDownloadProtectionDefaults, getBrandingDefaults, getCustomerNameFromPayload, getCustomerEmailFromPayload, getCustomerPhoneFromPayload, isPhoneFieldEnabled, mapEventForApi, hasCustomerContactColumns, deleteEventCascade, SLIDESHOW_TRANSITIONS, SLIDESHOW_COLORFILTERS } = require('./helpers');
 
 module.exports = (router) => {
@@ -294,6 +299,16 @@ module.exports = (router) => {
       const password_hash = requirePassword
         ? await bcrypt.hash(password, getBcryptRounds())
         : await bcrypt.hash(crypto.randomBytes(32).toString('hex'), getBcryptRounds());
+
+      let encryptedPasswordFields = {};
+      if (requirePassword && password && isEncryptionAvailable()) {
+        const value = encryptPassword(password);
+        encryptedPasswordFields = {
+          password_encrypted: value.encrypted,
+          password_iv: value.iv,
+          password_key_version: value.keyVersion,
+        };
+      }
     
       // Calculate expiration date (days after event date)
       // If expiration is not required, expires_at will be null (never expires)
@@ -416,6 +431,8 @@ module.exports = (router) => {
         host_email: customerEmail || null,
         admin_email: admin_email || null,
         password_hash,
+        ...encryptedPasswordFields,
+        language: null,
         welcome_message,
         color_theme,
         share_link: shareLinkToStore,
@@ -847,8 +864,36 @@ module.exports = (router) => {
       // the admin mistypes vs. what was set at draft creation, the gallery
       // password the customer receives is the one that actually works.
         publishUpdates.password_hash = await bcrypt.hash(password, getBcryptRounds());
+        if (isEncryptionAvailable()) {
+          const value = encryptPassword(password);
+          publishUpdates.password_encrypted = value.encrypted;
+          publishUpdates.password_iv = value.iv;
+          publishUpdates.password_key_version = value.keyVersion;
+        } else {
+          publishUpdates.password_encrypted = null;
+          publishUpdates.password_iv = null;
+          publishUpdates.password_key_version = null;
+        }
       }
       await db('events').where('id', id).update(publishUpdates);
+
+      let galleryPasswordForEmail;
+      if (!requirePassword) {
+        galleryPasswordForEmail = 'No password required';
+      } else if (password) {
+        // Admin re-typed the password in the publish dialog — put it straight
+        // into the email so the customer can actually log in (#627).
+        galleryPasswordForEmail = password;
+      } else if (event.password_encrypted && event.password_iv && isEncryptionAvailable()) {
+        galleryPasswordForEmail = decryptPassword(
+          event.password_encrypted,
+          event.password_iv,
+          event.password_key_version ?? 1,
+        );
+      } else {
+        // Legacy fallback for API-only publishes that don't carry the password.
+        galleryPasswordForEmail = '{{password_security_message}}';
+      }
 
       // Queue creation email
       const customerEmail = event.customer_email || event.host_email;
@@ -856,18 +901,6 @@ module.exports = (router) => {
       if (customerEmail) {
         const frontendBase = await getFrontendBaseUrl();
         const { shareUrl } = await buildShareLinkVariants({ slug: event.slug, shareToken: event.share_token });
-
-        let galleryPasswordForEmail;
-        if (!requirePassword) {
-          galleryPasswordForEmail = 'No password required';
-        } else if (password) {
-        // Admin re-typed the password in the publish dialog — put it straight
-        // into the email so the customer can actually log in (#627).
-          galleryPasswordForEmail = password;
-        } else {
-        // Legacy fallback for API-only publishes that don't carry the password.
-          galleryPasswordForEmail = '(set at creation)';
-        }
 
         const emailData = {
           customer_name: customerName,
@@ -922,10 +955,10 @@ module.exports = (router) => {
               customer_name: event.customer_name || event.host_name || '',
               event_name: event.event_name,
               gallery_link: shareUrlForWa || `${await getFrontendBaseUrl()}/gallery/${event.slug}`,
-              // Plaintext only when the admin re-typed at publish; otherwise
-              // omit so the buildComponents() helper renders an empty {{4}}
-              // line instead of leaking the "(set at creation)" sentinel.
-              gallery_password: requirePassword && password ? password : '',
+              // Reuse the email's resolved password — admin re-typed,
+              // decrypted ciphertext, or sentinel — so WhatsApp never
+              // leaks "(set at creation)" / empty when ciphertext exists.
+              gallery_password: requirePassword ? galleryPasswordForEmail : '',
               expiry_date: event.expires_at ? new Date(event.expires_at).toISOString() : null,
               language: null, // resolved by processor via general_default_language
             });
@@ -1064,6 +1097,7 @@ module.exports = (router) => {
         host_email: customer_email || null,
         admin_email: source.admin_email || null,
         password_hash,
+        language: null,
         welcome_message: source.welcome_message || '',
         color_theme: source.color_theme,
         share_link: shareLinkToStore,
@@ -1419,8 +1453,21 @@ module.exports = (router) => {
 
       if (newPasswordPlain) {
         updates.password_hash = await bcrypt.hash(newPasswordPlain, getBcryptRounds());
+        if (isEncryptionAvailable()) {
+          const value = encryptPassword(newPasswordPlain);
+          updates.password_encrypted = value.encrypted;
+          updates.password_iv = value.iv;
+          updates.password_key_version = value.keyVersion;
+        } else {
+          updates.password_encrypted = null;
+          updates.password_iv = null;
+          updates.password_key_version = null;
+        }
       } else if (hasRequirePasswordUpdate && requirePasswordUpdate === false && currentRequirePassword) {
         updates.password_hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), getBcryptRounds());
+        updates.password_encrypted = null;
+        updates.password_iv = null;
+        updates.password_key_version = null;
       }
 
       // Enforce expires_at requirement based on app settings

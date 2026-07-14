@@ -1173,5 +1173,6 @@ module.exports = {
   wrapEmailHtml,
   safeTemplateReplace,
   getSupportEmail,
+  getRecipientLanguage,
   htmlToText
 };
