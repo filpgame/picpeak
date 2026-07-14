@@ -1,6 +1,6 @@
 {
   "name": "picpeak-backend",
-  "version": "3.87.0-beta.0",
+  "version": "3.88.0-beta.0",
   "description": "Backend for PicPeak event photo sharing platform",
   "main": "server.js",
   "scripts": {
@@ -47,7 +47,6 @@
     "node-stream-zip": "^1.15.0",
     "nodemailer": "^9.0.1",
     "otplib": "^12.0.1",
-    "p-limit": "^3.1.0",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.17.2",
     "pg": "^8.16.3",
