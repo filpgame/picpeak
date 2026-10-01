@@ -4,7 +4,7 @@ const { archiveEvent } = require('./archiveService');
 const { queueEmail, getSupportEmail } = require('./emailProcessor');
 const { buildShareLinkVariants } = require('./shareLinkService');
 const logger = require('../utils/logger');
-const { formatBoolean } = require('../utils/dbCompat');
+const { formatBoolean, whereTimestamp } = require('../utils/dbCompat');
 
 function startExpirationChecker() {
   // Check every hour for expired events and warnings
@@ -41,8 +41,8 @@ async function checkExpirations() {
       .where('is_active', formatBoolean(true))
       .where('is_archived', formatBoolean(false))
       .whereNotNull('expires_at')
-      .where('expires_at', '<=', warningDate)
-      .where('expires_at', '>', now);
+      .modify(whereTimestamp, 'expires_at', '<=', warningDate)
+      .modify(whereTimestamp, 'expires_at', '>', now);
 
     for (const event of eventsNeedingWarning) {
       await emitGalleryExpiring(event); // always — for the built-in + any custom flows
@@ -57,7 +57,7 @@ async function checkExpirations() {
       .where('is_active', formatBoolean(true))
       .where('is_archived', formatBoolean(false))
       .whereNotNull('expires_at')
-      .where('expires_at', '<=', now);
+      .modify(whereTimestamp, 'expires_at', '<=', now);
 
     for (const event of expiredEvents) {
       await handleExpiredEvent(event, { sendLegacyEmails: !expiredFlowOwns });
@@ -249,6 +249,8 @@ async function handleExpiredEvent(event, { sendLegacyEmails = true } = {}) {
 
 module.exports = {
   startExpirationChecker,
+  // One hourly pass — exported for tests.
+  checkExpirations,
   // Reused by the workflow notify_gallery_* actions so the engine path sends the
   // exact same emails as the legacy hourly checker.
   queueExpirationWarning,

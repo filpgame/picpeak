@@ -46,6 +46,39 @@ function formatDateForDB(date) {
   return date.toISOString();
 }
 
+const TIMESTAMP_OPERATORS = new Set(['<', '<=', '>', '>=']);
+
+/**
+ * Compare a date/time column against a JS Date the same way on both databases.
+ * Use with Knex `.modify()`:
+ *   db('events').modify(whereTimestamp, 'expires_at', '<=', new Date())
+ *
+ * PostgreSQL compares its native timestamps against the bound Date. SQLite has
+ * no date type: the column holds TEXT ('YYYY-MM-DD' or ISO 8601) or, where a
+ * JS Date was written directly, INTEGER epoch milliseconds — while a bound Date
+ * is a REAL, and SQLite sorts every number before every TEXT value, so a plain
+ * `column <= date` never matches a TEXT row. Compare both sides as epoch
+ * milliseconds instead (julianday() also honours a TEXT value's UTC offset).
+ *
+ * @param {object} query - Knex query builder
+ * @param {string} column - Date/time column name
+ * @param {string} operator - One of '<', '<=', '>', '>='
+ * @param {Date} date - Value to compare against
+ * @returns {object} The query builder
+ */
+function whereTimestamp(query, column, operator, date) {
+  if (!TIMESTAMP_OPERATORS.has(operator)) {
+    throw new Error(`Unsupported timestamp comparison operator: ${operator}`);
+  }
+  if (isPostgreSQL()) {
+    return query.where(column, operator, date);
+  }
+  return query.whereRaw(
+    `(CASE WHEN typeof(??) IN ('integer', 'real') THEN ?? ELSE (julianday(??) - 2440587.5) * 86400000 END) ${operator} ?`,
+    [column, column, column, date.getTime()]
+  );
+}
+
 /**
  * Add days to a date (database agnostic)
  * @param {Date} date - Starting date
@@ -126,6 +159,7 @@ module.exports = {
   isPostgreSQL,
   insertAndGetId,
   formatDateForDB,
+  whereTimestamp,
   addDays,
   dateExtractSQL,
   getDatabaseSize,
