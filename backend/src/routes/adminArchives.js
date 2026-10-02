@@ -397,10 +397,26 @@ router.delete('/:id', adminAuth, requirePermission('archives.delete'), requireEv
       return res.status(404).json({ error: 'Archive not found' });
     }
 
+    const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
+    // Read the thumbnail paths before the photo rows go away.
+    const photos = await db('photos').where('event_id', req.params.id).select('thumbnail_path');
+
+    // Delete from the database before touching files, so a failure leaves the
+    // archive in place. PostgreSQL enforces the foreign keys SQLite never
+    // checked: activity_logs, access_logs and email_queue reference the event
+    // without ON DELETE CASCADE, so clear them first, in the same order as
+    // deleteEventCascade in adminEvents.js.
+    await db.transaction(async (trx) => {
+      await trx('activity_logs').where('event_id', req.params.id).del();
+      await trx('access_logs').where('event_id', req.params.id).del();
+      await trx('email_queue').where('event_id', req.params.id).del();
+      await trx('photos').where('event_id', req.params.id).del();
+      await trx('events').where('id', req.params.id).del();
+    });
+
     // Delete archive file if exists
     if (archive.archive_path) {
       try {
-        const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
         const fullArchivePath = path.join(storagePath, archive.archive_path);
         await fs.unlink(fullArchivePath);
       } catch (error) {
@@ -409,9 +425,6 @@ router.delete('/:id', adminAuth, requirePermission('archives.delete'), requireEv
     }
 
     // Delete thumbnails for this event
-    const photos = await db('photos').where('event_id', req.params.id).select('thumbnail_path');
-    const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
-    
     for (const photo of photos) {
       if (photo.thumbnail_path) {
         try {
@@ -422,9 +435,6 @@ router.delete('/:id', adminAuth, requirePermission('archives.delete'), requireEv
         }
       }
     }
-
-    // Delete from database (cascade will delete photos and logs)
-    await db('events').where('id', req.params.id).delete();
 
     // Log activity
     await db('activity_logs').insert({
