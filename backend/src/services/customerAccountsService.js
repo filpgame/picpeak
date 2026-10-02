@@ -13,7 +13,7 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { db, logActivity } = require('../database/db');
-const { formatBoolean } = require('../utils/dbCompat');
+const { formatBoolean, whereTimestamp } = require('../utils/dbCompat');
 const { getBcryptRounds } = require('../utils/passwordValidation');
 const { queueEmail } = require('./emailProcessor');
 const { getFrontendBaseUrl } = require('../utils/frontendUrl');
@@ -1040,7 +1040,7 @@ async function notifyCustomerOfNewAssignments(customerId, addedEventIds) {
     .whereIn('id', addedEventIds)
     .where('is_archived', formatBoolean(false))
     .andWhere(function() {
-      this.whereNull('expires_at').orWhere('expires_at', '>', now);
+      this.whereNull('expires_at').orWhere((q) => q.modify(whereTimestamp, 'expires_at', '>', now));
     })
     .orderBy('event_date', 'desc')
     .select('id', 'slug', 'event_name', 'event_date');

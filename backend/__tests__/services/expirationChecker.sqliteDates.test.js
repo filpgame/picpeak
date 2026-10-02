@@ -58,14 +58,11 @@ const logger = require('../../src/utils/logger');
 const { archiveEvent } = require('../../src/services/archiveService');
 const { queueEmail } = require('../../src/services/emailProcessor');
 const { checkExpirations } = require('../../src/services/expirationChecker');
+const { useMainRealmDate } = require('../helpers/mainRealmDate');
 
-// Jest runs each test file in its own V8 realm, and node-sqlite3 only
-// recognises Dates from the main realm (an `instanceof` check against its own
-// global Date): a sandbox Date is bound as the string '[object Object]'. Swap
-// in the main realm's Date so every Date — the fixtures' and the checker's own
-// `new Date()` — binds exactly as in production, as a REAL.
-const SandboxDate = global.Date;
-global.Date = require('vm').runInThisContext('Date');
+// Bind the fixtures' Dates and the checker's own `new Date()` as production
+// does (a REAL), not as Jest's sandbox realm would.
+const restoreDate = useMainRealmDate();
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const now = Date.now();
@@ -133,7 +130,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  global.Date = SandboxDate;
+  restoreDate();
   if (originalDbClient === undefined) {
     delete process.env.DATABASE_CLIENT;
   } else {
