@@ -268,30 +268,35 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
     // Merge data into dates array
     viewsData.forEach(row => {
       const dateObj = dates.find(d => d.date === row.date);
-      if (dateObj) dateObj.views = row.count;
+      if (dateObj) dateObj.views = Number(row.count);
     });
 
     downloadsData.forEach(row => {
       const dateObj = dates.find(d => d.date === row.date);
-      if (dateObj) dateObj.downloads = row.count;
+      if (dateObj) dateObj.downloads = Number(row.count);
     });
 
     visitorsData.forEach(row => {
       const dateObj = dates.find(d => d.date === row.date);
-      if (dateObj) dateObj.uniqueVisitors = row.count;
+      if (dateObj) dateObj.uniqueVisitors = Number(row.count);
     });
 
     // Get top galleries by views with additional metrics
     const topGalleries = await db('access_logs')
       .select('events.id', 'events.event_name', 'events.slug')
       .select(db.raw('COUNT(CASE WHEN action = \'view\' THEN 1 END) as views'))
-      .select(db.raw('COUNT(DISTINCT CASE WHEN action = \'view\' THEN ip_address END) as uniqueVisitors'))
+      .select(db.raw('COUNT(DISTINCT CASE WHEN action = \'view\' THEN ip_address END) as "uniqueVisitors"'))
       .select(db.raw('COUNT(CASE WHEN action IN (\'download\', \'download_all\') THEN 1 END) as downloads'))
       .join('events', 'access_logs.event_id', 'events.id')
       .where('access_logs.timestamp', '>=', startDateStr)
       .groupBy('events.id', 'events.event_name', 'events.slug')
       .orderBy('views', 'desc')
       .limit(5);
+    topGalleries.forEach((g) => {
+      g.views = Number(g.views);
+      g.uniqueVisitors = Number(g.uniqueVisitors);
+      g.downloads = Number(g.downloads);
+    });
 
     // Get device breakdown (simplified - based on user agent)
     const deviceData = await db('access_logs')
@@ -308,7 +313,8 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
       .where('timestamp', '>=', startDateStr)
       .groupBy('device_type');
 
-    const totalDevices = deviceData.reduce((sum, d) => sum + d.count, 0);
+    // COUNT() comes back as a string on PostgreSQL (bigint); coerce before adding.
+    const totalDevices = deviceData.reduce((sum, d) => sum + Number(d.count), 0);
     const devices = {
       desktop: 0,
       mobile: 0,
@@ -316,7 +322,7 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
     };
 
     deviceData.forEach(d => {
-      devices[d.device_type] = Math.round((d.count / totalDevices) * 100);
+      devices[d.device_type] = Math.round((Number(d.count) / totalDevices) * 100);
     });
 
     // Calculate totals for the period (matching /stats logic)
@@ -342,9 +348,9 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
       topGalleries,
       devices,
       totals: {
-        views: totalViews?.count || 0,
-        downloads: totalDownloadsCount?.count || 0,
-        uniqueVisitors: totalUniqueVisitors?.count || 0
+        views: Number(totalViews?.count || 0),
+        downloads: Number(totalDownloadsCount?.count || 0),
+        uniqueVisitors: Number(totalUniqueVisitors?.count || 0)
       }
     });
   } catch (error) {
