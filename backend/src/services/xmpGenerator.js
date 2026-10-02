@@ -48,6 +48,8 @@ class XmpGenerator {
    * @returns {number} XMP rating (0-5, integer)
    */
   mapRating(avgRating) {
+    // AVG() arrives as a numeric string on PostgreSQL ("0.00" is truthy).
+    avgRating = Number(avgRating);
     if (!avgRating || avgRating === 0) return 0;
     if (avgRating >= 4.5) return 5;
     if (avgRating >= 3.5) return 4;
@@ -62,6 +64,8 @@ class XmpGenerator {
    * @returns {string|null} XMP label color
    */
   mapLabel(avgRating) {
+    // AVG() arrives as a numeric string on PostgreSQL ("0.00" is truthy).
+    avgRating = Number(avgRating);
     if (!avgRating || avgRating === 0) return null;
     if (avgRating >= 4.5) return 'Red';      // Top picks
     if (avgRating >= 3.5) return 'Yellow';   // Good
