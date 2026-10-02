@@ -1003,8 +1003,9 @@ router.get('/:eventId/photos', adminAuth, requirePermission('photos.view'), requ
 
     // Search by filename
     if (search) {
-      const escapedSearch = escapeLikePattern(search);
-      query = query.where('photos.filename', 'like', `%${escapedSearch}%`);
+      // LOWER() on both sides: PostgreSQL's LIKE is case-sensitive (SQLite's is not, for ASCII).
+      const pattern = `%${escapeLikePattern(search).toLowerCase()}%`;
+      query = query.whereRaw('LOWER(photos.filename) LIKE ?', [pattern]);
     }
 
     // Feedback filters (has likes / favorites / comments / min rating) with AND/OR logic

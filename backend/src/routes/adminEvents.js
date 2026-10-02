@@ -979,12 +979,14 @@ router.get('/', adminAuth, requirePermission('events.view'), async (req, res) =>
 
     // Apply search filter
     if (search) {
-      const escapedSearch = escapeLikePattern(search);
+      // LOWER() on both sides: PostgreSQL's LIKE is case-sensitive (SQLite's
+      // is not, for ASCII), and "olivia" should still find "Olivia".
+      const pattern = `%${escapeLikePattern(search).toLowerCase()}%`;
       query = query.where((builder) => {
-        builder.where('event_name', 'like', `%${escapedSearch}%`)
-          .orWhere('admin_email', 'like', `%${escapedSearch}%`)
-          .orWhere('customer_email', 'like', `%${escapedSearch}%`)
-          .orWhere('slug', 'like', `%${escapedSearch}%`);
+        builder.whereRaw('LOWER(event_name) LIKE ?', [pattern])
+          .orWhereRaw('LOWER(admin_email) LIKE ?', [pattern])
+          .orWhereRaw('LOWER(customer_email) LIKE ?', [pattern])
+          .orWhereRaw('LOWER(slug) LIKE ?', [pattern]);
       });
     }
 
