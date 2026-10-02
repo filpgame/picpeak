@@ -4,6 +4,7 @@ const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const secureImageMiddleware = require('../middleware/secureImageMiddleware');
 const logger = require('../utils/logger');
+const { decodeJsonColumn } = require('../utils/jsonColumn');
 
 const router = express.Router();
 
@@ -253,7 +254,7 @@ router.get('/logs', adminAuth, requirePermission('settings.view'), async (req, r
     res.json({
       logs: logs.map(log => ({
         ...log,
-        details: log.details ? JSON.parse(log.details) : null
+        details: decodeJsonColumn(log.details)
       })),
       pagination: {
         page: parseInt(page),
@@ -300,7 +301,7 @@ router.get('/events/:eventId/access-logs', adminAuth, requirePermission('setting
     res.json({
       logs: logs.map(log => ({
         ...log,
-        metadata: log.metadata ? JSON.parse(log.metadata) : null
+        metadata: decodeJsonColumn(log.metadata)
       })),
       pagination: {
         page: parseInt(page),
@@ -459,11 +460,11 @@ router.get('/export', adminAuth, requirePermission('settings.view'), async (req,
       timeframe,
       securityLogs: securityLogs.map(log => ({
         ...log,
-        details: log.details ? JSON.parse(log.details) : null
+        details: decodeJsonColumn(log.details)
       })),
       accessLogs: accessLogs.map(log => ({
         ...log,
-        metadata: log.metadata ? JSON.parse(log.metadata) : null
+        metadata: decodeJsonColumn(log.metadata)
       }))
     };
 
