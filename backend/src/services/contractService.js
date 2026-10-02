@@ -2220,8 +2220,10 @@ async function getAuditTrail(contractId) {
   const rows = await db('activity_logs')
     .where('activity_type', 'like', 'contract_%')
     .andWhere(function () {
-      this.where('metadata', 'like', `%"contractId":${id}%`)
-        .orWhere('metadata', 'like', `%"contractId": ${id}%`);
+      // CAST: on PostgreSQL metadata is a json column, which has no LIKE
+      // operator; the cast is a no-op on SQLite's TEXT column.
+      this.whereRaw('CAST(metadata AS TEXT) LIKE ?', [`%"contractId":${id}%`])
+        .orWhereRaw('CAST(metadata AS TEXT) LIKE ?', [`%"contractId": ${id}%`]);
     })
     .orderBy('created_at', 'asc')
     .select('id', 'activity_type', 'actor_type', 'actor_id', 'actor_name', 'metadata', 'created_at');
