@@ -688,10 +688,42 @@ router.delete('/:id', adminAuth, requirePermission('archives.delete'), requireEv
       return res.status(404).json({ error: 'Archive not found' });
     }
 
+    // Read the thumbnail keys while the photo rows still exist. The files are
+    // removed only after the database delete commits, so a failed delete no
+    // longer leaves an event whose archive and thumbnails are already gone.
+    const photos = await db('photos').where('event_id', req.params.id).select('thumbnail_path');
+    const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
+
+    await db.transaction(async (trx) => {
+      // activity_logs, access_logs and email_queue reference events without
+      // ON DELETE CASCADE, so on PostgreSQL the event delete fails with a
+      // foreign-key violation while any of them still has rows for the event.
+      // Clear them first, the same way deleteEventCascade does.
+      await trx('activity_logs').where('event_id', req.params.id).del();
+      await trx('access_logs').where('event_id', req.params.id).del();
+      await trx('email_queue').where('event_id', req.params.id).del();
+
+      // Face data (#1074, #1132). This route deletes the event row directly and
+      // relies on the FK cascade, but SQLite only honours ON DELETE CASCADE with
+      // `PRAGMA foreign_keys = ON`, which PicPeak does not set — and
+      // event_people_merge_dismissals has no event FK at all, on either engine.
+      // archiveEvent's purge step is deliberately nonfatal, so an event can
+      // still be carrying face data when it reaches this permanent delete.
+      // Delete explicitly, the same way deleteEventCascade does.
+      await trx('photo_faces').where('event_id', req.params.id).del();
+      await trx('event_people').where('event_id', req.params.id).del();
+      if (await trx.schema.hasTable('event_people_merge_dismissals')) {
+        await trx('event_people_merge_dismissals').where('event_id', req.params.id).del();
+      }
+
+      await trx('photos').where('event_id', req.params.id).del();
+      await deleteWithAccountingHistory(trx, 'events', { id: req.params.id },
+        { actor: req.admin.id, source: 'archive.delete' });
+    });
+
     // Delete archive file if exists
     if (archive.archive_path) {
       try {
-        const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
         const fullArchivePath = path.join(storagePath, archive.archive_path);
         await fs.unlink(fullArchivePath);
       } catch (error) {
@@ -700,9 +732,6 @@ router.delete('/:id', adminAuth, requirePermission('archives.delete'), requireEv
     }
 
     // Delete thumbnails for this event
-    const photos = await db('photos').where('event_id', req.params.id).select('thumbnail_path');
-    const storagePath = process.env.STORAGE_PATH || path.join(__dirname, '../../../storage');
-    
     for (const photo of photos) {
       if (photo.thumbnail_path) {
         try {
@@ -713,23 +742,6 @@ router.delete('/:id', adminAuth, requirePermission('archives.delete'), requireEv
         }
       }
     }
-
-    // Face data (#1074, #1132). This route deletes the event row directly and
-    // relies on the FK cascade, but SQLite only honours ON DELETE CASCADE with
-    // `PRAGMA foreign_keys = ON`, which PicPeak does not set — and
-    // event_people_merge_dismissals has no event FK at all, on either engine.
-    // archiveEvent's purge step is deliberately nonfatal, so an event can
-    // still be carrying face data when it reaches this permanent delete.
-    // Delete explicitly, the same way deleteEventCascade does.
-    await db('photo_faces').where('event_id', req.params.id).del();
-    await db('event_people').where('event_id', req.params.id).del();
-    if (await db.schema.hasTable('event_people_merge_dismissals')) {
-      await db('event_people_merge_dismissals').where('event_id', req.params.id).del();
-    }
-
-    // Delete from database (cascade will delete photos and logs)
-    await deleteWithAccountingHistory(db, 'events', { id: req.params.id },
-      { actor: req.admin.id, source: 'archive.delete' });
 
     // Log activity
     await db('activity_logs').insert({
