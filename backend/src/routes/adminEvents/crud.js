@@ -333,14 +333,16 @@ module.exports = (router) => {
       // ownerless ones, the rule requireEventOwnership applies per event.
       query = scopeEventsListQuery(query, req.admin);
 
-      // Apply search filter
+      // Apply search filter. Case-insensitive on both engines: SQLite's LIKE
+      // already ignores ASCII case, PostgreSQL's does not, so compare the
+      // lowercased column with a lowercased pattern (as the archive search does).
       if (search) {
-        const pattern = `%${escapeLikePattern(search)}%`;
+        const pattern = `%${escapeLikePattern(String(search).toLowerCase())}%`;
         query = query.where((builder) => {
-          builder.whereRaw(likeWithEscape('event_name'), [pattern])
-            .orWhereRaw(likeWithEscape('admin_email'), [pattern])
-            .orWhereRaw(likeWithEscape('customer_email'), [pattern])
-            .orWhereRaw(likeWithEscape('slug'), [pattern]);
+          builder.whereRaw(likeWithEscape('LOWER(event_name)'), [pattern])
+            .orWhereRaw(likeWithEscape('LOWER(admin_email)'), [pattern])
+            .orWhereRaw(likeWithEscape('LOWER(customer_email)'), [pattern])
+            .orWhereRaw(likeWithEscape('LOWER(slug)'), [pattern]);
         });
       }
 
