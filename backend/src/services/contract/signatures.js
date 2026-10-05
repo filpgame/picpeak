@@ -1013,13 +1013,17 @@ async function getAuditTrail(contractId) {
   // boundaries; activity_logs.metadata never contains a contractId
   // key collision with another id-shaped value because logActivity
   // serialises only what callers pass.
+  //
+  // The column is `json` on Postgres, which has no LIKE operator
+  // ("operator does not exist: json ~~ unknown"), so compare its text
+  // form. CAST(... AS TEXT) is a no-op on SQLite's TEXT column.
   const id = Number(contractId);
   if (!Number.isFinite(id)) return [];
   const rows = await db('activity_logs')
     .where('activity_type', 'like', 'contract_%')
     .andWhere(function () {
-      this.where('metadata', 'like', `%"contractId":${id}%`)
-        .orWhere('metadata', 'like', `%"contractId": ${id}%`);
+      this.whereRaw('CAST(metadata AS TEXT) LIKE ?', [`%"contractId":${id}%`])
+        .orWhereRaw('CAST(metadata AS TEXT) LIKE ?', [`%"contractId": ${id}%`]);
     })
     .orderBy('created_at', 'asc')
     .select('id', 'activity_type', 'actor_type', 'actor_id', 'actor_name', 'metadata', 'created_at');

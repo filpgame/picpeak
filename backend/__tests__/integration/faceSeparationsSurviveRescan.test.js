@@ -413,8 +413,13 @@ describe('separations survive re-derivation (#1132)', () => {
         path.join(__dirname, '..', '..', 'src', 'routes', 'adminArchives.js'), 'utf8'
       );
       expect(src).toContain('event_people_merge_dismissals');
-      expect(src).toContain('db(\'photo_faces\').where(\'event_id\', req.params.id).del()');
-      expect(src).toContain('db(\'event_people\').where(\'event_id\', req.params.id).del()');
+      expect(src).toContain('trx(\'photo_faces\').where(\'event_id\', req.params.id).del()');
+      expect(src).toContain('trx(\'event_people\').where(\'event_id\', req.params.id).del()');
+      // Rows in tables without ON DELETE CASCADE go in the same transaction,
+      // or PostgreSQL rejects the event delete on their foreign keys.
+      for (const table of ['activity_logs', 'access_logs', 'email_queue']) {
+        expect(src).toContain(`trx('${table}').where('event_id', req.params.id).del()`);
+      }
     });
   });
 

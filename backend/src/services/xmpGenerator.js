@@ -91,12 +91,15 @@ class XmpGenerator {
    * @returns {string|null} XMP label color
    */
   mapRatingToLabel(avgRating) {
-    if (!avgRating || avgRating === 0) return null;
-    if (avgRating >= 4.5) return 'Red';      // Top picks
-    if (avgRating >= 3.5) return 'Yellow';   // Good
-    if (avgRating >= 2.5) return 'Green';    // Average
-    if (avgRating >= 1.5) return 'Blue';     // Below average
-    return 'Purple';                          // Low
+    // AVG() comes back as a numeric string on PostgreSQL ("0.00"), which is
+    // truthy, so an unrated photo would be labelled Purple. Compare numbers.
+    const rating = Number(avgRating);
+    if (!rating) return null;
+    if (rating >= 4.5) return 'Red';      // Top picks
+    if (rating >= 3.5) return 'Yellow';   // Good
+    if (rating >= 2.5) return 'Green';    // Average
+    if (rating >= 1.5) return 'Blue';     // Below average
+    return 'Purple';                       // Low
   }
 
   /**

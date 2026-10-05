@@ -24,6 +24,16 @@ try {
   try { logger.warn('SQLite directory ensure failed', { error: e.message }); } catch (_) { /* non-fatal */ }
 }
 
+// Keep PostgreSQL `date` columns (events.event_date and the CRM dates) as
+// 'YYYY-MM-DD' text, the shape SQLite returns and the frontend and date
+// helpers expect. node-pg's default parser turns them into JS Dates at the
+// server's local midnight, which serialise as e.g. "2026-10-01T03:00:00.000Z"
+// and render a day early for viewers west of the server's timezone.
+// OID 1082 is `date`; timestamp columns are unaffected.
+if (knexConfig && knexConfig.client === 'pg') {
+  require('pg').types.setTypeParser(1082, (value) => value);
+}
+
 // Create database connection with built-in retry logic.
 //
 // The underlying knex instance is held in `_db` and reachable through a

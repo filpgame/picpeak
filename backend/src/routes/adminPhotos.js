@@ -1243,12 +1243,14 @@ router.get('/:eventId/photos', adminAuth, requirePermission('photos.view'), requ
     // name printed on every card ("Original: …") — matching only the stored
     // renamed filename returned 0 results for a substring the admin can read
     // on screen. Grouped, because the feedback AND/OR conditions are appended
-    // right below and a bare orWhere would leak across them.
+    // right below and a bare orWhere would leak across them. Case-insensitive
+    // on both engines (PostgreSQL's LIKE is case-sensitive, SQLite's is not
+    // for ASCII), the same way the archive search compares lowercased values.
     if (search) {
-      const pattern = `%${escapeLikePattern(search)}%`;
+      const pattern = `%${escapeLikePattern(String(search).toLowerCase())}%`;
       query = query.where((qb) => {
-        qb.whereRaw(likeWithEscape('photos.filename'), [pattern])
-          .orWhereRaw(likeWithEscape('photos.original_filename'), [pattern]);
+        qb.whereRaw(likeWithEscape('LOWER(photos.filename)'), [pattern])
+          .orWhereRaw(likeWithEscape('LOWER(photos.original_filename)'), [pattern]);
       });
     }
 
