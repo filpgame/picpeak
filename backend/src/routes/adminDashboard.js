@@ -182,9 +182,11 @@ router.get('/stats', adminAuth, requirePermission('analytics.view'), async (req,
       : 0;
 
     res.json({
-      activeEvents: activeEvents.count || 0,
-      expiringEvents: expiringEvents.count || 0,
-      totalPhotos: totalPhotos.count || 0,
+      // COUNT() comes back as a string on PostgreSQL (bigint); the dashboard
+      // expects numbers, as SQLite returns them.
+      activeEvents: Number(activeEvents.count) || 0,
+      expiringEvents: Number(expiringEvents.count) || 0,
+      totalPhotos: Number(totalPhotos.count) || 0,
       // Real bytes on this disk. Null when the measurement failed, which the
       // UI shows as "unavailable" rather than substituting a number that
       // means something else.
@@ -200,12 +202,12 @@ router.get('/stats', adminAuth, requirePermission('analytics.view'), async (req,
       storagePartial: localStorage ? localStorage.partial : false,
       // Catalogued original bytes — what `storageUsed` used to report (#1164).
       catalogedBytes: Number(catalogedBytes.total) || 0,
-      totalViews: totalViews.count || 0,
-      totalDownloads: totalDownloads.count || 0,
+      totalViews: Number(totalViews.count) || 0,
+      totalDownloads: Number(totalDownloads.count) || 0,
       viewsTrend: Math.round(viewsTrend * 10) / 10,
       downloadsTrend: Math.round(downloadsTrend * 10) / 10,
-      archivedEvents: archivedEvents.count || 0,
-      totalEvents: totalEvents.count || 0
+      archivedEvents: Number(archivedEvents.count) || 0,
+      totalEvents: Number(totalEvents.count) || 0
     });
   } catch (error) {
     errorResponse(res, error, 500, 'Failed to fetch dashboard statistics');
@@ -397,13 +399,21 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
     const topGalleries = await applyEventScope(db('access_logs'), req.admin, 'access_logs.event_id')
       .select('events.id', 'events.event_name', 'events.slug')
       .select(db.raw('COUNT(CASE WHEN action = \'view\' THEN 1 END) as views'))
-      .select(db.raw('COUNT(DISTINCT CASE WHEN action = \'view\' THEN ip_address END) as uniqueVisitors'))
+      // Quoted so PostgreSQL keeps the camelCase key instead of folding it to
+      // "uniquevisitors", which the dashboard would read as undefined.
+      .select(db.raw('COUNT(DISTINCT CASE WHEN action = \'view\' THEN ip_address END) as "uniqueVisitors"'))
       .select(db.raw('COUNT(CASE WHEN action IN (\'download\', \'download_all\', \'download_all_presigned\', \'download_selected\') THEN 1 END) as downloads'))
       .join('events', 'access_logs.event_id', 'events.id')
       .where('access_logs.timestamp', '>=', startDateStr)
       .groupBy('events.id', 'events.event_name', 'events.slug')
       .orderBy('views', 'desc')
       .limit(5);
+    // COUNT() comes back as a string on PostgreSQL (bigint).
+    topGalleries.forEach((g) => {
+      g.views = Number(g.views) || 0;
+      g.uniqueVisitors = Number(g.uniqueVisitors) || 0;
+      g.downloads = Number(g.downloads) || 0;
+    });
 
     // Device breakdown — prefer the operator's analytics tracker (Umami /
     // Rybbit) when configured (#661 Bug C + #663 Phase 1). The local
@@ -487,9 +497,9 @@ router.get('/analytics', adminAuth, requirePermission('analytics.view'), async (
       devices,
       devicesSource,
       totals: {
-        views: totalViews?.count || 0,
-        downloads: totalDownloadsCount?.count || 0,
-        uniqueVisitors: totalUniqueVisitors?.count || 0
+        views: Number(totalViews?.count) || 0,
+        downloads: Number(totalDownloadsCount?.count) || 0,
+        uniqueVisitors: Number(totalUniqueVisitors?.count) || 0
       }
     });
   } catch (error) {
