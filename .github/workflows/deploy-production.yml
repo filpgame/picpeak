@@ -1,0 +1,194 @@
+name: Deploy production
+
+# Fork-only (filpgame/picpeak): deploys ghcr.io/filpgame/picpeak/{backend,frontend}:sha-<commit>
+# to the Hostinger VPS behind https://download.suhrealfotos.com.
+#
+# - Every successful image build of a push to `stable` deploys automatically. The trigger
+#   matches docker-build.yml by its `name:`; if upstream renames it, update `workflows:` below.
+# - Run workflow (manual) deploys any built tag. With "rehearse", the tag first starts on an
+#   isolated copy of production at https://picpeak-test.mybarraco.cloud and the run waits for
+#   approval of the `rehearsal-review` environment: approve = discard the copy and upgrade,
+#   reject = only discard the copy.
+#
+# The key in the `production` environment can only run /usr/local/sbin/picpeak-deploy on the VPS
+# (tools/picpeak-deploy in /opt/suhreal/stacks/picpeak), which hands the tag to tools/upgrade.sh:
+# pg_dump first, Portainer redeploy, health + smoke test, automatic rollback on failure. The
+# upgrade runs as its own systemd unit, so cancelling this workflow does not stop it half-way.
+# Deploying an older tag only swaps the code; the database keeps the newer migrations.
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Images"]
+    types: [completed]
+    branches: [stable]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag sha-xxxxxxx (empty = the tip of the selected branch)'
+        type: string
+        required: false
+        default: ''
+      rehearse:
+        description: 'Rehearse on the isolated copy first and wait for approval'
+        type: boolean
+        default: false
+
+# One deploy at a time; a run waiting for rehearsal approval holds the slot.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    # workflow_run also fires for PR builds, and its `branches` filter matches the PR's head
+    # branch name, which a fork controls — only deploy builds of pushes to this repository.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Resolve and check the image tag
+        id: tag
+        env:
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_run ]; then
+            [[ "$RUN_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::unexpected head_sha"; exit 1; }
+            # A newer push supersedes this build; its own build deploys it.
+            tip=$(gh api "repos/$GITHUB_REPOSITORY/commits/stable" --jq .sha)
+            if [ "$tip" != "$RUN_SHA" ]; then
+              echo "::notice::stable has moved on to ${tip:0:7}; not deploying ${RUN_SHA:0:7}"
+              exit 0
+            fi
+            tag=sha-${RUN_SHA:0:7}
+          else
+            tag=${INPUT_TAG:-sha-${GITHUB_SHA:0:7}}
+          fi
+          [[ "$tag" =~ ^sha-[0-9a-f]{7}$ ]] || { echo "::error::the tag must look like sha-xxxxxxx"; exit 1; }
+          for image in backend frontend; do
+            docker buildx imagetools inspect "ghcr.io/$GITHUB_REPOSITORY/$image:$tag" > /dev/null \
+              || { echo "::error::ghcr.io/$GITHUB_REPOSITORY/$image:$tag does not exist"; exit 1; }
+          done
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  rehearse:
+    needs: resolve
+    if: github.event_name == 'workflow_dispatch' && inputs.rehearse && needs.resolve.outputs.tag != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      TAG: ${{ needs.resolve.outputs.tag }}
+    steps:
+      - name: Set up the deploy key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '#!/bin/sh\nexec ssh -T -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 "picpeak-deploy@$DEPLOY_HOST" "$@"\n' > ~/vps
+          chmod 700 ~/vps
+
+      - name: Start the rehearsal
+        run: |
+          ~/vps rehearse-up "$TAG"
+          echo "Rehearsal of \`$TAG\` at https://picpeak-test.mybarraco.cloud — approve \`rehearsal-review\` to upgrade production, reject to discard it." >> "$GITHUB_STEP_SUMMARY"
+
+  review:
+    needs: rehearse
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: rehearsal-review
+      url: https://picpeak-test.mybarraco.cloud
+    steps:
+      - run: echo "Rehearsal approved"
+
+  deploy:
+    needs: [resolve, rehearse, review]
+    if: >-
+      always() && needs.resolve.result == 'success' && needs.resolve.outputs.tag != '' &&
+      (needs.rehearse.result == 'skipped' || needs.review.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment:
+      name: production
+      url: https://download.suhrealfotos.com
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      TAG: ${{ needs.resolve.outputs.tag }}
+    steps:
+      - name: Set up the deploy key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '#!/bin/sh\nexec ssh -T -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 "picpeak-deploy@$DEPLOY_HOST" "$@"\n' > ~/vps
+          chmod 700 ~/vps
+
+      - name: Discard the rehearsal
+        if: needs.rehearse.result == 'success'
+        run: ~/vps rehearse-down
+
+      - name: Upgrade
+        run: |
+          rc=0; ~/vps deploy "$TAG" || rc=$?
+          case $rc in
+            0) echo "\`$TAG\` is live at https://download.suhrealfotos.com" >> "$GITHUB_STEP_SUMMARY" ;;
+            75) echo "::error::another operation is running on the VPS"; exit 1 ;;
+            255) echo "::error::lost the SSH connection; the upgrade may still be running (see the status step)"; exit 1 ;;
+            *) echo "::error::the upgrade failed (exit $rc); upgrade.sh restores the previous version on its own"; exit 1 ;;
+          esac
+
+      - name: Status
+        if: failure() || cancelled()
+        run: ~/vps status
+
+  discard-rehearsal:
+    needs: [rehearse, review]
+    if: always() && needs.rehearse.result != 'skipped' && needs.review.result != 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+    steps:
+      - name: Set up the deploy key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '#!/bin/sh\nexec ssh -T -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 "picpeak-deploy@$DEPLOY_HOST" "$@"\n' > ~/vps
+          chmod 700 ~/vps
+
+      # A cancelled run leaves rehearsal.sh up running on the VPS; wait for it before tearing down.
+      - name: Discard the rehearsal
+        run: |
+          for i in $(seq 1 90); do
+            rc=0; ~/vps rehearse-down || rc=$?
+            [ "$rc" = 75 ] || exit "$rc"
+            sleep 30
+          done
+          echo "::error::the VPS stayed busy for 45 min"; exit 1
