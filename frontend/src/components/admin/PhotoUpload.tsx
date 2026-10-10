@@ -74,6 +74,11 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
   // failedPhotos — reading live would make the rows vanish the instant they
   // appear.
   const [processingFailures, setProcessingFailures] = useState<UploadFailure[]>([]);
+  // True once handleUpload has sent its last batch. Until then the processing
+  // aggregate only covers the batches sent so far: with many photos, batch 1
+  // finishes processing while batch 2 is still uploading, and settling on that
+  // closed the modal mid-upload.
+  const [transferDone, setTransferDone] = useState(false);
   const [failuresDismissed, setFailuresDismissed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -231,6 +236,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
     }
 
     setIsUploading(true);
+    setTransferDone(false);
     setUploadProgress(0);
     setUploadIds([]);
     // Clear any prior failure report before this run.
@@ -508,11 +514,23 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
         setCurrentChunk(0);
         setTotalChunks(0);
         setPhase({ kind: 'idle' });
+      } else {
+        // Every batch is sent: hand over to the processing tracker. Set the
+        // phase explicitly — if the last batch failed mid-transfer it is still
+        // 'transferring', the tracker stays disabled and the upload never settles.
+        setTransferDone(true);
+        setPhase({
+          kind: 'processing',
+          chunkIndex: Math.max(totalUnits - 1, 0),
+          totalChunks: totalUnits,
+          filesInChunk: smallFiles.length,
+        });
       }
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.response?.data?.error || t('toast.uploadError'));
       setIsUploading(false);
+      setTransferDone(false);
       setUploadProgress(0);
       setCurrentChunk(0);
       setTotalChunks(0);
@@ -525,6 +543,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
   // this upload, dismiss the upload UI and surface the result.
   useEffect(() => {
     if (!isUploading) return;
+    if (!transferDone) return;
     if (uploadIds.length === 0) return;
     if (!processingAggregate.isComplete) return;
 
@@ -567,6 +586,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
       hasFailures: transferFailures.length > 0 || processingAggregate.failed > 0,
     });
     setIsUploading(false);
+    setTransferDone(false);
     setUploadProgress(0);
     setCurrentChunk(0);
     setTotalChunks(0);
@@ -574,9 +594,11 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({ eventId, onUploadCompl
     setUploadIds([]);
     // We intentionally only react to processingAggregate.isComplete /
     // .failed — the rest of the deps either don't move during this
-    // effect's lifetime or are stable callbacks.
+    // effect's lifetime or are stable callbacks. transferDone is listed
+    // because the aggregate can already read complete when the last batch
+    // lands (e.g. it failed and added no upload ID).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processingAggregate.isComplete, processingAggregate.failed, isUploading]);
+  }, [processingAggregate.isComplete, processingAggregate.failed, isUploading, transferDone]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
