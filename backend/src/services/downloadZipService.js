@@ -668,15 +668,22 @@ class DownloadZipService {
    * Invalidate all events (e.g., global watermark settings changed).
    */
   async invalidateAll() {
+    // A build already running read the settings before they changed, and its
+    // event has no download_zip_path yet (invalidate() clears it and only a
+    // finished build sets it), so the query below misses it and it publishes
+    // under the old settings. Listed before the query: a build that publishes
+    // while the query runs has left activeBuilds by the time it returns.
+    const eventIds = new Set(this.activeBuilds.keys());
     try {
       const events = await db('events')
         .whereNotNull('download_zip_path')
         .select('id');
-      for (const event of events) {
-        this.invalidate(event.id);
-      }
+      for (const event of events) eventIds.add(event.id);
     } catch (err) {
       logger.error('downloadZipService.invalidateAll error', { error: err.message });
+    }
+    for (const eventId of eventIds) {
+      this.invalidate(eventId);
     }
   }
 

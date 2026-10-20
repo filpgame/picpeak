@@ -209,7 +209,10 @@ const uploadTimeout = (timeout = 300000) => { // 5 minutes default
 // The uploader sends a large upload as a run of batches, each ending in
 // downloadZipService.invalidate(). A "Download All" rebuild started while the
 // next batch is still arriving would be thrown away by that batch, so hold it
-// for as long as the request lasts — from before multer reads the body.
+// for as long as the request lasts — from before multer reads the body. The
+// chunked-upload chunk and complete routes take the same hold: a file too big
+// for one batch arrives as a run of chunk requests and only invalidates once
+// /complete has merged and stored it.
 function holdZipRebuildDuringUpload(req, res, next) {
   downloadZipService.holdRebuildUntilDone(parseInt(req.params.eventId, 10), res);
   next();
@@ -1703,7 +1706,7 @@ router.post('/:eventId/chunked-upload/init', adminAuth, requirePermission('photo
 });
 
 // Upload a chunk
-router.post('/:eventId/chunked-upload/:uploadId/chunk/:chunkIndex', adminAuth, requirePermission('photos.upload'), requireEventOwnership, async (req, res) => {
+router.post('/:eventId/chunked-upload/:uploadId/chunk/:chunkIndex', adminAuth, requirePermission('photos.upload'), requireEventOwnership, holdZipRebuildDuringUpload, async (req, res) => {
   try {
     const { uploadId, chunkIndex } = req.params;
 
@@ -1739,7 +1742,7 @@ router.post('/:eventId/chunked-upload/:uploadId/chunk/:chunkIndex', adminAuth, r
 });
 
 // Complete chunked upload and process the file
-router.post('/:eventId/chunked-upload/:uploadId/complete', adminAuth, requirePermission('photos.upload'), requireEventOwnership, async (req, res) => {
+router.post('/:eventId/chunked-upload/:uploadId/complete', adminAuth, requirePermission('photos.upload'), requireEventOwnership, holdZipRebuildDuringUpload, async (req, res) => {
   try {
     const { eventId, uploadId } = req.params;
     const { category_id } = req.body;
@@ -1789,6 +1792,12 @@ router.post('/:eventId/chunked-upload/:uploadId/complete', adminAuth, requirePer
       raw: path.extname(fileObj.originalname).toLowerCase() === '.dng',
       s3: process.env.STORAGE_BACKEND === 's3'
     });
+
+    // Same as the batch route: without this a large file uploaded on its own
+    // never reaches the cached "Download All" zip.
+    if (uploadedPhotos.length > 0) {
+      downloadZipService.invalidate(parseInt(eventId, 10));
+    }
 
     // Clean up temp directory
     try {
