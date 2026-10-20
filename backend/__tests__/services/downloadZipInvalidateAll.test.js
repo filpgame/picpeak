@@ -110,12 +110,20 @@ describe('downloadZipService.invalidateAll and builds in flight', () => {
   }
 
   const zipRow = (event) => db('events').where({ id: event.id }).first('download_zip_path');
-  const flush = async () => {
-    for (let i = 0; i < 20; i += 1) {
+  const zipOnDisk = (event) => fs.existsSync(path.join(mockStorageRoot, service.getCacheKey(event.slug)));
+
+  // invalidate() deletes the zip and clears the row fire-and-forget. Poll for
+  // the outcome: a fixed number of event-loop turns was too few on a loaded
+  // CI runner, where the SQLite update had not landed yet.
+  async function waitFor(predicate, timeoutMs = 10000) {
+    const deadline = Date.now() + timeoutMs;
+    // eslint-disable-next-line no-await-in-loop
+    while (!(await predicate())) {
+      if (Date.now() > deadline) throw new Error('waitFor: condition never held');
       // eslint-disable-next-line no-await-in-loop
-      await new Promise((resolve) => setImmediate(resolve));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
-  };
+  }
 
   beforeAll(async () => {
     ({ db, cleanup } = await bootCrmDb());
@@ -147,11 +155,12 @@ describe('downloadZipService.invalidateAll and builds in flight', () => {
     await service.invalidateAll();
     gate.open();
     const result = await building;
-    await flush();
 
+    // A build publishes (renames the zip in, sets the row) before it returns,
+    // so there is nothing to wait for here.
     expect(result).toEqual({ success: false, error: 'Build invalidated' });
     expect((await zipRow(event)).download_zip_path).toBeNull();
-    expect(fs.existsSync(path.join(mockStorageRoot, service.getCacheKey(event.slug)))).toBe(false);
+    expect(zipOnDisk(event)).toBe(false);
     expect(service.debounceTimers.has(event.id)).toBe(true);
   });
 
@@ -162,10 +171,8 @@ describe('downloadZipService.invalidateAll and builds in flight', () => {
     expect((await zipRow(event)).download_zip_path).not.toBeNull();
 
     await service.invalidateAll();
-    await flush();
 
-    expect((await zipRow(event)).download_zip_path).toBeNull();
-    expect(fs.existsSync(path.join(mockStorageRoot, service.getCacheKey(event.slug)))).toBe(false);
     expect(service.debounceTimers.has(event.id)).toBe(true);
+    await waitFor(async () => (await zipRow(event)).download_zip_path === null && !zipOnDisk(event));
   });
 });
