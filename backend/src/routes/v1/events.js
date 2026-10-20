@@ -98,6 +98,15 @@ const photoUpload = async (req, res, next) => {
   });
 };
 
+// API clients (the Lightroom plugin) send an export as one photo per request,
+// back to back, and each one invalidates the cached "Download All" zip. Hold
+// its rebuild while a photo is arriving, as the admin upload route does, so it
+// isn't started only to be thrown away by the next photo.
+const holdZipRebuildDuringUpload = (req, res, next) => {
+  downloadZipService.holdRebuildUntilDone(parseInt(req.params.id, 10), res);
+  next();
+};
+
 // slugify now imported from ../../utils/slug — shared with adminEvents
 // and events.js so the diacritic fix from #502 lands here too (#525).
 
@@ -414,6 +423,7 @@ router.post(
   requireApiScope('write'),
   requirePermission('photos.upload'),
   requireEventOwnership,
+  holdZipRebuildDuringUpload,
   photoUpload,
   async (req, res) => {
     let tempPath = null;
@@ -593,6 +603,10 @@ router.post(
         uploaded_at: new Date().toISOString()
       }).returning('id');
       const id = insertResult[0]?.id || insertResult[0];
+
+      // Without this, guests keep getting a cached ZIP that lacks every photo
+      // added through the API — the replace path above does the same.
+      downloadZipService.invalidate(event.id);
 
       await logActivity('photo_uploaded', { via: 'api_v1', filename: finalName }, event.id, {
         type: 'admin', id: req.admin.id, name: req.admin.username
