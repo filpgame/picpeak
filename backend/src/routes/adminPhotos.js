@@ -206,7 +206,16 @@ const uploadTimeout = (timeout = 300000) => { // 5 minutes default
 
 // Upload photos for an event
 // Max file count and max file size are configurable via general settings
-router.post('/:eventId/upload', adminAuth, requirePermission('photos.upload'), requireEventOwnership, uploadTimeout(600000), resolveAllowedTypes, registerTempUploadCleanup, async (req, res, next) => { // 10 minute timeout
+// The uploader sends a large upload as a run of batches, each ending in
+// downloadZipService.invalidate(). A "Download All" rebuild started while the
+// next batch is still arriving would be thrown away by that batch, so hold it
+// for as long as the request lasts — from before multer reads the body.
+function holdZipRebuildDuringUpload(req, res, next) {
+  downloadZipService.holdRebuildUntilDone(parseInt(req.params.eventId, 10), res);
+  next();
+}
+
+router.post('/:eventId/upload', adminAuth, requirePermission('photos.upload'), requireEventOwnership, holdZipRebuildDuringUpload, uploadTimeout(600000), resolveAllowedTypes, registerTempUploadCleanup, async (req, res, next) => { // 10 minute timeout
   let maxFilesPerUpload;
   let maxFileSizeBytes;
   let maxVideoSizeBytes;
