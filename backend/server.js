@@ -1133,6 +1133,10 @@ async function startServer() {
     
     require('./src/utils/cleanupTempUploads').startTempUploadCleanup();
 
+    // A pre-zip build the process died in the middle of (reboot, OOM kill)
+    // leaves its partial zip in the tmp dir — on Docker, the container layer.
+    require('./src/services/downloadZipService').sweepStaleBuildDirs().catch(() => {});
+
     // Start file watcher
     startFileWatcher();
     // External-media folder watcher (issue 1187): imports new files into
