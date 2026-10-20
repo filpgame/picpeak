@@ -8,9 +8,10 @@
  * Pattern follows watermarkGeneratorService.js — singleton with
  * in-memory locking and debounced background regeneration.
  *
- * Storage: zips are written to a local tmp file then uploaded to the
- * configured storage backend (local fs or S3) via storage.putFromFile.
- * The cached zip is served via the storage backend on download.
+ * Storage: on local fs the zip is written next to its final key and renamed
+ * into place. On S3 it is written to a local tmp file then uploaded via
+ * storage.putFromFile. The cached zip is served via the storage backend on
+ * download.
  */
 
 const fs = require('fs');
@@ -28,12 +29,31 @@ const { renderPhotoForDownload } = require('./downloadRendition');
 const { resolveEventDownloadPolicy } = require('../utils/downloadResolutions');
 const logger = require('../utils/logger');
 
-const DEBOUNCE_MS = 5000;
+// A background rebuild starts only once the event has been quiet this long: no
+// invalidate() and no upload still receiving photos for it (holdRebuild).
+//
+// Every rebuild rewrites the WHOLE archive. This used to be a 5s debounce, and
+// the admin uploader takes longer than that to send its next batch (up to
+// 95 MB), so every batch started a full rebuild: a 4.2 GB upload in ~45
+// batches completed 12 builds (97 MB up to 4.38 GB), cancelled dozens more and
+// wrote ~74 GB. Holds cover a batch however slowly it arrives; this covers the
+// gaps between requests and the callers that don't hold (the file watcher,
+// gallery visibility toggles), and still has the zip ready about half a minute
+// after an upload ends.
+const QUIET_MS = 30 * 1000;
+// A rebuild pending for this long falls back to the old 5s debounce, so a
+// steady trickle of changes (an auto-import folder fed through a live event)
+// still gets a zip, at most one build per 10 minutes. Holds still apply.
+const OVERDUE_AFTER_MS = 10 * 60 * 1000;
+const OVERDUE_QUIET_MS = 5 * 1000;
 
 // Prefix of the per-build tmp directory, and how old an unowned one must be
 // before the startup sweep treats it as the remains of an interrupted build.
 const BUILD_DIR_PREFIX = 'picpeak-zipbuild-';
 const STALE_BUILD_DIR_AGE_MS = 10 * 60 * 1000;
+// A local-fs build writes its zip beside the cached one under this name — the
+// staging name LocalFsStorage uses, so storage listings skip it.
+const STAGING_ZIP_RE = /^all\.zip\.tmp\.\d+\.[0-9a-f]+$/;
 
 // How many storage reads may be open at once while the archive is built.
 // archiver drains its queue one entry at a time, so a stream appended ahead of
@@ -60,11 +80,15 @@ class DownloadZipService {
   constructor() {
     this.activeBuilds = new Map();   // eventId -> { promise, version }
     this.debounceTimers = new Map();  // eventId -> setTimeout handle
+    this.pendingSince = new Map();    // eventId -> when its pending rebuild was first asked for
+    this.uploadHolds = new Map();     // eventId -> requests still receiving photos
     this.versions = new Map();        // eventId -> generation counter
+    this.publishedVersions = new Map(); // eventId -> version of the zip last published
     this.buildCancellers = new Map(); // eventId -> abort the in-flight build
     this.regenActive = 0;             // background rebuilds running right now
     this.regenWaiters = [];           // resolvers parked waiting for a slot
     this.liveTmpDirs = new Set();     // tmp build dirs owned by a running build
+    this.liveStagingZips = new Set(); // local-fs staging zips owned by a running build
     this.stopped = false;
   }
 
@@ -74,11 +98,17 @@ class DownloadZipService {
    * A build the process died in the middle of (container restart, VM reboot,
    * OOM kill) never reaches its `finally`, so its partial zip stays in the tmp
    * dir for good — on Docker that is the container's writable layer, which
-   * nothing else cleans. Meant to run once at startup. Directories of builds
-   * in this process are skipped, as is anything modified within `minAgeMs`.
-   * Returns how many directories were removed.
+   * nothing else cleans. On local storage the build writes beside the cached
+   * zip instead, so the same goes for staging zips in each event's
+   * `.download-cache`. Meant to run once at startup. Anything a build in this
+   * process owns is skipped, as is anything modified within `minAgeMs`.
+   * Returns how many directories and staging zips were removed.
    */
   async sweepStaleBuildDirs({ minAgeMs = STALE_BUILD_DIR_AGE_MS } = {}) {
+    return (await this._sweepTmpBuildDirs(minAgeMs)) + (await this._sweepStagingZips(minAgeMs));
+  }
+
+  async _sweepTmpBuildDirs(minAgeMs) {
     const root = os.tmpdir();
     let entries;
     try {
@@ -101,6 +131,56 @@ class DownloadZipService {
         logger.info('Removed stale pre-zip build directory', { dir });
       } catch (err) {
         logger.warn('downloadZipService.sweepStaleBuildDirs: could not remove directory', { dir, error: err.message });
+      }
+    }
+    return removed;
+  }
+
+  async _sweepStagingZips(minAgeMs) {
+    let activeRoot;
+    try {
+      const storage = getStorage();
+      activeRoot = storage.kind() === 'local' ? storage.resolveLocalPath('events/active') : null;
+    } catch (_) {
+      activeRoot = null;
+    }
+    if (!activeRoot) return 0;
+
+    let events;
+    try {
+      events = await fsp.readdir(activeRoot, { withFileTypes: true });
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        logger.warn('downloadZipService.sweepStaleBuildDirs: cannot read events dir', { dir: activeRoot, error: err.message });
+      }
+      return 0;
+    }
+
+    let removed = 0;
+    for (const event of events) {
+      if (!event.isDirectory()) continue;
+      const cacheDir = path.join(activeRoot, event.name, '.download-cache');
+      let names;
+      try {
+        names = await fsp.readdir(cacheDir);
+      } catch (_) {
+        continue; // no download cache for this event
+      }
+      for (const name of names) {
+        if (!STAGING_ZIP_RE.test(name)) continue;
+        const file = path.join(cacheDir, name);
+        if (this.liveStagingZips.has(file)) continue;
+        try {
+          const { mtimeMs } = await fsp.stat(file);
+          if (Date.now() - mtimeMs < minAgeMs) continue;
+          await fsp.unlink(file);
+          removed += 1;
+          logger.info('Removed stale pre-zip staging file', { file });
+        } catch (err) {
+          if (err.code !== 'ENOENT') {
+            logger.warn('downloadZipService.sweepStaleBuildDirs: could not remove staging zip', { file, error: err.message });
+          }
+        }
       }
     }
     return removed;
@@ -133,6 +213,9 @@ class DownloadZipService {
     this.stopped = true;
     for (const timer of this.debounceTimers.values()) clearTimeout(timer);
     this.debounceTimers.clear();
+    this.pendingSince.clear();
+    this.uploadHolds.clear();
+    this.publishedVersions.clear();
     // Release anything parked for a slot so shutdown can't hang on a queue
     // that will never drain — they check `stopped` and return without building.
     const waiters = this.regenWaiters.splice(0);
@@ -190,9 +273,17 @@ class DownloadZipService {
    * Concurrent calls for the same eventId share one in-flight build.
    */
   async generateZip(eventId) {
-    // If already building, return the existing promise
-    const existing = this.activeBuilds.get(eventId);
-    if (existing) return existing.promise;
+    // Share a build that is still current. One that an invalidate() overtook
+    // can still be running (an S3 upload it cannot abort) and it publishes to
+    // the same key, so wait for it to finish rather than overlap it. Handing
+    // back its promise instead reported 'Build invalidated' to the rebuild
+    // the invalidate() asked for, and no zip was built at all.
+    let existing = this.activeBuilds.get(eventId);
+    while (existing) {
+      if (existing.version === this.versions.get(eventId)) return existing.promise;
+      await existing.promise.catch(() => {});
+      existing = this.activeBuilds.get(eventId);
+    }
 
     const version = (this.versions.get(eventId) || 0) + 1;
     this.versions.set(eventId, version);
@@ -214,6 +305,9 @@ class DownloadZipService {
   async _build(eventId, version) {
     const storage = getStorage();
     let tmpDir;
+    // Local fs only: the zip is written beside the cached one and renamed
+    // over it.
+    let stagingPath = null;
     // The tmp zip being written. Kept out here so `finally` can close it: an
     // archive that was aborted never does (see the comment there).
     let output = null;
@@ -289,9 +383,23 @@ class DownloadZipService {
 
       const finalKey = this.getCacheKey(event.slug);
 
-      tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), BUILD_DIR_PREFIX));
-      this.liveTmpDirs.add(tmpDir);
-      const tmpPath = path.join(tmpDir, `${crypto.randomBytes(4).toString('hex')}-all.zip`);
+      // On local fs, write the zip where it will be served from and rename it
+      // into place. Building in os.tmpdir() and handing it to putFromFile
+      // wrote every zip twice — on Docker the tmp dir is the container layer,
+      // on the same disk as storage — and the copy alone took as long as the
+      // build. S3 has no local path and still uploads from a tmp file.
+      const localFinalPath = storage.kind() === 'local' ? storage.resolveLocalPath(finalKey) : null;
+      let tmpPath;
+      if (localFinalPath) {
+        await fsp.mkdir(path.dirname(localFinalPath), { recursive: true });
+        stagingPath = `${localFinalPath}.tmp.${process.pid}.${crypto.randomBytes(4).toString('hex')}`;
+        this.liveStagingZips.add(stagingPath);
+        tmpPath = stagingPath;
+      } else {
+        tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), BUILD_DIR_PREFIX));
+        this.liveTmpDirs.add(tmpDir);
+        tmpPath = path.join(tmpDir, `${crypto.randomBytes(4).toString('hex')}-all.zip`);
+      }
 
       // #493: resolve display filenames (with collision suffix) before the
       // streaming starts so the loop just indexes the precomputed array.
@@ -401,10 +509,14 @@ class DownloadZipService {
         return { success: false, error: 'Build invalidated' };
       }
 
-      // Upload to storage (atomic from caller's perspective: storage.put writes
-      // to a tmp file/object first then commits in LocalFs; in S3 the key only
-      // exists after the multipart upload completes).
-      await storage.putFromFile(finalKey, tmpPath, { contentType: 'application/zip' });
+      // Publish. Both are atomic for a reader: rename() swaps the file in one
+      // step (a download already streaming keeps the old inode), and an S3
+      // key only exists once its multipart upload completes.
+      if (stagingPath) {
+        await fsp.rename(stagingPath, localFinalPath);
+      } else {
+        await storage.putFromFile(finalKey, tmpPath, { contentType: 'application/zip' });
+      }
 
       // An invalidate() that arrived during the upload has already run its
       // cleanup; publishing now would put a zip built under the old settings
@@ -425,6 +537,7 @@ class DownloadZipService {
         download_zip_path: finalKey,
         download_zip_generated_at: new Date(),
       });
+      this.publishedVersions.set(eventId, version);
 
       logger.info('Pre-zip generated', { eventId, slug: event.slug, size: stat.size, photos: photos.length });
       return { success: true, key: finalKey, size: stat.size };
@@ -447,6 +560,11 @@ class DownloadZipService {
       // cancels one build per batch, so that adds up to tens of GB. After a
       // successful build the stream has already closed and this does nothing.
       if (output && !output.destroyed) output.destroy();
+      if (stagingPath) {
+        // Already renamed away after a successful build.
+        await fsp.unlink(stagingPath).catch(() => {});
+        this.liveStagingZips.delete(stagingPath);
+      }
       if (tmpDir) {
         await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
         this.liveTmpDirs.delete(tmpDir);
@@ -456,7 +574,8 @@ class DownloadZipService {
 
   /**
    * Invalidate the cached zip for an event.
-   * Deletes the file, clears DB, debounces regeneration.
+   * Deletes the file and clears DB now; the rebuild waits for the event to go
+   * quiet (QUIET_MS).
    */
   invalidate(eventId) {
     // Bump version to signal any in-flight build is stale
@@ -467,40 +586,104 @@ class DownloadZipService {
     const cancelBuild = this.buildCancellers.get(eventId);
     if (cancelBuild) cancelBuild();
 
-    // Cancel pending debounce
-    const timer = this.debounceTimers.get(eventId);
-    if (timer) clearTimeout(timer);
-
-    // Fire-and-forget cleanup
+    // Fire-and-forget cleanup. The old zip goes now rather than when its
+    // replacement is ready: after a delete, hide or settings change it holds
+    // photos guests may no longer get, and until the rebuild the download
+    // route streams the archive instead.
     this._cleanup(eventId).catch(err =>
       logger.warn('downloadZipService.invalidate cleanup error', { eventId, error: err.message })
     );
 
-    // Debounce regeneration
-    const newTimer = setTimeout(() => {
+    this._scheduleRegen(eventId);
+  }
+
+  /**
+   * Keep background rebuilds of this event's zip from starting until the
+   * returned release() is called. For a request still receiving photos for
+   * the event: anything built meanwhile would be thrown away by the
+   * invalidate() it ends with. A rebuild that came due during the hold is
+   * re-armed on release. Foreground generateZip() calls are not held.
+   */
+  holdRebuild(eventId) {
+    this.uploadHolds.set(eventId, (this.uploadHolds.get(eventId) || 0) + 1);
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      const left = (this.uploadHolds.get(eventId) || 1) - 1;
+      if (left > 0) {
+        this.uploadHolds.set(eventId, left);
+        return;
+      }
+      this.uploadHolds.delete(eventId);
+      if (!this.stopped && this.pendingSince.has(eventId) && !this.debounceTimers.has(eventId)) {
+        this._scheduleRegen(eventId);
+      }
+    };
+  }
+
+  /**
+   * holdRebuild() for the life of an HTTP response: released when it
+   * finishes, or when the client goes away first.
+   */
+  holdRebuildUntilDone(eventId, res) {
+    const release = this.holdRebuild(eventId);
+    res.once('finish', release);
+    res.once('close', release);
+  }
+
+  // (Re)arm the event's rebuild timer: a trailing debounce of QUIET_MS, or of
+  // OVERDUE_QUIET_MS once the rebuild has waited OVERDUE_AFTER_MS.
+  _scheduleRegen(eventId) {
+    const timer = this.debounceTimers.get(eventId);
+    if (timer) clearTimeout(timer);
+
+    const now = Date.now();
+    if (!this.pendingSince.has(eventId)) this.pendingSince.set(eventId, now);
+    const overdue = now - this.pendingSince.get(eventId) >= OVERDUE_AFTER_MS;
+
+    this.debounceTimers.set(eventId, setTimeout(() => {
       this.debounceTimers.delete(eventId);
+      // An upload is still arriving; releasing its hold re-arms this.
+      if (this.uploadHolds.has(eventId)) return;
       // Through the cap (#1399): invalidateAll arms every one of these in the
       // same tick, so without it they all start building together.
-      this._withRegenSlot(() => this.generateZip(eventId)).catch(err =>
+      this._withRegenSlot(() => {
+        // Re-armed or held again while this waited for a slot: whichever
+        // fires next builds instead.
+        if (this.debounceTimers.has(eventId) || this.uploadHolds.has(eventId)) return undefined;
+        this.pendingSince.delete(eventId);
+        // A guest's download already rebuilt it after the last change (or is
+        // rebuilding it now, and generateZip shares that build).
+        if (this.publishedVersions.has(eventId)
+          && this.publishedVersions.get(eventId) === this.versions.get(eventId)) return undefined;
+        return this.generateZip(eventId);
+      }).catch(err =>
         logger.warn('downloadZipService debounced regen error', { eventId, error: err.message })
       );
-    }, DEBOUNCE_MS);
-    this.debounceTimers.set(eventId, newTimer);
+    }, overdue ? OVERDUE_QUIET_MS : QUIET_MS));
   }
 
   /**
    * Invalidate all events (e.g., global watermark settings changed).
    */
   async invalidateAll() {
+    // A build already running read the settings before they changed, and its
+    // event has no download_zip_path yet (invalidate() clears it and only a
+    // finished build sets it), so the query below misses it and it publishes
+    // under the old settings. Listed before the query: a build that publishes
+    // while the query runs has left activeBuilds by the time it returns.
+    const eventIds = new Set(this.activeBuilds.keys());
     try {
       const events = await db('events')
         .whereNotNull('download_zip_path')
         .select('id');
-      for (const event of events) {
-        this.invalidate(event.id);
-      }
+      for (const event of events) eventIds.add(event.id);
     } catch (err) {
       logger.error('downloadZipService.invalidateAll error', { error: err.message });
+    }
+    for (const eventId of eventIds) {
+      this.invalidate(eventId);
     }
   }
 
@@ -514,6 +697,8 @@ class DownloadZipService {
       clearTimeout(timer);
       this.debounceTimers.delete(eventId);
     }
+    this.pendingSince.delete(eventId);
+    this.publishedVersions.delete(eventId);
     await this._cleanup(eventId);
   }
 
